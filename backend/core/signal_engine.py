@@ -110,3 +110,96 @@ def calculate_signals(df: pd.DataFrame):
         "downtrend": get_downtrend().tolist(),
     }
     return df, signals
+
+
+def add_daily_indicators(df: pd.DataFrame) -> pd.DataFrame:
+    """Add EMA21/50/200 and ATR14 to a daily OHLCV DataFrame. Drops NaN rows."""
+    df = df.copy()
+    df['ema21'] = ema(df['close'], 21)
+    df['ema50'] = ema(df['close'], 50)
+    df['ema200'] = ema(df['close'], 200)
+    df['atr14'] = atr(df['high'], df['low'], df['close'], 14)
+    df['vol_avg20'] = df['volume'].rolling(20).mean()
+    return df.dropna()
+
+
+def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None) -> dict:
+    """
+    Minervini Stage 2 analysis. df must have columns added by add_daily_indicators.
+    Returns 7 checks, score, RS score, key levels, and suggested entry/stop/target.
+    """
+    if df.empty:
+        return {}
+
+    close = df['close']
+    high_arr = df['high']
+    low_arr = df['low']
+    volume = df['volume']
+
+    latest_close = float(close.iloc[-1])
+    latest_ema21 = float(df['ema21'].iloc[-1])
+    latest_ema50 = float(df['ema50'].iloc[-1])
+    latest_ema200 = float(df['ema200'].iloc[-1])
+    latest_atr = float(df['atr14'].iloc[-1])
+
+    ema200_slope = 0.0
+    if len(df) >= 20:
+        base = float(df['ema200'].iloc[-20])
+        if base != 0:
+            ema200_slope = (float(df['ema200'].iloc[-1]) - base) / base * 100
+
+    window = min(252, len(df))
+    high52 = float(high_arr.iloc[-window:].max())
+    low52 = float(low_arr.iloc[-window:].min())
+    pct_from_52w_high = (latest_close - high52) / high52 * 100 if high52 != 0 else 0.0
+    pct_from_52w_low = (latest_close - low52) / low52 * 100 if low52 != 0 else 0.0
+
+    recent_high = float(close.rolling(20).max().iloc[-1])
+    pullback_pct = (recent_high - latest_close) / recent_high * 100 if recent_high > 0 else 0.0
+
+    vol_avg20 = float(volume.rolling(20).mean().iloc[-1])
+    vol_last5 = float(volume.iloc[-5:].mean())
+    vol_contracting = bool(vol_last5 < vol_avg20)
+
+    rs_score = 50.0
+    if spy_close is not None and len(df) >= 63 and len(spy_close) >= 63:
+        try:
+            stock_ret = (float(close.iloc[-1]) - float(close.iloc[-63])) / float(close.iloc[-63]) * 100
+            spy_ret = (float(spy_close.iloc[-1]) - float(spy_close.iloc[-63])) / float(spy_close.iloc[-63]) * 100
+            rs_score = min(100.0, max(0.0, 50.0 + (stock_ret - spy_ret) * 2.0))
+        except Exception:
+            pass
+
+    checks = {
+        'price_above_emas': bool(latest_close > latest_ema21 and latest_ema21 > latest_ema50 and latest_ema50 > latest_ema200),
+        'ema200_rising': bool(ema200_slope > 0),
+        'near_52w_high': bool(pct_from_52w_high >= -25),
+        'above_52w_low': bool(pct_from_52w_low >= 30),
+        'pullback_shallow': bool(pullback_pct <= 15),
+        'rs_strong': bool(rs_score >= 50),
+        'volume_contracting': bool(vol_contracting),
+    }
+    score = sum(1 for v in checks.values() if v)
+
+    pivot = recent_high
+    entry = round(pivot * 1.005, 2)
+    stop = round(entry - 2 * latest_atr, 2)
+    risk_per_share = entry - stop
+    target = round(entry + 3 * risk_per_share, 2)
+
+    return {
+        'checks': checks,
+        'score': score,
+        'rs_score': round(rs_score, 1),
+        'ema200_slope': round(ema200_slope, 3),
+        'pct_from_52w_high': round(pct_from_52w_high, 2),
+        'pct_from_52w_low': round(pct_from_52w_low, 2),
+        'pullback_pct': round(pullback_pct, 2),
+        'latest_ema21': round(latest_ema21, 2),
+        'latest_ema50': round(latest_ema50, 2),
+        'latest_ema200': round(latest_ema200, 2),
+        'latest_atr': round(latest_atr, 4),
+        'entry': entry,
+        'stop': stop,
+        'target': target,
+    }

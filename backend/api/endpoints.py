@@ -1,9 +1,12 @@
+import pandas as pd
 from fastapi import APIRouter, HTTPException
-from services.data_service import get_ohlcv
-from core.signal_engine import calculate_signals
-from typing import List, Dict, Any
+from services.data_service import get_ohlcv, get_multi_daily
+from core.signal_engine import calculate_signals, add_daily_indicators, calculate_stage2_analysis
 
 router = APIRouter()
+
+WATCHLIST_SYMS = ["TSLA", "AAPL", "NVDA", "META", "AMZN", "GOOGL"]
+
 
 @router.get("/ohlcv")
 async def get_ohlcv_endpoint(symbol: str, tf: str = "5m"):
@@ -11,7 +14,6 @@ async def get_ohlcv_endpoint(symbol: str, tf: str = "5m"):
     if raw_df is None or raw_df.empty:
         raise HTTPException(status_code=404, detail="No data found")
 
-    # processed_df rows align 1-to-1 with signals arrays
     processed_df, signals = calculate_signals(raw_df)
 
     candles = []
@@ -63,3 +65,84 @@ async def get_latest_signal(symbol: str, tf: str = "5m"):
         "latest_atr": round(float(processed_df["atr"].iloc[-1]), 4),
         "latest_signals": latest,
     }
+
+
+@router.get("/daily")
+async def get_daily_endpoint(symbol: str):
+    """1-year daily OHLCV with EMA21/50/200, ATR, volume avg, and Stage 2 analysis."""
+    dfs = get_multi_daily([symbol.upper(), "SPY"], period="2y")
+    df = dfs.get(symbol.upper())
+    spy_df = dfs.get("SPY")
+
+    if df is None or df.empty:
+        raise HTTPException(status_code=404, detail=f"No daily data found for {symbol}")
+
+    df = add_daily_indicators(df)
+    df = df.iloc[-252:]  # Show last ~1 year after EMA200 warmup
+
+    spy_close = spy_df["close"] if spy_df is not None and not spy_df.empty else None
+    stage2 = calculate_stage2_analysis(df, spy_close)
+
+    candles = []
+    for i in range(len(df)):
+        row = df.iloc[i]
+        candles.append({
+            "time": df.index[i].strftime("%Y-%m-%d"),
+            "open": round(float(row["open"]), 4),
+            "high": round(float(row["high"]), 4),
+            "low": round(float(row["low"]), 4),
+            "close": round(float(row["close"]), 4),
+            "volume": int(row["volume"]),
+        })
+
+    indicators = {
+        "ema21": [round(float(v), 4) for v in df["ema21"]],
+        "ema50": [round(float(v), 4) for v in df["ema50"]],
+        "ema200": [round(float(v), 4) for v in df["ema200"]],
+        "atr14": [round(float(v), 4) for v in df["atr14"]],
+    }
+
+    vol_avg20 = [int(v) if pd.notna(v) else 0 for v in df["vol_avg20"]]
+
+    return {
+        "symbol": symbol.upper(),
+        "candles": candles,
+        "indicators": indicators,
+        "vol_avg20": vol_avg20,
+        "stage2": stage2,
+    }
+
+
+@router.get("/watchlist")
+async def get_watchlist_endpoint():
+    """Stage 2 analysis for all watchlist symbols, ranked by score."""
+    all_syms = WATCHLIST_SYMS + ["SPY"]
+    dfs = get_multi_daily(all_syms, period="2y")
+    spy_df = dfs.get("SPY")
+    spy_close = spy_df["close"] if spy_df is not None and not spy_df.empty else None
+
+    result = []
+    for sym in WATCHLIST_SYMS:
+        df = dfs.get(sym)
+        if df is None or df.empty:
+            continue
+        try:
+            df = add_daily_indicators(df)
+            stage2 = calculate_stage2_analysis(df, spy_close)
+            result.append({
+                "symbol": sym,
+                "price": round(float(df["close"].iloc[-1]), 2),
+                "score": stage2.get("score", 0),
+                "rs_score": stage2.get("rs_score", 50.0),
+                "pct_from_52w_high": stage2.get("pct_from_52w_high", 0.0),
+                "checks": stage2.get("checks", {}),
+                "entry": stage2.get("entry", 0.0),
+                "stop": stage2.get("stop", 0.0),
+                "target": stage2.get("target", 0.0),
+                "latest_atr": stage2.get("latest_atr", 0.0),
+            })
+        except Exception as e:
+            print(f"Watchlist error for {sym}: {e}")
+
+    result.sort(key=lambda x: x["score"], reverse=True)
+    return {"watchlist": result}
