@@ -82,7 +82,7 @@ cd sniperboard
 
 ```bash
 # docker-compose.yml 의 NEXT_PUBLIC_API_URL 을 서버 IP에 맞게 수정
-# 기본값: http://172.16.8.250:5000
+# 기본값: http://192.168.1.100:5000
 ```
 
 ### 3. 실행
