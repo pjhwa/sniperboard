@@ -16,6 +16,12 @@
 
 ---
 
+## 📸 Screenshot
+
+![SniperBoard Dashboard](docs/images/dashboard.png)
+
+---
+
 ## 📌 Overview
 
 SniperBoard는 미국 주식 시장을 위한 **TradingView 스타일의 웹 기반 매매 신호 대시보드**입니다.  
