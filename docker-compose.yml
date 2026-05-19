@@ -1,0 +1,22 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lazy-alpha-backend
+    ports:
+      - "5000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://172.16.8.250:5000
+    container_name: lazy-alpha-frontend
+    ports:
+      - "4000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
