@@ -8,10 +8,10 @@ import { WatchlistItem } from '../app/types';
 const getScoreColor = (s: number) => (s >= 6 ? 'text-emerald-400' : s >= 4 ? 'text-yellow-400' : 'text-red-400');
 const getScoreBg = (s: number) =>
   s >= 6
-    ? 'bg-emerald-500/20 border-emerald-500/40'
+    ? 'bg-emerald-500/10 border-emerald-500/30'
     : s >= 4
-    ? 'bg-yellow-500/20 border-yellow-500/40'
-    : 'bg-red-500/20 border-red-500/40';
+    ? 'bg-yellow-500/10 border-yellow-500/30'
+    : 'bg-red-500/10 border-red-500/30';
 
 export default function WatchlistTab() {
   const { rrAccount, rrRiskPct, setRrAccount, setRrRiskPct, setSymbol, setTab } = useDashboardStore();
@@ -20,15 +20,18 @@ export default function WatchlistTab() {
 
   if (isLoading) {
     return (
-      <div className="text-zinc-500 text-sm text-center py-24 animate-pulse">
-        워치리스트 종목들의 Stage 2 지표 분석 중... (약 1분 소요)
+      <div className="flex flex-col items-center justify-center py-32 space-y-4">
+        <div className="w-8 h-8 border-2 border-t-white border-zinc-800 rounded-full animate-spin-slow" />
+        <div className="text-zinc-500 text-sm tracking-wide">
+          워치리스트 종목들의 Stage 2 지표 분석 중... (약 1분 소요)
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-red-400 text-sm text-center py-24 border border-red-500/20 bg-red-500/5 rounded-2xl">
+      <div className="text-red-400 text-sm text-center py-24 border border-red-500/20 bg-red-500/5 rounded-2xl glow-red animate-fade-in">
         워치리스트 데이터를 불러오지 못했습니다. 백엔드 연결 상태를 확인해주세요.
       </div>
     );
@@ -37,51 +40,94 @@ export default function WatchlistTab() {
   const rrAccN = parseFloat(rrAccount);
   const rrRiskN = parseFloat(rrRiskPct);
 
+  // R:R 비율 시각화 바 렌더링 헬퍼
+  const renderRRBar = (ratio: number | null) => {
+    if (!ratio || ratio <= 0 || isNaN(ratio)) return null;
+    
+    const riskPart = 1;
+    const rewardPart = Math.min(Math.max(ratio, 0.5), 10);
+    const total = riskPart + rewardPart;
+    const riskPct = (riskPart / total) * 100;
+    const rewardPct = (rewardPart / total) * 100;
+    
+    return (
+      <div className="mt-3.5 bg-zinc-950/60 p-2.5 rounded-xl border border-zinc-900">
+        <div className="flex justify-between text-[9px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
+          <span>손절 리스크 (1.0x)</span>
+          <span>진입</span>
+          <span>목표 수익 ({ratio.toFixed(2)}x)</span>
+        </div>
+        <div className="relative h-2 rounded-full overflow-hidden flex bg-zinc-950">
+          <div className="h-full bg-gradient-to-r from-red-500/80 to-red-500" style={{ width: `${riskPct}%` }} />
+          <div className="w-[2px] bg-white h-full z-10" />
+          <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-500/80" style={{ width: `${rewardPct}%` }} />
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="flex flex-col gap-4">
-      {/* 순위 테이블 */}
-      <div className="bg-zinc-900 rounded-2xl border border-zinc-800 p-5 transition duration-200 hover:border-zinc-800/80">
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-xs text-zinc-400 uppercase tracking-widest">워치리스트 — Stage 2 스코어 순위</div>
+    <div className="flex flex-col gap-5 animate-fade-in">
+      
+      {/* Watchlist Table Card */}
+      <div className="glass-card rounded-2xl p-5 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
+        
+        <div className="flex items-center justify-between mb-4 border-b border-zinc-800/80 pb-3">
+          <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
+            워치리스트 &mdash; Stage 2 스코어 분석 순위
+          </div>
         </div>
 
         {watchlist.length > 0 ? (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr className="text-xs text-zinc-500 border-b border-zinc-800">
-                    <th className="text-left pb-3 pr-4">종목</th>
-                    <th className="text-right pb-3 pr-4">현재가</th>
-                    <th className="text-right pb-3 pr-4">Stage2</th>
-                    <th className="text-right pb-3 pr-4">RS</th>
-                    <th className="text-right pb-3 pr-4">52W고점</th>
-                    <th className="text-right pb-3 pr-4">피벗 진입가</th>
-                    <th className="text-right pb-3 pr-4">손절가</th>
-                    <th className="text-right pb-3 pr-4">목표가 (3R)</th>
-                    <th className="text-center pb-3">체크 (7)</th>
+                  <tr className="text-[10px] font-bold text-zinc-500 border-b border-zinc-800/60 uppercase tracking-wider">
+                    <th className="text-left pb-3 pr-4 font-bold">종목 (Ticker)</th>
+                    <th className="text-right pb-3 pr-4 font-bold">현재가</th>
+                    <th className="text-right pb-3 pr-4 font-bold">Stage 2 점수</th>
+                    <th className="text-right pb-3 pr-4 font-bold">RS 스코어</th>
+                    <th className="text-right pb-3 pr-4 font-bold">52W고점 이격</th>
+                    <th className="text-right pb-3 pr-4 font-bold">피벗 진입가</th>
+                    <th className="text-right pb-3 pr-4 font-bold">손절가</th>
+                    <th className="text-right pb-3 pr-4 font-bold">목표가 (3R)</th>
+                    <th className="text-center pb-3 font-bold">체크리스트 (7)</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-zinc-900/60">
                   {watchlist.map((item) => {
                     const isSelected = selectedWatch?.symbol === item.symbol;
                     return (
                       <tr
                         key={item.symbol}
                         onClick={() => setSelectedWatch(isSelected ? null : item)}
-                        className={`border-b border-zinc-800/50 cursor-pointer transition duration-150 ${
-                          isSelected ? 'bg-zinc-800/80' : 'hover:bg-zinc-850'
+                        className={`cursor-pointer transition-all duration-200 ${
+                          isSelected 
+                            ? 'bg-zinc-900/70 border-l-2 border-l-amber-500' 
+                            : 'hover:bg-zinc-900/40 hover:translate-x-0.5'
                         }`}
                       >
-                        <td className="py-3 pr-4 font-semibold">
-                          <span className={isSelected ? 'text-amber-300' : ''}>{item.symbol}</span>
-                          {isSelected && <span className="ml-1 text-xs text-amber-400">▼</span>}
+                        <td className="py-4 pr-4 font-bold">
+                          <span className={`px-2.5 py-1 rounded-lg border text-xs tracking-wider transition ${
+                            isSelected 
+                              ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' 
+                              : 'bg-zinc-900 border-zinc-800 text-zinc-200'
+                          }`}>
+                            {item.symbol}
+                          </span>
                         </td>
-                        <td className="text-right pr-4 text-zinc-200">${item.price.toFixed(2)}</td>
-                        <td className="text-right pr-4">
-                          <span className={`font-bold ${getScoreColor(item.score)}`}>{item.score}/7</span>
+                        <td className="text-right pr-4 font-semibold text-zinc-200 tabular-nums">
+                          ${item.price.toFixed(2)}
                         </td>
                         <td className="text-right pr-4">
+                          <span className={`font-bold px-2 py-0.5 rounded-full border text-xs ${getScoreBg(item.score)} ${getScoreColor(item.score)}`}>
+                            {item.score}/7
+                          </span>
+                        </td>
+                        <td className="text-right pr-4 font-semibold tabular-nums">
                           <span
                             className={
                               item.rs_score >= 60
@@ -94,7 +140,7 @@ export default function WatchlistTab() {
                             {item.rs_score.toFixed(0)}
                           </span>
                         </td>
-                        <td className="text-right pr-4">
+                        <td className="text-right pr-4 font-semibold tabular-nums">
                           <span
                             className={
                               item.pct_from_52w_high >= -10
@@ -107,15 +153,20 @@ export default function WatchlistTab() {
                             {item.pct_from_52w_high.toFixed(1)}%
                           </span>
                         </td>
-                        <td className="text-right pr-4 text-amber-400">${item.entry.toFixed(2)}</td>
-                        <td className="text-right pr-4 text-red-400">${item.stop.toFixed(2)}</td>
-                        <td className="text-right pr-4 text-blue-400">${item.target.toFixed(2)}</td>
+                        <td className="text-right pr-4 text-amber-400 font-bold tabular-nums">${item.entry.toFixed(2)}</td>
+                        <td className="text-right pr-4 text-red-400 font-semibold tabular-nums">${item.stop.toFixed(2)}</td>
+                        <td className="text-right pr-4 text-blue-400 font-semibold tabular-nums">${item.target.toFixed(2)}</td>
                         <td className="text-center">
-                          <div className="flex justify-center gap-0.5">
+                          <div className="flex justify-center items-center gap-1">
                             {(Object.values(item.checks) as boolean[]).map((v, i) => (
                               <div
                                 key={i}
-                                className={`w-2 h-2 rounded-full ${v ? 'bg-emerald-400' : 'bg-red-400/40'}`}
+                                className={`w-2.5 h-2.5 rounded-full border transition ${
+                                  v 
+                                    ? 'bg-emerald-500 border-emerald-400 glow-green' 
+                                    : 'bg-zinc-800 border-zinc-700/60'
+                                }`}
+                                title={`Check ${i+1}: ${v ? '통과' : '미달'}`}
                               />
                             ))}
                           </div>
@@ -126,14 +177,19 @@ export default function WatchlistTab() {
                 </tbody>
               </table>
             </div>
-            <div className="mt-4 text-xs text-zinc-600">* 행 클릭 → R:R 계산기 확장 · 다시 클릭하면 접힘</div>
+            <div className="mt-4 text-xs text-zinc-500 font-medium flex items-center gap-1.5">
+              <span className="w-1 h-1 rounded-full bg-zinc-600" />
+              <span>행 클릭 시 해당 종목의 R:R 계산기가 아래에 확장됩니다. 다시 클릭하면 닫힙니다.</span>
+            </div>
           </>
         ) : (
-          <div className="text-zinc-500 text-sm text-center py-12">데이터를 불러오지 못했습니다.</div>
+          <div className="text-zinc-500 text-sm text-center py-16">
+            분석 대상 종목의 데이터를 찾을 수 없습니다.
+          </div>
         )}
       </div>
 
-      {/* R:R 패널 — 행 선택 시 표시 */}
+      {/* R:R Panel - Expands on row click */}
       {selectedWatch && (() => {
         const item = selectedWatch;
         const atr = item.latest_atr;
@@ -162,27 +218,30 @@ export default function WatchlistTab() {
         const pvtR = calcW(pvtE, pvtS, pvtT);
 
         return (
-          <div className="bg-zinc-900 rounded-2xl border border-amber-500/25 p-5 animate-fadeIn">
+          <div className="glass-card rounded-2xl p-5 shadow-2xl border-l-[3px] border-l-amber-500 animate-slide-up glow-amber relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
+            
             {/* Header */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-5 border-b border-zinc-800/80 pb-3">
               <div className="flex items-center gap-3">
-                <span className="text-xl font-bold text-amber-300">{item.symbol}</span>
-                <span className="text-zinc-400 text-sm">R:R 계산기</span>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${getScoreBg(item.score)}`}>
-                  <span className={getScoreColor(item.score)}>Stage2 {item.score}/7</span>
+                <span className="text-xl font-black text-amber-300 tracking-tight">{item.symbol}</span>
+                <span className="text-zinc-400 text-xs font-bold uppercase tracking-wider">포지션 최적화 계산</span>
+                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${getScoreBg(item.score)} ${getScoreColor(item.score)}`}>
+                  Stage 2 score: {item.score}/7
                 </span>
               </div>
+              
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-xs text-zinc-400">
+                <div className="flex items-center gap-2.5 text-xs text-zinc-400 font-semibold flex-wrap">
                   <span>계좌</span>
                   <input
                     type="number"
                     value={rrAccount}
                     onChange={(e) => setRrAccount(e.target.value)}
                     step="1000"
-                    className="w-28 bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1 text-white focus:outline-none focus:border-zinc-500"
+                    className="w-24 bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1 text-white font-bold focus:outline-none focus:border-zinc-700 transition"
                   />
-                  <span>리스크%</span>
+                  <span>리스크 %</span>
                   <input
                     type="number"
                     value={rrRiskPct}
@@ -190,60 +249,60 @@ export default function WatchlistTab() {
                     step="0.5"
                     min="0.5"
                     max="5"
-                    className="w-16 bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1 text-white focus:outline-none focus:border-zinc-500"
+                    className="w-14 bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1 text-white font-bold focus:outline-none focus:border-zinc-700 transition"
                   />
-                  <span className="text-zinc-500">
-                    = 리스크{' '}
-                    <span className="text-zinc-300 font-semibold">
-                      ${(!isNaN(rrAccN) && !isNaN(rrRiskN) ? (rrAccN * rrRiskN) / 100 : 0).toFixed(0)}
+                  <span className="text-zinc-500 font-medium">
+                    = 리스크액:{' '}
+                    <span className="text-red-400 font-bold">
+                      ${(!isNaN(rrAccN) && !isNaN(rrRiskN) ? (rrAccN * rrRiskN) / 100 : 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </span>
                   </span>
                 </div>
+                
                 <button
                   onClick={() => {
                     setSymbol(item.symbol);
                     setTab('daily');
                   }}
-                  className="px-3 py-1.5 text-xs bg-zinc-700 hover:bg-zinc-600 rounded-lg text-zinc-200 transition"
+                  className="px-3 py-1.5 text-xs bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 rounded-lg text-zinc-300 font-bold transition duration-200 active:scale-95 cursor-pointer"
                 >
-                  일봉 분석 →
+                  일봉 분석 상세 →
                 </button>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
               {/* 시나리오 A */}
-              <div className="bg-zinc-800/60 rounded-xl border border-zinc-700 p-4">
+              <div className="bg-zinc-950/40 rounded-xl border border-zinc-900 p-4 transition hover:bg-zinc-950/60">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300">
+                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-400 tracking-wider">
                     시나리오 A
                   </span>
-                  <span className="text-xs text-zinc-300 font-medium">지금 바로 매수</span>
+                  <span className="text-xs text-zinc-200 font-bold">즉시 시장가 진입</span>
                 </div>
-                <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
-                  현재가 <span className="text-zinc-300">${nowE.toFixed(2)}</span>에 즉시 진입. 손절 2×ATR, 목표 3R.
-                  <br />
-                  <span className="text-amber-400/80">돌파 확인 없이 진입하므로 실패 시 손절 빈도 높음.</span>
+                <p className="text-[11px] text-zinc-400 mb-3.5 leading-relaxed font-medium">
+                  현재가 <span className="text-zinc-300 font-bold">${nowE.toFixed(2)}</span> 기준 시장가 매수. 손절 2ATR, 목표 수익 3R.
                 </p>
-                <div className="grid grid-cols-3 gap-2 text-xs mb-3">
-                  <div className="bg-zinc-900 rounded-lg p-2">
-                    <div className="text-zinc-500 mb-0.5">진입가</div>
-                    <div className="font-semibold text-blue-300">${nowE.toFixed(2)}</div>
+                <div className="grid grid-cols-3 gap-2 text-xs mb-4">
+                  <div className="bg-zinc-900/60 rounded-xl p-2.5 border border-zinc-900">
+                    <div className="text-[9px] font-bold text-zinc-500 mb-0.5">진입가</div>
+                    <div className="font-bold text-xs text-blue-300">${nowE.toFixed(2)}</div>
                   </div>
-                  <div className="bg-zinc-900 rounded-lg p-2">
-                    <div className="text-zinc-500 mb-0.5">손절가</div>
-                    <div className="font-semibold text-red-400">${nowS.toFixed(2)}</div>
+                  <div className="bg-zinc-900/60 rounded-xl p-2.5 border border-zinc-900">
+                    <div className="text-[9px] font-bold text-zinc-500 mb-0.5">손절가</div>
+                    <div className="font-bold text-xs text-red-400">${nowS.toFixed(2)}</div>
                   </div>
-                  <div className="bg-zinc-900 rounded-lg p-2">
-                    <div className="text-zinc-500 mb-0.5">목표가</div>
-                    <div className="font-semibold text-emerald-400">${nowT.toFixed(2)}</div>
+                  <div className="bg-zinc-900/60 rounded-xl p-2.5 border border-zinc-900">
+                    <div className="text-[9px] font-bold text-zinc-500 mb-0.5">목표가</div>
+                    <div className="font-bold text-xs text-emerald-400">${nowT.toFixed(2)}</div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-zinc-900 rounded-lg p-2">
-                    <div className="text-zinc-500 mb-0.5">R:R 비율</div>
+                <div className="grid grid-cols-2 gap-2.5 text-xs">
+                  <div className="bg-zinc-900/60 rounded-xl p-2.5 border border-zinc-900">
+                    <div className="text-[9px] font-bold text-zinc-500 mb-0.5">R:R 비율</div>
                     <div
-                      className={`font-bold text-base ${
+                      className={`font-bold text-sm ${
                         nowR.ratio && nowR.ratio >= 2
                           ? 'text-emerald-400'
                           : nowR.ratio
@@ -254,61 +313,60 @@ export default function WatchlistTab() {
                       {nowR.ratio ? `1 : ${nowR.ratio.toFixed(2)}` : '—'}
                     </div>
                   </div>
-                  <div className="bg-zinc-900 rounded-lg p-2">
-                    <div className="text-zinc-500 mb-0.5">매수 수량</div>
-                    <div className="font-bold text-base text-blue-400">
+                  <div className="bg-zinc-900/60 rounded-xl p-2.5 border border-zinc-900">
+                    <div className="text-[9px] font-bold text-zinc-500 mb-0.5">권장 수량</div>
+                    <div className="font-bold text-sm text-blue-400">
                       {nowR.shares != null ? nowR.shares.toLocaleString() : '—'} 주
                     </div>
                   </div>
-                  <div className="bg-zinc-900 rounded-lg p-2">
-                    <div className="text-zinc-500 mb-0.5">포지션 규모</div>
-                    <div className="font-bold text-base text-zinc-200">
+                  <div className="bg-zinc-900/60 rounded-xl p-2.5 border border-zinc-900">
+                    <div className="text-[9px] font-bold text-zinc-500 mb-0.5">포지션 규모</div>
+                    <div className="font-bold text-sm text-zinc-300">
                       {nowR.posSize
                         ? `$${nowR.posSize.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
                         : '—'}
                     </div>
                   </div>
-                  <div className="bg-zinc-905 rounded-lg p-2">
-                    <div className="text-zinc-500 mb-0.5">예상 수익</div>
-                    <div className="font-bold text-base text-emerald-400">
+                  <div className="bg-zinc-900/60 rounded-xl p-2.5 border border-zinc-900">
+                    <div className="text-[9px] font-bold text-zinc-500 mb-0.5">목표 수익</div>
+                    <div className="font-bold text-sm text-emerald-400">
                       {nowR.profit ? `+$${nowR.profit.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'}
                     </div>
                   </div>
                 </div>
+                {renderRRBar(nowR.ratio)}
               </div>
 
               {/* 시나리오 B */}
-              <div className="bg-zinc-800/60 rounded-xl border border-amber-500/25 p-4">
+              <div className="bg-zinc-950/40 rounded-xl border border-amber-500/10 p-4 transition hover:bg-zinc-950/60">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300">
+                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 tracking-wider">
                     시나리오 B
                   </span>
-                  <span className="text-xs text-zinc-300 font-medium">피벗 돌파 후 진입 (권장)</span>
+                  <span className="text-xs text-zinc-200 font-bold">피벗 돌파 매수 (권장)</span>
                 </div>
-                <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
-                  20일 고점 <span className="text-zinc-300">${item.pivot_high.toFixed(2)}</span> +0.5% 돌파 시 매수 주문.
-                  <br />
-                  <span className="text-emerald-400/80">모멘텀·거래량 확인 후 진입 → 성공률·R:R 모두 유리.</span>
+                <p className="text-[11px] text-zinc-400 mb-3.5 leading-relaxed font-medium">
+                  20일 최고가 <span className="text-zinc-300 font-bold">${item.pivot_high.toFixed(2)}</span> +0.5% 돌파 시 자동매수 진입.
                 </p>
-                <div className="grid grid-cols-3 gap-2 text-xs mb-3">
-                  <div className="bg-zinc-900 rounded-lg p-2">
-                    <div className="text-zinc-500 mb-0.5">진입가 (피벗)</div>
-                    <div className="font-semibold text-amber-300">${pvtE.toFixed(2)}</div>
+                <div className="grid grid-cols-3 gap-2 text-xs mb-4">
+                  <div className="bg-zinc-900/60 rounded-xl p-2.5 border border-zinc-900">
+                    <div className="text-[9px] font-bold text-zinc-500 mb-0.5">진입가 (피벗)</div>
+                    <div className="font-bold text-xs text-amber-300">${pvtE.toFixed(2)}</div>
                   </div>
-                  <div className="bg-zinc-900 rounded-lg p-2">
-                    <div className="text-zinc-500 mb-0.5">손절가</div>
-                    <div className="font-semibold text-red-400">${pvtS.toFixed(2)}</div>
+                  <div className="bg-zinc-900/60 rounded-xl p-2.5 border border-zinc-900">
+                    <div className="text-[9px] font-bold text-zinc-500 mb-0.5">손절가</div>
+                    <div className="font-bold text-xs text-red-400">${pvtS.toFixed(2)}</div>
                   </div>
-                  <div className="bg-zinc-900 rounded-lg p-2">
-                    <div className="text-zinc-500 mb-0.5">목표가 (3R)</div>
-                    <div className="font-semibold text-emerald-400">${pvtT.toFixed(2)}</div>
+                  <div className="bg-zinc-900/60 rounded-xl p-2.5 border border-zinc-900">
+                    <div className="text-[9px] font-bold text-zinc-500 mb-0.5">목표가 (3R)</div>
+                    <div className="font-bold text-xs text-emerald-400">${pvtT.toFixed(2)}</div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-zinc-900 rounded-lg p-2">
-                    <div className="text-zinc-500 mb-0.5">R:R 비율</div>
+                <div className="grid grid-cols-2 gap-2.5 text-xs">
+                  <div className="bg-zinc-900/60 rounded-xl p-2.5 border border-zinc-900">
+                    <div className="text-[9px] font-bold text-zinc-500 mb-0.5">R:R 비율</div>
                     <div
-                      className={`font-bold text-base ${
+                      className={`font-bold text-sm ${
                         pvtR.ratio && pvtR.ratio >= 2
                           ? 'text-emerald-400'
                           : pvtR.ratio
@@ -319,27 +377,28 @@ export default function WatchlistTab() {
                       {pvtR.ratio ? `1 : ${pvtR.ratio.toFixed(2)}` : '—'}
                     </div>
                   </div>
-                  <div className="bg-zinc-900 rounded-lg p-2">
-                    <div className="text-zinc-500 mb-0.5">매수 수량</div>
-                    <div className="font-bold text-base text-amber-400">
+                  <div className="bg-zinc-900/60 rounded-xl p-2.5 border border-zinc-900">
+                    <div className="text-[9px] font-bold text-zinc-500 mb-0.5">권장 수량</div>
+                    <div className="font-bold text-sm text-amber-400">
                       {pvtR.shares != null ? pvtR.shares.toLocaleString() : '—'} 주
                     </div>
                   </div>
-                  <div className="bg-zinc-900 rounded-lg p-2">
-                    <div className="text-zinc-500 mb-0.5">포지션 규모</div>
-                    <div className="font-bold text-base text-zinc-200">
+                  <div className="bg-zinc-900/60 rounded-xl p-2.5 border border-zinc-900">
+                    <div className="text-[9px] font-bold text-zinc-500 mb-0.5">포지션 규모</div>
+                    <div className="font-bold text-sm text-zinc-300">
                       {pvtR.posSize
                         ? `$${pvtR.posSize.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
                         : '—'}
                     </div>
                   </div>
-                  <div className="bg-zinc-900 rounded-lg p-2">
-                    <div className="text-zinc-500 mb-0.5">예상 수익</div>
-                    <div className="font-bold text-base text-emerald-400">
+                  <div className="bg-zinc-900/60 rounded-xl p-2.5 border border-zinc-900">
+                    <div className="text-[9px] font-bold text-zinc-500 mb-0.5">목표 수익</div>
+                    <div className="font-bold text-sm text-emerald-400">
                       {pvtR.profit ? `+$${pvtR.profit.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'}
                     </div>
                   </div>
                 </div>
+                {renderRRBar(pvtR.ratio)}
               </div>
             </div>
           </div>
