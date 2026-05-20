@@ -24,3 +24,8 @@ frontend/out/
 # OS
 .DS_Store
 Thumbs.db
+
+# Agent Metadata
+.antigravitycli/
+.pytest_cache/
+

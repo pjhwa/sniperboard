@@ -3,7 +3,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: lazy-alpha-backend
+    image: sniperboard-backend:latest
+    container_name: sniperboard-backend
     ports:
       - "5000:8000"
     restart: unless-stopped
@@ -13,8 +14,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://192.168.1.100:5000
-    container_name: lazy-alpha-frontend
+        NEXT_PUBLIC_API_URL: http://172.16.8.250:5000
+    image: sniperboard-frontend:latest
+    container_name: sniperboard-frontend
     ports:
       - "4000:3000"
     depends_on:

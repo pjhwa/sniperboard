@@ -125,35 +125,38 @@ Stage 2 분석 결과에서 ATR을 기반으로 자동 계산됩니다.
 
 ### 요구사항
 
-- [Docker](https://docs.docker.com/get-docker/) & Docker Compose
+- [Docker](https://docs.docker.com/get-docker/) & Docker Compose (v2)
 - Git
 
-### 1. 클론
+### 1. 클론 및 이동
 
 ```bash
 git clone https://github.com/pjhwa/sniperboard.git
 cd sniperboard
 ```
 
-### 2. 환경 변수 설정 (선택)
+### 2. 스크립트를 통한 간편 실행 (권장)
+
+프로젝트 루트에 포함된 `run_docker.sh` 스크립트를 실행하면 기존 컨테이너 클린업, 이미지 빌드 및 백그라운드 구동이 자동으로 이루어집니다.
 
 ```bash
-# docker-compose.yml 의 NEXT_PUBLIC_API_URL 을 서버 IP에 맞게 수정
-# 기본값: http://192.168.1.100:5000
+./run_docker.sh
 ```
 
-### 3. 실행
+### 3. 수동 실행
+
+직접 Docker Compose 명령어로 구동할 수도 있습니다.
 
 ```bash
 docker compose up --build -d
 ```
 
-| 서비스 | URL |
-|--------|-----|
-| 대시보드 | http://localhost:4000 |
-| API 문서 | http://localhost:5000/docs |
+| 서비스 | 호스트 포트 | 컨테이너 포트 | URL |
+|--------|-------------|---------------|-----|
+| **대시보드 Frontend** | 4000 | 3000 | [http://localhost:4000](http://localhost:4000) |
+| **API Backend** | 5000 | 8000 | [http://localhost:5000/docs](http://localhost:5000/docs) |
 
-> **참고**: 워치리스트 첫 로딩은 6종목 2년치 데이터를 일괄 다운로드하므로 1~2분 소요됩니다.
+> **참고**: 워치리스트 첫 로딩은 6종목 2년치 데이터를 일괄 다운로드하므로 1~2분 소요될 수 있습니다.
 
 ---
 
