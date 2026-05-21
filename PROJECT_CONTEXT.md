@@ -1,142 +1,305 @@
-# SniperBoard - 프로젝트 컨텍스트 문서
+# SniperBoard — Project Context (AUTO-GENERATED 2026-05-21)
 
-## 1. 프로젝트 개요
-- **목표**: Whop의 Lazy Alpha Indicator를 웹 대시보드 형태로 재구현
-- **방향**: TradingView 느낌을 살린 고성능 스윙 트레이딩 대시보드
-- **현재 범위**: 미국 주식 중심 (Mag7 + 주요 종목), 한국 주식은 추후 추가
-- **버전**: 오픈 버전 (무료 공개, 구독/로그인 없음)
-- **주요 타임프레임**: 5분봉/1분봉 (단기) + 일봉 (스윙 분석)
+## 0. 이 문서의 목적
+
+AI가 이 프로젝트를 즉시 파악할 수 있도록 전체 코드베이스를 분석하여 작성한 컨텍스트 문서입니다.
+코드를 수정할 때 이 문서를 먼저 읽으면 구조와 로직을 빠르게 파악할 수 있습니다.
 
 ---
 
-## 2. 핵심 신호 및 분석 알고리즘 (6개 단기 신호 + Stage 2)
+## 1. 프로젝트 한 줄 요약
 
-### 2.1 VCP 타점 (돌파 진입)
-- 최근 30캔들 최고가 갱신
-- 거래량 ≥ 20일 평균 × 2.0
-- 가격 > 21EMA
-- ATR 변동성 8캔들 연속 축소 (벡터 연산 최적화)
-- 21EMA > 50EMA
-
-### 2.2 Sniper 타점 (EMA 지지 반등)
-- 21EMA에 0.4% 이내 접근
-- RSI 38~58 구간
-- 종가 > 21EMA
-- 거래량 ≥ 직전 캔들 × 1.4
-
-### 2.3 Pullback (지지 매수)
-- 최근 15캔들 고점 대비 4.5~9% 조정
-- 21EMA 또는 50EMA 지지
-- MACD 히스토그램 3캔들 상승 전환 (벡터 연산 최적화)
-- 거래량 감소
-
-### 2.4 StrongTrend (홀딩 유지)
-- 가격 > 21EMA > 50EMA
-- 21EMA 기울기 +0.15% 이상
-- RSI 52~78
-- 거래량 ≥ 20일 평균 × 0.9
-
-### 2.5 Overbought (분할 익절)
-- RSI ≥ 76
-- 최근 5캔들 중 4캔들 이상 양봉
-- 21EMA 이격률 +3.2% 이상
-- 거래량 감소 조짐
-
-### 2.6 Downtrend (접근 금지)
-- 가격 < 21EMA
-- 21EMA 기울기 음수
-- 거래량 ≥ 20일 평균 × 1.3
-- 최근 8캔들 저점 이탈
-
-### 2.7 Minervini Stage 2 분석 및 가우시안 채널
-- **이평 정배열**: 가격 > EMA21 > EMA50 > EMA200
-- **장기 추세**: EMA200이 20일 이상 연속 상승 중
-- **52주 가격 밴드**: 고점 대비 -25% 이내, 저점 대비 +30% 이상
-- **가우시안 채널**: 통계 노이즈가 필터링된 추세 채널 돌파 및 리테스트 판단
+**SniperBoard**는 Livermore · O'Neil · Minervini 방법론에 기반한 미국 주식 트레이딩 신호 대시보드입니다.
+FastAPI(Python) 백엔드가 yfinance로 시세를 가져와 신호를 계산하고, Next.js 프론트엔드가 4개 탭으로 시각화합니다.
 
 ---
 
-## 3. 기술 스택 (최종 확정 및 리팩토링 완료)
-
-### Frontend
-- **Core**: Next.js 16 (App Router, Turbopack) + TypeScript + Tailwind CSS
-- **State Management**: **Zustand** (클라이언트 전역 상태 및 리스크 설정 바인딩)
-- **Server Cache**: **@tanstack/react-query** (REST API 통신 및 30초 캐시 무효화/폴링 관리)
-- **Charts**: TradingView Lightweight Charts (반응형 Resize 및 메모리 정리 대응)
-
-### Backend
-- **Core**: FastAPI (Python)
-- **Validation**: **Pydantic v2 schemas** (엄격한 입출력 타입 및 JSON 직렬화 검증)
-- **Signal Engine**: pandas (벡터화 성능 개선 및 SettingWithCopyWarning 제거)
-- **Data Provider**: `yfinance` 기반 다중 데이터 획득 모듈 (`BaseDataService` 추상화)
-- **Testing**: **pytest** (신호 엔진, Gaussian Channel, Stage 2 스코어 자동 유닛 테스트)
-
----
-
-## 4. 시스템 아키텍처
-
-```
-[ 브라우저 (Next.js Client) ]
-      │
-      ├── (Zustand Global Store - 계좌규모, 리스크% 등)
-      │
-      ▼ (React Query API fetch & Cache 관리)
-[ FastAPI Backend (Port 5000) ]
-      │
-      ├── /api/ohlcv          (단기 캔들 + 6대 신호 + 보조 지표)
-      ├── /api/latest-signal  (최신 캔들 기준 간략 상태 요약)
-      ├── /api/daily          (일봉 + EMA 3종 + Gaussian + Stage2 스코어)
-      ├── /api/watchlist      (주요 6종목 Stage2 일괄 스캔 순위)
-      │
-      ▼ (Pydantic schemas 데이터 규격 매핑)
-[ Signal Engine & Data Layer ]
-      │
-      └── YFinanceDataService (BaseDataService 상속, 멀티스레드 멀티인덱스 복구)
-```
-
----
-
-## 5. 프로젝트 디렉토리 구조 및 파일 위치
-
-*디렉토리 이름은 기존 `xfetch`에서 `sniperboard`로 변경될 예정입니다.*
+## 2. 디렉토리 구조 (전체)
 
 ```
 sniperboard/
-├── run_docker.sh          # 도커 빌드/재구동 통합 실행 스크립트
-├── docker-compose.yml     # sniperboard 이미지/컨테이너(Frontend:4000, Backend:5000) 정의
 ├── backend/
-│   ├── Dockerfile         # Python 3.11-slim 기반 API 빌드 환경
-│   ├── requirements.txt   # FastAPI, yfinance, pandas, pytest 등 정의
-│   ├── main.py            # FastAPI Entrypoint 및 CORS 미들웨어 설정
+│   ├── main.py                   # FastAPI 앱 진입점 (앱명: "Lazy Alpha Signal API"), CORS allow_origins=["*"]
+│   ├── requirements.txt          # fastapi, uvicorn, yfinance, pandas, python-dotenv, pytest
+│   ├── Dockerfile
 │   ├── api/
-│   │   ├── endpoints.py   # API 라우팅 엔드포인트 구현 (Pydantic 모델 적용)
-│   │   └── schemas.py     # 입출력 데이터 검증 스키마
+│   │   ├── endpoints.py          # 7개 REST 엔드포인트 (APIRouter prefix=/api)
+│   │   └── schemas.py            # Pydantic v2 요청/응답 모델 전체
 │   ├── core/
-│   │   └── signal_engine.py # 판다스 최적화 신호/지표 계산 엔진
+│   │   ├── signal_engine.py      # 핵심: 모든 기술적 지표·신호 계산 (700+ lines)
+│   │   ├── regime_engine.py      # Risk Regime 5요소 종합 점수 (0~100)
+│   │   └── distribution_day.py   # O'Neil Distribution Day 카운트 (25거래일 기준)
 │   ├── services/
-│   │   ├── base.py        # BaseDataService 인터페이스 선언
-│   │   └── data_service.py # YFinanceDataService 구현체
+│   │   ├── base.py               # BaseDataService 추상 클래스
+│   │   └── data_service.py       # YFinanceDataService 구현체 + 모듈 레벨 헬퍼 함수
 │   └── tests/
-│       └── test_signal_engine.py # pytest 엔진 기능 검증 테스트
-└── frontend/
-    ├── Dockerfile         # Node 20-alpine 기반 Next.js 빌드 환경 (멀티스테이지)
-    ├── app/
-    │   ├── layout.tsx     # 폰트, 메타데이터, Providers 주입
-    │   ├── page.tsx       # 메인 대시보드 구조 및 컴포넌트 결합
-    │   ├── providers.tsx  # React Query Client Context
-    │   └── types.ts       # 전역 금융 데이터 타입 명세
-    ├── hooks/
-    │   ├── useStore.ts    # Zustand 글로벌 스토어 (공유 설정)
-    │   ├── useIntraday.ts # 단기 분석 조회용 훅
-    │   ├── useDaily.ts    # 일봉 분석 조회용 훅
-    │   └── useWatchlist.ts # 워치리스트 조회용 훅
-    └── components/
-        ├── StatCard.tsx   # 수치 모니터링 카드
-        ├── RRCalculator.tsx # 손익비(R:R) 및 포지션 크기 계산기
-        ├── IntradayTab.tsx  # 단기 분석 탭 통합 뷰
-        ├── DailyTab.tsx     # 일봉 분석 탭 통합 뷰
-        ├── WatchlistTab.tsx # 워치리스트 탭 통합 뷰
-        └── charts/
-            ├── IntradayChart.tsx # 단기 캔들/EMA/시그널 마커 차트
-            └── DailyChart.tsx    # 일봉 캔들/EMA/Gaussian/Entry 차트
+│       └── test_signal_engine.py
+├── frontend/
+│   ├── package.json              # Next.js 16.2.6, React 19.2.4, TanStack Query 5, Zustand 5, lightweight-charts 4.2.3, Tailwind v4
+│   ├── next.config.ts
+│   ├── Dockerfile                # 빌드 arg: NEXT_PUBLIC_API_URL
+│   ├── app/
+│   │   ├── layout.tsx            # 루트 레이아웃 + QueryClientProvider
+│   │   ├── page.tsx              # 메인 SniperBoard 컴포넌트 (탭 전환, 헤더, 새로고침)
+│   │   ├── providers.tsx         # QueryClientProvider 래퍼
+│   │   ├── types.ts              # 모든 TypeScript 타입 정의 + 메타데이터 상수
+│   │   └── globals.css           # CSS 변수, glass-card, animate-*, 테마 색상
+│   ├── components/
+│   │   ├── DashboardOverview.tsx # 항상 상단 고정: Regime + DD + 지수 + VIX + Breadth + Credit
+│   │   ├── IntradayTab.tsx       # 단기 탭: 차트 + 6신호 + RSI 게이지
+│   │   ├── DailyTab.tsx          # 일봉 탭: 차트 + Stage2 + GC분석 + 시장구조 + RR계산기
+│   │   ├── WatchlistTab.tsx      # 워치리스트: Stage2 스코어 정렬 테이블
+│   │   ├── MacroTab.tsx          # 매크로: 섹터 로테이션 바 + 21개 심볼 그룹 카드
+│   │   ├── RRCalculator.tsx      # Risk/Reward 계산기 (진입·손절·목표가·포지션 크기)
+│   │   ├── StatCard.tsx          # 범용 통계 카드
+│   │   └── charts/
+│   │       ├── IntradayChart.tsx  # lightweight-charts 캔들차트 (단기)
+│   │       └── DailyChart.tsx    # lightweight-charts 캔들차트 (일봉 + GC 채널)
+│   └── hooks/
+│       ├── useStore.ts           # Zustand: symbol(기본 TSLA), timeframe(5m), tab(intraday), rrAccount, rrRiskPct
+│       ├── useIntraday.ts        # GET /api/ohlcv + /api/latest-signal (30초 폴링)
+│       ├── useDaily.ts           # GET /api/daily
+│       ├── useWatchlist.ts       # GET /api/watchlist
+│       ├── useMacro.ts           # GET /api/macro
+│       ├── useRegime.ts          # GET /api/regime
+│       └── useDistributionDays.ts # GET /api/distribution-days
+├── docker-compose.yml            # backend 8000→5000, frontend 3000→4000
+└── docs/
+    ├── claude-code-brief.md
+    └── sniperboard-integration-plan.md
 ```
+
+---
+
+## 3. 백엔드 API 엔드포인트 (`backend/api/endpoints.py`)
+
+베이스 URL: `http://<host>:5000/api`
+
+| 경로 | 파라미터 | 반환 |
+|------|----------|------|
+| `GET /ohlcv` | `symbol`, `tf`(기본 5m) | OHLCV 캔들 + 6개 신호 불리언 배열 + ema21/50/rsi/atr |
+| `GET /latest-signal` | `symbol`, `tf`(기본 5m) | 최신 캔들 신호 요약 (active_signals, 가격/RSI/EMA) |
+| `GET /daily` | `symbol` | 252봉 일봉 + EMA8/21/50/200/ATR14/GC + Stage2 전체 |
+| `GET /macro` | — | 21개 매크로 심볼: 가격·1D/5D변화율·EMA8/21·시장구조·RSI14 |
+| `GET /watchlist` | — | WATCHLIST_SYMS 6종목 Stage2 점수 내림차순 |
+| `GET /regime` | — | Risk Regime 5요소 점수 + 종합 regime 문자열 |
+| `GET /distribution-days` | — | SPY·QQQ DD count/level/dates |
+
+---
+
+## 4. 핵심 비즈니스 로직
+
+### 4-1. 단기 지표 (`signal_engine.py: add_indicators`)
+
+intraday용: EMA21, EMA50, RSI(14), ATR(14), MACD 히스토그램, vol_avg20
+
+### 4-2. 단기 신호 6종 (`signal_engine.py: calculate_signals`)
+
+| 신호 | 핵심 조건 | 액션 |
+|------|-----------|------|
+| **VCP** | 30봉 신고가 + 거래량≥평균×2 + EMA21>50 + ATR 8봉 연속 수축 | 돌파 진입 |
+| **Sniper** | EMA21 0.4% 이내 + RSI 38~58 + 가격>EMA21 + 거래량≥전봉×1.4 | 진입 |
+| **Pullback** | 15봉 고점 대비 4.5~9% 조정 + EMA 근접 + MACD 3봉 반등 + 거래량 감소 | 눌림 진입 |
+| **StrongTrend** | 가격>EMA21>EMA50 + EMA21 기울기 +0.15% + RSI 52~78 + 거래량≥평균×0.9 | 홀딩 |
+| **Overbought** | RSI≥76 + 5봉 중 4양봉 + EMA21 이격 +3.2% + 거래량 감소 | 분할 익절 |
+| **Downtrend** | 가격<EMA21 + EMA21 음기울기 + 거래량≥평균×1.3 + 8봉 신저가 | 접근 금지 |
+
+### 4-3. 일봉 지표 (`signal_engine.py: add_daily_indicators`)
+
+EMA8, EMA21, EMA50, EMA200, RSI14, ATR14, vol_avg20, Gaussian Channel(period=100, mult=1.5)
+
+### 4-4. 가우시안 채널 (`signal_engine.py: gaussian_channel`)
+
+- 인과 가우시안 커널 가중 이동평균 (look-ahead bias 없음)
+- center = (gc_high + gc_low) / 2, upper/lower = center ± half*mult
+- 상태: gc_above, gc_below, gc_breakout(당일 돌파), gc_retest(3% 이내 리테스트)
+
+### 4-5. Stage2 분석 (`signal_engine.py: calculate_stage2_analysis`)
+
+Minervini 7개 체크리스트 (score 0~7):
+1. `price_above_emas`: 가격 > EMA21 > EMA50 > EMA200
+2. `ema200_rising`: EMA200 20일 기울기 > 0
+3. `near_52w_high`: 52주 고점 대비 >= -25%
+4. `above_52w_low`: 52주 저점 대비 >= +30%
+5. `pullback_shallow`: 20일 고점 대비 조정 <= 15%
+6. `rs_strong`: RS Score >= 50 (63일 수익률 vs SPY)
+7. `volume_contracting`: 최근 5일 평균 < 20일 평균
+
+추가 계산:
+- 진입가 = 20일 고점 × 1.005
+- 손절가 = 진입가 - 2 × ATR14
+- 목표가 = 진입가 + 3 × (진입가 - 손절가)
+- rs_score 공식: min(100, max(0, 50 + (stock_63d_ret - spy_63d_ret) × 2))
+- breadth_narrow: SPY가 20일 신고가인데 RSP가 아닐 때 True
+
+추가 패턴 감지:
+- `market_structure` (UPTREND/DOWNTREND/DISTRIBUTION/ACCUMULATION/NEUTRAL): `detect_market_structure()`
+- `rsi_divergence_bearish/bullish`: `detect_rsi_divergence()` — 최근 40봉 스윙 포인트 비교
+- `bear_flag`: `detect_bear_flag()` — 5%+ 급락 후 거래량 감소 횡보
+
+### 4-6. Risk Regime (`regime_engine.py: compute_regime`)
+
+5요소 각 0~20점, 유효 컴포넌트 3개 이상일 때만 계산:
+- **Trend**: SPY vs EMA200 이격률 → [−5%, +10%] 구간 선형 매핑
+- **Breadth**: RSP−SPY 60일 상대성과 → [−5%, +3%] 구간
+- **Credit**: HYG/IEF 비율 30일 변화율 → [−2%, +1%] 구간
+- **Volatility**: ^VIX → [30, 14] 구간 (invert=True)
+- **Momentum**: SPY 20일 RoC → [−5%, +5%] 구간
+
+총점 = sum(valid) / len(valid) × 5 → RISK_ON(≥80) / CONSTRUCTIVE(≥60) / MIXED(≥40) / DEFENSIVE(≥20) / RISK_OFF(<20)
+
+### 4-7. Distribution Day (`distribution_day.py: count_distribution_days`)
+
+최근 25거래일: (종가변화율 ≤ -0.2%) AND (거래량 > 전일) 인 날 수
+OK(<4) / WARNING(4~5) / DANGER(≥6)
+
+---
+
+## 5. 프론트엔드 아키텍처
+
+### 5-1. 전역 상태 (`hooks/useStore.ts` — Zustand)
+
+| 상태 | 기본값 | 설명 |
+|------|--------|------|
+| `symbol` | `'TSLA'` | 선택된 종목 |
+| `timeframe` | `'5m'` | 단기 타임프레임 |
+| `tab` | `'intraday'` | 현재 탭 |
+| `rrAccount` | `'100000'` | RR 계산기 계좌 크기 |
+| `rrRiskPct` | `'1'` | RR 계산기 리스크 % |
+
+### 5-2. API 훅 (TanStack Query v5)
+
+- `useIntraday(symbol, timeframe)`: `/ohlcv` + `/latest-signal` 동시 조회, 30초 폴링
+- `useDaily(symbol)`: `/daily`
+- `useWatchlist()`: `/watchlist`
+- `useMacro()`: `/macro`
+- `useRegime()`: `/regime`
+- `useDistributionDays()`: `/distribution-days`
+
+### 5-3. 타입 정의 (`app/types.ts`) — 중요 상수
+
+```typescript
+export const SYMBOLS = ['TSLA', 'AAPL', 'NVDA', 'META', 'AMZN', 'GOOGL'];
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://172.16.8.250:5000';
+export const SIGNAL_META = { sniper, vcp, pullback, strong_trend, overbought, downtrend }; // 색상·설명·액션
+export const STAGE2_META = { price_above_emas, ema200_rising, ... };
+export const REGIME_META = { RISK_ON, CONSTRUCTIVE, MIXED, DEFENSIVE, RISK_OFF, UNKNOWN };
+export const DD_META = { OK, WARNING, DANGER };
+```
+
+### 5-4. UI 시스템 (`app/globals.css`)
+
+- 배경: `#07091a` + radial-gradient 인디고 조명
+- CSS 변수: `--text-primary`, `--text-secondary`, `--text-label`, `--text-muted`
+- 클래스: `glass-card` (글래스모피즘), `animate-fade-in`, `animate-slide-up`, `animate-spin-slow`
+- 색상 글로우: `glow-blue`, `glow-red`, `glow-purple`
+- 탭 활성: `segment-tab-active`
+
+### 5-5. 차트 (`components/charts/`)
+
+- **lightweight-charts v4** 기반
+- `IntradayChart`: 캔들 + 볼륨 + EMA21(황색)/EMA50(인디고) + 신호 마커(▲▼)
+- `DailyChart`: 캔들 + 볼륨 + EMA8(에메랄드)/21(황색)/50(인디고)/200(로즈) + GC 채널(보라 점선) + Entry Pivot 라인
+
+### 5-6. DashboardOverview 구성 (항상 상단 표시)
+
+| 섹션 | 데이터 소스 | 내용 |
+|------|------------|------|
+| RegimeCard | `useRegime` | 5요소 바 + 총점 + regime 라벨 |
+| DDCard (SPY·QQQ) | `useDistributionDays` | DD 카운트 + 도트 시각화 |
+| IndexSnapshot | `useMacro` | SPY·QQQ·IWM·DXY·GLD 가격·1D/5D |
+| VIXPanel | `useMacro` | ^VIX + ^VIX9D + ^VVIX + 백워데이션 감지 |
+| BreadthPanel | `useMacro` | SPY/QQQ/RSP/MAGS/IWM 가로 바 + 협소 랠리 경고 |
+| CreditPanel | `useMacro` | HYG·JNK·LQD·IEF + 스트레스 레벨 |
+
+---
+
+## 6. 데이터 흐름
+
+```
+yfinance (외부 API, 15분 지연, 무료)
+    ↓ YFinanceDataService.get_ohlcv(symbol, tf, period="5d")
+    ↓ YFinanceDataService.get_multi_daily(symbols, period="2y"|"3mo"|"1y")
+    ↓ signal_engine / regime_engine / distribution_day
+FastAPI (port 8000 내부 / 5000 외부 Docker)
+    ↓ JSON (Pydantic 직렬화)
+TanStack Query 훅 (React 컴포넌트 트리)
+    ↓ props / Zustand 상태
+lightweight-charts + Tailwind 카드 UI
+```
+
+---
+
+## 7. 환경 및 실행
+
+### Docker Compose (권장)
+```bash
+docker-compose up -d
+# 백엔드: http://localhost:5000  (API docs: /docs)
+# 프론트엔드: http://localhost:4000
+```
+
+### 로컬 개발
+```bash
+# 백엔드 (port 8000)
+cd backend && pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+
+# 프론트엔드
+cd frontend && npm install
+NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
+```
+
+### 주요 환경변수
+- `NEXT_PUBLIC_API_URL`: 빌드 시 번들됨. docker-compose에서 `http://172.16.8.250:5000` 하드코딩.
+  변경 시 반드시 **재빌드** 필요.
+
+---
+
+## 8. 고정 심볼 목록
+
+### 워치리스트 (`endpoints.py: WATCHLIST_SYMS`)
+`["TSLA", "AAPL", "NVDA", "META", "AMZN", "GOOGL"]`
+
+### 매크로 심볼 (`endpoints.py: MACRO_SYMBOLS`) — 21종
+| 카테고리 | 심볼 |
+|----------|------|
+| 달러·금리·채권·원자재 | DX-Y.NYB, ^TNX, TLT, CL=F, GLD |
+| 주요 지수 | SPY, QQQ |
+| 변동성 | ^VIX, ^VVIX, ^VIX9D |
+| 신용 스트레스 | HYG, JNK, LQD, IEF |
+| 시장 폭 | RSP, MAGS, IWM |
+| 섹터 ETF | SMH, XLE, XLY, XHB, ITA |
+
+### Regime 계산용 심볼 (`endpoints.py: /regime`)
+`['SPY', 'RSP', 'HYG', 'IEF', '^VIX']`
+
+---
+
+## 9. 알려진 제약사항 및 주의점
+
+| 항목 | 내용 |
+|------|------|
+| 데이터 지연 | yfinance 무료 API → 15분 지연 데이터 |
+| Intraday 기간 | yfinance 제한: 최근 5일치만 조회 가능 |
+| 일봉 로드 시간 | 첫 요청 약 30초 (2년치 다운로드 + 지표 계산) |
+| CORS | 개발용 `allow_origins=["*"]` — 운영 시 변경 필요 |
+| API_BASE 재빌드 | `NEXT_PUBLIC_API_URL`은 빌드 시 번들되므로 런타임 변경 불가 |
+| 매크로 데이터 | 시장 마감 후에는 당일 데이터 미갱신 |
+| yfinance MultiIndex | 멀티 종목 다운로드 시 컬럼 구조 주의 (`data_service.py` 참고) |
+
+---
+
+## 10. 코드 수정 시 참고 지점
+
+| 수정 대상 | 파일 위치 |
+|-----------|-----------|
+| 신호 조건 변경 | `backend/core/signal_engine.py: get_vcp(), get_sniper(), ...` |
+| Stage2 체크리스트 기준 | `backend/core/signal_engine.py: calculate_stage2_analysis()` |
+| Regime 임계값 | `backend/core/regime_engine.py: TREND_LOW/HIGH, ...` 상수 |
+| DD 기준일 변경 | `backend/core/distribution_day.py: DD_LOOKBACK, DD_THRESHOLD_PCT` |
+| 워치리스트 종목 추가 | `backend/api/endpoints.py: WATCHLIST_SYMS` + `frontend/app/types.ts: SYMBOLS` |
+| 매크로 심볼 추가 | `backend/api/endpoints.py: MACRO_SYMBOLS` |
+| API 주소 변경 | `frontend/app/types.ts: API_BASE` + `docker-compose.yml: NEXT_PUBLIC_API_URL` |
+| 신호 메타데이터(색상·설명) | `frontend/app/types.ts: SIGNAL_META` |
+| 폴링 간격 변경 | `frontend/hooks/useIntraday.ts` (현재 30초) |
