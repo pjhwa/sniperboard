@@ -149,12 +149,14 @@ def gaussian_channel(close: pd.Series, high: pd.Series, low: pd.Series,
     return center, center + half, center - half
 
 def add_daily_indicators(df: pd.DataFrame) -> pd.DataFrame:
-    """일봉 데이터프레임에 EMA21/50/200, ATR14, 가우시안 채널 지표를 추가합니다."""
+    """일봉 데이터프레임에 EMA8/21/50/200, ATR14, 가우시안 채널 지표를 추가합니다."""
     df = df.copy()
-    df['ema21'] = ema(df['close'], 21)
-    df['ema50'] = ema(df['close'], 50)
+    df['ema8']   = ema(df['close'], 8)
+    df['ema21']  = ema(df['close'], 21)
+    df['ema50']  = ema(df['close'], 50)
     df['ema200'] = ema(df['close'], 200)
-    df['atr14'] = atr(df['high'], df['low'], df['close'], 14)
+    df['rsi14']  = rsi(df['close'], 14)
+    df['atr14']  = atr(df['high'], df['low'], df['close'], 14)
     df['vol_avg20'] = df['volume'].rolling(20).mean()
 
     gc_mid, gc_upper, gc_lower = gaussian_channel(df['close'], df['high'], df['low'], period=100, mult=1.5)
@@ -163,6 +165,107 @@ def add_daily_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df['gc_lower'] = gc_lower
 
     return df.dropna()
+
+
+def detect_swing_points(arr: np.ndarray, n: int = 5) -> Tuple[List[Tuple[int, float]], List[Tuple[int, float]]]:
+    """arr에서 스윙 고점/저점 인덱스·값 목록을 반환합니다."""
+    highs, lows = [], []
+    length = len(arr)
+    for i in range(n, length - n):
+        window = arr[i - n:i + n + 1]
+        if arr[i] == window.max():
+            highs.append((i, float(arr[i])))
+        if arr[i] == window.min():
+            lows.append((i, float(arr[i])))
+    return highs, lows
+
+
+def detect_market_structure(df: pd.DataFrame, pivot_bars: int = 5) -> dict:
+    """일봉 기준 시장 구조(HH/HL/LH/LL)를 감지하여 반환합니다."""
+    high_arr = df['high'].values
+    low_arr  = df['low'].values
+
+    sh_list, sl_list = detect_swing_points(high_arr, pivot_bars)
+    # 저점은 low 배열 기준
+    _, raw_sl = detect_swing_points(low_arr, pivot_bars)
+
+    hh = hl = lh = ll = False
+    structure = 'NEUTRAL'
+
+    if len(sh_list) >= 2:
+        hh = sh_list[-1][1] > sh_list[-2][1]
+        lh = not hh
+
+    if len(raw_sl) >= 2:
+        hl = raw_sl[-1][1] > raw_sl[-2][1]
+        ll = not hl
+
+    if hh and hl:
+        structure = 'UPTREND'
+    elif lh and ll:
+        structure = 'DOWNTREND'
+    elif lh and hl:
+        structure = 'DISTRIBUTION'
+    elif hh and ll:
+        structure = 'ACCUMULATION'
+
+    return {
+        'structure': structure,
+        'higher_high': hh,
+        'higher_low': hl,
+        'lower_high': lh,
+        'lower_low': ll,
+    }
+
+
+def detect_rsi_divergence(df: pd.DataFrame, lookback: int = 40, pivot_bars: int = 3) -> dict:
+    """RSI 다이버전스(베어리시/불리시)를 감지합니다."""
+    if len(df) < lookback + pivot_bars * 2:
+        return {'bearish': False, 'bullish': False}
+
+    recent = df.iloc[-lookback:].copy()
+    close_arr = recent['close'].values
+    rsi_arr   = recent['rsi14'].values
+
+    price_highs, _ = detect_swing_points(close_arr, pivot_bars)
+    rsi_highs,   _ = detect_swing_points(rsi_arr,   pivot_bars)
+    _, price_lows  = detect_swing_points(close_arr, pivot_bars)
+    _, rsi_lows    = detect_swing_points(rsi_arr,   pivot_bars)
+
+    bearish = (
+        len(price_highs) >= 2 and len(rsi_highs) >= 2
+        and price_highs[-1][1] > price_highs[-2][1]
+        and rsi_highs[-1][1] < rsi_highs[-2][1]
+    )
+    bullish = (
+        len(price_lows) >= 2 and len(rsi_lows) >= 2
+        and price_lows[-1][1] < price_lows[-2][1]
+        and rsi_lows[-1][1] > rsi_lows[-2][1]
+    )
+    return {'bearish': bool(bearish), 'bullish': bool(bullish)}
+
+
+def detect_bear_flag(df: pd.DataFrame, pole_bars: int = 10, flag_bars: int = 10) -> bool:
+    """베어 플래그 패턴 감지: 급락(폴) 후 거래량 감소를 동반한 횡보/소폭 반등(플래그)."""
+    total = pole_bars + flag_bars
+    if len(df) < total:
+        return False
+
+    close  = df['close'].values
+    volume = df['volume'].values
+
+    pole_decline = (close[-(total)] - close[-(flag_bars + 1)]) / close[-(total)] * 100
+    if pole_decline < 5:
+        return False
+
+    flag_close = close[-flag_bars:]
+    flag_range = (flag_close.max() - flag_close.min()) / flag_close.min() * 100
+    if flag_range > 5:
+        return False
+
+    vol_pole = volume[-total:-flag_bars].mean()
+    vol_flag = volume[-flag_bars:].mean()
+    return bool(vol_flag < vol_pole * 0.85)
 
 def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None) -> dict:
     """
@@ -256,6 +359,13 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None) -> 
         near_upper = abs(cl[-1] - gc_upper_val) / gc_upper_val * 100 <= 3.0
         gc_retest = bool(recent_was_above and near_upper and not gc_above)
 
+    # 시장 구조 / RSI 다이버전스 / 베어플래그
+    mkt_struct   = detect_market_structure(df)
+    rsi_div      = detect_rsi_divergence(df)
+    bear_flag    = detect_bear_flag(df)
+
+    latest_ema8 = float(df['ema8'].iloc[-1]) if 'ema8' in df.columns else None
+
     return {
         'checks': checks,
         'score': score,
@@ -264,6 +374,7 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None) -> 
         'pct_from_52w_high': round(pct_from_52w_high, 2),
         'pct_from_52w_low': round(pct_from_52w_low, 2),
         'pullback_pct': round(pullback_pct, 2),
+        'latest_ema8':  round(latest_ema8, 2) if latest_ema8 is not None else None,
         'latest_ema21': round(latest_ema21, 2),
         'latest_ema50': round(latest_ema50, 2),
         'latest_ema200': round(latest_ema200, 2),
@@ -280,4 +391,13 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None) -> 
         'gc_below':    gc_below,
         'gc_breakout': gc_breakout,
         'gc_retest':   gc_retest,
+        # 신규 시장 구조 지표
+        'market_structure':     mkt_struct['structure'],
+        'higher_high':          mkt_struct['higher_high'],
+        'higher_low':           mkt_struct['higher_low'],
+        'lower_high':           mkt_struct['lower_high'],
+        'lower_low':            mkt_struct['lower_low'],
+        'rsi_divergence_bearish': rsi_div['bearish'],
+        'rsi_divergence_bullish': rsi_div['bullish'],
+        'bear_flag':            bear_flag,
     }

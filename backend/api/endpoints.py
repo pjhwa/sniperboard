@@ -2,8 +2,11 @@ import pandas as pd
 import logging
 from fastapi import APIRouter, HTTPException, Query
 from services.data_service import get_ohlcv, get_multi_daily
-from core.signal_engine import calculate_signals, add_daily_indicators, calculate_stage2_analysis
-from api.schemas import OHLCVResponse, LatestSignalResponse, DailyResponse, WatchlistResponse
+from core.signal_engine import (
+    calculate_signals, add_daily_indicators, calculate_stage2_analysis,
+    detect_market_structure, ema, rsi
+)
+from api.schemas import OHLCVResponse, LatestSignalResponse, DailyResponse, WatchlistResponse, MacroResponse
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -119,6 +122,7 @@ async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주
             })
 
         indicators = {
+            "ema8":   [round(float(v), 4) for v in df["ema8"]],
             "ema21":  [round(float(v), 4) for v in df["ema21"]],
             "ema50":  [round(float(v), 4) for v in df["ema50"]],
             "ema200": [round(float(v), 4) for v in df["ema200"]],
@@ -142,6 +146,77 @@ async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주
     except Exception as e:
         logger.error(f"Error in /daily endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error while processing daily analysis")
+
+
+MACRO_SYMBOLS = {
+    # 달러/금리/채권/원유
+    "DX-Y.NYB": "달러인덱스 (DXY)",
+    "^TNX":     "10년물 금리 (TNX)",
+    "TLT":      "장기채 ETF (TLT)",
+    "CL=F":     "WTI 원유 (Crude)",
+    "GLD":      "금 ETF (GLD)",
+    # 지수
+    "SPY":      "S&P 500 (SPY)",
+    "QQQ":      "나스닥 100 (QQQ)",
+    # 섹터
+    "SMH":      "반도체 (SMH)",
+    "XLE":      "에너지 (XLE)",
+    "XLY":      "소비재 (XLY)",
+    "XHB":      "홈빌더 (XHB)",
+    "ITA":      "방산 (ITA)",
+}
+
+
+@router.get("/macro", response_model=MacroResponse)
+async def get_macro_endpoint():
+    try:
+        syms = list(MACRO_SYMBOLS.keys())
+        dfs = get_multi_daily(syms, period="3mo")
+
+        result = []
+        for sym, name in MACRO_SYMBOLS.items():
+            df = dfs.get(sym)
+            if df is None or df.empty or len(df) < 10:
+                continue
+            try:
+                close = df["close"]
+                latest = float(close.iloc[-1])
+                prev1d = float(close.iloc[-2]) if len(close) >= 2 else latest
+                prev5d = float(close.iloc[-6]) if len(close) >= 6 else float(close.iloc[0])
+
+                chg1d = (latest - prev1d) / prev1d * 100 if prev1d else 0.0
+                chg5d = (latest - prev5d) / prev5d * 100 if prev5d else 0.0
+
+                e8  = ema(close, 8)
+                e21 = ema(close, 21)
+                r14 = rsi(close, 14)
+
+                e8_val  = float(e8.iloc[-1])  if not e8.empty  else None
+                e21_val = float(e21.iloc[-1]) if not e21.empty else None
+                r14_val = float(r14.iloc[-1]) if not r14.isna().all() else None
+
+                struct = detect_market_structure(df) if len(df) >= 15 else {'structure': 'NEUTRAL'}
+
+                result.append({
+                    "symbol": sym,
+                    "name": name,
+                    "price": round(latest, 4),
+                    "change_pct_1d": round(chg1d, 2),
+                    "change_pct_5d": round(chg5d, 2),
+                    "ema8":  round(e8_val, 4) if e8_val else None,
+                    "ema21": round(e21_val, 4) if e21_val else None,
+                    "above_ema8":  bool(latest > e8_val) if e8_val else False,
+                    "above_ema21": bool(latest > e21_val) if e21_val else False,
+                    "market_structure": struct['structure'],
+                    "rsi14": round(r14_val, 1) if r14_val else None,
+                })
+            except Exception as e:
+                logger.error(f"Macro error for {sym}: {e}", exc_info=True)
+
+        return {"macro": result}
+    except Exception as e:
+        logger.error(f"Error in /macro endpoint: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error while building macro overview")
 
 
 @router.get("/watchlist", response_model=WatchlistResponse)

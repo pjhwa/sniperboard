@@ -56,6 +56,10 @@ export default function DailyTab() {
           
           <div className="flex items-center gap-4 text-[11px] text-zinc-400 flex-wrap">
             <span className="flex items-center gap-1.5">
+              <span className="inline-block w-4 h-0.5 bg-emerald-400 rounded-full" />
+              EMA 8
+            </span>
+            <span className="flex items-center gap-1.5">
               <span className="inline-block w-4 h-0.5 bg-amber-400 rounded-full" />
               EMA 21
             </span>
@@ -83,6 +87,133 @@ export default function DailyTab() {
 
         <DailyChart data={dailyData} />
       </div>
+
+      {/* Market Structure + RSI Divergence + Bear Flag */}
+      {s2 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          {/* 시장 구조 */}
+          {(() => {
+            const structMap: Record<string, { label: string; color: string; bg: string; desc: string }> = {
+              UPTREND:      { label: 'HH+HL 상승추세',   color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30', desc: '연속 고점 신고 + 연속 저점 신고 — 추세 매수 유효' },
+              DOWNTREND:    { label: 'LH+LL 하락추세',   color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/30',         desc: '연속 고점 저하 + 연속 저점 저하 — 매수 접근 금지' },
+              DISTRIBUTION: { label: 'LH+HL 분배 (주의)', color: 'text-orange-400',bg: 'bg-orange-500/10 border-orange-500/30',   desc: '고점이 낮아지는 중 — 로어하이 경고, 전고점 저항 주시' },
+              ACCUMULATION: { label: 'HH+LL 축적',       color: 'text-blue-400',   bg: 'bg-blue-500/10 border-blue-500/30',       desc: '고점 신고 but 저점도 하락 — 방향성 결정 대기 구간' },
+              NEUTRAL:      { label: 'NEUTRAL',           color: 'text-zinc-400',   bg: 'bg-zinc-800/60 border-zinc-700/40',       desc: '스윙 포인트 불충분 — 추가 데이터 대기' },
+            };
+            const sm = structMap[s2.market_structure] ?? structMap['NEUTRAL'];
+            return (
+              <div className={`glass-card rounded-xl p-4 border-l-[3px] relative overflow-hidden ${
+                s2.market_structure === 'UPTREND' ? 'border-l-emerald-500' :
+                s2.market_structure === 'DOWNTREND' ? 'border-l-red-500' :
+                s2.market_structure === 'DISTRIBUTION' ? 'border-l-orange-500' :
+                s2.market_structure === 'ACCUMULATION' ? 'border-l-blue-500' :
+                'border-l-zinc-700'
+              }`}>
+                <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
+                  시장 구조 (Market Structure)
+                </div>
+                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold mb-3 ${sm.bg} ${sm.color}`}>
+                  {sm.label}
+                </div>
+                <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">{sm.desc}</p>
+                <div className="mt-3 grid grid-cols-2 gap-1.5">
+                  {[
+                    { key: 'higher_high', label: 'HH', color: 'emerald' },
+                    { key: 'higher_low',  label: 'HL', color: 'emerald' },
+                    { key: 'lower_high',  label: 'LH', color: 'red' },
+                    { key: 'lower_low',   label: 'LL', color: 'red' },
+                  ].map(({ key, label, color }) => {
+                    const active = s2[key as keyof typeof s2] as boolean;
+                    return (
+                      <div key={key} className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-bold ${
+                        active
+                          ? color === 'emerald'
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                            : 'bg-red-500/10 border-red-500/30 text-red-400'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-600'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${active ? (color === 'emerald' ? 'bg-emerald-400' : 'bg-red-400') : 'bg-zinc-700'}`} />
+                        {label}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* RSI 다이버전스 */}
+          <div className={`glass-card rounded-xl p-4 border-l-[3px] relative overflow-hidden ${
+            s2.rsi_divergence_bearish ? 'border-l-orange-500' :
+            s2.rsi_divergence_bullish ? 'border-l-cyan-500' :
+            'border-l-zinc-700'
+          }`}>
+            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
+              RSI 다이버전스
+            </div>
+            {s2.rsi_divergence_bearish ? (
+              <>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold mb-3 text-orange-400 bg-orange-500/10 border-orange-500/30 animate-pulse">
+                  ⚠ 베어리시 다이버전스
+                </div>
+                <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">
+                  가격이 고점을 높이는 동안 RSI는 고점을 낮추는 중 — 네거티브 다이버전스. 추세 약화 신호, 분할 익절·신규 매수 자제 권고.
+                </p>
+              </>
+            ) : s2.rsi_divergence_bullish ? (
+              <>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold mb-3 text-cyan-400 bg-cyan-500/10 border-cyan-500/30">
+                  ✦ 불리시 다이버전스
+                </div>
+                <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">
+                  가격이 저점을 낮추는 동안 RSI는 저점을 높이는 중 — 포지티브 다이버전스. 잠재적 추세 전환 신호, 눌림목 진입 주목.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold mb-3 text-zinc-400 bg-zinc-800/60 border-zinc-700/40">
+                  감지 없음
+                </div>
+                <p className="text-[11px] text-zinc-500 leading-relaxed font-medium">
+                  최근 40봉 내 유효한 RSI 다이버전스가 감지되지 않았습니다.
+                </p>
+              </>
+            )}
+          </div>
+
+          {/* 베어플래그 */}
+          <div className={`glass-card rounded-xl p-4 border-l-[3px] relative overflow-hidden ${
+            s2.bear_flag ? 'border-l-red-500' : 'border-l-zinc-700'
+          }`}>
+            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
+              베어 플래그 패턴
+            </div>
+            {s2.bear_flag ? (
+              <>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold mb-3 text-red-400 bg-red-500/10 border-red-500/30 animate-pulse">
+                  ⚠ 베어플래그 감지
+                </div>
+                <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">
+                  급락(폴) 후 거래량 감소를 동반한 횡보 구간(플래그) 감지. 하락 재개 가능성 — 숏 진입 또는 롱 포지션 축소 고려.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold mb-3 text-zinc-400 bg-zinc-800/60 border-zinc-700/40">
+                  패턴 없음
+                </div>
+                <p className="text-[11px] text-zinc-500 leading-relaxed font-medium">
+                  현재 베어플래그 조건(5% 이상 급락 + 거래량 감소 횡보) 미충족.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Gaussian Channel Analysis */}
       {s2?.gc_upper != null && (

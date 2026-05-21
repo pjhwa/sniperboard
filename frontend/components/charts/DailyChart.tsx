@@ -51,8 +51,9 @@ export default function DailyChart({ data }: DailyChartProps) {
 
     // EMA 라인 렌더링 설정
     const emaConfig = [
-      { key: 'ema21' as const, color: '#f59e0b', title: 'EMA21' },
-      { key: 'ema50' as const, color: '#818cf8', title: 'EMA50' },
+      { key: 'ema8'   as const, color: '#34d399', title: 'EMA8' },
+      { key: 'ema21'  as const, color: '#f59e0b', title: 'EMA21' },
+      { key: 'ema50'  as const, color: '#818cf8', title: 'EMA50' },
       { key: 'ema200' as const, color: '#f43f5e', title: 'EMA200' },
     ];
 

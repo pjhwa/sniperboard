@@ -24,6 +24,7 @@ export interface IntradayIndicators {
 }
 
 export interface DailyIndicators {
+  ema8:  number[];
   ema21: number[];
   ema50: number[];
   ema200: number[];
@@ -51,6 +52,7 @@ export interface Stage2 {
   pct_from_52w_high: number;
   pct_from_52w_low: number;
   pullback_pct: number;
+  latest_ema8: number | null;
   latest_ema21: number;
   latest_ema50: number;
   latest_ema200: number;
@@ -67,6 +69,14 @@ export interface Stage2 {
   gc_below:    boolean;
   gc_breakout: boolean;
   gc_retest:   boolean;
+  market_structure: string;
+  higher_high: boolean;
+  higher_low: boolean;
+  lower_high: boolean;
+  lower_low: boolean;
+  rsi_divergence_bearish: boolean;
+  rsi_divergence_bullish: boolean;
+  bear_flag: boolean;
 }
 
 export interface DailyData {
@@ -103,7 +113,25 @@ export interface LatestData {
   latest_signals: Record<string, boolean>;
 }
 
-export type Tab = 'intraday' | 'daily' | 'watchlist';
+export interface MacroItem {
+  symbol: string;
+  name: string;
+  price: number;
+  change_pct_1d: number;
+  change_pct_5d: number;
+  ema8: number | null;
+  ema21: number | null;
+  above_ema8: boolean;
+  above_ema21: boolean;
+  market_structure: string;
+  rsi14: number | null;
+}
+
+export interface MacroData {
+  macro: MacroItem[];
+}
+
+export type Tab = 'intraday' | 'daily' | 'watchlist' | 'macro';
 
 export const SIGNAL_META: Record<string, { label: string; color: string; bg: string; action: string; desc: string }> = {
   sniper:       { label: 'Sniper',      color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30', action: '진입',      desc: '21EMA 0.4% 이내 터치 후 반등 — RSI 38~58 구간, 거래량 급증' },

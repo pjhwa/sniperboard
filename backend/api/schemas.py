@@ -26,6 +26,7 @@ class IntradayIndicatorsSchema(BaseModel):
     atr: List[float]
 
 class DailyIndicatorsSchema(BaseModel):
+    ema8:  List[float]
     ema21: List[float]
     ema50: List[float]
     ema200: List[float]
@@ -51,6 +52,7 @@ class Stage2Schema(BaseModel):
     pct_from_52w_high: float
     pct_from_52w_low: float
     pullback_pct: float
+    latest_ema8: Optional[float] = None
     latest_ema21: float
     latest_ema50: float
     latest_ema200: float
@@ -67,6 +69,15 @@ class Stage2Schema(BaseModel):
     gc_below: bool
     gc_breakout: bool
     gc_retest: bool
+    # 시장 구조
+    market_structure: str = 'NEUTRAL'
+    higher_high: bool = False
+    higher_low: bool = False
+    lower_high: bool = False
+    lower_low: bool = False
+    rsi_divergence_bearish: bool = False
+    rsi_divergence_bullish: bool = False
+    bear_flag: bool = False
 
 class WatchlistItemSchema(BaseModel):
     symbol: str
@@ -81,6 +92,18 @@ class WatchlistItemSchema(BaseModel):
     latest_atr: float
     pivot_high: float
 
+class MacroItemSchema(BaseModel):
+    symbol: str
+    name: str
+    price: float
+    change_pct_1d: float
+    change_pct_5d: float
+    ema8: Optional[float] = None
+    ema21: Optional[float] = None
+    above_ema8: bool = False
+    above_ema21: bool = False
+    market_structure: str = 'NEUTRAL'
+    rsi14: Optional[float] = None
 
 # --- API 응답 모델 ---
 
@@ -111,3 +134,6 @@ class DailyResponse(BaseModel):
 
 class WatchlistResponse(BaseModel):
     watchlist: List[WatchlistItemSchema]
+
+class MacroResponse(BaseModel):
+    macro: List[MacroItemSchema]
