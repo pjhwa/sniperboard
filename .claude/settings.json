@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /home/citec/tmp/sniperboard && bash .claude/check-docs.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
