@@ -8,8 +8,9 @@ from core.signal_engine import (
 )
 from api.schemas import (
     OHLCVResponse, LatestSignalResponse, DailyResponse, WatchlistResponse,
-    MacroResponse, RegimeResponse, DistributionDayResponse,
+    MacroResponse, RegimeResponse, DistributionDayResponse, SentimentResponse,
 )
+from services.sentiment_service import fetch_latest, enrich_with_delta
 from core.distribution_day import count_distribution_days
 from core.regime_engine import compute_regime
 
@@ -294,6 +295,18 @@ async def get_regime_endpoint():
     except Exception as e:
         logger.error(f"Error in /regime: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Regime computation failed")
+
+
+@router.get("/sentiment", response_model=SentimentResponse)
+async def get_sentiment_endpoint():
+    """소셜 심리 최신 스냅샷. 실패 시 available:false로 200 반환."""
+    try:
+        snapshot = fetch_latest()
+        snapshot = enrich_with_delta(snapshot)
+        return snapshot
+    except Exception as e:
+        logger.error(f"Error in /sentiment endpoint: {e}", exc_info=True)
+        return {"available": False, "error": "심리 데이터 처리 중 오류 발생"}
 
 
 @router.get("/distribution-days", response_model=DistributionDayResponse)

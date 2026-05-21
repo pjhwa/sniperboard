@@ -4,3 +4,5 @@ yfinance
 pandas
 python-dotenv
 pytest
+requests
+jsonschema

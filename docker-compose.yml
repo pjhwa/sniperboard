@@ -6,7 +6,15 @@ services:
     image: sniperboard-backend:latest
     container_name: sniperboard-backend
     ports:
-      - "5000:8000"
+      - "5001:8000"
+    environment:
+      # 소셜 심리 데이터 소스 (market-sentiment-data GitHub 리포)
+      # 예: https://raw.githubusercontent.com/<user>/market-sentiment-data/main/latest.json
+      SENTIMENT_DATA_URL: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/latest.json"
+      # history/ 디렉토리 base URL (파일명 없이)
+      SENTIMENT_DATA_HISTORY_BASE: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/history"
+      # Private 리포일 때만 필요 (GitHub PAT). Public이면 빈 채로 두세요.
+      SENTIMENT_DATA_TOKEN: ""
     restart: unless-stopped
 
   frontend:
@@ -14,7 +22,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://172.16.8.250:5000
+        NEXT_PUBLIC_API_URL: http://jerrymacmini.local:5001
     image: sniperboard-frontend:latest
     container_name: sniperboard-frontend
     ports:

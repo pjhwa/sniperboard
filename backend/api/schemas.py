@@ -163,3 +163,36 @@ class DDDetailSchema(BaseModel):
 class DistributionDayResponse(BaseModel):
     spy: DDDetailSchema
     qqq: DDDetailSchema
+
+
+# --- Sentiment (소셜 심리) ---
+
+class SymbolSentiment(BaseModel):
+    symbol: str
+    as_of: str
+    sentiment: str
+    sentiment_score: int
+    trend_vs_yesterday: str
+    mention_volume: str
+    key_reason: str
+    bot_suspected: str
+    confidence: str
+    source: str
+    score_delta: Optional[int] = None
+
+class MarketSentiment(BaseModel):
+    as_of: str
+    sentiment: str
+    sentiment_score: int
+    trend_vs_yesterday: str
+    extreme_flag: str
+    key_reason: str
+    confidence: str
+
+class SentimentResponse(BaseModel):
+    available: bool
+    generated_at: Optional[str] = None
+    schema_version: Optional[str] = None
+    market: Optional[MarketSentiment] = None
+    symbols: Optional[List[SymbolSentiment]] = None
+    error: Optional[str] = None

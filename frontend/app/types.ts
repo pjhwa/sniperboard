@@ -132,7 +132,7 @@ export interface MacroData {
   macro: MacroItem[];
 }
 
-export type Tab = 'intraday' | 'daily' | 'watchlist' | 'macro';
+export type Tab = 'intraday' | 'daily' | 'watchlist' | 'macro' | 'sentiment';
 
 // --- Regime ---
 
@@ -201,3 +201,64 @@ export const STAGE2_META: Record<keyof Stage2Checks, { label: string; desc: stri
 export const SYMBOLS = ['TSLA', 'AAPL', 'NVDA', 'META', 'AMZN', 'GOOGL'];
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://172.16.8.250:5000';
+
+// --- Sentiment (소셜 심리) ---
+
+export interface SymbolSentiment {
+  symbol: string;
+  as_of: string;
+  sentiment: SentimentEnum;
+  sentiment_score: number;
+  trend_vs_yesterday: TrendEnum;
+  mention_volume: VolumeEnum;
+  key_reason: string;
+  bot_suspected: 'yes' | 'no' | 'unclear';
+  confidence: ConfidenceEnum;
+  source: string;
+  score_delta: number | null;
+}
+
+export interface MarketSentiment {
+  as_of: string;
+  sentiment: SentimentEnum;
+  sentiment_score: number;
+  trend_vs_yesterday: TrendEnum;
+  extreme_flag: 'none' | 'extreme_fear' | 'extreme_greed';
+  key_reason: string;
+  confidence: ConfidenceEnum;
+}
+
+export interface SentimentData {
+  available: boolean;
+  generated_at?: string;
+  schema_version?: string;
+  market?: MarketSentiment;
+  symbols?: SymbolSentiment[];
+  error?: string;
+}
+
+export type SentimentEnum = 'very_fearful' | 'fearful' | 'neutral' | 'optimistic' | 'euphoric';
+export type TrendEnum = 'cooling' | 'stable' | 'heating';
+export type VolumeEnum = 'low' | 'normal' | 'elevated' | 'surging';
+export type ConfidenceEnum = 'high' | 'med' | 'low';
+
+export const SENTIMENT_META: Record<SentimentEnum, { label: string; color: string; bg: string; score: number }> = {
+  very_fearful: { label: '극도 공포', color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/30',         score: -2 },
+  fearful:      { label: '공포',     color: 'text-orange-400',  bg: 'bg-orange-500/10 border-orange-500/30',   score: -1 },
+  neutral:      { label: '중립',     color: 'text-zinc-400',    bg: 'bg-zinc-700/30 border-zinc-600/30',       score:  0 },
+  optimistic:   { label: '낙관',     color: 'text-teal-400',    bg: 'bg-teal-500/10 border-teal-500/30',       score:  1 },
+  euphoric:     { label: '도취',     color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30', score:  2 },
+};
+
+export const TREND_META: Record<TrendEnum, { icon: string; label: string; color: string }> = {
+  heating: { icon: '↑', label: '상승 중', color: 'text-emerald-400' },
+  stable:  { icon: '→', label: '유지',    color: 'text-zinc-400'    },
+  cooling: { icon: '↓', label: '냉각 중', color: 'text-red-400'     },
+};
+
+export const VOLUME_META: Record<VolumeEnum, { label: string; color: string }> = {
+  low:      { label: '낮음',  color: 'text-zinc-500'    },
+  normal:   { label: '보통',  color: 'text-zinc-400'    },
+  elevated: { label: '높음',  color: 'text-yellow-400'  },
+  surging:  { label: '급증',  color: 'text-orange-400'  },
+};

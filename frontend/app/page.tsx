@@ -10,6 +10,7 @@ import IntradayTab from '../components/IntradayTab';
 import DailyTab from '../components/DailyTab';
 import WatchlistTab from '../components/WatchlistTab';
 import MacroTab from '../components/MacroTab';
+import SentimentTab from '../components/SentimentTab';
 import DashboardOverview from '../components/DashboardOverview';
 
 export default function SniperBoard() {
@@ -32,6 +33,8 @@ export default function SniperBoard() {
         await queryClient.invalidateQueries({ queryKey: ['watchlist_analysis'] });
       } else if (tab === 'macro') {
         await queryClient.invalidateQueries({ queryKey: ['macro_overview'] });
+      } else if (tab === 'sentiment') {
+        await queryClient.invalidateQueries({ queryKey: ['sentiment'] });
       }
     } catch (e) {
       console.error(e);
@@ -65,7 +68,7 @@ export default function SniperBoard() {
           </div>
           
           <div className="flex items-center gap-2.5 flex-wrap">
-            {tab !== 'watchlist' && tab !== 'macro' && (
+            {tab !== 'watchlist' && tab !== 'macro' && tab !== 'sentiment' && (
               <div className="relative">
                 <select
                   value={symbol}
@@ -137,6 +140,7 @@ export default function SniperBoard() {
             ['daily', '일봉 분석 (Daily)'],
             ['watchlist', '워치리스트'],
             ['macro', '매크로 (Macro)'],
+            ['sentiment', '소셜 심리'],
           ] as [Tab, string][]).map(([t, label]) => (
             <button
               key={t}
@@ -159,6 +163,7 @@ export default function SniperBoard() {
           {tab === 'daily' && <DailyTab />}
           {tab === 'watchlist' && <WatchlistTab />}
           {tab === 'macro' && <MacroTab />}
+          {tab === 'sentiment' && <SentimentTab />}
         </main>
         
       </div>
