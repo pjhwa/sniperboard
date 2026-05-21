@@ -22,7 +22,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://jerrymacmini.local:5001
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:5001}
     image: sniperboard-frontend:latest
     container_name: sniperboard-frontend
     ports:
