@@ -39,7 +39,7 @@ docker compose up --build -d
 | 서비스 | URL |
 |--------|-----|
 | 대시보드 | http://localhost:4000 |
-| API 문서 | http://localhost:5000/docs |
+| API 문서 | http://localhost:5001/docs |
 
 > 첫 로딩 시 yfinance 데이터 다운로드로 30초~2분 소요될 수 있습니다.
 

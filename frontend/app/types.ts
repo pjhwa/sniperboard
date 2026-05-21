@@ -200,7 +200,7 @@ export const STAGE2_META: Record<keyof Stage2Checks, { label: string; desc: stri
 
 export const SYMBOLS = ['TSLA', 'AAPL', 'NVDA', 'META', 'AMZN', 'GOOGL'];
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://172.16.8.250:5000';
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
 // --- Sentiment (소셜 심리) ---
 

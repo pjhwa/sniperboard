@@ -486,16 +486,16 @@ cd backend && pytest tests/ -v
 cd .. && ./run_docker.sh
 
 # API 회귀
-curl http://localhost:5000/api/ohlcv?symbol=TSLA | jq '.signals | keys'
+curl http://localhost:5001/api/ohlcv?symbol=TSLA | jq '.signals | keys'
 # → 기존 6개 키 동일 ['downtrend','overbought','pullback','sniper','strong_trend','vcp']
 
-curl http://localhost:5000/api/daily?symbol=TSLA | jq '.stage2 | keys'
+curl http://localhost:5001/api/daily?symbol=TSLA | jq '.stage2 | keys'
 # → 기존 키 + 'breadth_narrow' 한 개 추가
 
 # 신규
-curl http://localhost:5000/api/regime | jq
-curl http://localhost:5000/api/distribution-days | jq
-curl http://localhost:5000/api/macro | jq '.macro[] | select(.symbol == "^VIX")'
+curl http://localhost:5001/api/regime | jq
+curl http://localhost:5001/api/distribution-days | jq
+curl http://localhost:5001/api/macro | jq '.macro[] | select(.symbol == "^VIX")'
 
 # 타입 컴파일
 cd frontend && npx tsc --noEmit

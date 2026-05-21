@@ -63,7 +63,7 @@ sniperboard/
 │       ├── useMacro.ts           # GET /api/macro
 │       ├── useRegime.ts          # GET /api/regime
 │       └── useDistributionDays.ts # GET /api/distribution-days
-├── docker-compose.yml            # backend 8000→5000, frontend 3000→4000
+├── docker-compose.yml            # backend 8000→5001, frontend 3000→4000
 └── docs/
     ├── claude-code-brief.md
     └── sniperboard-integration-plan.md
@@ -73,7 +73,7 @@ sniperboard/
 
 ## 3. 백엔드 API 엔드포인트 (`backend/api/endpoints.py`)
 
-베이스 URL: `http://<host>:5000/api`
+베이스 URL: `http://<host>:5001/api`
 
 | 경로 | 파라미터 | 반환 |
 |------|----------|------|
@@ -180,7 +180,7 @@ OK(<4) / WARNING(4~5) / DANGER(≥6)
 
 ```typescript
 export const SYMBOLS = ['TSLA', 'AAPL', 'NVDA', 'META', 'AMZN', 'GOOGL'];
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://172.16.8.250:5000';
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 export const SIGNAL_META = { sniper, vcp, pullback, strong_trend, overbought, downtrend }; // 색상·설명·액션
 export const STAGE2_META = { price_above_emas, ema200_rising, ... };
 export const REGIME_META = { RISK_ON, CONSTRUCTIVE, MIXED, DEFENSIVE, RISK_OFF, UNKNOWN };
@@ -221,7 +221,7 @@ yfinance (외부 API, 15분 지연, 무료)
     ↓ YFinanceDataService.get_ohlcv(symbol, tf, period="5d")
     ↓ YFinanceDataService.get_multi_daily(symbols, period="2y"|"3mo"|"1y")
     ↓ signal_engine / regime_engine / distribution_day
-FastAPI (port 8000 내부 / 5000 외부 Docker)
+FastAPI (port 8000 내부 / 5001 외부 Docker)
     ↓ JSON (Pydantic 직렬화)
 TanStack Query 훅 (React 컴포넌트 트리)
     ↓ props / Zustand 상태
@@ -235,7 +235,7 @@ lightweight-charts + Tailwind 카드 UI
 ### Docker Compose (권장)
 ```bash
 docker-compose up -d
-# 백엔드: http://localhost:5000  (API docs: /docs)
+# 백엔드: http://localhost:5001  (API docs: /docs)
 # 프론트엔드: http://localhost:4000
 ```
 
@@ -251,7 +251,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 ```
 
 ### 주요 환경변수
-- `NEXT_PUBLIC_API_URL`: 빌드 시 번들됨. docker-compose에서 `http://172.16.8.250:5000` 하드코딩.
+- `NEXT_PUBLIC_API_URL`: 빌드 시 번들됨. docker-compose에서 `http://localhost:5001` 하드코딩.
   변경 시 반드시 **재빌드** 필요.
 
 ---
