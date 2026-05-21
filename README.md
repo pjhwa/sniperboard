@@ -27,6 +27,14 @@
 SniperBoard는 미국 주식 스윙 트레이딩을 위한 **TradingView 스타일의 웹 기반 매매 신호 대시보드**입니다.  
 단기 인트라데이 신호부터 Minervini Stage 2 일봉 분석, R:R 포지션 계산, 종목 워치리스트까지 **3개 탭**으로 구성됩니다.
 
+### 🎨 UI/UX Redesign (Premium Glassmorphic Theme)
+최신 프론트엔드 디자인 트렌드를 조화롭게 조합한 **프리미엄 금융 터미널 스타일(Deep Zinc-Black Theme)**이 적용되었습니다.
+- **글래스모피즘(Glassmorphism)**: 투명하고 깊이 있는 블러(`backdrop-blur`) 배경과 은은한 윤곽선 테두리 카드로 시각적 피로도 감소
+- **실시간 활성 신호 펄스**: 신호별(Sniper, VCP, Pullback 등) 고대비 색상 적용 및 라이브(LIVE) 상태를 알리는 네온 펄스 애니메이션
+- **RSI 그라디언트 게이지**: 직관적인 그라디언트 레일 및 글로잉 포인터를 제공하여 과매수/과매도 구간을 한눈에 식별
+- **Stage 2 시각 체크 보드**: Minervini의 7대 상승 조건을 에메랄드 유리 질감 배지로 보드화하여 즉각적인 분석 제공
+- **R:R 포지션 바 시각화**: 진입가 대비 손실 비율(Risk)과 목표 수익 비율(Reward)을 HTS/MTS 스타일 눈금 바로 시각화
+
 ```
 브라우저 ──► Next.js Frontend (포트 4000)
                     │
