@@ -267,7 +267,7 @@ def detect_bear_flag(df: pd.DataFrame, pole_bars: int = 10, flag_bars: int = 10)
     vol_flag = volume[-flag_bars:].mean()
     return bool(vol_flag < vol_pole * 0.85)
 
-def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None) -> dict:
+def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None, rsp_close: pd.Series = None) -> dict:
     """
     Minervini Stage 2 분석을 수행합니다.
     """
@@ -366,6 +366,12 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None) -> 
 
     latest_ema8 = float(df['ema8'].iloc[-1]) if 'ema8' in df.columns else None
 
+    breadth_narrow = False
+    if spy_close is not None and rsp_close is not None and len(spy_close) >= 20 and len(rsp_close) >= 20:
+        spy_at_high = float(spy_close.iloc[-1]) >= float(spy_close.iloc[-20:].max()) * 0.999
+        rsp_at_high = float(rsp_close.iloc[-1]) >= float(rsp_close.iloc[-20:].max()) * 0.999
+        breadth_narrow = bool(spy_at_high and not rsp_at_high)
+
     return {
         'checks': checks,
         'score': score,
@@ -391,7 +397,7 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None) -> 
         'gc_below':    gc_below,
         'gc_breakout': gc_breakout,
         'gc_retest':   gc_retest,
-        # 신규 시장 구조 지표
+        # 시장 구조
         'market_structure':     mkt_struct['structure'],
         'higher_high':          mkt_struct['higher_high'],
         'higher_low':           mkt_struct['higher_low'],
@@ -400,4 +406,5 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None) -> 
         'rsi_divergence_bearish': rsi_div['bearish'],
         'rsi_divergence_bullish': rsi_div['bullish'],
         'bear_flag':            bear_flag,
+        'breadth_narrow':       breadth_narrow,
     }

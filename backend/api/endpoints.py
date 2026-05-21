@@ -6,7 +6,12 @@ from core.signal_engine import (
     calculate_signals, add_daily_indicators, calculate_stage2_analysis,
     detect_market_structure, ema, rsi
 )
-from api.schemas import OHLCVResponse, LatestSignalResponse, DailyResponse, WatchlistResponse, MacroResponse
+from api.schemas import (
+    OHLCVResponse, LatestSignalResponse, DailyResponse, WatchlistResponse,
+    MacroResponse, RegimeResponse, DistributionDayResponse,
+)
+from core.distribution_day import count_distribution_days
+from core.regime_engine import compute_regime
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -96,9 +101,10 @@ async def get_latest_signal(
 @router.get("/daily", response_model=DailyResponse)
 async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주식 심볼")):
     try:
-        dfs = get_multi_daily([symbol.upper(), "SPY"], period="2y")
+        dfs = get_multi_daily([symbol.upper(), "SPY", "RSP"], period="2y")
         df = dfs.get(symbol.upper())
         spy_df = dfs.get("SPY")
+        rsp_df = dfs.get("RSP")
 
         if df is None or df.empty:
             raise HTTPException(status_code=404, detail=f"No daily data found for {symbol}")
@@ -107,7 +113,8 @@ async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주
         df = df.iloc[-252:]  # 200EMA 워밍업 이후 1년분만 추출
 
         spy_close = spy_df["close"] if spy_df is not None and not spy_df.empty else None
-        stage2 = calculate_stage2_analysis(df, spy_close)
+        rsp_close = rsp_df["close"] if rsp_df is not None and not rsp_df.empty else None
+        stage2 = calculate_stage2_analysis(df, spy_close, rsp_close)
 
         candles = []
         for i in range(len(df)):
@@ -158,6 +165,19 @@ MACRO_SYMBOLS = {
     # 지수
     "SPY":      "S&P 500 (SPY)",
     "QQQ":      "나스닥 100 (QQQ)",
+    # 변동성 (지표 #2)
+    "^VIX":     "VIX 변동성",
+    "^VVIX":    "VIX의 변동성 (^VVIX)",
+    "^VIX9D":   "9일 VIX (^VIX9D)",
+    # 신용 스트레스 (지표 #4)
+    "HYG":      "하이일드 ETF (HYG)",
+    "JNK":      "정크본드 ETF (JNK)",
+    "LQD":      "투자등급 ETF (LQD)",
+    "IEF":      "중기국채 ETF (IEF)",
+    # 폭(Breadth) (지표 #3)
+    "RSP":      "S&P 동등가중 (RSP)",
+    "MAGS":     "Magnificent 7 (MAGS)",
+    "IWM":      "러셀2000 (IWM)",
     # 섹터
     "SMH":      "반도체 (SMH)",
     "XLE":      "에너지 (XLE)",
@@ -177,6 +197,12 @@ async def get_macro_endpoint():
         for sym, name in MACRO_SYMBOLS.items():
             df = dfs.get(sym)
             if df is None or df.empty or len(df) < 10:
+                result.append({
+                    "symbol": sym, "name": name,
+                    "price": None, "change_pct_1d": None, "change_pct_5d": None,
+                    "ema8": None, "ema21": None, "above_ema8": False, "above_ema21": False,
+                    "market_structure": "NEUTRAL", "rsi14": None,
+                })
                 continue
             try:
                 close = df["close"]
@@ -222,10 +248,12 @@ async def get_macro_endpoint():
 @router.get("/watchlist", response_model=WatchlistResponse)
 async def get_watchlist_endpoint():
     try:
-        all_syms = WATCHLIST_SYMS + ["SPY"]
+        all_syms = WATCHLIST_SYMS + ["SPY", "RSP"]
         dfs = get_multi_daily(all_syms, period="2y")
         spy_df = dfs.get("SPY")
+        rsp_df = dfs.get("RSP")
         spy_close = spy_df["close"] if spy_df is not None and not spy_df.empty else None
+        rsp_close = rsp_df["close"] if rsp_df is not None and not rsp_df.empty else None
 
         result = []
         for sym in WATCHLIST_SYMS:
@@ -234,7 +262,7 @@ async def get_watchlist_endpoint():
                 continue
             try:
                 df = add_daily_indicators(df)
-                stage2 = calculate_stage2_analysis(df, spy_close)
+                stage2 = calculate_stage2_analysis(df, spy_close, rsp_close)
                 result.append({
                     "symbol": sym,
                     "price": round(float(df["close"].iloc[-1]), 2),
@@ -256,3 +284,28 @@ async def get_watchlist_endpoint():
     except Exception as e:
         logger.error(f"Error in /watchlist endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error while building watchlist")
+
+
+@router.get("/regime", response_model=RegimeResponse)
+async def get_regime_endpoint():
+    try:
+        dfs = get_multi_daily(['SPY', 'RSP', 'HYG', 'IEF', '^VIX'], period="1y")
+        return compute_regime(dfs)
+    except Exception as e:
+        logger.error(f"Error in /regime: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Regime computation failed")
+
+
+@router.get("/distribution-days", response_model=DistributionDayResponse)
+async def get_distribution_days_endpoint():
+    try:
+        dfs = get_multi_daily(['SPY', 'QQQ'], period="3mo")
+        result = {}
+        for sym in ['SPY', 'QQQ']:
+            df = dfs.get(sym)
+            dd = count_distribution_days(df) if df is not None else None
+            result[sym] = dd if dd is not None else {'count': 0, 'level': 'OK', 'dates': []}
+        return {'spy': result['SPY'], 'qqq': result['QQQ']}
+    except Exception as e:
+        logger.error(f"Error in /distribution-days: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="DD computation failed")

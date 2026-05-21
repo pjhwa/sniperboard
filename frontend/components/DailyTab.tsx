@@ -302,10 +302,17 @@ export default function DailyTab() {
         <div className="glass-card rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-zinc-850 to-transparent" />
           
-          <div className="flex items-center justify-between mb-4 border-b border-zinc-800/80 pb-3">
-            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
-              Stage 2 체크리스트 (Mark Minervini)
+          <div className="flex items-center justify-between mb-4 border-b border-zinc-800/80 pb-3 flex-wrap gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
+                Stage 2 체크리스트 (Mark Minervini)
+              </div>
+              {s2?.breadth_narrow && (
+                <div className="px-2.5 py-1 rounded-md bg-orange-500/10 border border-orange-500/30 text-orange-400 text-[10px] font-bold tracking-wide">
+                  ⚠ 협소한 랠리 — RSP 신고가 미달
+                </div>
+              )}
             </div>
             {s2 && (
               <div className={`font-bold text-sm px-3.5 py-1 rounded-full border ${getScoreBg(s2.score)}`}>

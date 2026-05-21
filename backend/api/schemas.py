@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 # --- 기본 서브 모델 ---
 
@@ -78,6 +78,7 @@ class Stage2Schema(BaseModel):
     rsi_divergence_bearish: bool = False
     rsi_divergence_bullish: bool = False
     bear_flag: bool = False
+    breadth_narrow: bool = False
 
 class WatchlistItemSchema(BaseModel):
     symbol: str
@@ -95,9 +96,9 @@ class WatchlistItemSchema(BaseModel):
 class MacroItemSchema(BaseModel):
     symbol: str
     name: str
-    price: float
-    change_pct_1d: float
-    change_pct_5d: float
+    price: Optional[float] = None
+    change_pct_1d: Optional[float] = None
+    change_pct_5d: Optional[float] = None
     ema8: Optional[float] = None
     ema21: Optional[float] = None
     above_ema8: bool = False
@@ -137,3 +138,28 @@ class WatchlistResponse(BaseModel):
 
 class MacroResponse(BaseModel):
     macro: List[MacroItemSchema]
+
+
+# --- Regime + Distribution Day ---
+
+class RegimeComponentsSchema(BaseModel):
+    trend: Optional[float] = None
+    breadth: Optional[float] = None
+    credit: Optional[float] = None
+    volatility: Optional[float] = None
+    momentum: Optional[float] = None
+
+class RegimeResponse(BaseModel):
+    total: Optional[float] = None
+    regime: str
+    components: RegimeComponentsSchema
+    valid_count: int
+
+class DDDetailSchema(BaseModel):
+    count: int
+    level: str
+    dates: List[str]
+
+class DistributionDayResponse(BaseModel):
+    spy: DDDetailSchema
+    qqq: DDDetailSchema

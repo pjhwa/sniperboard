@@ -77,6 +77,7 @@ export interface Stage2 {
   rsi_divergence_bearish: boolean;
   rsi_divergence_bullish: boolean;
   bear_flag: boolean;
+  breadth_narrow: boolean;
 }
 
 export interface DailyData {
@@ -116,9 +117,9 @@ export interface LatestData {
 export interface MacroItem {
   symbol: string;
   name: string;
-  price: number;
-  change_pct_1d: number;
-  change_pct_5d: number;
+  price: number | null;
+  change_pct_1d: number | null;
+  change_pct_5d: number | null;
   ema8: number | null;
   ema21: number | null;
   above_ema8: boolean;
@@ -132,6 +133,51 @@ export interface MacroData {
 }
 
 export type Tab = 'intraday' | 'daily' | 'watchlist' | 'macro';
+
+// --- Regime ---
+
+export interface RegimeComponents {
+  trend: number | null;
+  breadth: number | null;
+  credit: number | null;
+  volatility: number | null;
+  momentum: number | null;
+}
+
+export interface RegimeData {
+  total: number | null;
+  regime: 'RISK_ON' | 'CONSTRUCTIVE' | 'MIXED' | 'DEFENSIVE' | 'RISK_OFF' | 'UNKNOWN';
+  components: RegimeComponents;
+  valid_count: number;
+}
+
+export const REGIME_META: Record<RegimeData['regime'], { label: string; labelKo: string; color: string; bg: string; desc: string }> = {
+  RISK_ON:      { label: 'Risk-On',      labelKo: '강세',    color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30', desc: '매크로 환경이 강세. 추세 추종 전략 유효.' },
+  CONSTRUCTIVE: { label: 'Constructive', labelKo: '우호적',  color: 'text-teal-400',    bg: 'bg-teal-500/10 border-teal-500/30',       desc: '대체로 건전한 환경. 선별적 진입 가능.' },
+  MIXED:        { label: 'Mixed',        labelKo: '혼조',    color: 'text-yellow-400',  bg: 'bg-yellow-500/10 border-yellow-500/30',   desc: '신호가 혼재. 포지션 사이즈 축소 권장.' },
+  DEFENSIVE:    { label: 'Defensive',    labelKo: '방어적',  color: 'text-orange-400',  bg: 'bg-orange-500/10 border-orange-500/30',   desc: '약세 신호 우세. 현금 비중 늘리기.' },
+  RISK_OFF:     { label: 'Risk-Off',     labelKo: '약세',    color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/30',         desc: '리스크 오프. 신규 매수 자제, 방어 포지션.' },
+  UNKNOWN:      { label: 'Unknown',      labelKo: '불명',    color: 'text-zinc-400',    bg: 'bg-zinc-800/60 border-zinc-700/40',       desc: '데이터 부족으로 판단 불가.' },
+};
+
+// --- Distribution Day ---
+
+export interface DDDetail {
+  count: number;
+  level: 'OK' | 'WARNING' | 'DANGER';
+  dates: string[];
+}
+
+export interface DistributionDayData {
+  spy: DDDetail;
+  qqq: DDDetail;
+}
+
+export const DD_META: Record<DDDetail['level'], { label: string; color: string; bg: string; desc: string }> = {
+  OK:      { label: '정상 (0~3일)',    color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30', desc: '기관 분배 압력 낮음. 추세 진행 중.' },
+  WARNING: { label: '경계 (4~5일)',    color: 'text-orange-400',  bg: 'bg-orange-500/10 border-orange-500/30',   desc: '기관이 매도 중. 신규 진입 신중.' },
+  DANGER:  { label: '위험 (6일+)',     color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/30',         desc: 'O\'Neil: 시장 상단 임박. 포지션 축소 고려.' },
+};
 
 export const SIGNAL_META: Record<string, { label: string; color: string; bg: string; action: string; desc: string }> = {
   sniper:       { label: 'Sniper',      color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30', action: '진입',      desc: '21EMA 0.4% 이내 터치 후 반등 — RSI 38~58 구간, 거래량 급증' },

@@ -10,6 +10,7 @@ import IntradayTab from '../components/IntradayTab';
 import DailyTab from '../components/DailyTab';
 import WatchlistTab from '../components/WatchlistTab';
 import MacroTab from '../components/MacroTab';
+import DashboardOverview from '../components/DashboardOverview';
 
 export default function SniperBoard() {
   const queryClient = useQueryClient();
@@ -41,11 +42,11 @@ export default function SniperBoard() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900/40 via-zinc-950 to-zinc-950 text-white selection:bg-white/10 selection:text-white antialiased">
+    <div className="min-h-screen text-white selection:bg-blue-500/20 selection:text-white antialiased" style={{background: "radial-gradient(ellipse 120% 60% at 50% -10%, rgba(29,42,90,0.55) 0%, transparent 70%), radial-gradient(ellipse 80% 40% at 80% 100%, rgba(16,32,70,0.35) 0%, transparent 60%), #07091a"}}>
       <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
         
         {/* Header Section */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-zinc-900 animate-fade-in">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-blue-950/60 animate-fade-in">
           <div>
             <div className="flex items-center gap-2.5">
               <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent">
@@ -58,7 +59,7 @@ export default function SniperBoard() {
                 </div>
               )}
             </div>
-            <p className="text-zinc-500 mt-1 text-xs tracking-wide uppercase font-medium">
+            <p className="mt-1 text-xs tracking-wide uppercase font-medium" style={{color: 'var(--text-label)'}}>
               Precision Signal Dashboard &middot; Livermore &middot; O&apos;Neil &middot; Minervini
             </p>
           </div>
@@ -69,7 +70,7 @@ export default function SniperBoard() {
                 <select
                   value={symbol}
                   onChange={(e) => setSymbol(e.target.value)}
-                  className="appearance-none bg-zinc-900/90 border border-zinc-800 rounded-xl pl-4 pr-10 py-2.5 text-sm font-medium focus:outline-none focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition cursor-pointer hover:bg-zinc-850"
+                  className="appearance-none rounded-xl pl-4 pr-10 py-2.5 text-sm font-medium focus:outline-none transition cursor-pointer" style={{background:'rgba(10,15,32,0.9)', border:'1px solid rgba(45,65,115,0.5)', color:'var(--text-primary)'}}
                 >
                   {SYMBOLS.map((s) => (
                     <option key={s} value={s}>
@@ -90,7 +91,7 @@ export default function SniperBoard() {
                 <select
                   value={timeframe}
                   onChange={(e) => setTimeframe(e.target.value)}
-                  className="appearance-none bg-zinc-900/90 border border-zinc-800 rounded-xl pl-4 pr-10 py-2.5 text-sm font-medium focus:outline-none focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition cursor-pointer hover:bg-zinc-850"
+                  className="appearance-none rounded-xl pl-4 pr-10 py-2.5 text-sm font-medium focus:outline-none transition cursor-pointer" style={{background:'rgba(10,15,32,0.9)', border:'1px solid rgba(45,65,115,0.5)', color:'var(--text-primary)'}}
                 >
                   <option value="5m">5분봉</option>
                   <option value="1m">1분봉</option>
@@ -126,8 +127,11 @@ export default function SniperBoard() {
           </div>
         </header>
 
+        {/* Dashboard Overview — 항상 상단에 표시 */}
+        <DashboardOverview />
+
         {/* Tab Selection Section */}
-        <div className="flex gap-1.5 bg-zinc-900/40 backdrop-blur-md border border-zinc-900 rounded-2xl p-1.5 w-fit animate-fade-in">
+        <div className="flex gap-1.5 backdrop-blur-md rounded-2xl p-1.5 w-fit animate-fade-in" style={{background:'rgba(10,15,35,0.75)', border:'1px solid rgba(45,65,115,0.4)'}}>
           {([
             ['intraday', '단기 (Intraday)'],
             ['daily', '일봉 분석 (Daily)'],
@@ -140,8 +144,9 @@ export default function SniperBoard() {
               className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
                 tab === t
                   ? 'segment-tab-active'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50'
+                  : 'hover:bg-blue-950/40 hover:text-blue-100'
               }`}
+            style={tab !== t ? {color: 'var(--text-secondary)'} : {}}
             >
               {label}
             </button>
