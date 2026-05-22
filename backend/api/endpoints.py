@@ -10,7 +10,7 @@ from api.schemas import (
     OHLCVResponse, LatestSignalResponse, DailyResponse, WatchlistResponse,
     MacroResponse, RegimeResponse, DistributionDayResponse, SentimentResponse,
 )
-from services.sentiment_service import fetch_latest, enrich_with_delta
+from services.sentiment_service import fetch_latest, enrich_with_delta, fetch_today_slots
 from core.distribution_day import count_distribution_days
 from core.regime_engine import compute_regime
 
@@ -299,11 +299,27 @@ async def get_regime_endpoint():
 
 @router.get("/sentiment", response_model=SentimentResponse)
 async def get_sentiment_endpoint():
-    """소셜 심리 최신 스냅샷. 실패 시 available:false로 200 반환."""
+    """소셜 심리 최신 스냅샷 + 당일 슬롯. 실패 시 available:false로 200 반환."""
     try:
+        from datetime import datetime, timezone
         snapshot = fetch_latest()
         snapshot = enrich_with_delta(snapshot)
-        return snapshot
+
+        if not snapshot.get("available"):
+            return {"available": False, "error": snapshot.get("error", "데이터 없음")}
+
+        today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        today_slots = fetch_today_slots(today_str)
+
+        latest_data = {k: v for k, v in snapshot.items() if k != "available"}
+        return {
+            "available": True,
+            "latest": latest_data,
+            "today": {
+                "pre_open": today_slots["pre_open"],
+                "post_close": today_slots["post_close"],
+            },
+        }
     except Exception as e:
         logger.error(f"Error in /sentiment endpoint: {e}", exc_info=True)
         return {"available": False, "error": "심리 데이터 처리 중 오류 발생"}

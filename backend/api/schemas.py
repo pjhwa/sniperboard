@@ -179,6 +179,7 @@ class SymbolSentiment(BaseModel):
     confidence: str
     source: str
     score_delta: Optional[int] = None
+    intraday_shift: Optional[str] = None
 
 class MarketSentiment(BaseModel):
     as_of: str
@@ -188,11 +189,23 @@ class MarketSentiment(BaseModel):
     extreme_flag: str
     key_reason: str
     confidence: str
+    intraday_shift: Optional[str] = None
+
+class SnapshotData(BaseModel):
+    generated_at: Optional[str] = None
+    schema_version: Optional[str] = None
+    slot: Optional[str] = None
+    market: Optional[MarketSentiment] = None
+    symbols: Optional[List[SymbolSentiment]] = None
+
+
+class TodaySlots(BaseModel):
+    pre_open: Optional[SnapshotData] = None
+    post_close: Optional[SnapshotData] = None
+
 
 class SentimentResponse(BaseModel):
     available: bool
-    generated_at: Optional[str] = None
-    schema_version: Optional[str] = None
-    market: Optional[MarketSentiment] = None
-    symbols: Optional[List[SymbolSentiment]] = None
+    latest: Optional[SnapshotData] = None
+    today: Optional[TodaySlots] = None
     error: Optional[str] = None
