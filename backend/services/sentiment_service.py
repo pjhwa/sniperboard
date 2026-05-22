@@ -41,7 +41,7 @@ def _fetch_json(url: str) -> dict | None:
         resp = requests.get(url, headers=_auth_headers(), timeout=10)
         resp.raise_for_status()
         return resp.json()
-    except requests.RequestException as e:
+    except Exception as e:
         logger.warning(f"fetch 실패: {url} — {e}")
         return None
 
@@ -68,6 +68,25 @@ def fetch_latest() -> dict:
     return result
 
 
+def fetch_today_slots(date_str: str) -> dict:
+    """당일 UTC 날짜 기준으로 pre_open / post_close 슬롯 파일을 fetch.
+    슬롯 파일이 없거나 fetch 실패 시 해당 키를 None으로 반환.
+    반환: {"pre_open": dict|None, "post_close": dict|None}
+    """
+    result: dict = {"pre_open": None, "post_close": None}
+    history_base = os.environ.get("SENTIMENT_DATA_HISTORY_BASE", "")
+    if not history_base:
+        return result
+
+    base = history_base.rstrip("/")
+    for slot in ("pre_open", "post_close"):
+        url = f"{base}/{date_str}_{slot}.json"
+        data = _fetch_json(url)
+        if data is not None:
+            result[slot] = data
+    return result
+
+
 def enrich_with_delta(snapshot: dict) -> dict:
     """
     종목별로 어제 history 파일과 비교해 score_delta를 추가.
@@ -77,9 +96,15 @@ def enrich_with_delta(snapshot: dict) -> dict:
         return snapshot
 
     yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
-    yesterday_url = f"{SENTIMENT_DATA_HISTORY_BASE.rstrip('/')}/{yesterday}.json" if SENTIMENT_DATA_HISTORY_BASE else ""
-
-    yesterday_data = _fetch_json(yesterday_url) if yesterday_url else None
+    history_base = os.environ.get("SENTIMENT_DATA_HISTORY_BASE", "")
+    if history_base:
+        base = history_base.rstrip("/")
+        yesterday_data = (
+            _fetch_json(f"{base}/{yesterday}_post_close.json")
+            or _fetch_json(f"{base}/{yesterday}.json")
+        )
+    else:
+        yesterday_data = None
     yesterday_scores: dict[str, int] = {}
 
     if yesterday_data and "symbols" in yesterday_data:
