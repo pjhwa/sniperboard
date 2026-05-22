@@ -1,5 +1,6 @@
 import pandas as pd
 import logging
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Query
 from services.data_service import get_ohlcv, get_multi_daily
 from core.signal_engine import (
@@ -301,7 +302,6 @@ async def get_regime_endpoint():
 async def get_sentiment_endpoint():
     """소셜 심리 최신 스냅샷 + 당일 슬롯. 실패 시 available:false로 200 반환."""
     try:
-        from datetime import datetime, timezone
         snapshot = fetch_latest()
         snapshot = enrich_with_delta(snapshot)
 
