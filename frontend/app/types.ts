@@ -216,6 +216,7 @@ export interface SymbolSentiment {
   confidence: ConfidenceEnum;
   source: string;
   score_delta: number | null;
+  intraday_shift: TrendEnum | null;
 }
 
 export interface MarketSentiment {
@@ -226,14 +227,24 @@ export interface MarketSentiment {
   extreme_flag: 'none' | 'extreme_fear' | 'extreme_greed';
   key_reason: string;
   confidence: ConfidenceEnum;
+  intraday_shift: TrendEnum | null;
+}
+
+export interface SnapshotData {
+  generated_at?: string;
+  schema_version?: string;
+  slot?: 'pre_open' | 'post_close';
+  market?: MarketSentiment;
+  symbols?: SymbolSentiment[];
 }
 
 export interface SentimentData {
   available: boolean;
-  generated_at?: string;
-  schema_version?: string;
-  market?: MarketSentiment;
-  symbols?: SymbolSentiment[];
+  latest?: SnapshotData;
+  today?: {
+    pre_open?: SnapshotData | null;
+    post_close?: SnapshotData | null;
+  };
   error?: string;
 }
 

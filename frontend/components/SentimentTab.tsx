@@ -124,19 +124,28 @@ export default function SentimentTab() {
     );
   }
 
-  const generatedAt = data.generated_at
-    ? new Date(data.generated_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
+  const snapshot = data.latest;
+  if (!snapshot) {
+    return (
+      <div className="glass-card rounded-2xl p-6 border border-zinc-700/40 text-zinc-400 text-sm">
+        스냅샷 데이터가 없습니다.
+      </div>
+    );
+  }
+
+  const generatedAt = snapshot.generated_at
+    ? new Date(snapshot.generated_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
     : null;
 
   return (
     <div className="space-y-5 animate-fade-in">
       {/* 시장 전체 */}
-      {data.market && <MarketCard market={data.market} />}
+      {snapshot.market && <MarketCard market={snapshot.market} />}
 
       {/* 종목 그리드 */}
-      {data.symbols && data.symbols.length > 0 && (
+      {snapshot.symbols && snapshot.symbols.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data.symbols.map((sym) => (
+          {snapshot.symbols.map((sym) => (
             <SymbolCard key={sym.symbol} sym={sym} />
           ))}
         </div>
@@ -148,7 +157,7 @@ export default function SentimentTab() {
           ⚠ 소셜 심리는 보조 참고용입니다. 진입 결정은 가격 신호를 우선하세요.
         </p>
         {generatedAt && (
-          <p className="shrink-0">수집: {generatedAt} KST</p>
+          <p className="shrink-0">수집: {generatedAt} KST{snapshot.slot ? ` (${snapshot.slot})` : ''}</p>
         )}
       </div>
     </div>
