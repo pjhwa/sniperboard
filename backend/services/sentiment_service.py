@@ -14,7 +14,6 @@ import requests
 logger = logging.getLogger(__name__)
 
 SENTIMENT_DATA_URL = os.environ.get("SENTIMENT_DATA_URL", "")
-SENTIMENT_DATA_HISTORY_BASE = os.environ.get("SENTIMENT_DATA_HISTORY_BASE", "")
 SENTIMENT_DATA_TOKEN = os.environ.get("SENTIMENT_DATA_TOKEN", "")
 
 CACHE_TTL = 300  # 5분
@@ -99,10 +98,8 @@ def enrich_with_delta(snapshot: dict) -> dict:
     history_base = os.environ.get("SENTIMENT_DATA_HISTORY_BASE", "")
     if history_base:
         base = history_base.rstrip("/")
-        yesterday_data = (
-            _fetch_json(f"{base}/{yesterday}_post_close.json")
-            or _fetch_json(f"{base}/{yesterday}.json")
-        )
+        post_close = _fetch_json(f"{base}/{yesterday}_post_close.json")
+        yesterday_data = post_close if post_close is not None else _fetch_json(f"{base}/{yesterday}.json")
     else:
         yesterday_data = None
     yesterday_scores: dict[str, int] = {}
