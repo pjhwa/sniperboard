@@ -227,7 +227,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 ## 주의사항
 
 - yfinance는 개발·테스트용 무료 API입니다 (15분 지연 데이터). 운영 환경에서는 유료 데이터 소스 권장.
-- **yfinance 데이터 정확도 강화 진행 중**: `backend/core/data_adapter.py` 에 MultiIndex 정규화 로직을 TDD 로 격리 (2026-05). 기존 ad-hoc 처리(data_service) 를 점진 교체 예정.
+- **yfinance 데이터 정확도 강화 진행 중 (Task 2 완료)**: `backend/core/data_adapter.py` (normalize + get_daily + get_ohlcv_intraday) 에 MultiIndex 정규화 TDD 로 격리. `data_service` 의 get_ohlcv(인트라데이)와 get_multi_daily 가 어댑터로 위임 (중앙화, ad-hoc 제거). (2026-05)
 - 매매 신호와 분석은 **참고용**입니다. 투자 손실에 대한 책임은 사용자 본인에게 있습니다.
 - Risk Regime · Distribution Day는 **후행 지표**입니다 — 매매 신호가 아닌 시장 환경 진단입니다.
 - 미국 주식 시장 운영 시간(ET 09:30–16:00) 외에는 단기 데이터가 갱신되지 않습니다.

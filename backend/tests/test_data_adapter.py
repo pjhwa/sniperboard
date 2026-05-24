@@ -15,7 +15,7 @@ import numpy as np
 # backend/ 를 path 에 추가 (다른 테스트들과 동일 패턴)
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from core.data_adapter import normalize_yf_dataframe, get_daily
+from core.data_adapter import normalize_yf_dataframe, get_daily, get_ohlcv_intraday
 
 
 def _make_single_ticker_multindex_df(symbol: str = "TSLA", n: int = 5) -> pd.DataFrame:
@@ -117,4 +117,28 @@ def test_get_daily_uses_normalize_and_returns_clean_df():
         assert result is not None
         assert list(result.columns) == ["open", "high", "low", "close", "volume"]
         assert len(result) == 3
+        assert isinstance(result.index, pd.DatetimeIndex)
+
+
+def test_get_ohlcv_intraday_uses_normalize_and_explicit_auto_adjust():
+    """get_ohlcv_intraday 는 intraday 데이터 로드 + normalize + auto_adjust=False 를 명시적으로 사용해야 함.
+    (Task 2: data_service 위임 대상)
+    """
+    symbol = "TSLA"
+    fake_raw = _make_single_ticker_multindex_df(symbol, n=4)
+
+    with patch("core.data_adapter.yf.download", return_value=fake_raw) as mock_download:
+        result = get_ohlcv_intraday(symbol, timeframe="5m", period="5d")
+
+        mock_download.assert_called_once()
+        call_kwargs = mock_download.call_args.kwargs
+        assert symbol in str(call_kwargs.get("tickers", "")) or symbol == call_kwargs.get("tickers")
+        assert call_kwargs.get("interval") == "5m"
+        assert call_kwargs.get("period") == "5d"
+        assert call_kwargs.get("auto_adjust") is False   # 핵심: 명시적 False
+
+        # normalize 결과 검증 (MultiIndex -> flat ohlcv)
+        assert result is not None
+        assert list(result.columns) == ["open", "high", "low", "close", "volume"]
+        assert len(result) == 4
         assert isinstance(result.index, pd.DatetimeIndex)

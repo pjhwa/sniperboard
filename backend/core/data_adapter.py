@@ -8,6 +8,7 @@
 Public API (현재 단계):
 - normalize_yf_dataframe(df) -> pd.DataFrame
 - get_daily(symbol, period="2y") -> Optional[pd.DataFrame]
+- get_ohlcv_intraday(symbol, timeframe="5m", period="5d") -> Optional[pd.DataFrame]
 """
 import pandas as pd
 import yfinance as yf
@@ -84,4 +85,27 @@ def get_daily(symbol: str, period: str = "2y") -> Optional[pd.DataFrame]:
         return normalize_yf_dataframe(raw_df)
     except Exception as e:
         logger.error(f"Error fetching daily data for {symbol}: {e}", exc_info=True)
+        return None
+
+
+def get_ohlcv_intraday(symbol: str, timeframe: str = "5m", period: str = "5d") -> Optional[pd.DataFrame]:
+    """단일 종목 intraday OHLCV (e.g. 5m, 1m) 를 yfinance 로 가져와 정규화된 DF 로 반환.
+
+    Task 2: data_service.get_ohlcv 의 기존 로직을 포팅. auto_adjust=False 명시.
+    normalize_yf_dataframe 호출로 MultiIndex( yf 1.3+ ) 를 robust 하게 처리.
+    """
+    try:
+        raw_df = yf.download(
+            tickers=symbol,
+            period=period,
+            interval=timeframe,
+            progress=False,
+            auto_adjust=False,
+        )
+        if raw_df is None or raw_df.empty:
+            logger.warning(f"No data returned for symbol: {symbol}")
+            return None
+        return normalize_yf_dataframe(raw_df)
+    except Exception as e:
+        logger.error(f"Error fetching intraday data for {symbol} ({timeframe}): {e}", exc_info=True)
         return None
