@@ -10,8 +10,11 @@ from core.signal_engine import (
 from api.schemas import (
     OHLCVResponse, LatestSignalResponse, DailyResponse, WatchlistResponse,
     MacroResponse, RegimeResponse, DistributionDayResponse, SentimentResponse,
+    BriefResponse, EarningsResponse,
 )
 from services.sentiment_service import fetch_latest, enrich_with_delta, fetch_today_slots
+from services.brief_service import fetch_brief
+from services.earnings_service import fetch_earnings
 from core.distribution_day import count_distribution_days
 from core.regime_engine import compute_regime
 
@@ -323,6 +326,32 @@ async def get_sentiment_endpoint():
     except Exception as e:
         logger.error(f"Error in /sentiment endpoint: {e}", exc_info=True)
         return {"available": False, "error": "심리 데이터 처리 중 오류 발생"}
+
+
+@router.get("/brief", response_model=BriefResponse)
+async def get_brief_endpoint():
+    """AI Daily Brief 최신 스냅샷. 실패 시 available:false로 200 반환."""
+    try:
+        result = fetch_brief()
+        if not result.get("available"):
+            return {"available": False, "error": result.get("error", "데이터 없음")}
+        return {"available": True, "data": result["data"]}
+    except Exception as e:
+        logger.error(f"Error in /brief endpoint: {e}", exc_info=True)
+        return {"available": False, "error": "Brief 데이터 처리 중 오류 발생"}
+
+
+@router.get("/earnings", response_model=EarningsResponse)
+async def get_earnings_endpoint():
+    """Earnings Intelligence 최신 스냅샷. 실패 시 available:false로 200 반환."""
+    try:
+        result = fetch_earnings()
+        if not result.get("available"):
+            return {"available": False, "error": result.get("error", "데이터 없음")}
+        return {"available": True, "data": result["data"]}
+    except Exception as e:
+        logger.error(f"Error in /earnings endpoint: {e}", exc_info=True)
+        return {"available": False, "error": "Earnings 데이터 처리 중 오류 발생"}
 
 
 @router.get("/distribution-days", response_model=DistributionDayResponse)

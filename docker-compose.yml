@@ -13,6 +13,9 @@ services:
       SENTIMENT_DATA_URL: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/latest.json"
       # history/ 디렉토리 base URL (파일명 없이)
       SENTIMENT_DATA_HISTORY_BASE: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/history"
+      # AI Brief + Earnings Intelligence
+      BRIEF_DATA_URL: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/brief/latest.json"
+      EARNINGS_DATA_URL: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/earnings/latest.json"
       # Private 리포일 때만 필요 (GitHub PAT). Public이면 빈 채로 두세요.
       SENTIMENT_DATA_TOKEN: ""
     restart: unless-stopped

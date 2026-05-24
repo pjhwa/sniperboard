@@ -284,3 +284,85 @@ export const VOLUME_META: Record<VolumeEnum, { label: string; color: string }> =
   elevated: { label: '높음',  color: 'text-yellow-400'  },
   surging:  { label: '급증',  color: 'text-orange-400'  },
 };
+
+// --- AI Brief ---
+
+export interface MarketBrief {
+  summary: string;
+  tone: 'bullish' | 'cautious' | 'bearish' | 'neutral';
+  key_themes: string[];
+  watch_points: string;
+}
+
+export interface SymbolBrief {
+  symbol: string;
+  setup_quality: 'A+' | 'A' | 'B' | 'C' | 'D';
+  brief: string;
+  key_risk: string;
+  key_opportunity: string;
+  action_bias: 'buy' | 'hold' | 'watch' | 'avoid';
+}
+
+export interface BriefData {
+  generated_at?: string | null;
+  schema_version?: string | null;
+  slot?: string | null;
+  market_brief?: MarketBrief | null;
+  symbol_briefs?: SymbolBrief[] | null;
+}
+
+export interface BriefResponse {
+  available: boolean;
+  data?: BriefData | null;
+  error?: string | null;
+}
+
+// --- Earnings Intelligence ---
+
+export interface UpcomingEarning {
+  symbol: string;
+  earnings_date: string;
+  days_until: number;
+  eps_estimate?: number | null;
+  revenue_estimate_b?: number | null;
+  historical_beat_rate?: number | null;
+  ai_summary: string;
+  risk_level: 'high' | 'med' | 'low';
+  action_note: string;
+}
+
+export interface RecentResult {
+  symbol: string;
+  report_date: string;
+  eps_actual: number;
+  eps_estimate: number;
+  surprise_pct: number;
+  ai_reaction: string;
+}
+
+export interface EarningsData {
+  generated_at?: string | null;
+  schema_version?: string | null;
+  upcoming_earnings?: UpcomingEarning[] | null;
+  recent_results?: RecentResult[] | null;
+}
+
+export interface EarningsResponse {
+  available: boolean;
+  data?: EarningsData | null;
+  error?: string | null;
+}
+
+export const SETUP_QUALITY_META: Record<string, { color: string; label: string }> = {
+  'A+': { color: 'bull',  label: 'A+' },
+  'A':  { color: 'teal', label: 'A'  },
+  'B':  { color: 'warn', label: 'B'  },
+  'C':  { color: 'bear', label: 'C'  },
+  'D':  { color: 'bear', label: 'D'  },
+};
+
+export const EARNINGS_RISK_META: Record<string, { color: string; dot: string }> = {
+  high: { color: 'bear', dot: '●' },
+  med:  { color: 'warn', dot: '●' },
+  low:  { color: 'teal', dot: '●' },
+};

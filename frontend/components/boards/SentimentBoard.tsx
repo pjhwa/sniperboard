@@ -2,7 +2,9 @@
 
 import { useStore } from '@/hooks/useStore';
 import { useSentiment } from '@/hooks/useSentiment';
+import { useBrief } from '@/hooks/useBrief';
 import { Card } from '@/components/ui/Card';
+import { SymbolBrief, SETUP_QUALITY_META } from '@/app/types';
 import { RadialGauge } from '@/components/ui/RadialGauge';
 import { SENTIMENT_META, TREND_META, VOLUME_META } from '@/app/types';
 import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
@@ -96,6 +98,11 @@ function DeltaLabel({ delta }: { delta: number | null }) {
 export function SentimentBoard() {
   const { symbol, setSymbol } = useStore();
   const { data: sentimentData, isLoading } = useSentiment();
+  const { briefData } = useBrief();
+  const briefBySymbol = (briefData?.symbol_briefs ?? []).reduce(
+    (acc: Record<string, SymbolBrief>, sb: SymbolBrief) => { acc[sb.symbol] = sb; return acc; },
+    {}
+  );
 
   if (isLoading) {
     return (
@@ -215,6 +222,15 @@ export function SentimentBoard() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   <span className="sym-pill__badge" style={{ width: 22, height: 22 }}>{it.symbol[0]}</span>
                   <span style={{ fontWeight: 600, fontSize: 13 }}>{it.symbol}</span>
+                  {briefBySymbol[it.symbol] && (() => {
+                    const sq = briefBySymbol[it.symbol].setup_quality;
+                    const sqMeta = SETUP_QUALITY_META[sq] ?? SETUP_QUALITY_META['B'];
+                    return (
+                      <span className={`badge ${sqMeta.color}`} style={{ fontSize: 10, marginLeft: 2 }}>
+                        {sqMeta.label}
+                      </span>
+                    );
+                  })()}
                   <span style={{
                     marginLeft: 'auto', fontSize: 10, fontWeight: 600,
                     color: compositeColor(score),

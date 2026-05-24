@@ -2,7 +2,9 @@
 
 import { useStore } from '@/hooks/useStore';
 import { useDaily } from '@/hooks/useDaily';
+import { useEarnings } from '@/hooks/useEarnings';
 import { Card } from '@/components/ui/Card';
+import { UpcomingEarning } from '@/app/types';
 import { RadialGauge } from '@/components/ui/RadialGauge';
 import DailyChart from '@/components/charts/DailyChart';
 import { Check, X } from '@/components/ui/Icons';
@@ -33,6 +35,10 @@ const STRUCT_COLOR: Record<string, string> = {
 export function DailyBoard() {
   const { symbol, rrAccount, rrRiskPct } = useStore();
   const { dailyData, isLoading } = useDaily(symbol);
+  const { earningsData } = useEarnings();
+  const symbolEarning: UpcomingEarning | undefined = earningsData?.upcoming_earnings?.find(
+    (e: UpcomingEarning) => e.symbol === symbol
+  );
 
   const stage2 = dailyData?.stage2;
   const structColor = STRUCT_COLOR[stage2?.market_structure ?? 'NEUTRAL'] ?? 'neutral';
@@ -60,6 +66,21 @@ export function DailyBoard() {
           <small>1Y · Gaussian Channel</small>
         </div>
         <div className="card__bd" style={{ paddingTop: 0 }}>
+          {symbolEarning && (
+            <div style={{
+              background: symbolEarning.risk_level === 'high' ? 'var(--warn)' : 'var(--border)',
+              color: symbolEarning.risk_level === 'high' ? '#000' : 'var(--fg)',
+              padding: '4px 12px',
+              fontSize: 11.5,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              opacity: 0.9,
+            }}>
+              <span style={{ fontWeight: 700 }}>⚡ EARNINGS IN {symbolEarning.days_until}D</span>
+              <span style={{ opacity: 0.8 }}>{symbolEarning.action_note}</span>
+            </div>
+          )}
           {isLoading ? (
             <div className="subtle" style={{ padding: 24 }}>차트 로딩 중...</div>
           ) : dailyData ? (

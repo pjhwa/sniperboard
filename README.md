@@ -98,6 +98,14 @@ docker compose up --build -d
 - TSLA·AAPL·NVDA·META·AMZN·GOOGL Stage 2 점수 순 정렬
 - 7개 체크 항목, RS Score, 52주 고점 이격, 진입/손절/목표가
 
+**심리 분석 (Sentiment)**
+- 소셜 심리 게이지: 시장 전체 감정 스코어 및 트렌드
+- 종목별 심리 카드: 멘션량·봇 의심도·다이버전스 + Grok AI 셋업 품질 배지(A+~D)
+
+**AI Daily Brief & Earnings** (OverviewBoard 통합)
+- AI Insight 카드: Grok이 기술 지표 + 소셜 심리를 결합한 시장 내러티브 (tone·key_themes)
+- Earnings Calendar: 워치리스트 종목 실적 발표 일정 + 리스크 등급(high/med/low) + Grok 요약
+
 **매크로 (Macro)**
 - 섹터 로테이션 바 (SMH·XLE·XLY·XHB·ITA 1일 수익률 정렬)
 - VIX 백워데이션 배지 자동 표시
@@ -164,6 +172,9 @@ docker compose up --build -d
 | `GET /api/watchlist` | 6종목 Stage2 점수 순 정렬 |
 | `GET /api/regime` | Risk Regime 5요소 종합 점수 |
 | `GET /api/distribution-days` | SPY·QQQ Distribution Day 카운트 |
+| `GET /api/sentiment` | 소셜 심리 데이터 (GitHub raw 캐시) |
+| `GET /api/brief` | AI Daily Brief — Grok 시장 분석 (GitHub raw 캐시) |
+| `GET /api/earnings` | Earnings Intelligence — 실적 발표 일정 + AI 해석 (GitHub raw 캐시) |
 
 전체 응답 스키마: `backend/api/schemas.py` 참고
 

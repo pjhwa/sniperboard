@@ -12,8 +12,10 @@ import { RadialGauge } from '@/components/ui/RadialGauge';
 import { Sparkline } from '@/components/ui/Sparkline';
 import { HeatStrip } from '@/components/ui/HeatStrip';
 import { Sparkle } from '@/components/ui/Icons';
-import { MacroItem, RegimeDiagnostics } from '@/app/types';
+import { MacroItem, RegimeDiagnostics, UpcomingEarning, EARNINGS_RISK_META } from '@/app/types';
 import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
+import { useBrief } from '@/hooks/useBrief';
+import { useEarnings } from '@/hooks/useEarnings';
 
 const OVERVIEW_GLOSSARY: GlossaryItem[] = [
   { term: 'Risk Regime (리스크 레짐)', plain: '지금 시장이 얼마나 투자하기 좋은 환경인지를 5가지 요소로 종합해 점수로 나타냅니다. 100점에 가까울수록 강세, 낮을수록 위험한 환경입니다.' },
@@ -73,6 +75,9 @@ export function OverviewBoard() {
   const lqd   = findMacro(macro, 'LQD');
   const ief   = findMacro(macro, 'IEF');
 
+  const { briefData } = useBrief();
+  const { earningsData } = useEarnings();
+
   const candles = ohlcvData?.candles ?? [];
   const signals = ohlcvData?.signals;
   const indicators = ohlcvData?.indicators;
@@ -114,7 +119,33 @@ export function OverviewBoard() {
             <small>{new Date().toLocaleDateString('ko-KR')}</small>
           </div>
           <div className="ai-card__body">
-            {regimeData ? (
+            {briefData?.market_brief ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <span className={`badge ${
+                    briefData.market_brief.tone === 'bullish' ? 'bull' :
+                    briefData.market_brief.tone === 'bearish' ? 'bear' :
+                    briefData.market_brief.tone === 'cautious' ? 'warn' : 'neutral'
+                  }`}>{
+                    briefData.market_brief.tone === 'bullish' ? '강세' :
+                    briefData.market_brief.tone === 'bearish' ? '약세' :
+                    briefData.market_brief.tone === 'cautious' ? '주의' : '중립'
+                  }</span>
+                  <span style={{ fontSize: 13 }}>{briefData.market_brief.summary}</span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
+                  {briefData.market_brief.key_themes.map((theme, i) => (
+                    <span key={i} className="badge neutral" style={{ fontSize: 10.5 }}>{theme}</span>
+                  ))}
+                </div>
+                <div style={{ color: 'var(--fg-muted)', fontSize: 11.5 }}>
+                  주시: {briefData.market_brief.watch_points}
+                </div>
+                <div style={{ color: 'var(--fg-subtle)', fontSize: 10, marginTop: 4 }}>
+                  AI 의견 — 매매 신호 아님 · {briefData.slot === 'pre_open' ? '장 전' : '장 후'} 기준
+                </div>
+              </>
+            ) : regimeData ? (
               <>
                 <div style={{ marginBottom: 6 }}>
                   현재 Risk Regime은{' '}
@@ -136,11 +167,37 @@ export function OverviewBoard() {
                 </div>
               </>
             ) : (
-              <div style={{ color: 'var(--fg-muted)' }}>시장 데이터 로딩 중...</div>
+              <div style={{ color: 'var(--fg-muted)' }}>AI Brief 로딩 중...</div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Earnings Calendar */}
+      <Card title="Earnings Calendar" action="60일 이내">
+        {earningsData?.upcoming_earnings && earningsData.upcoming_earnings.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {earningsData.upcoming_earnings.map((e: UpcomingEarning) => {
+              const rm = EARNINGS_RISK_META[e.risk_level] ?? EARNINGS_RISK_META.med;
+              return (
+                <div key={e.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+                  <span style={{ fontWeight: 600, width: 40, fontFamily: 'var(--mono)' }}>{e.symbol}</span>
+                  <span style={{ color: 'var(--fg-muted)', flex: 1 }}>
+                    {e.earnings_date.slice(5)} · {e.days_until}일 후
+                  </span>
+                  <span className={`badge ${rm.color}`} style={{ fontSize: 10 }}>
+                    {rm.dot} {e.risk_level.toUpperCase()}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{ color: 'var(--fg-muted)', fontSize: 12 }}>
+            {earningsData === null ? 'Earnings 로딩 중...' : '60일 이내 어닝 없음'}
+          </div>
+        )}
+      </Card>
 
       {/* Regime gauge */}
       <Card title="Risk Regime" action="5요소 종합">

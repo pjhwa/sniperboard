@@ -219,3 +219,65 @@ class SentimentResponse(BaseModel):
     latest: Optional[SnapshotData] = None
     today: Optional[TodaySlots] = None
     error: Optional[str] = None
+
+
+# --- AI Brief ---
+
+class MarketBrief(BaseModel):
+    summary: str
+    tone: str  # "bullish" | "cautious" | "bearish" | "neutral"
+    key_themes: List[str]
+    watch_points: str
+
+class SymbolBrief(BaseModel):
+    symbol: str
+    setup_quality: str  # "A+" | "A" | "B" | "C" | "D"
+    brief: str
+    key_risk: str
+    key_opportunity: str
+    action_bias: str  # "buy" | "hold" | "watch" | "avoid"
+
+class BriefData(BaseModel):
+    generated_at: Optional[str] = None
+    schema_version: Optional[str] = None
+    slot: Optional[str] = None
+    market_brief: Optional[MarketBrief] = None
+    symbol_briefs: Optional[List[SymbolBrief]] = None
+
+class BriefResponse(BaseModel):
+    available: bool
+    data: Optional[BriefData] = None
+    error: Optional[str] = None
+
+
+# --- Earnings Intelligence ---
+
+class UpcomingEarning(BaseModel):
+    symbol: str
+    earnings_date: str
+    days_until: int
+    eps_estimate: Optional[float] = None
+    revenue_estimate_b: Optional[float] = None
+    historical_beat_rate: Optional[float] = None
+    ai_summary: str
+    risk_level: str  # "high" | "med" | "low"
+    action_note: str
+
+class RecentResult(BaseModel):
+    symbol: str
+    report_date: str
+    eps_actual: float
+    eps_estimate: float
+    surprise_pct: float
+    ai_reaction: str
+
+class EarningsData(BaseModel):
+    generated_at: Optional[str] = None
+    schema_version: Optional[str] = None
+    upcoming_earnings: Optional[List[UpcomingEarning]] = None
+    recent_results: Optional[List[RecentResult]] = None
+
+class EarningsResponse(BaseModel):
+    available: bool
+    data: Optional[EarningsData] = None
+    error: Optional[str] = None

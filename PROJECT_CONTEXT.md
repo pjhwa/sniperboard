@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (AUTO-GENERATED 2026-05-24)
+# SniperBoard — Project Context (UPDATED 2026-05-24)
 
 ## 0. 이 문서의 목적
 
@@ -31,7 +31,9 @@ sniperboard/
 │   │   └── distribution_day.py   # O'Neil Distribution Day 카운트 (25거래일 기준)
 │   ├── services/
 │   │   ├── base.py               # BaseDataService 추상 클래스
-│   │   └── data_service.py       # YFinanceDataService 구현체 + 모듈 레벨 헬퍼 함수
+│   │   ├── data_service.py       # YFinanceDataService 구현체 + 모듈 레벨 헬퍼 함수
+│   │   ├── brief_service.py      # GitHub raw fetch + 30분 인메모리 캐시 (BRIEF_DATA_URL)
+│   │   └── earnings_service.py   # GitHub raw fetch + 60분 인메모리 캐시 (EARNINGS_DATA_URL)
 │   └── tests/
 │       └── test_signal_engine.py
 ├── frontend/
@@ -75,6 +77,8 @@ sniperboard/
 │       ├── useMacro.ts           # GET /api/macro
 │       ├── useRegime.ts          # GET /api/regime
 │       ├── useSentiment.ts       # GET /api/sentiment
+│       ├── useBrief.ts           # GET /api/brief (30분 staleTime)
+│       ├── useEarnings.ts        # GET /api/earnings (60분 staleTime)
 │       └── useDistributionDays.ts # GET /api/distribution-days
 ├── docker-compose.yml            # backend 8000→5001, frontend 3000→4000
 └── docs/
@@ -97,6 +101,9 @@ sniperboard/
 | `GET /watchlist` | — | WATCHLIST_SYMS 6종목 Stage2 점수 내림차순 |
 | `GET /regime` | — | Risk Regime 5요소 점수 + 종합 regime 문자열 |
 | `GET /distribution-days` | — | SPY·QQQ DD count/level/dates |
+| `GET /sentiment` | — | 소셜 심리 JSON (GitHub raw 30분 캐시) |
+| `GET /brief` | — | AI Daily Brief JSON (GitHub raw 30분 캐시) |
+| `GET /earnings` | — | Earnings Intelligence JSON (GitHub raw 60분 캐시) |
 
 ---
 
@@ -188,6 +195,9 @@ OK(<4) / WARNING(4~5) / DANGER(≥6)
 - `useMacro()`: `/macro`
 - `useRegime()`: `/regime`
 - `useDistributionDays()`: `/distribution-days`
+- `useSentiment()`: `/sentiment` — 30분 staleTime, `available` 체크 후 `.data` 반환
+- `useBrief()`: `/brief` — 30분 staleTime, `briefData` null이면 Insight 카드 fallback
+- `useEarnings()`: `/earnings` — 60분 staleTime, `earningsData` null이면 카드 숨김
 
 ### 5-3. 타입 정의 (`app/types.ts`) — 중요 상수
 
@@ -198,6 +208,10 @@ export const SIGNAL_META = { sniper, vcp, pullback, strong_trend, overbought, do
 export const STAGE2_META = { price_above_emas, ema200_rising, ... };
 export const REGIME_META = { RISK_ON, CONSTRUCTIVE, MIXED, DEFENSIVE, RISK_OFF, UNKNOWN };
 export const DD_META = { OK, WARNING, DANGER };
+export const SETUP_QUALITY_META = { 'A+': {color:'bull'}, 'A': {color:'teal'}, 'B': {color:'warn'}, 'C': {color:'bear'}, 'D': {color:'bear'} };
+export const EARNINGS_RISK_META = { high: {color:'bear',dot:'●'}, med: {color:'warn',dot:'●'}, low: {color:'teal',dot:'●'} };
+// AI 관련 인터페이스: MarketBrief, SymbolBrief, BriefData, BriefResponse
+// Earnings 관련 인터페이스: UpcomingEarning, RecentResult, EarningsData, EarningsResponse
 ```
 
 ### 5-4. UI 시스템 (`app/globals.css`) — Plaid DS 리디자인
@@ -221,6 +235,8 @@ export const DD_META = { OK, WARNING, DANGER };
 |------|------------|------|
 | RegimeCard | `useRegime` | 5요소 바 + 총점 + regime 라벨 |
 | DDCard (SPY·QQQ) | `useDistributionDays` | DD 카운트 + 도트 시각화 |
+| AI Insight | `useBrief` | Grok 시장 분석 — tone 배지·summary·key_themes·watch_points; briefData=null이면 regime 텍스트로 fallback |
+| Earnings Calendar | `useEarnings` | 워치리스트 종목 실적 일정 + risk_level 배지 + action_note; earningsData=null이면 카드 숨김 |
 | IndexSnapshot | `useMacro` | SPY·QQQ·IWM·DXY·GLD 가격·1D/5D |
 | VIXPanel | `useMacro` | ^VIX + ^VIX9D + ^VVIX + 백워데이션 감지 |
 | BreadthPanel | `useMacro` | SPY/QQQ/RSP/MAGS/IWM 가로 바 + 협소 랠리 경고 |
@@ -240,6 +256,29 @@ FastAPI (port 8000 내부 / 5001 외부 Docker)
 TanStack Query 훅 (React 컴포넌트 트리)
     ↓ props / Zustand 상태
 lightweight-charts + Tailwind 카드 UI
+
+─── AI 파이프라인 (별도 경로) ───────────────────────────────────────
+Mac Mini cron (06:00/22:00 UTC)
+    ↓ collect_sentiment.py → GitHub: market-sentiment-data/latest.json
+Mac Mini cron (06:30/22:30 UTC)
+    ↓ collect_brief.py
+        ├─ GET /api/regime, /api/daily, /api/watchlist  (Sniperboard API)
+        ├─ read latest.json  (소셜 심리)
+        └─ Hermes/Grok → JSON
+    ↓ GitHub push: market-sentiment-data/brief/latest.json
+Mac Mini cron (06:30 UTC, 하루 1회)
+    ↓ collect_earnings.py
+        ├─ yfinance .calendar + .earnings_history
+        └─ Hermes/Grok → JSON
+    ↓ GitHub push: market-sentiment-data/earnings/latest.json
+
+GitHub raw CDN
+    ↓ brief_service.py / earnings_service.py (30~60분 인메모리 캐시, Cache-Control: no-cache 헤더)
+FastAPI /api/brief, /api/earnings
+    ↓ TanStack Query useBrief / useEarnings
+OverviewBoard (AI Insight 카드 + Earnings Calendar)
+DailyBoard (⚡ EARNINGS IN Nd 배너)
+SentimentBoard (종목별 셋업 품질 배지 A+~D)
 ```
 
 ---
@@ -267,6 +306,9 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 ### 주요 환경변수
 - `NEXT_PUBLIC_API_URL`: 빌드 시 번들됨. docker-compose에서 `http://localhost:5001` 하드코딩.
   변경 시 반드시 **재빌드** 필요.
+- `BRIEF_DATA_URL`: GitHub raw URL for `brief/latest.json` (backend 환경변수)
+- `EARNINGS_DATA_URL`: GitHub raw URL for `earnings/latest.json` (backend 환경변수)
+- `SENTIMENT_DATA_TOKEN`: GitHub PAT (private 리포인 경우 sentiment/brief/earnings 모두 사용)
 
 ---
 
@@ -317,3 +359,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | API 주소 변경 | `frontend/app/types.ts: API_BASE` + `docker-compose.yml: NEXT_PUBLIC_API_URL` |
 | 신호 메타데이터(색상·설명) | `frontend/app/types.ts: SIGNAL_META` |
 | 폴링 간격 변경 | `frontend/hooks/useIntraday.ts` (현재 30초) |
+| Brief/Earnings URL 변경 | `docker-compose.yml: BRIEF_DATA_URL / EARNINGS_DATA_URL` |
+| Brief 캐시 TTL 변경 | `backend/services/brief_service.py: CACHE_TTL` (현재 1800초) |
+| Earnings 캐시 TTL 변경 | `backend/services/earnings_service.py: CACHE_TTL` (현재 3600초) |
+| Brief 워치리스트 변경 | `collect/collect_brief.py: WATCHLIST` + `collect/collect_earnings.py: WATCHLIST` |
