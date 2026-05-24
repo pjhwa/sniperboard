@@ -7,9 +7,12 @@ def ema(series: pd.Series, period: int) -> pd.Series:
 
 def rsi(series: pd.Series, period: int = 14) -> pd.Series:
     delta = series.diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
-    rs = gain / loss
+    gain = delta.where(delta > 0, 0.0)
+    loss = -delta.where(delta < 0, 0.0)
+    # Wilder's Smoothed Moving Average: com = period - 1 (alpha = 1/period)
+    avg_gain = gain.ewm(com=period - 1, min_periods=period, adjust=False).mean()
+    avg_loss = loss.ewm(com=period - 1, min_periods=period, adjust=False).mean()
+    rs = avg_gain / avg_loss
     return 100 - (100 / (1 + rs))
 
 def atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
@@ -297,7 +300,9 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None, rsp
     pct_from_52w_high = (latest_close - high52) / high52 * 100 if high52 != 0 else 0.0
     pct_from_52w_low = (latest_close - low52) / low52 * 100 if low52 != 0 else 0.0
 
-    recent_high = float(close.rolling(20).max().iloc[-1])
+    # 피벗 고점: 일봉 고가(high) 20일 최대 — close 최대가 아닌 실제 고가 기준
+    recent_high = float(high_arr.rolling(20).max().iloc[-1])
+    # 눌림목 % 계산은 종가 기준
     pullback_pct = (recent_high - latest_close) / recent_high * 100 if recent_high > 0 else 0.0
 
     vol_avg20 = float(volume.rolling(20).mean().iloc[-1])

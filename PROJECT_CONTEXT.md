@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (AUTO-GENERATED 2026-05-23)
+# SniperBoard — Project Context (AUTO-GENERATED 2026-05-24)
 
 ## 0. 이 문서의 목적
 
@@ -104,7 +104,7 @@ sniperboard/
 
 ### 4-1. 단기 지표 (`signal_engine.py: add_indicators`)
 
-intraday용: EMA21, EMA50, RSI(14), ATR(14), MACD 히스토그램, vol_avg20
+intraday용: EMA21, EMA50, RSI(14, Wilder's Smoothed MA), ATR(14), MACD 히스토그램, vol_avg20
 
 ### 4-2. 단기 신호 6종 (`signal_engine.py: calculate_signals`)
 
@@ -139,7 +139,7 @@ Minervini 7개 체크리스트 (score 0~7):
 7. `volume_contracting`: 최근 5일 평균 < 20일 평균
 
 추가 계산:
-- 진입가 = 20일 고점 × 1.005
+- 진입가 = 20일 **일봉 고가(high)** 최대 × 1.005 (close 아닌 high 기준)
 - 손절가 = 진입가 - 2 × ATR14
 - 목표가 = 진입가 + 3 × (진입가 - 손절가)
 - rs_score 공식: min(100, max(0, 50 + (stock_63d_ret - spy_63d_ret) × 2))

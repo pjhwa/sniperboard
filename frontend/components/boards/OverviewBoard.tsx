@@ -23,7 +23,7 @@ const OVERVIEW_GLOSSARY: GlossaryItem[] = [
   { term: 'Volatility (변동성)', plain: 'VIX 공포 지수입니다. 14 이하면 시장이 안정적, 20 이상이면 불안, 30 이상이면 공포 국면입니다. 낮을수록 좋은 환경입니다.' },
   { term: 'Momentum (모멘텀)', plain: 'S&P500의 최근 20일 방향성입니다. 지수가 꾸준히 오르고 있으면 긍정 점수를 받습니다.' },
   { term: 'Distribution Days (분산일)', plain: '기관 투자자들이 대량 매도한 날의 수입니다. 25거래일 내에 4~5일이면 경계, 6일 이상이면 시장 상단 가능성이 높아 신규 진입을 조심해야 합니다.' },
-  { term: 'VIX 백워데이션', plain: 'VIX(30일 변동성)가 VIX9D(9일)보다 높은 상태입니다. 단기보다 장기 불확실성이 크다는 뜻으로 시장 불안 신호입니다.' },
+  { term: 'VIX 백워데이션', plain: 'VIX9D(9일 변동성)가 VIX(30일)보다 높은 상태입니다. 정상적으로는 장기 변동성(VIX)이 더 높은데(콘탱고), 역전되면 지금 당장 시장이 더 불안하다는 뜻으로 위험 신호입니다.' },
   { term: 'Market Breadth · SPY vs RSP', plain: 'SPY는 시가총액 비례 지수(애플, MS 등 대형주 영향 큼), RSP는 모든 종목을 동일 비중으로 구성한 지수입니다. RSP가 SPY보다 약하면 소수 대형주만 시장을 끌고 있다는 경고입니다.' },
   { term: 'Credit Stress · HYG/JNK/LQD/IEF', plain: 'HYG·JNK는 고수익(고위험) 채권, LQD는 투자등급 회사채, IEF는 미국 국채입니다. 안전 자산(IEF)이 강하고 위험 자산(HYG)이 약하면 투자자들이 공포를 느끼고 있다는 뜻입니다.' },
   { term: 'Daily Heat Strip (일봉 히트맵)', plain: '최근 60거래일의 일별 등락률을 색깔로 표현합니다. 초록색이 짙을수록 큰 상승, 빨간색이 짙을수록 큰 하락입니다. 패턴을 보며 종목의 건강도를 확인합니다.' },
@@ -97,7 +97,8 @@ export function OverviewBoard() {
   const maxGain  = dailyChg.length ? Math.max(...dailyChg) : 0;
   const maxLoss  = dailyChg.length ? Math.min(...dailyChg) : 0;
 
-  const backward = vix && vix9d ? vix.price !== null && vix9d.price !== null && (vix.price ?? 0) > (vix9d.price ?? 0) : false;
+  // 백워데이션: VIX9D(9일) > VIX(30일) — 단기 변동성이 장기보다 높아 역전된 상태
+  const backward = vix && vix9d ? vix.price !== null && vix9d.price !== null && (vix9d.price ?? 0) > (vix.price ?? 0) : false;
 
   return (
     <div
