@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-24)
+# SniperBoard — Project Context (UPDATED 2026-05-24; post Task2 review: get_multi_daily test coverage + docstring cleanup)
 
 ## 0. 이 문서의 목적
 
@@ -29,14 +29,16 @@ sniperboard/
 │   │   ├── signal_engine.py      # 핵심: 모든 기술적 지표·신호 계산 (700+ lines)
 │   │   ├── regime_engine.py      # Risk Regime 5요소 종합 점수 (0~100)
 │   │   ├── distribution_day.py   # O'Neil Distribution Day 카운트 (25거래일 기준)
-│   │   └── data_adapter.py       # yfinance MultiIndex 정규화 전담 (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily). TDD, yf 1.3+ 대응. Task2: get_ohlcv + get_multi_daily 완전 위임 완료.
+│   │   └── data_adapter.py       # yfinance MultiIndex 정규화 전담 (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily). yf 1.3+ 대응. Task2: get_ohlcv + get_multi_daily 완전 위임 + test_data_adapter.py coverage (post-review).
 │   ├── services/
 │   │   ├── base.py               # BaseDataService 추상 클래스
 │   │   ├── data_service.py       # YFinanceDataService 구현체 + 모듈 레벨 헬퍼 함수
 │   │   ├── brief_service.py      # GitHub raw fetch + 30분 인메모리 캐시 (BRIEF_DATA_URL)
 │   │   └── earnings_service.py   # GitHub raw fetch + 60분 인메모리 캐시 (EARNINGS_DATA_URL)
 │   └── tests/
-│       └── test_signal_engine.py
+│       ├── test_data_adapter.py
+│       ├── test_signal_engine.py
+│       └── (service tests: brief/earnings/sentiment)
 ├── frontend/
 │   ├── package.json              # Next.js 16.2.6, React 19.2.4, TanStack Query 5, Zustand 5, lightweight-charts 4.2.3, Tailwind v4
 │   ├── next.config.ts
@@ -343,7 +345,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | CORS | 개발용 `allow_origins=["*"]` — 운영 시 변경 필요 |
 | API_BASE 재빌드 | `NEXT_PUBLIC_API_URL`은 빌드 시 번들되므로 런타임 변경 불가 |
 | 매크로 데이터 | 시장 마감 후에는 당일 데이터 미갱신 |
-| yfinance MultiIndex | 멀티 종목 다운로드 시 컬럼 구조 주의. **정규화 로직은 `core/data_adapter.py:normalize_yf_dataframe` 로 일원화. Task2: get_ohlcv + get_multi_daily 모두 어댑터에 완전 위임 완료 (data_service의 yf download/ad-hoc 제거)** |
+| yfinance MultiIndex | 멀티 종목 다운로드 시 컬럼 구조 주의. **정규화 로직은 `core/data_adapter.py:normalize_yf_dataframe` 로 일원화. Task2: get_ohlcv + get_multi_daily 모두 어댑터에 완전 위임 완료 (data_service의 yf download/ad-hoc 제거)** (post-review: get_multi_daily targeted tests 추가) |
 
 ---
 
@@ -355,7 +357,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | Stage2 체크리스트 기준 | `backend/core/signal_engine.py: calculate_stage2_analysis()` |
 | Regime 임계값 | `backend/core/regime_engine.py: TREND_LOW/HIGH, ...` 상수 |
 | DD 기준일 변경 | `backend/core/distribution_day.py: DD_LOOKBACK, DD_THRESHOLD_PCT` |
-| yfinance MultiIndex / daily+intraday data 정확도 | `backend/core/data_adapter.py` (normalize_yf_dataframe, get_daily, get_ohlcv_intraday, get_multi_daily) — TDD 정규화+fetch 전담. Task2: data_service.get_ohlcv + get_multi_daily 완전 위임 완료 |
+| yfinance MultiIndex / daily+intraday data 정확도 | `backend/core/data_adapter.py` (normalize_yf_dataframe, get_daily, get_ohlcv_intraday, get_multi_daily) — 정규화+fetch 전담. Task2: 위임 완료 + test_data_adapter.py 에 get_multi_daily unit test coverage 추가 (Code Review fix) |
 | 워치리스트 종목 추가 | `backend/api/endpoints.py: WATCHLIST_SYMS` + `frontend/app/types.ts: SYMBOLS` |
 | 매크로 심볼 추가 | `backend/api/endpoints.py: MACRO_SYMBOLS` |
 | API 주소 변경 | `frontend/app/types.ts: API_BASE` + `docker-compose.yml: NEXT_PUBLIC_API_URL` |

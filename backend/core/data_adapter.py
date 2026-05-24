@@ -1,4 +1,4 @@
-"""data_adapter.py — yfinance DataFrame MultiIndex 정규화 전담 모듈 (TDD skeleton)
+"""data_adapter.py — yfinance DataFrame MultiIndex 정규화 전담 모듈
 
 이 모듈의 목적:
 - yfinance 1.x/1.3+ 에서 발생하는 컬럼 구조 변이 (단일/멀티, group_by='ticker' 유무)를

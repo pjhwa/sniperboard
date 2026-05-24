@@ -15,7 +15,7 @@ import numpy as np
 # backend/ 를 path 에 추가 (다른 테스트들과 동일 패턴)
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from core.data_adapter import normalize_yf_dataframe, get_daily, get_ohlcv_intraday
+from core.data_adapter import normalize_yf_dataframe, get_daily, get_ohlcv_intraday, get_multi_daily
 
 
 def _make_single_ticker_multindex_df(symbol: str = "TSLA", n: int = 5) -> pd.DataFrame:
@@ -142,3 +142,96 @@ def test_get_ohlcv_intraday_uses_normalize_and_explicit_auto_adjust():
         assert list(result.columns) == ["open", "high", "low", "close", "volume"]
         assert len(result) == 4
         assert isinstance(result.index, pd.DatetimeIndex)
+
+
+# =============================================================================
+# get_multi_daily coverage (added per Code Quality Reviewer feedback)
+# =============================================================================
+
+def _make_multi_ticker_group_by_df(symbols: list[str], n: int = 5) -> pd.DataFrame:
+    """group_by='ticker' 로 다운로드한 multi-symbol 결과 모방.
+    columns: MultiIndex(level0=symbol, level1=Field) — get_multi_daily의 levels[0] 체크에 사용.
+    """
+    dates = pd.date_range("2025-03-01", periods=n, freq="D")
+    data = {}
+    for i, sym in enumerate(symbols):
+        base = np.linspace(120 + i * 10, 125 + i * 10, n)
+        data[(sym, "Open")] = base + np.random.uniform(-1, 1, n)
+        data[(sym, "High")] = base + np.random.uniform(0.5, 2, n)
+        data[(sym, "Low")] = base + np.random.uniform(-2, -0.5, n)
+        data[(sym, "Close")] = base + np.random.uniform(-0.5, 0.5, n)
+        data[(sym, "Adj Close")] = base + np.random.uniform(-0.5, 0.5, n)
+        data[(sym, "Volume")] = np.random.randint(10_000_000, 50_000_000, n)
+    df = pd.DataFrame(data, index=dates)
+    df.columns = pd.MultiIndex.from_tuples(df.columns.tolist())
+    df.columns.names = [None, None]
+    return df
+
+
+def test_get_multi_daily_empty_symbols_returns_empty_dict():
+    """빈 symbols 리스트 → {} 반환 (early return 커버)."""
+    result = get_multi_daily([])
+    assert result == {}
+
+
+def test_get_multi_daily_happy_path_multiple_symbols():
+    """Happy path (multi-symbol): group_by MultiIndex → dict[sym -> normalized DF]."""
+    symbols = ["TSLA", "AAPL"]
+    fake_raw = _make_multi_ticker_group_by_df(symbols, n=7)
+
+    with patch("core.data_adapter.yf.download", return_value=fake_raw) as mock_download:
+        result = get_multi_daily(symbols, period="2y")
+
+        mock_download.assert_called_once()
+        kwargs = mock_download.call_args.kwargs
+        assert kwargs.get("group_by") == "ticker"
+        assert kwargs.get("interval") == "1d"
+        assert kwargs.get("period") == "2y"
+        tickers_arg = kwargs.get("tickers")
+        assert tickers_arg == symbols or set(symbols).issubset(
+            set(tickers_arg) if isinstance(tickers_arg, (list, tuple)) else [tickers_arg]
+        )
+
+        assert isinstance(result, dict)
+        assert set(result.keys()) == set(symbols)
+        for sym in symbols:
+            df = result[sym]
+            assert df is not None
+            assert not df.empty
+            assert list(df.columns) == ["open", "high", "low", "close", "volume"]
+            assert len(df) == 7
+            assert isinstance(df.index, pd.DatetimeIndex)
+
+
+def test_get_multi_daily_single_symbol_case():
+    """len(symbols)==1 분기: data.copy() 경로 + normalize (single-wrapped MultiIndex 대응)."""
+    symbols = ["NVDA"]
+    fake_raw = _make_single_ticker_multindex_df("NVDA", n=3)
+
+    with patch("core.data_adapter.yf.download", return_value=fake_raw) as mock_download:
+        result = get_multi_daily(symbols)
+
+        assert list(result.keys()) == ["NVDA"]
+        df = result["NVDA"]
+        assert df is not None
+        assert list(df.columns) == ["open", "high", "low", "close", "volume"]
+        assert len(df) == 3
+
+
+def test_get_multi_daily_missing_symbol_and_overall_error_handling():
+    """멀티 경로: levels[0] 미존재 sym → None, per-sym except → None.
+    전체 download 예외 → {} 반환."""
+    symbols = ["MISSING", "PRESENT"]
+    # PRESENT만 포함된 DF → MISSING은 'not in levels[0]' 로 None 처리
+    fake_raw = _make_multi_ticker_group_by_df(["PRESENT"], n=4)
+
+    with patch("core.data_adapter.yf.download", return_value=fake_raw) as mock_download:
+        result = get_multi_daily(symbols, period="5d")
+        assert result["MISSING"] is None
+        assert result["PRESENT"] is not None
+        assert list(result["PRESENT"].columns) == ["open", "high", "low", "close", "volume"]
+
+    # download 자체 실패 (outer except)
+    with patch("core.data_adapter.yf.download", side_effect=Exception("network timeout")):
+        result = get_multi_daily(["ANY"])
+        assert result == {}
