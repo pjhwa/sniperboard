@@ -5,6 +5,22 @@ import { useSentiment } from '@/hooks/useSentiment';
 import { Card } from '@/components/ui/Card';
 import { RadialGauge } from '@/components/ui/RadialGauge';
 import { SENTIMENT_META, TREND_META, VOLUME_META } from '@/app/types';
+import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
+
+const SENTIMENT_GLOSSARY: GlossaryItem[] = [
+  { term: '복합점수 (Composite Score, −2 ~ +2)', plain: '소셜 미디어와 뉴스에서 수집한 심리를 종합한 점수입니다. +2에 가까울수록 극도의 낙관(과열 주의), −2에 가까울수록 극도의 공포(역발상 매수 기회)를 의미합니다.' },
+  { term: '극도 공포 (−2)', plain: '시장 참여자들이 극도로 두려워하는 상태입니다. 역설적으로 Warren Buffett의 "남들이 두려워할 때 탐욕스러워지라"는 격언처럼, 이 구간은 역발상 매수 기회일 수 있습니다.', color: 'var(--bear)' },
+  { term: '공포 (−1)', plain: '전반적인 비관론이 우세합니다. 아직 시장 저점을 확인하기 어려운 구간입니다.' },
+  { term: '중립 (0)', plain: '강한 방향성이 없는 관망 국면입니다. 뚜렷한 심리적 편향이 없어 기술적 분석이 더 중요한 시기입니다.' },
+  { term: '낙관 (+1)', plain: '전반적인 낙관론이 우세합니다. 상승 기대감이 높아지고 있는 단계입니다.' },
+  { term: '도취 (+2)', plain: '시장 참여자들이 극도로 흥분한 과열 상태입니다. 역발상적으로 주의가 필요한 구간으로, 신규 매수보다 기존 포지션 점검을 권장합니다.', color: 'var(--bull)' },
+  { term: '전일 대비 (Trend vs Yesterday)', plain: '어제와 비교해 심리가 좋아지고 있는지(heating↑), 유지되고 있는지(stable→), 나빠지고 있는지(cooling↓)를 나타냅니다.' },
+  { term: 'Confidence (신뢰도)', plain: '이 심리 판단이 얼마나 신뢰할 수 있는지를 나타냅니다. HIGH는 데이터 품질이 좋고 신호가 명확함, LOW는 데이터가 부족하거나 신호가 혼재함을 의미합니다.' },
+  { term: '언급량 (Mention Volume)', plain: '소셜 미디어에서 해당 종목이나 시장이 얼마나 자주 언급되고 있는지입니다. "급증(surging)"이면 주목도가 매우 높아진 상태로, 심리 급변 가능성이 있습니다.' },
+  { term: '봇 의심 (Bot Suspected)', plain: '인위적으로 생성된 게시물(봇)이 심리 데이터를 왜곡하고 있을 가능성을 나타냅니다. "봇 의심" 표시가 있으면 해당 심리 데이터를 신중하게 해석해야 합니다.' },
+  { term: '스코어 바 (Score Bar)', plain: '복합점수의 위치를 시각적으로 보여주는 막대입니다. 중앙(0)이 중립이고, 오른쪽(녹색)으로 갈수록 낙관, 왼쪽(빨간색)으로 갈수록 공포입니다.' },
+  { term: 'Key Reason (핵심 이유)', plain: '이 심리 점수가 나온 주된 이유를 한 문장으로 요약한 것입니다. AI가 소셜 미디어와 뉴스를 분석해 가장 영향력 있는 요인을 추출합니다.' },
+];
 
 // -2 ~ +2 범위를 색상으로 표현
 function compositeColor(score: number): string {
@@ -108,7 +124,7 @@ export function SentimentBoard() {
   const symbols = latest.symbols ?? [];
 
   return (
-    <div className="board fade-in" style={{ gridTemplateColumns: '380px 1fr', gridTemplateRows: 'auto 1fr' }}>
+    <div className="board fade-in" style={{ gridTemplateColumns: '380px 1fr', gridTemplateRows: 'auto 1fr auto', alignContent: 'start' }}>
       {/* 시장 전체 */}
       <Card title="Market Sentiment" action={market?.as_of ?? ''}>
         {market ? (
@@ -249,6 +265,11 @@ export function SentimentBoard() {
           <div className="subtle" style={{ textAlign: 'center', padding: 24 }}>심리 데이터 없음</div>
         )}
       </Card>
+
+      {/* 이 화면 데이터 설명 */}
+      <div style={{ gridColumn: 'span 2' }}>
+        <GlossaryPanel items={SENTIMENT_GLOSSARY} />
+      </div>
     </div>
   );
 }
