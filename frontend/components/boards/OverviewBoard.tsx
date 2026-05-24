@@ -70,10 +70,16 @@ export function OverviewBoard() {
     : [];
 
   const dailyCandles = dailyData?.candles ?? [];
-  const dailyChg = dailyCandles.slice(-60).map((c, i, arr) => {
+  const dailyChg = dailyCandles.slice(-61).map((c, i, arr) => {
     if (i === 0) return 0;
     return ((c.close - arr[i - 1].close) / arr[i - 1].close) * 100;
-  });
+  }).slice(1); // 첫 번째 0 제거 → 60거래일 순수 등락률
+
+  const upDays   = dailyChg.filter(v => v > 0.05).length;
+  const downDays = dailyChg.filter(v => v < -0.05).length;
+  const avgChg   = dailyChg.length ? dailyChg.reduce((a, b) => a + b, 0) / dailyChg.length : 0;
+  const maxGain  = dailyChg.length ? Math.max(...dailyChg) : 0;
+  const maxLoss  = dailyChg.length ? Math.min(...dailyChg) : 0;
 
   const backward = vix && vix9d ? vix.price !== null && vix9d.price !== null && (vix.price ?? 0) > (vix9d.price ?? 0) : false;
 
@@ -298,12 +304,43 @@ export function OverviewBoard() {
       <Card title="Daily Heat · 60d" action={symbol}>
         {dailyChg.length > 0 ? (
           <>
-            <HeatStrip values={dailyChg} cols={20} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 10.5, color: 'var(--fg-subtle)' }}>
-              <span>↓ -2%+</span><span>0%</span><span>+2%+ ↑</span>
+            {/* 요약 통계 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+              <span className="badge bull" style={{ fontSize: 10.5 }}>↑ {upDays}일 상승</span>
+              <span className="badge bear" style={{ fontSize: 10.5 }}>↓ {downDays}일 하락</span>
+              <span style={{ marginLeft: 'auto', fontSize: 10.5, color: avgChg >= 0 ? 'var(--bull)' : 'var(--bear)' }} className="mono">
+                평균 {avgChg >= 0 ? '+' : ''}{avgChg.toFixed(2)}%/일
+              </span>
             </div>
-            <div style={{ marginTop: 6, fontSize: 11, color: 'var(--fg-muted)' }}>
-              60거래일 일일 등락. 색 농도 = 변동성 강도.
+
+            {/* 타임라인 레이블 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9.5, color: 'var(--fg-subtle)', marginBottom: 3 }}>
+              <span>← 60일 전</span>
+              <span>오늘 →</span>
+            </div>
+
+            {/* 열 지도 (3행 × 20열 = 60거래일) */}
+            <HeatStrip values={dailyChg} cols={20} rows={3} />
+
+            {/* 범례 + 최대 등락 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, fontSize: 10, color: 'var(--fg-subtle)', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--bear)', opacity: 0.85 }} />
+                <span>하락</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--bg-subtle)', border: '1px solid var(--border)' }} />
+                <span>보합</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--bull)', opacity: 0.85 }} />
+                <span>상승 · 진할수록 큰 변동</span>
+              </div>
+              <span style={{ marginLeft: 'auto' }}>
+                <span style={{ color: 'var(--bull)' }}>최대 +{maxGain.toFixed(1)}%</span>
+                {' / '}
+                <span style={{ color: 'var(--bear)' }}>{maxLoss.toFixed(1)}%</span>
+              </span>
             </div>
           </>
         ) : <div className="subtle">로딩 중...</div>}
