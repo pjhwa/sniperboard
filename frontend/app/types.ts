@@ -216,7 +216,7 @@ export interface SymbolSentiment {
   bot_suspected: 'yes' | 'no' | 'unclear';
   confidence: ConfidenceEnum;
   source: string;
-  score_delta: number | null;
+  score_delta: number | null;  // composite_score 기준 전일 대비 delta (float)
   intraday_shift: TrendEnum | null;
 }
 

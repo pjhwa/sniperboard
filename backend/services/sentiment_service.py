@@ -102,12 +102,13 @@ def enrich_with_delta(snapshot: dict) -> dict:
         yesterday_data = post_close if post_close is not None else _fetch_json(f"{base}/{yesterday}.json")
     else:
         yesterday_data = None
-    yesterday_scores: dict[str, int] = {}
+    yesterday_scores: dict[str, float] = {}
 
     if yesterday_data and "symbols" in yesterday_data:
         for sym_obj in yesterday_data["symbols"]:
             sym = sym_obj.get("symbol")
-            score = sym_obj.get("sentiment_score")
+            # composite_score 우선, 없으면 sentiment_score 폴백
+            score = sym_obj.get("composite_score") if sym_obj.get("composite_score") is not None else sym_obj.get("sentiment_score")
             if sym and score is not None:
                 yesterday_scores[sym] = score
 
@@ -115,9 +116,9 @@ def enrich_with_delta(snapshot: dict) -> dict:
     enriched_symbols = []
     for sym_obj in symbols:
         sym = sym_obj.get("symbol")
-        current_score = sym_obj.get("sentiment_score")
+        current_score = sym_obj.get("composite_score") if sym_obj.get("composite_score") is not None else sym_obj.get("sentiment_score")
         prev_score = yesterday_scores.get(sym)
-        delta = (current_score - prev_score) if (current_score is not None and prev_score is not None) else None
+        delta = round(current_score - prev_score, 1) if (current_score is not None and prev_score is not None) else None
         enriched_symbols.append({**sym_obj, "score_delta": delta})
 
     return {**snapshot, "symbols": enriched_symbols}

@@ -179,7 +179,7 @@ class SymbolSentiment(BaseModel):
     bot_suspected: str
     confidence: str
     source: str
-    score_delta: Optional[int] = None
+    score_delta: Optional[float] = None
     intraday_shift: Optional[str] = None
 
 class MarketSentiment(BaseModel):
