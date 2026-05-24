@@ -7,6 +7,24 @@ import { RadialGauge } from '@/components/ui/RadialGauge';
 import DailyChart from '@/components/charts/DailyChart';
 import { Check, X } from '@/components/ui/Icons';
 import { STAGE2_META } from '@/app/types';
+import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
+
+const DAILY_GLOSSARY: GlossaryItem[] = [
+  { term: 'Stage 2 점수 (0~7)', plain: 'Minervini가 정의한 이상적인 매수 구간 조건 7가지를 충족한 개수입니다. 6~7점이면 진입 검토, 4~5점은 관망, 3점 이하면 매수 회피를 권장합니다.', color: 'var(--bull)' },
+  { term: 'RS Score (상대 강도)', plain: 'S&P500(미국 대표 지수)과 비교해 최근 63일(약 3개월) 수익률이 얼마나 우수한지를 0~100 점수로 나타냅니다. 70 이상이면 시장의 상위 30% 강세주입니다.' },
+  { term: '52w 고점 이격', plain: '최근 52주(1년) 중 가장 높은 가격에서 현재 가격이 몇 % 아래에 있는지 보여줍니다. -25% 이내면 Stage 2 조건 중 하나를 충족합니다.' },
+  { term: '최근 조정 (Pullback %)', plain: '최근 20일 고점 대비 현재가가 얼마나 하락했는지를 나타냅니다. 15% 이내면 건강한 조정, 그 이상이면 추세 붕괴 가능성이 있습니다.' },
+  { term: '가우시안 채널 (Gaussian Channel)', plain: '통계적 평활화 기법으로 그린 추세 밴드입니다. 주가가 채널 위에 있으면 강세, 채널 안에서 움직이면 정상 추세, 채널 아래로 이탈하면 약세 신호입니다.' },
+  { term: 'GC Breakout (가우시안 채널 상단 돌파)', plain: '주가가 가우시안 채널의 위 경계를 위로 돌파한 상태입니다. 강한 모멘텀의 신호로, 추세 가속을 의미합니다.', color: 'var(--purple)' },
+  { term: 'GC Retest (채널 재접촉)', plain: '채널 상단을 돌파한 후 다시 채널 경계에 접촉하는 패턴입니다. "눌림목 확인" 진입 기회가 될 수 있습니다.', color: 'var(--purple)' },
+  { term: 'Above Channel / Below Channel', plain: '주가가 가우시안 채널 위(Above)에 완전히 있으면 강세, 채널 아래(Below)로 이탈했으면 약세를 의미합니다.' },
+  { term: 'Bear Flag (베어 플래그)', plain: '주가가 급락 후 횡보하는 약세 패턴입니다. 이 패턴이 완성되면 추가 하락 가능성이 높아 매수를 피해야 합니다.', color: 'var(--bear)' },
+  { term: 'RSI Bull Div (강세 다이버전스)', plain: '주가는 이전 저점보다 낮아졌는데 RSI는 이전보다 높아지는 현상입니다. 하락 모멘텀이 약해지며 반등 가능성을 시사합니다.', color: 'var(--bull)' },
+  { term: 'RSI Bear Div (약세 다이버전스)', plain: '주가는 이전 고점보다 높아졌는데 RSI는 이전보다 낮아지는 현상입니다. 상승 모멘텀이 약해지며 하락 전환 가능성을 경고합니다.', color: 'var(--warn)' },
+  { term: 'Entry / Stop / Target', plain: '피벗 진입가(어디서 살지), 손절가(틀렸을 때 어디서 팔지), 목표가(어디까지 벌지)입니다. 이 세 가격을 미리 정하는 것이 계획적인 트레이딩의 기본입니다.' },
+  { term: 'R:R Ratio 1:3', plain: '리스크 대 보상 비율입니다. 1을 잃을 위험을 감수하고 3을 버는 구조입니다. 이 비율을 지키면 3번 중 1번만 성공해도 전체적으로 손익이 맞습니다.' },
+  { term: 'Position (매수 수량)', plain: '계좌 금액과 리스크 %를 입력하면 자동으로 계산되는 권장 매수 주수입니다. 한 번의 손절로 잃는 금액이 계좌의 일정 % 이내가 되도록 조절합니다.' },
+];
 
 const STRUCT_COLOR: Record<string, string> = {
   UPTREND: 'bull', DOWNTREND: 'bear', DISTRIBUTION: 'warn', ACCUMULATION: 'info', NEUTRAL: 'neutral',
@@ -32,7 +50,7 @@ export function DailyBoard() {
   return (
     <div
       className="board fade-in"
-      style={{ gridTemplateColumns: '1fr 340px', gridTemplateRows: 'auto 1fr' }}
+      style={{ gridTemplateColumns: '1fr 340px', gridTemplateRows: 'auto 1fr auto' }}
     >
       {/* Daily chart */}
       <div className="card" style={{ gridRow: 'span 2' }}>
@@ -149,6 +167,11 @@ export function DailyBoard() {
           <div className="subtle">로딩 중...</div>
         )}
       </Card>
+
+      {/* 이 화면 데이터 설명 */}
+      <div style={{ gridColumn: 'span 2' }}>
+        <GlossaryPanel items={DAILY_GLOSSARY} />
+      </div>
     </div>
   );
 }

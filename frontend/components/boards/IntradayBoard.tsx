@@ -7,6 +7,24 @@ import { useDaily } from '@/hooks/useDaily';
 import { Card } from '@/components/ui/Card';
 import IntradayChart from '@/components/charts/IntradayChart';
 import { ArrowRight } from '@/components/ui/Icons';
+import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
+
+const INTRADAY_GLOSSARY: GlossaryItem[] = [
+  { term: 'RSI (14)', plain: '상대강도지수. 최근 14봉 기준으로 주가가 얼마나 강한지 0~100으로 나타냅니다. 30 이하면 "너무 많이 떨어져 반등 가능성", 70 이상이면 "과열되어 조정 가능성"을 시사합니다.' },
+  { term: 'EMA21 (21봉 지수이동평균)', plain: '최근 21개 봉의 가중 평균 가격입니다. 주가가 이 선 위에 있으면 단기 강세, 아래면 단기 약세입니다. 트레이더들이 지지/저항선으로 자주 활용합니다.' },
+  { term: 'EMA50 (50봉 지수이동평균)', plain: '최근 50개 봉의 가중 평균 가격입니다. EMA21보다 느린 중기 추세선으로, EMA21이 EMA50 위에 있으면 상승 추세가 강하다는 신호입니다.' },
+  { term: 'ATR (14)', plain: '평균 진폭(Average True Range). 최근 14봉 동안 주가가 평균적으로 얼마나 오르내렸는지를 달러로 나타냅니다. 손절가 설정의 기준이 됩니다.' },
+  { term: '21EMA 이격', plain: '현재가와 EMA21의 거리를 %로 나타냅니다. +3.2% 이상이면 평균에서 너무 많이 올라 단기 과열 위험, -2% 이하면 지지선에 접근 중임을 의미합니다.' },
+  { term: 'Sniper 신호', plain: '가격이 EMA21(21봉 평균선)에 살짝 닿고 반등하면서 RSI가 38~58 사이일 때 뜨는 매수 신호입니다. 추세 중 가장 좋은 진입 타이밍을 포착합니다.', color: 'var(--bull)' },
+  { term: 'VCP (변동성 수축 패턴)', plain: '주가가 신고가를 돌파하면서 거래량이 평소의 2배 이상 급증할 때 나타나는 강력한 돌파 매수 신호입니다. 기관 투자자들의 대량 매수가 확인된 것입니다.', color: 'var(--info)' },
+  { term: 'Pullback (눌림목)', plain: '고점 대비 4.5~9% 조정 후 이동평균선에서 지지를 받을 때 나타납니다. 상승 추세가 잠깐 숨 고르기 후 재개될 가능성이 높은 진입 타이밍입니다.', color: 'var(--warn)' },
+  { term: 'StrongTrend (강한 추세)', plain: '가격 > EMA21 > EMA50 순서로 정렬되고 RSI가 52~78일 때 표시됩니다. 현재 보유 중인 포지션을 계속 유지(홀딩)하라는 신호입니다.', color: 'var(--teal)' },
+  { term: 'Overbought (과열)', plain: 'RSI가 76 이상이고 EMA21에서 +3.2% 이상 떨어진 과열 구간입니다. 일부 물량 분할 매도(익절)를 고려할 타이밍입니다.' },
+  { term: 'Downtrend (하락 추세)', plain: '가격이 EMA21 아래에 있고 거래량이 급증한 상태입니다. "떨어지는 칼날을 잡지 말라" — 이 신호가 있을 때는 매수 접근 금지입니다.', color: 'var(--bear)' },
+  { term: '진입 Entry / 손절 Stop / 목표 Target', plain: '일봉 기준으로 계산된 트레이드 계획입니다. 진입(어디서 살지), 손절(틀렸을 때 어디서 팔지), 목표(어디까지 먹을지)를 미리 정해두는 것이 핵심입니다.' },
+  { term: 'R:R 비율 (Risk:Reward)', plain: '내가 잃을 수 있는 금액 대비 벌 수 있는 금액의 비율입니다. 1:3이면 1만원 잃을 위험에 3만원을 노린다는 뜻으로, 3번 중 1번만 맞아도 수익이 납니다.' },
+  { term: '매수 수량 (Position Size)', plain: '계좌 규모와 리스크 %를 바탕으로 계산한 권장 매수 주수입니다. 계좌의 일정 비율만 위험에 노출시켜 한 번의 실패로 큰 타격을 입지 않도록 합니다.' },
+];
 
 const SIG_META: Record<string, { name: string; color: string; action: string; desc: string }> = {
   sniper:       { name: 'Sniper',      color: 'color-bull',   action: '진입',      desc: '21EMA 터치 후 반등 · RSI 38~58' },
@@ -19,6 +37,8 @@ const SIG_META: Record<string, { name: string; color: string; action: string; de
 
 export function IntradayBoard() {
   const [tf, setTf] = useState('5m');
+  const [copied, setCopied] = useState(false);
+  const [sigGuide, setSigGuide] = useState(false);
   const { symbol, rrAccount, rrRiskPct, setRrAccount, setRrRiskPct } = useStore();
   const { ohlcvData, isLoading } = useIntraday(symbol, tf);
   const { dailyData } = useDaily(symbol);
@@ -45,6 +65,16 @@ export function IntradayBoard() {
   const riskPct = parseFloat(rrRiskPct) || 1;
   const riskAmt = accountNum * (riskPct / 100);
   const qty = stop > 0 && entry > stop ? Math.floor(riskAmt / (entry - stop)) : 0;
+
+  function handleCopyEntry() {
+    const text = `${symbol} | 진입: $${entry.toFixed(2)} | 손절: $${stop.toFixed(2)} | 목표: $${target.toFixed(2)} | 수량: ${qty > 0 ? qty + '주' : '—'} | R:R 1:3`;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      // clipboard unavailable (headless / no permission) — silent fail
+    });
+  }
 
   return (
     <div
@@ -175,9 +205,48 @@ export function IntradayBoard() {
             <span className="v" style={{ color: 'var(--em-500)' }}>{qty > 0 ? `${qty} 주` : '—'}</span>
           </div>
           <div className="spacer" />
-          <button className="btn btn--ghost">신호 가이드</button>
-          <button className="btn btn--em">진입 복사 <ArrowRight /></button>
+          <button className="btn btn--ghost" onClick={() => setSigGuide(v => !v)}>
+            {sigGuide ? '신호 가이드 닫기' : '신호 가이드'}
+          </button>
+          <button
+            className="btn btn--em"
+            onClick={handleCopyEntry}
+            style={copied ? { background: 'var(--bull)', borderColor: 'var(--bull)' } : undefined}
+          >
+            {copied ? '복사됨 ✓' : <><span>진입 복사</span> <ArrowRight /></>}
+          </button>
         </div>
+      </div>
+
+      {/* 신호 가이드 패널 */}
+      {sigGuide && (
+        <div style={{ gridColumn: 'span 2' }}>
+          <div className="card">
+            <div className="card__hd">
+              <h3>신호 가이드 — 각 신호의 의미와 대응 전략</h3>
+              <small>6가지 신호</small>
+            </div>
+            <div className="card__bd">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 8 }}>
+                {Object.entries(SIG_META).map(([key, m]) => (
+                  <div key={key} className={`sig ${m.color}`}>
+                    <div className="sig__hd">
+                      <span className="sig__dot" />
+                      <span className="sig__name">{m.name}</span>
+                      <span className="sig__action">{m.action}</span>
+                    </div>
+                    <div className="sig__desc">{m.desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 이 화면 데이터 설명 */}
+      <div style={{ gridColumn: 'span 2' }}>
+        <GlossaryPanel items={INTRADAY_GLOSSARY} />
       </div>
     </div>
   );
