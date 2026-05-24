@@ -7,6 +7,22 @@ import {
   SymbolSentiment, MarketSentiment,
 } from '../app/types';
 
+function compositeColor(score: number): string {
+  if (score >= 1.5) return 'text-emerald-400';
+  if (score >= 0.5) return 'text-teal-400';
+  if (score > -0.5) return 'text-zinc-400';
+  if (score > -1.5) return 'text-orange-400';
+  return 'text-red-400';
+}
+
+function compositeLabel(score: number): string {
+  if (score >= 1.5) return '도취';
+  if (score >= 0.5) return '낙관';
+  if (score > -0.5) return '중립';
+  if (score > -1.5) return '공포';
+  return '극도공포';
+}
+
 // ── 시장 전체 카드 ──────────────────────────────────────────────────────────
 function MarketCard({ market }: { market: MarketSentiment }) {
   const sm = SENTIMENT_META[market.sentiment];
@@ -37,7 +53,13 @@ function MarketCard({ market }: { market: MarketSentiment }) {
         </div>
         <div className="text-right text-xs space-y-1" style={{ color: 'var(--text-muted)' }}>
           <p>신뢰도: <span className={market.confidence === 'low' ? 'text-red-400' : 'text-zinc-300'}>{market.confidence}</span></p>
-          <p>점수: <span className="text-zinc-300">{market.sentiment_score > 0 ? '+' : ''}{market.sentiment_score}</span></p>
+          {market.composite_score !== undefined ? (
+            <p>복합점수: <span className={`font-semibold ${compositeColor(market.composite_score)}`}>
+              {market.composite_score > 0 ? '+' : ''}{market.composite_score}
+            </span></p>
+          ) : (
+            <p>점수: <span className="text-zinc-300">{market.sentiment_score > 0 ? '+' : ''}{market.sentiment_score}</span></p>
+          )}
         </div>
       </div>
     </div>
@@ -72,7 +94,18 @@ function SymbolCard({ sym }: { sym: SymbolSentiment }) {
       <div className="flex items-center gap-3 text-xs mb-2 flex-wrap">
         <span className={`font-semibold ${tm.color}`}>{tm.icon} {tm.label}</span>
         <span className={vm.color}>언급: {vm.label}</span>
-        {sym.score_delta !== null && sym.score_delta !== undefined && (
+        {sym.composite_score !== undefined ? (
+          <span className={`font-semibold ${compositeColor(sym.composite_score)}`} title="복합 점수 (신뢰도·봇·언급량·다이버전스 반영)">
+            ◈ {sym.composite_score > 0 ? '+' : ''}{sym.composite_score}
+          </span>
+        ) : (
+          sym.score_delta !== null && sym.score_delta !== undefined && (
+            <span className={`font-medium ${sym.score_delta > 0 ? 'text-emerald-400' : sym.score_delta < 0 ? 'text-red-400' : 'text-zinc-500'}`}>
+              Δ{sym.score_delta > 0 ? '+' : ''}{sym.score_delta}
+            </span>
+          )
+        )}
+        {sym.composite_score !== undefined && sym.score_delta !== null && sym.score_delta !== undefined && (
           <span className={`font-medium ${sym.score_delta > 0 ? 'text-emerald-400' : sym.score_delta < 0 ? 'text-red-400' : 'text-zinc-500'}`}>
             Δ{sym.score_delta > 0 ? '+' : ''}{sym.score_delta}
           </span>

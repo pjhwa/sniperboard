@@ -209,6 +209,7 @@ export interface SymbolSentiment {
   as_of: string;
   sentiment: SentimentEnum;
   sentiment_score: number;
+  composite_score?: number;
   trend_vs_yesterday: TrendEnum;
   mention_volume: VolumeEnum;
   key_reason: string;
@@ -223,6 +224,7 @@ export interface MarketSentiment {
   as_of: string;
   sentiment: SentimentEnum;
   sentiment_score: number;
+  composite_score?: number;
   trend_vs_yesterday: TrendEnum;
   extreme_flag: 'none' | 'extreme_fear' | 'extreme_greed';
   key_reason: string;
