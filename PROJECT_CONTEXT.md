@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (AUTO-GENERATED 2026-05-21)
+# SniperBoard — Project Context (AUTO-GENERATED 2026-05-23)
 
 ## 0. 이 문서의 목적
 
@@ -39,29 +39,42 @@ sniperboard/
 │   ├── next.config.ts
 │   ├── Dockerfile                # 빌드 arg: NEXT_PUBLIC_API_URL
 │   ├── app/
-│   │   ├── layout.tsx            # 루트 레이아웃 + QueryClientProvider
-│   │   ├── page.tsx              # 메인 SniperBoard 컴포넌트 (탭 전환, 헤더, 새로고침)
+│   │   ├── layout.tsx            # 루트 레이아웃 (테마 init 스크립트 포함, data-theme="dark")
+│   │   ├── page.tsx              # App shell: Rail+Topbar+MarketStrip+Board 라우터 + ⌘K 핸들러
 │   │   ├── providers.tsx         # QueryClientProvider 래퍼
 │   │   ├── types.ts              # 모든 TypeScript 타입 정의 + 메타데이터 상수
-│   │   └── globals.css           # CSS 변수, glass-card, animate-*, 테마 색상
+│   │   └── globals.css           # Plaid DS 디자인 토큰 (CSS vars, 다크/라이트 토글, 컴포넌트 클래스)
 │   ├── components/
-│   │   ├── DashboardOverview.tsx # 항상 상단 고정: Regime + DD + 지수 + VIX + Breadth + Credit
-│   │   ├── IntradayTab.tsx       # 단기 탭: 차트 + 6신호 + RSI 게이지
-│   │   ├── DailyTab.tsx          # 일봉 탭: 차트 + Stage2 + GC분석 + 시장구조 + RR계산기
-│   │   ├── WatchlistTab.tsx      # 워치리스트: Stage2 스코어 정렬 테이블
-│   │   ├── MacroTab.tsx          # 매크로: 섹터 로테이션 바 + 21개 심볼 그룹 카드
-│   │   ├── RRCalculator.tsx      # Risk/Reward 계산기 (진입·손절·목표가·포지션 크기)
-│   │   ├── StatCard.tsx          # 범용 통계 카드
-│   │   └── charts/
-│   │       ├── IntradayChart.tsx  # lightweight-charts 캔들차트 (단기)
-│   │       └── DailyChart.tsx    # lightweight-charts 캔들차트 (일봉 + GC 채널)
+│   │   ├── shell/
+│   │   │   ├── Rail.tsx          # 좌측 네비게이션 레일 (6보드 아이콘 + 활성 인디케이터)
+│   │   │   ├── Topbar.tsx        # 상단바 (제목, 검색, 종목 버튼, Regime mini, 테마 토글)
+│   │   │   ├── MarketStrip.tsx   # 슬림 마켓 스트립 (선택종목 + SPY/QQQ/IWM/VIX/DXY/GLD/CL=F)
+│   │   │   └── CommandPalette.tsx # ⌘K 커맨드 팔레트 (종목·보드 검색)
+│   │   ├── ui/
+│   │   │   ├── Icons.tsx         # SVG 아이콘 (Crosshair, Activity, Candles, Eye, Globe, Heart 등)
+│   │   │   ├── Card.tsx          # Card/ScorePill 래퍼 컴포넌트
+│   │   │   ├── Sparkline.tsx     # Canvas 기반 스파크라인
+│   │   │   ├── RadialGauge.tsx   # Canvas 기반 라디얼 게이지
+│   │   │   └── HeatStrip.tsx     # CSS 기반 히트맵 스트립
+│   │   ├── boards/               # 6개 보드 컴포넌트 (실제 훅 사용)
+│   │   │   ├── OverviewBoard.tsx # 시장 개요: AI Insight + Regime + DD + Breadth + VIX + Credit + 종목 미니
+│   │   │   ├── IntradayBoard.tsx # 단기: IntradayChart + 활성신호 + RSI + 액션바
+│   │   │   ├── DailyBoard.tsx    # 일봉: DailyChart + Stage2 체크리스트 + R:R 패널
+│   │   │   ├── WatchlistBoard.tsx # 워치리스트: Stage2 정렬 테이블
+│   │   │   ├── MacroBoard.tsx    # 매크로: 섹터 로테이션 바 + 6그룹 카드
+│   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드
+│   │   ├── charts/               # 기존 lightweight-charts 컴포넌트 유지
+│   │   │   ├── IntradayChart.tsx
+│   │   │   └── DailyChart.tsx
+│   │   └── (레거시 탭 컴포넌트들 — 기존 파일 유지, 더 이상 page.tsx에서 사용되지 않음)
 │   └── hooks/
-│       ├── useStore.ts           # Zustand: symbol(기본 TSLA), timeframe(5m), tab(intraday), rrAccount, rrRiskPct
+│       ├── useStore.ts           # Zustand persist: symbol, timeframe, board, theme, cmdOpen, rrAccount, rrRiskPct
 │       ├── useIntraday.ts        # GET /api/ohlcv + /api/latest-signal (30초 폴링)
 │       ├── useDaily.ts           # GET /api/daily
 │       ├── useWatchlist.ts       # GET /api/watchlist
 │       ├── useMacro.ts           # GET /api/macro
 │       ├── useRegime.ts          # GET /api/regime
+│       ├── useSentiment.ts       # GET /api/sentiment
 │       └── useDistributionDays.ts # GET /api/distribution-days
 ├── docker-compose.yml            # backend 8000→5001, frontend 3000→4000
 └── docs/
@@ -187,13 +200,14 @@ export const REGIME_META = { RISK_ON, CONSTRUCTIVE, MIXED, DEFENSIVE, RISK_OFF, 
 export const DD_META = { OK, WARNING, DANGER };
 ```
 
-### 5-4. UI 시스템 (`app/globals.css`)
+### 5-4. UI 시스템 (`app/globals.css`) — Plaid DS 리디자인
 
-- 배경: `#07091a` + radial-gradient 인디고 조명
-- CSS 변수: `--text-primary`, `--text-secondary`, `--text-label`, `--text-muted`
-- 클래스: `glass-card` (글래스모피즘), `animate-fade-in`, `animate-slide-up`, `animate-spin-slow`
-- 색상 글로우: `glow-blue`, `glow-red`, `glow-purple`
-- 탭 활성: `segment-tab-active`
+- **디자인 시스템**: Plaid DS 기반 (Inter + JetBrains Mono 폰트)
+- **다크/라이트 토글**: `[data-theme="dark"]` CSS 셀렉터, localStorage `sb_theme`에 영속
+- **CSS 변수**: `--bg`, `--fg`, `--border`, `--bull`, `--bear`, `--warn`, `--info`, `--teal`, `--purple`, `--em-500` 등
+- **App 레이아웃**: CSS Grid `var(--rail)=64px / var(--topbar)=56px / var(--strip)=52px`
+- **컴포넌트 클래스**: `.rail`, `.topbar`, `.strip`, `.board`, `.card`, `.badge`, `.sig`, `.act-bar`, `.tbl`, `.rsi-gauge` 등
+- **Zustand 스토어** (`hooks/useStore.ts`): `board: Board`, `theme: Theme`, `cmdOpen`, `symbol`, `timeframe`, `rrAccount`, `rrRiskPct` — persist 미들웨어로 localStorage 영속
 
 ### 5-5. 차트 (`components/charts/`)
 

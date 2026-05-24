@@ -14,7 +14,7 @@ const getScoreBg = (s: number) =>
     : 'bg-red-500/10 border-red-500/30';
 
 export default function WatchlistTab() {
-  const { rrAccount, rrRiskPct, setRrAccount, setRrRiskPct, setSymbol, setTab } = useDashboardStore();
+  const { rrAccount, rrRiskPct, setRrAccount, setRrRiskPct, setSymbol } = useDashboardStore();
   const { watchlist, isLoading, error } = useWatchlist();
   const [selectedWatch, setSelectedWatch] = useState<WatchlistItem | null>(null);
 
@@ -262,7 +262,6 @@ export default function WatchlistTab() {
                 <button
                   onClick={() => {
                     setSymbol(item.symbol);
-                    setTab('daily');
                   }}
                   className="px-3 py-1.5 text-xs bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 rounded-lg text-zinc-300 font-bold transition duration-200 active:scale-95 cursor-pointer"
                 >

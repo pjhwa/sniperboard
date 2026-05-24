@@ -1,0 +1,38 @@
+'use client';
+
+import React from 'react';
+import { useStore, Board } from '@/hooks/useStore';
+import { Crosshair, Activity, Candles, Eye, Globe, Heart, Bell } from '@/components/ui/Icons';
+
+const BOARDS: { id: Board; label: string; ko: string; Icon: () => React.ReactElement }[] = [
+  { id: 'overview',  label: 'Overview',  ko: '시장',       Icon: Crosshair },
+  { id: 'intraday',  label: 'Intraday',  ko: '단기',       Icon: Activity },
+  { id: 'daily',     label: 'Daily',     ko: '일봉',       Icon: Candles },
+  { id: 'watchlist', label: 'Watchlist', ko: '워치리스트',  Icon: Eye },
+  { id: 'macro',     label: 'Macro',     ko: '매크로',     Icon: Globe },
+  { id: 'sentiment', label: 'Sentiment', ko: '심리',       Icon: Heart },
+];
+
+export function Rail() {
+  const { board, setBoard } = useStore();
+  return (
+    <aside className="rail">
+      <div className="rail__logo" title="SniperBoard">S</div>
+      {BOARDS.map(({ id, label, ko, Icon }) => (
+        <button
+          key={id}
+          className={'rail__item ' + (board === id ? 'active' : '')}
+          onClick={() => setBoard(id)}
+        >
+          <Icon />
+          <span className="rail__tt">{label} · {ko}</span>
+        </button>
+      ))}
+      <div className="rail__spacer" />
+      <button className="rail__item">
+        <Bell />
+        <span className="rail__tt">알림</span>
+      </button>
+    </aside>
+  );
+}
