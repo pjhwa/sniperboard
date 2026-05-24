@@ -323,6 +323,7 @@ export interface UpcomingEarning {
   symbol: string;
   earnings_date: string;
   days_until: number;
+  relevance_tier?: 'imminent' | 'approaching' | 'watching' | null;
   eps_estimate?: number | null;
   revenue_estimate_b?: number | null;
   historical_beat_rate?: number | null;

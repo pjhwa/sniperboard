@@ -66,10 +66,11 @@ export function DailyBoard() {
           <small>1Y · Gaussian Channel</small>
         </div>
         <div className="card__bd" style={{ paddingTop: 0 }}>
-          {symbolEarning && (
+          {/* watching tier(22-30일, 추정치 미형성)는 배너 노출 안 함 — 노이즈 */}
+          {symbolEarning && symbolEarning.relevance_tier !== 'watching' && (
             <div style={{
-              background: symbolEarning.risk_level === 'high' ? 'var(--warn)' : 'var(--border)',
-              color: symbolEarning.risk_level === 'high' ? '#000' : 'var(--fg)',
+              background: symbolEarning.relevance_tier === 'imminent' ? 'var(--warn)' : 'var(--border)',
+              color: symbolEarning.relevance_tier === 'imminent' ? '#000' : 'var(--fg)',
               padding: '4px 12px',
               fontSize: 11.5,
               display: 'flex',
@@ -77,7 +78,9 @@ export function DailyBoard() {
               gap: 8,
               opacity: 0.9,
             }}>
-              <span style={{ fontWeight: 700 }}>⚡ EARNINGS IN {symbolEarning.days_until}D</span>
+              <span style={{ fontWeight: 700 }}>
+                {symbolEarning.relevance_tier === 'imminent' ? '⚡' : '📅'} EARNINGS IN {symbolEarning.days_until}D
+              </span>
               <span style={{ opacity: 0.8 }}>{symbolEarning.action_note}</span>
             </div>
           )}

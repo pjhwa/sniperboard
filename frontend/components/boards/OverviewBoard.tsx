@@ -174,17 +174,23 @@ export function OverviewBoard() {
       </div>
 
       {/* Earnings Calendar */}
-      <Card title="Earnings Calendar" action="60일 이내">
+      <Card title="Earnings Calendar" action="30일 이내">
         {earningsData?.upcoming_earnings && earningsData.upcoming_earnings.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {earningsData.upcoming_earnings.map((e: UpcomingEarning) => {
               const rm = EARNINGS_RISK_META[e.risk_level] ?? EARNINGS_RISK_META.med;
+              const tierLabel = e.relevance_tier === 'imminent' ? '임박' : e.relevance_tier === 'approaching' ? '진입권' : '관망';
+              const tierColor = e.relevance_tier === 'imminent' ? 'var(--bear)' : e.relevance_tier === 'approaching' ? 'var(--warn)' : 'var(--fg-subtle)';
               return (
                 <div key={e.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
                   <span style={{ fontWeight: 600, width: 40, fontFamily: 'var(--mono)' }}>{e.symbol}</span>
                   <span style={{ color: 'var(--fg-muted)', flex: 1 }}>
                     {e.earnings_date.slice(5)} · {e.days_until}일 후
                   </span>
+                  {e.eps_estimate == null && (
+                    <span style={{ fontSize: 9.5, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>추정치 미형성</span>
+                  )}
+                  <span style={{ fontSize: 9.5, color: tierColor, fontWeight: 600 }}>{tierLabel}</span>
                   <span className={`badge ${rm.color}`} style={{ fontSize: 10 }}>
                     {rm.dot} {e.risk_level.toUpperCase()}
                   </span>
@@ -194,7 +200,7 @@ export function OverviewBoard() {
           </div>
         ) : (
           <div style={{ color: 'var(--fg-muted)', fontSize: 12 }}>
-            {earningsData === null ? 'Earnings 로딩 중...' : '60일 이내 어닝 없음'}
+            {earningsData === null ? 'Earnings 로딩 중...' : '30일 이내 어닝 없음'}
           </div>
         )}
       </Card>
