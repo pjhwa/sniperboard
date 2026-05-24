@@ -6,12 +6,75 @@ import { Card } from '@/components/ui/Card';
 import { RadialGauge } from '@/components/ui/RadialGauge';
 import { SENTIMENT_META, TREND_META, VOLUME_META } from '@/app/types';
 
+// -2 ~ +2 범위를 색상으로 표현
 function compositeColor(score: number): string {
   if (score >= 1.5) return 'var(--emerald)';
   if (score >= 0.5) return 'var(--teal)';
   if (score > -0.5) return 'var(--fg-muted)';
   if (score > -1.5) return 'var(--orange)';
   return 'var(--red)';
+}
+
+// -2 ~ +2 위치를 시각화하는 바
+function ScoreBar({ score }: { score: number }) {
+  const clampedScore = Math.max(-2, Math.min(2, score));
+  const pct = ((clampedScore + 2) / 4) * 100; // -2→0%, 0→50%, +2→100%
+  const isPositive = clampedScore >= 0;
+  const fillLeft = isPositive ? 50 : pct;
+  const fillWidth = isPositive ? pct - 50 : 50 - pct;
+  const color = compositeColor(clampedScore);
+
+  return (
+    <div style={{ margin: '8px 0 6px' }}>
+      {/* 트랙 */}
+      <div style={{ position: 'relative', height: 5, borderRadius: 3, background: 'var(--border)' }}>
+        {/* 중립(0) 기준선 */}
+        <div style={{
+          position: 'absolute', top: -2, bottom: -2, left: '50%',
+          width: 1, background: 'var(--fg-subtle)', opacity: 0.5,
+          transform: 'translateX(-50%)',
+        }} />
+        {/* 현재 점수 채움 (중립 기준으로 좌우) */}
+        <div style={{
+          position: 'absolute', top: 0, height: '100%',
+          left: `${fillLeft}%`, width: `${fillWidth}%`,
+          borderRadius: 3, background: color, opacity: 0.85,
+        }} />
+        {/* 현재 위치 도트 */}
+        <div style={{
+          position: 'absolute', top: '50%', left: `${pct}%`,
+          width: 9, height: 9, borderRadius: '50%',
+          background: color, border: '2px solid var(--card)',
+          transform: 'translate(-50%, -50%)',
+          boxShadow: `0 0 4px ${color}`,
+        }} />
+      </div>
+      {/* 스케일 레이블 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--fg-subtle)', marginTop: 4 }}>
+        <span>−2 극도공포</span>
+        <span>0 중립</span>
+        <span>도취 +2</span>
+      </div>
+    </div>
+  );
+}
+
+// 델타를 읽기 쉬운 문장으로
+function DeltaLabel({ delta }: { delta: number | null }) {
+  if (delta === null) return (
+    <span style={{ fontSize: 10.5, color: 'var(--fg-subtle)' }}>전일 데이터 없음</span>
+  );
+  if (Math.abs(delta) < 0.05) return (
+    <span style={{ fontSize: 10.5, color: 'var(--fg-subtle)' }}>어제와 동일</span>
+  );
+  const sign = delta > 0 ? '+' : '';
+  const color = delta > 0 ? 'var(--bull)' : 'var(--bear)';
+  const label = delta > 0 ? '상승' : '하락';
+  return (
+    <span style={{ fontSize: 10.5, color }}>
+      어제보다 {sign}{delta} {label}
+    </span>
+  );
 }
 
 export function SentimentBoard() {
@@ -46,7 +109,7 @@ export function SentimentBoard() {
 
   return (
     <div className="board fade-in" style={{ gridTemplateColumns: '380px 1fr', gridTemplateRows: 'auto 1fr' }}>
-      {/* Market sentiment */}
+      {/* 시장 전체 */}
       <Card title="Market Sentiment" action={market?.as_of ?? ''}>
         {market ? (
           <>
@@ -112,10 +175,11 @@ export function SentimentBoard() {
         ) : null}
       </Card>
 
-      {/* Per-symbol cards */}
+      {/* 종목별 카드 */}
       <Card title="Symbol Sentiment" action="워치리스트 심리">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
           {symbols.map(it => {
+            const score = it.composite_score ?? it.sentiment_score;
             const meta = SENTIMENT_META[it.sentiment];
             const trend = TREND_META[it.trend_vs_yesterday];
             const vol = VOLUME_META[it.mention_volume];
@@ -131,37 +195,47 @@ export function SentimentBoard() {
                   cursor: 'pointer',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                {/* 헤더: 심볼 + 등급 배지 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   <span className="sym-pill__badge" style={{ width: 22, height: 22 }}>{it.symbol[0]}</span>
                   <span style={{ fontWeight: 600, fontSize: 13 }}>{it.symbol}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 600, color: 'var(--fg-subtle)' }}>
+                  <span style={{
+                    marginLeft: 'auto', fontSize: 10, fontWeight: 600,
+                    color: compositeColor(score),
+                    background: 'var(--card)',
+                    border: `1px solid ${compositeColor(score)}`,
+                    padding: '1px 6px', borderRadius: 4,
+                  }}>
                     {meta?.label}
                   </span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
-                  {it.composite_score !== undefined ? (
-                    <span
-                      className="mono"
-                      title="복합점수: 신뢰도·봇의심·언급량·가격다이버전스 반영"
-                      style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', color: compositeColor(it.composite_score) }}
-                    >
-                      {it.composite_score > 0 ? '+' : ''}{it.composite_score}
-                    </span>
-                  ) : (
-                    <span className="mono" style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em' }}>
-                      {it.sentiment_score}
-                    </span>
-                  )}
-                  {it.score_delta != null && (
-                    <span className={'mono ' + (it.score_delta >= 0 ? 'chg up' : 'chg down')} style={{ fontSize: 11 }}>
-                      {it.score_delta >= 0 ? '+' : ''}{it.score_delta}
-                    </span>
-                  )}
-                  <span style={{ fontSize: 10.5, color: 'var(--fg-subtle)' }}>vs 어제</span>
+
+                {/* 주 점수 */}
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }}>
+                  <span
+                    className="mono"
+                    title="복합점수: 신뢰도·봇의심·언급량·가격다이버전스 반영 (범위 −2 ~ +2)"
+                    style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', color: compositeColor(score) }}
+                  >
+                    {score > 0 ? '+' : ''}{score}
+                  </span>
+                  <span style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>/ 2.0 최대</span>
                 </div>
-                <div style={{ fontSize: 10.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 8 }}>
+
+                {/* 스코어 바: −2 ~ +2 범위에서 현재 위치 시각화 */}
+                <ScoreBar score={score} />
+
+                {/* 델타 */}
+                <div style={{ marginBottom: 6 }}>
+                  <DeltaLabel delta={it.score_delta ?? null} />
+                </div>
+
+                {/* 이유 */}
+                <div style={{ fontSize: 10.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 6 }}>
                   {it.key_reason}
                 </div>
+
+                {/* 메타 */}
                 <div style={{ display: 'flex', gap: 8, fontSize: 10, color: 'var(--fg-subtle)' }}>
                   {trend && <span>{trend.icon} {it.trend_vs_yesterday}</span>}
                   {vol && <span>· {vol.label}</span>}
