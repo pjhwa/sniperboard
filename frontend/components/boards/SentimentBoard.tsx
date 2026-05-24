@@ -6,6 +6,14 @@ import { Card } from '@/components/ui/Card';
 import { RadialGauge } from '@/components/ui/RadialGauge';
 import { SENTIMENT_META, TREND_META, VOLUME_META } from '@/app/types';
 
+function compositeColor(score: number): string {
+  if (score >= 1.5) return 'var(--emerald)';
+  if (score >= 0.5) return 'var(--teal)';
+  if (score > -0.5) return 'var(--fg-muted)';
+  if (score > -1.5) return 'var(--orange)';
+  return 'var(--red)';
+}
+
 export function SentimentBoard() {
   const { symbol, setSymbol } = useStore();
   const { data: sentimentData, isLoading } = useSentiment();
@@ -44,9 +52,10 @@ export function SentimentBoard() {
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <RadialGauge
-                value={market.sentiment_score}
+                value={(market.composite_score ?? market.sentiment_score) + 2}
+                max={4}
                 size={110}
-                label={market.sentiment_score}
+                label={market.composite_score ?? market.sentiment_score}
                 sublabel={SENTIMENT_META[market.sentiment]?.label}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -69,6 +78,14 @@ export function SentimentBoard() {
                       {market.confidence.toUpperCase()}
                     </div>
                   </div>
+                  {market.composite_score !== undefined && (
+                    <div>
+                      <div className="subtle" style={{ fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>복합점수</div>
+                      <div className="mono" style={{ fontWeight: 700, fontSize: 15, color: compositeColor(market.composite_score) }}>
+                        {market.composite_score > 0 ? '+' : ''}{market.composite_score}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -122,9 +139,19 @@ export function SentimentBoard() {
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
-                  <span className="mono" style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em' }}>
-                    {it.sentiment_score}
-                  </span>
+                  {it.composite_score !== undefined ? (
+                    <span
+                      className="mono"
+                      title="복합점수: 신뢰도·봇의심·언급량·가격다이버전스 반영"
+                      style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', color: compositeColor(it.composite_score) }}
+                    >
+                      {it.composite_score > 0 ? '+' : ''}{it.composite_score}
+                    </span>
+                  ) : (
+                    <span className="mono" style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em' }}>
+                      {it.sentiment_score}
+                    </span>
+                  )}
                   {it.score_delta != null && (
                     <span className={'mono ' + (it.score_delta >= 0 ? 'chg up' : 'chg down')} style={{ fontSize: 11 }}>
                       {it.score_delta >= 0 ? '+' : ''}{it.score_delta}

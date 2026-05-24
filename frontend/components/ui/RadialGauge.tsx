@@ -42,10 +42,10 @@ export function RadialGauge({ value = 0, max = 100, size = 140, label, sublabel 
     const pct = Math.min(1, Math.max(0, value / max));
     const va = startAngle + (endAngle - startAngle) * pct;
     let color = cs.getPropertyValue('--bull').trim();
-    if (value < 20) color = cs.getPropertyValue('--bear').trim();
-    else if (value < 40) color = 'hsl(20 90% 55%)';
-    else if (value < 60) color = cs.getPropertyValue('--warn').trim();
-    else if (value < 80) color = cs.getPropertyValue('--teal').trim();
+    if (pct < 0.2) color = cs.getPropertyValue('--bear').trim();
+    else if (pct < 0.4) color = 'hsl(20 90% 55%)';
+    else if (pct < 0.6) color = cs.getPropertyValue('--warn').trim();
+    else if (pct < 0.8) color = cs.getPropertyValue('--teal').trim();
 
     ctx.strokeStyle = color;
     ctx.lineWidth = 7;

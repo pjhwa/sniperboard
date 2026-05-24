@@ -172,6 +172,7 @@ class SymbolSentiment(BaseModel):
     as_of: str
     sentiment: str
     sentiment_score: int
+    composite_score: Optional[float] = None
     trend_vs_yesterday: str
     mention_volume: str
     key_reason: str
@@ -185,6 +186,7 @@ class MarketSentiment(BaseModel):
     as_of: str
     sentiment: str
     sentiment_score: int
+    composite_score: Optional[float] = None
     trend_vs_yesterday: str
     extreme_flag: str
     key_reason: str
