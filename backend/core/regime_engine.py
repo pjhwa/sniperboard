@@ -39,35 +39,45 @@ def compute_regime(dfs: Dict[str, Optional[pd.DataFrame]]) -> dict:
 
     # 1. Trend: SPY vs EMA200
     trend = None
+    spy_vs_ema200 = None
     if len(spy) >= 200:
         ema200 = spy.ewm(span=200, adjust=False).mean().iloc[-1]
         if ema200 != 0:
-            trend = _linear((spy.iloc[-1] - ema200) / ema200 * 100, TREND_LOW, TREND_HIGH)
+            spy_vs_ema200 = round((spy.iloc[-1] - ema200) / ema200 * 100, 2)
+            trend = _linear(spy_vs_ema200, TREND_LOW, TREND_HIGH)
 
     # 2. Breadth: RSP - SPY 60일 상대성과
     breadth = None
+    rsp_minus_spy = None
     if len(rsp) >= 60 and len(spy) >= 60:
         rsp_ret = (rsp.iloc[-1] / rsp.iloc[-60] - 1) * 100
         spy_ret = (spy.iloc[-1] / spy.iloc[-60] - 1) * 100
-        breadth = _linear(rsp_ret - spy_ret, BREADTH_LOW, BREADTH_HIGH)
+        rsp_minus_spy = round(rsp_ret - spy_ret, 2)
+        breadth = _linear(rsp_minus_spy, BREADTH_LOW, BREADTH_HIGH)
 
     # 3. Credit: HYG/IEF 30일 변화율
     credit = None
+    hyg_ief_chg = None
     if len(hyg) >= 30 and len(ief) >= 30:
         ratio_now  = hyg.iloc[-1]  / ief.iloc[-1]
         ratio_prev = hyg.iloc[-30] / ief.iloc[-30]
         if ratio_prev != 0:
-            credit = _linear((ratio_now / ratio_prev - 1) * 100, CREDIT_LOW, CREDIT_HIGH)
+            hyg_ief_chg = round((ratio_now / ratio_prev - 1) * 100, 2)
+            credit = _linear(hyg_ief_chg, CREDIT_LOW, CREDIT_HIGH)
 
     # 4. Volatility: ^VIX (낮을수록 risk-on)
     vol = None
+    vix_level = None
     if len(vix) >= 1:
-        vol = _linear(float(vix.iloc[-1]), VOL_LOW, VOL_HIGH, invert=True)
+        vix_level = round(float(vix.iloc[-1]), 2)
+        vol = _linear(vix_level, VOL_LOW, VOL_HIGH, invert=True)
 
     # 5. Momentum: SPY 20일 RoC
     momentum = None
+    spy_roc20 = None
     if len(spy) >= 20 and float(spy.iloc[-20]) != 0:
-        momentum = _linear((spy.iloc[-1] / spy.iloc[-20] - 1) * 100, MOMENTUM_LOW, MOMENTUM_HIGH)
+        spy_roc20 = round((spy.iloc[-1] / spy.iloc[-20] - 1) * 100, 2)
+        momentum = _linear(spy_roc20, MOMENTUM_LOW, MOMENTUM_HIGH)
 
     components = {
         'trend':      round(trend,    1) if trend    is not None else None,
@@ -76,11 +86,20 @@ def compute_regime(dfs: Dict[str, Optional[pd.DataFrame]]) -> dict:
         'volatility': round(vol,      1) if vol      is not None else None,
         'momentum':   round(momentum, 1) if momentum is not None else None,
     }
+    diagnostics = {
+        'spy_vs_ema200_pct':    spy_vs_ema200,
+        'rsp_minus_spy_60d':    rsp_minus_spy,
+        'hyg_ief_ratio_chg_pct': hyg_ief_chg,
+        'vix_level':            vix_level,
+        'spy_roc_20d':          spy_roc20,
+    }
+
     valid = [v for v in components.values() if v is not None]
     if len(valid) < 3:
         return {
             'total': None, 'regime': 'UNKNOWN',
-            'components': components, 'valid_count': len(valid),
+            'components': components, 'diagnostics': diagnostics,
+            'valid_count': len(valid),
         }
 
     total = sum(valid) / len(valid) * 5
@@ -94,5 +113,6 @@ def compute_regime(dfs: Dict[str, Optional[pd.DataFrame]]) -> dict:
         'total': round(total, 1),
         'regime': regime,
         'components': components,
+        'diagnostics': diagnostics,
         'valid_count': len(valid),
     }

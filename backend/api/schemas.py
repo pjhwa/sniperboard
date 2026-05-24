@@ -149,10 +149,18 @@ class RegimeComponentsSchema(BaseModel):
     volatility: Optional[float] = None
     momentum: Optional[float] = None
 
+class RegimeDiagnosticsSchema(BaseModel):
+    spy_vs_ema200_pct: Optional[float] = None   # Trend 원시값
+    rsp_minus_spy_60d: Optional[float] = None   # Breadth 원시값 (RSP-SPY 60일 스프레드)
+    hyg_ief_ratio_chg_pct: Optional[float] = None  # Credit 원시값
+    vix_level: Optional[float] = None           # Volatility 원시값
+    spy_roc_20d: Optional[float] = None         # Momentum 원시값
+
 class RegimeResponse(BaseModel):
     total: Optional[float] = None
     regime: str
     components: RegimeComponentsSchema
+    diagnostics: Optional[RegimeDiagnosticsSchema] = None
     valid_count: int
 
 class DDDetailSchema(BaseModel):

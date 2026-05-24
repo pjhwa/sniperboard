@@ -144,10 +144,19 @@ export interface RegimeComponents {
   momentum: number | null;
 }
 
+export interface RegimeDiagnostics {
+  spy_vs_ema200_pct: number | null;    // SPY vs EMA200 (%)
+  rsp_minus_spy_60d: number | null;    // RSP-SPY 60일 스프레드 (%)
+  hyg_ief_ratio_chg_pct: number | null; // HYG/IEF 30일 변화율 (%)
+  vix_level: number | null;            // VIX 현재값
+  spy_roc_20d: number | null;          // SPY 20일 RoC (%)
+}
+
 export interface RegimeData {
   total: number | null;
   regime: 'RISK_ON' | 'CONSTRUCTIVE' | 'MIXED' | 'DEFENSIVE' | 'RISK_OFF' | 'UNKNOWN';
   components: RegimeComponents;
+  diagnostics?: RegimeDiagnostics;
   valid_count: number;
 }
 

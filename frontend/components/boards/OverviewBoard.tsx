@@ -12,7 +12,7 @@ import { RadialGauge } from '@/components/ui/RadialGauge';
 import { Sparkline } from '@/components/ui/Sparkline';
 import { HeatStrip } from '@/components/ui/HeatStrip';
 import { Sparkle } from '@/components/ui/Icons';
-import { MacroItem } from '@/app/types';
+import { MacroItem, RegimeDiagnostics } from '@/app/types';
 
 const REGIME_LABELS: Record<string, [string, string]> = {
   RISK_ON:      ['Risk-On',      '강세'],
@@ -135,18 +135,30 @@ export function OverviewBoard() {
                 {REGIME_LABELS[regimeData.regime]?.[0]} · {REGIME_LABELS[regimeData.regime]?.[1]}
               </span>
               {([
-                ['Trend',      regimeData.components.trend],
-                ['Breadth',    regimeData.components.breadth],
-                ['Credit',     regimeData.components.credit],
-                ['Volatility', regimeData.components.volatility],
-                ['Momentum',   regimeData.components.momentum],
-              ] as [string, number | null][]).map(([label, v]) => (
+                ['Trend',      regimeData.components.trend,      regimeData.diagnostics?.spy_vs_ema200_pct,    'SPY/EMA200',  '%'],
+                ['Breadth',    regimeData.components.breadth,    regimeData.diagnostics?.rsp_minus_spy_60d,   'RSP-SPY 60d', '%'],
+                ['Credit',     regimeData.components.credit,     regimeData.diagnostics?.hyg_ief_ratio_chg_pct,'HYG/IEF 30d','%'],
+                ['Volatility', regimeData.components.volatility, regimeData.diagnostics?.vix_level,           'VIX',         ''],
+                ['Momentum',   regimeData.components.momentum,   regimeData.diagnostics?.spy_roc_20d,         'SPY RoC 20d', '%'],
+              ] as [string, number | null, number | null | undefined, string, string][]).map(([label, v, raw, rawLabel, unit]) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10.5 }}>
-                  <span style={{ width: 64, color: 'var(--fg-subtle)' }}>{label}</span>
-                  <div className="bar" style={{ flex: 1 }}>
-                    <div className="bar__fill" style={{ width: ((v ?? 0) / 20 * 100) + '%', background: 'var(--em-500)' }} />
+                  <div style={{ width: 64 }}>
+                    <div style={{ color: 'var(--fg-subtle)' }}>{label}</div>
+                    {raw !== null && raw !== undefined && (
+                      <div style={{ fontSize: 9, color: (v ?? 0) === 0 ? 'var(--bear)' : 'var(--fg-subtle)', letterSpacing: '0.01em' }}>
+                        {rawLabel} {raw >= 0 ? '+' : ''}{raw.toFixed(1)}{unit}
+                      </div>
+                    )}
                   </div>
-                  <span className="mono" style={{ width: 26, textAlign: 'right' }}>{(v ?? 0).toFixed(1)}</span>
+                  <div className="bar" style={{ flex: 1 }}>
+                    <div className="bar__fill" style={{
+                      width: ((v ?? 0) / 20 * 100) + '%',
+                      background: (v ?? 0) === 0 ? 'var(--bear)' : (v ?? 0) < 8 ? 'var(--warn)' : 'var(--em-500)',
+                    }} />
+                  </div>
+                  <span className="mono" style={{ width: 26, textAlign: 'right', color: (v ?? 0) === 0 ? 'var(--bear)' : 'inherit' }}>
+                    {(v ?? 0).toFixed(1)}
+                  </span>
                 </div>
               ))}
             </div>
