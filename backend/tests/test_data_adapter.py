@@ -63,7 +63,7 @@ def test_normalize_yf_dataframe_single_ticker_multindex():
     bad_df = _make_single_ticker_multindex_df("TSLA", n=5)
     original_close = bad_df[("TSLA", "Close")].copy()
 
-    result = normalize_yf_dataframe(bad_df, symbol="TSLA")
+    result = normalize_yf_dataframe(bad_df)
 
     assert isinstance(result, pd.DataFrame)
     assert not result.empty
@@ -86,7 +86,7 @@ def test_normalize_yf_dataframe_group_by_ticker_multindex():
     bad_df = _make_group_by_ticker_multindex_df("AAPL", n=4)
     original_close = bad_df[("AAPL", "Close")].copy()
 
-    result = normalize_yf_dataframe(bad_df, symbol="AAPL")
+    result = normalize_yf_dataframe(bad_df)
 
     expected_cols = ["open", "high", "low", "close", "volume"]
     assert list(result.columns) == expected_cols

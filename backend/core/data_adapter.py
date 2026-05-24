@@ -6,15 +6,18 @@
 - 기존 data_service.py 의 ad-hoc 분기 로직을 점진적으로 대체하기 위한 기반.
 
 Public API (현재 단계):
-- normalize_yf_dataframe(df, symbol=None) -> pd.DataFrame
+- normalize_yf_dataframe(df) -> pd.DataFrame
 - get_daily(symbol, period="2y") -> Optional[pd.DataFrame]
 """
-from typing import Optional
 import pandas as pd
 import yfinance as yf
+import logging
+from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
-def normalize_yf_dataframe(df: pd.DataFrame, symbol: Optional[str] = None) -> pd.DataFrame:
+def normalize_yf_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """yfinance download 결과 DF 의 MultiIndex 컬럼을 일관된 flat lowercase 로 정규화.
 
     처리 규칙 (TDD 요구사항 충족하는 최소 구현):
@@ -43,8 +46,7 @@ def normalize_yf_dataframe(df: pd.DataFrame, symbol: Optional[str] = None) -> pd
         "Open": "open", "High": "high", "Low": "low",
         "Close": "close", "Volume": "volume",
         "Adj Close": "adj_close",
-        "open": "open", "high": "high", "low": "low",
-        "close": "close", "volume": "volume", "adj close": "adj_close",
+        "adj close": "adj_close",
     }
     result = result.rename(columns=rename_map)
 
@@ -77,8 +79,9 @@ def get_daily(symbol: str, period: str = "2y") -> Optional[pd.DataFrame]:
             progress=False,
         )
         if raw_df is None or raw_df.empty:
+            logger.warning(f"No data returned for symbol: {symbol}")
             return None
-        return normalize_yf_dataframe(raw_df, symbol=symbol)
-    except Exception:
-        # skeleton 단계에서는 조용히 None (상위에서 로깅/처리)
+        return normalize_yf_dataframe(raw_df)
+    except Exception as e:
+        logger.error(f"Error fetching daily data for {symbol}: {e}", exc_info=True)
         return None
