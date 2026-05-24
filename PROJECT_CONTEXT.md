@@ -28,7 +28,8 @@ sniperboard/
 │   ├── core/
 │   │   ├── signal_engine.py      # 핵심: 모든 기술적 지표·신호 계산 (700+ lines)
 │   │   ├── regime_engine.py      # Risk Regime 5요소 종합 점수 (0~100)
-│   │   └── distribution_day.py   # O'Neil Distribution Day 카운트 (25거래일 기준)
+│   │   ├── distribution_day.py   # O'Neil Distribution Day 카운트 (25거래일 기준)
+│   │   └── data_adapter.py       # yfinance MultiIndex 정규화 전담 (normalize_yf_dataframe + get_daily). TDD로 시작, yf 1.3+ 컬럼 구조 대응
 │   ├── services/
 │   │   ├── base.py               # BaseDataService 추상 클래스
 │   │   ├── data_service.py       # YFinanceDataService 구현체 + 모듈 레벨 헬퍼 함수
@@ -342,7 +343,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | CORS | 개발용 `allow_origins=["*"]` — 운영 시 변경 필요 |
 | API_BASE 재빌드 | `NEXT_PUBLIC_API_URL`은 빌드 시 번들되므로 런타임 변경 불가 |
 | 매크로 데이터 | 시장 마감 후에는 당일 데이터 미갱신 |
-| yfinance MultiIndex | 멀티 종목 다운로드 시 컬럼 구조 주의 (`data_service.py` 참고) |
+| yfinance MultiIndex | 멀티 종목 다운로드 시 컬럼 구조 주의. **정규화 로직은 `core/data_adapter.py:normalize_yf_dataframe` 로 일원화 (기존 data_service ad-hoc 코드 마이그레이션 예정)** |
 
 ---
 
@@ -354,6 +355,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | Stage2 체크리스트 기준 | `backend/core/signal_engine.py: calculate_stage2_analysis()` |
 | Regime 임계값 | `backend/core/regime_engine.py: TREND_LOW/HIGH, ...` 상수 |
 | DD 기준일 변경 | `backend/core/distribution_day.py: DD_LOOKBACK, DD_THRESHOLD_PCT` |
+| yfinance MultiIndex / daily data 정확도 | `backend/core/data_adapter.py` (normalize_yf_dataframe, get_daily) — TDD로 작성된 정규화 전담 모듈 |
 | 워치리스트 종목 추가 | `backend/api/endpoints.py: WATCHLIST_SYMS` + `frontend/app/types.ts: SYMBOLS` |
 | 매크로 심볼 추가 | `backend/api/endpoints.py: MACRO_SYMBOLS` |
 | API 주소 변경 | `frontend/app/types.ts: API_BASE` + `docker-compose.yml: NEXT_PUBLIC_API_URL` |
