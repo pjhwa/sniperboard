@@ -335,6 +335,13 @@ async def get_watchlist_endpoint():
                 sym_key = s.get("symbol")
                 if sym_key:
                     symbol_sentiment_map[sym_key] = s.get("composite_score", market_sentiment)
+
+            # Task 4: Also consider the latest brief's context market_sentiment as additional signal
+            brief = fetch_brief()
+            if brief.get("available") and brief.get("context"):
+                ctx_sent = brief["context"].get("market_sentiment", {}).get("composite_score")
+                if ctx_sent is not None:
+                    market_sentiment = (market_sentiment + ctx_sent) / 2  # simple blend
         except Exception:
             market_sentiment = 50.0
             symbol_sentiment_map = {}
