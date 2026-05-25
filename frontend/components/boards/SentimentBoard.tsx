@@ -8,6 +8,7 @@ import { SymbolBrief, SETUP_QUALITY_META, FreshnessMeta } from '@/app/types';
 import { RadialGauge } from '@/components/ui/RadialGauge';
 import { SENTIMENT_META, TREND_META, VOLUME_META } from '@/app/types';
 import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
+import { formatDateTime } from '@/lib/formatDateTime';
 
 const SENTIMENT_GLOSSARY: GlossaryItem[] = [
   { term: '복합점수 (Composite Score, −2 ~ +2)', plain: '소셜 미디어와 뉴스에서 수집한 심리를 종합한 점수입니다. +2에 가까울수록 극도의 낙관(과열 주의), −2에 가까울수록 극도의 공포(역발상 매수 기회)를 의미합니다.' },
@@ -133,7 +134,7 @@ export function SentimentBoard() {
   return (
     <div className="board fade-in" style={{ gridTemplateColumns: '380px 1fr', gridTemplateRows: 'auto 1fr auto', alignContent: 'start' }}>
       {/* 시장 전체 */}
-      <Card title="Market Sentiment" action={market?.as_of ?? ''}>
+      <Card title="Market Sentiment" action={formatDateTime(market?.as_of)}>
         {market ? (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
