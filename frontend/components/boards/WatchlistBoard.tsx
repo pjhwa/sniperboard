@@ -90,6 +90,11 @@ export function WatchlistBoard() {
                           {w.conviction_score?.toFixed(0) ?? '-'}
                         </span>
                         <span className="subtle" style={{ fontSize: 10 }}>{w.conviction_label ?? ''}</span>
+                        {w.conviction_reliability && (
+                          <span style={{ fontSize: 9, color: w.conviction_reliability === 'high' ? 'var(--bull)' : w.conviction_reliability === 'medium' ? 'var(--teal)' : 'var(--warn)' }}>
+                            {w.conviction_reliability}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td>

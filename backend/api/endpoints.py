@@ -206,6 +206,8 @@ async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주
             "stage2": stage2,
             "conviction_score": conv["score"],
             "conviction_label": conv["label"],
+            "conviction_reliability": conv.get("reliability", "medium"),
+            "conviction_notes": conv.get("notes", []),
         }
     except HTTPException as he:
         raise he
@@ -382,6 +384,8 @@ async def get_watchlist_endpoint():
                     # Phase 1 Conviction
                     "conviction_score": conv["score"],
                     "conviction_label": conv["label"],
+                    "conviction_reliability": conv.get("reliability", "medium"),
+                    "conviction_notes": conv.get("notes", []),
                 })
             except Exception as e:
                 logger.error(f"Watchlist error for {sym}: {e}", exc_info=True)

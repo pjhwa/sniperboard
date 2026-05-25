@@ -157,3 +157,16 @@ def test_regime_conditioned_returns_adjusted_weights_in_components():
     assert result["components"]["sentiment"]["weight"] == 0.35
     assert result["components"]["regime"]["weight"] == 0.25
     assert result["components"]["stage2"]["weight"] == 0.40
+
+
+def test_reliability_low_when_no_regime():
+    """Regime 데이터가 없으면 reliability = low"""
+    result = calculate_conviction(5, 60.0, None, None)
+    assert result["reliability"] == "low"
+    assert any("Regime 데이터가 부족" in n for n in result["notes"])
+
+
+def test_reliability_high_with_full_data():
+    """충분한 데이터가 있으면 reliability = high"""
+    result = calculate_conviction(6, 75.0, 82.0, "CONSTRUCTIVE")
+    assert result["reliability"] == "high"

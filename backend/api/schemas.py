@@ -95,6 +95,8 @@ class WatchlistItemSchema(BaseModel):
     # Phase 1: Conviction Composite Score
     conviction_score: Optional[float] = None
     conviction_label: Optional[str] = None
+    conviction_reliability: Optional[str] = None  # high / medium / low
+    conviction_notes: Optional[List[str]] = None
 
 class MacroItemSchema(BaseModel):
     symbol: str
@@ -138,6 +140,8 @@ class DailyResponse(BaseModel):
     # Phase 1: Conviction Composite Score
     conviction_score: Optional[float] = None
     conviction_label: Optional[str] = None
+    conviction_reliability: Optional[str] = None  # high / medium / low
+    conviction_notes: Optional[List[str]] = None
 
 class WatchlistResponse(BaseModel):
     watchlist: List[WatchlistItemSchema]

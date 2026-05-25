@@ -86,6 +86,11 @@ export interface DailyData {
   indicators: DailyIndicators;
   vol_avg20: number[];
   stage2: Stage2;
+  // Phase 1 Conviction (added to backend DailyResponse)
+  conviction_score?: number;
+  conviction_label?: string;
+  conviction_reliability?: 'high' | 'medium' | 'low';
+  conviction_notes?: string[];
 }
 
 export interface WatchlistItem {
@@ -103,6 +108,8 @@ export interface WatchlistItem {
   // Phase 1 Conviction
   conviction_score?: number;
   conviction_label?: string;
+  conviction_reliability?: 'high' | 'medium' | 'low';
+  conviction_notes?: string[];
 }
 
 export interface LatestData {

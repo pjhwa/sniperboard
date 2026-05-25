@@ -72,6 +72,10 @@ def calculate_conviction(
     Stage2 weight is always fixed at 0.40 (core technical signal).
 
     The effective weights are returned in the 'components' for transparency.
+
+    추가 필드 (Phase 1 마무리):
+    - reliability: "high" | "medium" | "low" — 데이터 품질 기반 신뢰도
+    - notes: 주의사항 배열 (예: Regime 데이터 부족 시 경고)
     """
     stage2_norm = _normalize_stage2(stage2_score)
     sentiment = max(0.0, min(100.0, float(sentiment_composite)))
@@ -101,9 +105,26 @@ def calculate_conviction(
 
     score = round(max(0.0, min(100.0, raw_score)), 1)
 
+    # 신뢰도(Reliability) 계산 - Phase 1 마무리 작업
+    if regime_total is None:
+        reliability = "low"
+    elif regime_label is None or regime_label.upper() in ("UNKNOWN", "MIXED"):
+        reliability = "medium"
+    else:
+        reliability = "high"
+
+    # 간단한 disclaimer / note
+    notes = []
+    if regime_total is None:
+        notes.append("Regime 데이터가 부족하여 신뢰도가 낮습니다.")
+    if reliability == "low":
+        notes.append("참고용으로만 활용하시기 바랍니다.")
+
     return {
         "score": score,
         "label": _calculate_label(score),
+        "reliability": reliability,
+        "notes": notes,
         "components": {
             "stage2": {
                 "raw": float(stage2_score),
