@@ -142,3 +142,18 @@ def test_regime_conditioned_risk_off_increases_regime_weight():
     assert result["score"] > default_result["score"]  # Regime pull is stronger
     assert result["components"]["regime"]["weight"] == 0.35
     assert result["components"]["sentiment"]["weight"] == 0.25
+
+
+def test_regime_conditioned_mixed_is_neutral():
+    """MIXED일 때는 중립 가중치(0.30/0.30)를 유지해야 함."""
+    result = calculate_conviction(5, 60.0, 50.0, "MIXED")
+    assert result["components"]["sentiment"]["weight"] == 0.30
+    assert result["components"]["regime"]["weight"] == 0.30
+
+
+def test_regime_conditioned_returns_adjusted_weights_in_components():
+    """components에 실제 적용된 가중치가 정확히 기록되어야 함."""
+    result = calculate_conviction(6, 70.0, 80.0, "CONSTRUCTIVE")
+    assert result["components"]["sentiment"]["weight"] == 0.35
+    assert result["components"]["regime"]["weight"] == 0.25
+    assert result["components"]["stage2"]["weight"] == 0.40

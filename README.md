@@ -180,7 +180,7 @@ docker compose up --build -d
 
 > **Phase 1 진행 중**:
 > - Conviction Composite Score v1 계산 엔진 (`core/conviction_calculator.py`) TDD 완료.
-> - `/api/watchlist` (per-symbol sentiment 우선 사용) 및 `/api/daily` 응답에 `conviction_score` + `conviction_label` 필드 추가. Regime-conditioned 가중치 적용. DailyBoard 헤더와 WatchlistBoard에 최소 UI 표시. 테스트 7개.
+> - `/api/watchlist` (per-symbol sentiment 우선 사용) 및 `/api/daily` 응답에 `conviction_score` + `conviction_label` 필드 추가. Regime-conditioned 가중치 정교화 (Task 2). 테스트 9개. DailyBoard + WatchlistBoard UI 표시.
 
 **Phase 1 빠른 검증 방법**:
 

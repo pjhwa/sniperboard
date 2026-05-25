@@ -63,36 +63,33 @@ def calculate_conviction(
 ) -> Dict[str, Any]:
     """Conviction Composite Score v1 계산 (Regime-conditioned weights 지원).
 
-    Regime-conditioned adjustment (Phase 2 logic, now enabled):
-    - RISK_ON / CONSTRUCTIVE: Sentiment 가중치 상향 (35%), Regime 하향 (25%)
-    - RISK_OFF / DEFENSIVE: Regime 가중치 상향 (35%), Sentiment 하향 (25%)
-    - 그 외: 기본 40/30/30 유지
+    Regime-conditioned weight adjustment (refined in Task 2):
+    - RISK_ON / CONSTRUCTIVE : Sentiment weight ↑ (0.35), Regime weight ↓ (0.25)
+    - RISK_OFF / DEFENSIVE   : Regime weight ↑ (0.35), Sentiment weight ↓ (0.25)
+    - MIXED                  : Neutral (0.30 / 0.30)
+    - UNKNOWN / None         : Neutral (0.30 / 0.30)
 
-    Returns:
-        {
-            "score": float (0.0 ~ 100.0, 1 decimal),
-            "label": str,
-            "components": {
-                "stage2": {"raw": float, "norm": float, "weight": 0.4},
-                "sentiment": {"raw": float, "weight": ...},
-                "regime": {"raw": Optional[float], "filled": float, "weight": ...},
-            }
-        }
+    Stage2 weight is always fixed at 0.40 (core technical signal).
+
+    The effective weights are returned in the 'components' for transparency.
     """
     stage2_norm = _normalize_stage2(stage2_score)
     sentiment = max(0.0, min(100.0, float(sentiment_composite)))
     regime_filled = _fill_regime(regime_total)
 
-    # Regime-conditioned weight adjustment
+    # Regime-conditioned weight adjustment (refined)
     s_weight = 0.30
     r_weight = 0.30
 
-    if regime_label in ("RISK_ON", "CONSTRUCTIVE"):
+    label = (regime_label or "UNKNOWN").upper()
+
+    if label in ("RISK_ON", "CONSTRUCTIVE"):
         s_weight = 0.35
         r_weight = 0.25
-    elif regime_label in ("RISK_OFF", "DEFENSIVE"):
+    elif label in ("RISK_OFF", "DEFENSIVE"):
         s_weight = 0.25
         r_weight = 0.35
+    # MIXED and UNKNOWN stay at neutral 0.30/0.30
 
     stage2_weight = 0.40
 
