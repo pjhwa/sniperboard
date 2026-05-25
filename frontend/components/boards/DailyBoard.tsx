@@ -26,6 +26,7 @@ const DAILY_GLOSSARY: GlossaryItem[] = [
   { term: 'Entry / Stop / Target', plain: '피벗 진입가(어디서 살지), 손절가(틀렸을 때 어디서 팔지), 목표가(어디까지 벌지)입니다. 이 세 가격을 미리 정하는 것이 계획적인 트레이딩의 기본입니다.' },
   { term: 'R:R Ratio 1:3', plain: '리스크 대 보상 비율입니다. 1을 잃을 위험을 감수하고 3을 버는 구조입니다. 이 비율을 지키면 3번 중 1번만 성공해도 전체적으로 손익이 맞습니다.' },
   { term: 'Position (매수 수량)', plain: '계좌 금액과 리스크 %를 입력하면 자동으로 계산되는 권장 매수 주수입니다. 한 번의 손절로 잃는 금액이 계좌의 일정 % 이내가 되도록 조절합니다.' },
+  { term: 'Conviction (확신 점수)', plain: 'Stage2 + 시장 심리 + Regime을 종합한 0~100 점수. Regime 환경에 따라 가중치가 자동 조정됩니다. (Phase 1)', color: 'var(--teal)' },
 ];
 
 const STRUCT_COLOR: Record<string, string> = {
@@ -63,6 +64,11 @@ export function DailyBoard() {
         <div className="card__hd">
           <h3>{symbol} · Daily</h3>
           {stage2 && <span className={'badge ' + structColor}>{stage2.market_structure}</span>}
+          {dailyData?.conviction_score != null && (
+            <span className="badge" style={{ background: 'var(--teal)', color: '#fff', marginLeft: 8 }}>
+              Conviction {dailyData.conviction_score} ({dailyData.conviction_label})
+            </span>
+          )}
           <small>1Y · Gaussian Channel</small>
         </div>
         <div className="card__bd" style={{ paddingTop: 0 }}>
