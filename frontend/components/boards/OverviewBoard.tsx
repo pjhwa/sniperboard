@@ -479,6 +479,11 @@ export function OverviewBoard() {
               <div className="mono" style={{ fontSize: 11.5 }}>${w.price.toFixed(2)}</div>
             </div>
             <ScorePill score={w.score} />
+            {w.conviction_score != null && (
+              <span style={{ fontSize: 10, marginLeft: 4, color: w.conviction_score >= 65 ? 'var(--bull)' : 'var(--teal)' }}>
+                C:{w.conviction_score}
+              </span>
+            )}
           </div>
         ))}
         {watchlist.length === 0 && <div className="subtle">로딩 중...</div>}

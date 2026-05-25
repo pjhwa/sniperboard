@@ -128,6 +128,16 @@ export function DailyBoard() {
                 </div>
               </div>
             </div>
+
+            {/* Phase 1: Conviction - more natural placement inside Stage 2 card */}
+            {dailyData?.conviction_score != null && (
+              <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase' }}>Conviction (Phase 1)</div>
+                <div style={{ fontSize: 18, fontWeight: 600, color: dailyData.conviction_score >= 65 ? 'var(--bull)' : 'var(--teal)' }}>
+                  {dailyData.conviction_score} <span style={{ fontSize: 12, fontWeight: 400 }}>({dailyData.conviction_label})</span>
+                </div>
+              </div>
+            )}
             <div>
               {(Object.keys(STAGE2_META) as (keyof typeof STAGE2_META)[]).map(k => {
                 const pass = stage2.checks[k];
