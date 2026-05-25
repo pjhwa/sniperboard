@@ -135,6 +135,9 @@ class DailyResponse(BaseModel):
     indicators: DailyIndicatorsSchema
     vol_avg20: List[int]
     stage2: Stage2Schema
+    # Phase 1: Conviction Composite Score
+    conviction_score: Optional[float] = None
+    conviction_label: Optional[str] = None
 
 class WatchlistResponse(BaseModel):
     watchlist: List[WatchlistItemSchema]

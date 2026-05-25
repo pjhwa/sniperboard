@@ -175,12 +175,34 @@ async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주
 
         vol_avg20 = [int(v) if pd.notna(v) else 0 for v in df["vol_avg20"]]
 
+        # Phase 1: Conviction for this symbol (same pattern as watchlist for consistency)
+        try:
+            regime_dfs = get_multi_daily(["SPY", "RSP", "HYG", "IEF", "^VIX"], period="1y")
+            regime = compute_regime(regime_dfs)
+            regime_total = regime.get("total", 50.0) if regime else 50.0
+        except Exception:
+            regime_total = 50.0
+
+        try:
+            sent = fetch_latest()
+            market_sentiment = sent.get("market", {}).get("composite_score", 50.0) if sent else 50.0
+        except Exception:
+            market_sentiment = 50.0
+
+        conv = calculate_conviction(
+            stage2_score=stage2.get("score", 0),
+            sentiment_composite=market_sentiment,
+            regime_total=regime_total,
+        )
+
         return {
             "symbol": symbol.upper(),
             "candles": candles,
             "indicators": indicators,
             "vol_avg20": vol_avg20,
             "stage2": stage2,
+            "conviction_score": conv["score"],
+            "conviction_label": conv["label"],
         }
     except HTTPException as he:
         raise he
