@@ -18,6 +18,7 @@ export function useBrief() {
 
   return {
     briefData: data?.available ? data.data : null,
+    briefMeta: data?.meta ?? null,  // Phase 4: expose freshness meta for badge
     isLoading,
     error: data?.error ?? (error ? String(error) : null),
   };

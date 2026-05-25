@@ -103,8 +103,8 @@ docker compose up --build -d
 - 종목별 심리 카드: 멘션량·봇 의심도·다이버전스 + Grok AI 셋업 품질 배지(A+~D)
 
 **AI Daily Brief & Earnings** (OverviewBoard 통합)
-- AI Insight 카드: Grok이 기술 지표 + 소셜 심리를 결합한 시장 내러티브 (tone·key_themes)
-- Earnings Calendar: 워치리스트 종목 실적 발표 일정 + 리스크 등급(high/med/low) + Grok 요약
+- AI Insight 카드: Grok이 기술 지표 + 소셜 심리를 결합한 시장 내러티브 (tone·key_themes) — subtle ⏱ freshness (age_minutes) badge
+- Earnings Calendar: 워치리스트 종목 실적 발표 일정 + 리스크 등급(high/med/low) + Grok 요약 — subtle ⏱ freshness badge (Phase 4)
 
 **매크로 (Macro)**
 - 섹터 로테이션 바 (SMH·XLE·XLY·XHB·ITA 1일 수익률 정렬)
@@ -227,7 +227,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 ## 주의사항
 
 - yfinance는 개발·테스트용 무료 API입니다 (15분 지연 데이터). 운영 환경에서는 유료 데이터 소스 권장.
-- **yfinance 데이터 정확도 강화 (Task 2 + Task 3 + Phase 2)**: `backend/core/data_adapter.py` 가 yfinance fetch + MultiIndex 정규화 single source of truth (daily 경로에서 'adj_close' 보존). Phase 2: `backend/core/signal_engine.py:calculate_stage2_analysis` 가 adj_close 컬럼 감지 시 52주 고/저점, RS Score(63d), EMA200 slope, pullback, pivot/entry 등 장기 메트릭에 adjusted prices 사용 (split 심볼 NVDA 등 정확도). GC/단기신호/raw 경로는 변경 없음 (완전 backward compat). Task3: daily/watchlist 등 direct adapter + AI meta freshness. (2026-05-24)
+- **yfinance 데이터 정확도 강화 (Task 2 + Task 3 + Phase 2 + Phase 4 UI)**: `backend/core/data_adapter.py` 가 yfinance fetch + MultiIndex 정규화 single source of truth (daily 경로에서 'adj_close' 보존). Phase 2: `backend/core/signal_engine.py:calculate_stage2_analysis` 가 adj_close 컬럼 감지 시 52주 고/저점, RS Score(63d), EMA200 slope, pullback, pivot/entry 등 장기 메트릭에 adjusted prices 사용 (split 심볼 NVDA 등 정확도). GC/단기신호/raw 경로는 변경 없음 (완전 backward compat). Task3: daily/watchlist 등 direct adapter + AI meta freshness. Phase 4: frontend types + hooks + minimal ⏱ freshness badges in OverviewBoard (AI Insight + Earnings Calendar) + light touch in SentimentBoard. (2026-05-24)
 - 매매 신호와 분석은 **참고용**입니다. 투자 손실에 대한 책임은 사용자 본인에게 있습니다.
 - Risk Regime · Distribution Day는 **후행 지표**입니다 — 매매 신호가 아닌 시장 환경 진단입니다.
 - 미국 주식 시장 운영 시간(ET 09:30–16:00) 외에는 단기 데이터가 갱신되지 않습니다.

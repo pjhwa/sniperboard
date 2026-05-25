@@ -4,7 +4,7 @@ import { useStore } from '@/hooks/useStore';
 import { useSentiment } from '@/hooks/useSentiment';
 import { useBrief } from '@/hooks/useBrief';
 import { Card } from '@/components/ui/Card';
-import { SymbolBrief, SETUP_QUALITY_META } from '@/app/types';
+import { SymbolBrief, SETUP_QUALITY_META, FreshnessMeta } from '@/app/types';
 import { RadialGauge } from '@/components/ui/RadialGauge';
 import { SENTIMENT_META, TREND_META, VOLUME_META } from '@/app/types';
 import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
@@ -196,6 +196,11 @@ export function SentimentBoard() {
             </div>
           </>
         ) : null}
+        {sentimentData?.meta && (
+          <div style={{ marginTop: 8, fontSize: 9.5, color: (sentimentData.meta.age_minutes > 90 ? 'var(--warn)' : 'var(--fg-subtle)'), opacity: 0.7, fontFamily: 'var(--font-mono, monospace)' }}>
+            ⏱ {Math.round(sentimentData.meta.age_minutes)}m ago
+          </div>
+        )}
       </Card>
 
       {/* 종목별 카드 */}

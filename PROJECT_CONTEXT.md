@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-24; Phase 2 yf accuracy: signal_engine Stage2 now supports adj_close for long-horizon metrics on splits + data_adapter preserves adj_close in daily frames; all tests green)
+# SniperBoard — Project Context (UPDATED 2026-05-24; Phase 4: AI meta freshness + minimal FE badges (⏱ age_minutes in OverviewBoard AI Insight/Earnings + light Sentiment); types/hooks updated; backend meta attachment complete (no gaps); tsc clean. Phase 2 yf accuracy: signal_engine Stage2 now supports adj_close for long-horizon metrics on splits + data_adapter preserves adj_close in daily frames; all tests green)
 
 ## 0. 이 문서의 목적
 
@@ -200,9 +200,9 @@ OK(<4) / WARNING(4~5) / DANGER(≥6)
 - `useMacro()`: `/macro`
 - `useRegime()`: `/regime`
 - `useDistributionDays()`: `/distribution-days`
-- `useSentiment()`: `/sentiment` — 30분 staleTime, `available` 체크 후 `.data` 반환
-- `useBrief()`: `/brief` — 30분 staleTime, `briefData` null이면 Insight 카드 fallback
-- `useEarnings()`: `/earnings` — 60분 staleTime, `earningsData` null이면 카드 숨김
+- `useSentiment()`: `/sentiment` — 30분 staleTime, returns full (incl. `meta` for freshness badge)
+- `useBrief()`: `/brief` — 30분 staleTime, `briefData` + `briefMeta` (FreshnessMeta, Phase 4) for ⏱ badge in Overview
+- `useEarnings()`: `/earnings` — 60분 staleTime, `earningsData` + `earningsMeta` (FreshnessMeta, Phase 4) for badge
 
 ### 5-3. 타입 정의 (`app/types.ts`) — 중요 상수
 
@@ -215,8 +215,9 @@ export const REGIME_META = { RISK_ON, CONSTRUCTIVE, MIXED, DEFENSIVE, RISK_OFF, 
 export const DD_META = { OK, WARNING, DANGER };
 export const SETUP_QUALITY_META = { 'A+': {color:'bull'}, 'A': {color:'teal'}, 'B': {color:'warn'}, 'C': {color:'bear'}, 'D': {color:'bear'} };
 export const EARNINGS_RISK_META = { high: {color:'bear',dot:'●'}, med: {color:'warn',dot:'●'}, low: {color:'teal',dot:'●'} };
-// AI 관련 인터페이스: MarketBrief, SymbolBrief, BriefData, BriefResponse
-// Earnings 관련 인터페이스: UpcomingEarning, RecentResult, EarningsData, EarningsResponse
+// AI 관련 인터페이스: MarketBrief, SymbolBrief, BriefData, BriefResponse (+ meta: FreshnessMeta Phase 4)
+// Earnings 관련 인터페이스: UpcomingEarning, RecentResult, EarningsData, EarningsResponse (+ meta)
+// SentimentData + FreshnessMeta (fetched_at/age_minutes/source) — used for minimal ⏱ freshness badges
 ```
 
 ### 5-4. UI 시스템 (`app/globals.css`) — Plaid DS 리디자인
@@ -364,6 +365,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | 매크로 심볼 추가 | `backend/api/endpoints.py: MACRO_SYMBOLS` |
 | API 주소 변경 | `frontend/app/types.ts: API_BASE` + `docker-compose.yml: NEXT_PUBLIC_API_URL` |
 | 신호 메타데이터(색상·설명) | `frontend/app/types.ts: SIGNAL_META` |
+| FreshnessMeta + AI 응답 meta (Phase 4) | `frontend/app/types.ts` (SentimentData/BriefResponse/EarningsResponse); hooks useBrief/useEarnings expose *Meta; badges in OverviewBoard (AI+ Earnings) + light SentimentBoard |
 | 폴링 간격 변경 | `frontend/hooks/useIntraday.ts` (현재 30초) |
 | Brief/Earnings URL 변경 | `docker-compose.yml: BRIEF_DATA_URL / EARNINGS_DATA_URL` |
 | Brief 캐시 TTL 변경 | `backend/services/brief_service.py: CACHE_TTL` (현재 1800초) |
