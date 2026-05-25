@@ -324,8 +324,15 @@ async def get_watchlist_endpoint():
         try:
             sent = fetch_latest()
             market_sentiment = sent.get("market", {}).get("composite_score", 50.0) if sent else 50.0
+            # B improvement: per-symbol sentiment if available
+            symbol_sentiment_map = {}
+            for s in sent.get("symbols", []) if sent else []:
+                sym_key = s.get("symbol")
+                if sym_key:
+                    symbol_sentiment_map[sym_key] = s.get("composite_score", market_sentiment)
         except Exception:
             market_sentiment = 50.0
+            symbol_sentiment_map = {}
 
         for sym in WATCHLIST_SYMS:
             df = dfs.get(sym)
@@ -336,10 +343,12 @@ async def get_watchlist_endpoint():
                 stage2 = calculate_stage2_analysis(df, spy_close, rsp_close)
                 stage2_score = stage2.get("score", 0)
 
-                # Conviction 계산 (v1: market-level sentiment + global regime 사용)
+                # B: Prefer per-symbol sentiment, fallback to market
+                sym_sentiment = symbol_sentiment_map.get(sym, market_sentiment)
+
                 conv = calculate_conviction(
                     stage2_score=stage2_score,
-                    sentiment_composite=market_sentiment,
+                    sentiment_composite=sym_sentiment,
                     regime_total=regime_total,
                 )
 
