@@ -191,12 +191,24 @@ async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주
         except Exception:
             market_sentiment = 50.0
 
-        conv = calculate_conviction(
-            stage2_score=stage2.get("score", 0),
-            sentiment_composite=market_sentiment,
-            regime_total=regime_total,
-            regime_label=regime_label,  # Task 2: Regime-conditioned weights
-        )
+        # Conviction 계산 — 에러 방어
+        try:
+            conv = calculate_conviction(
+                stage2_score=stage2.get("score", 0),
+                sentiment_composite=market_sentiment,
+                regime_total=regime_total,
+                regime_label=regime_label,
+            )
+            c_score = conv["score"]
+            c_label = conv["label"]
+            c_rel   = conv.get("reliability", "medium")
+            c_notes = conv.get("notes", [])
+        except Exception as e:
+            logger.warning(f"Conviction calculation failed for {symbol}: {e}")
+            c_score = None
+            c_label = None
+            c_rel   = "low"
+            c_notes = ["Conviction 계산 중 오류가 발생했습니다."]
 
         return {
             "symbol": symbol.upper(),
@@ -204,10 +216,10 @@ async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주
             "indicators": indicators,
             "vol_avg20": vol_avg20,
             "stage2": stage2,
-            "conviction_score": conv["score"],
-            "conviction_label": conv["label"],
-            "conviction_reliability": conv.get("reliability", "medium"),
-            "conviction_notes": conv.get("notes", []),
+            "conviction_score": c_score,
+            "conviction_label": c_label,
+            "conviction_reliability": c_rel,
+            "conviction_notes": c_notes,
         }
     except HTTPException as he:
         raise he
@@ -362,12 +374,24 @@ async def get_watchlist_endpoint():
                 # B: Prefer per-symbol sentiment, fallback to market
                 sym_sentiment = symbol_sentiment_map.get(sym, market_sentiment)
 
-                conv = calculate_conviction(
-                    stage2_score=stage2_score,
-                    sentiment_composite=sym_sentiment,
-                    regime_total=regime_total,
-                    regime_label=regime_label,  # Task 2: Regime-conditioned weights
-                )
+                # Conviction 계산 — 에러가 나도 전체 watchlist가 깨지지 않도록 방어
+                try:
+                    conv = calculate_conviction(
+                        stage2_score=stage2_score,
+                        sentiment_composite=sym_sentiment,
+                        regime_total=regime_total,
+                        regime_label=regime_label,
+                    )
+                    c_score = conv["score"]
+                    c_label = conv["label"]
+                    c_rel   = conv.get("reliability", "medium")
+                    c_notes = conv.get("notes", [])
+                except Exception as e:
+                    logger.warning(f"Conviction calculation failed for {sym}: {e}")
+                    c_score = None
+                    c_label = None
+                    c_rel   = "low"
+                    c_notes = ["Conviction 계산 중 오류가 발생했습니다."]
 
                 result.append({
                     "symbol": sym,
@@ -381,11 +405,11 @@ async def get_watchlist_endpoint():
                     "target": stage2.get("target", 0.0),
                     "latest_atr": stage2.get("latest_atr", 0.0),
                     "pivot_high": stage2.get("pivot_high", 0.0),
-                    # Phase 1 Conviction
-                    "conviction_score": conv["score"],
-                    "conviction_label": conv["label"],
-                    "conviction_reliability": conv.get("reliability", "medium"),
-                    "conviction_notes": conv.get("notes", []),
+                    # Phase 1 Conviction (에러 시에도 안전하게 반환)
+                    "conviction_score": c_score,
+                    "conviction_label": c_label,
+                    "conviction_reliability": c_rel,
+                    "conviction_notes": c_notes,
                 })
             except Exception as e:
                 logger.error(f"Watchlist error for {sym}: {e}", exc_info=True)

@@ -170,3 +170,11 @@ def test_reliability_high_with_full_data():
     """충분한 데이터가 있으면 reliability = high"""
     result = calculate_conviction(6, 75.0, 82.0, "CONSTRUCTIVE")
     assert result["reliability"] == "high"
+
+
+def test_calculator_is_defensive_on_bad_input():
+    """이상한 입력이 들어와도 crash 없이 결과 + low reliability를 반환해야 함"""
+    result = calculate_conviction(-999, -999, None, None)
+    assert result["reliability"] == "low"
+    assert result["score"] >= 0   # 최소한 음수가 되면 안 됨
+    assert len(result["notes"]) > 0
