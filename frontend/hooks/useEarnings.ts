@@ -11,8 +11,8 @@ export function useEarnings() {
   const { data, isLoading, error } = useQuery<EarningsResponse>({
     queryKey: ['earnings'],
     queryFn: fetchEarnings,
-    staleTime: 60 * 60 * 1000,
-    refetchInterval: 60 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
     retry: 2,
   });
 

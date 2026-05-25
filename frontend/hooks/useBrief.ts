@@ -11,8 +11,8 @@ export function useBrief() {
   const { data, isLoading, error } = useQuery<BriefResponse>({
     queryKey: ['brief'],
     queryFn: fetchBrief,
-    staleTime: 30 * 60 * 1000,
-    refetchInterval: 30 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
     retry: 2,
   });
 
