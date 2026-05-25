@@ -178,6 +178,8 @@ docker compose up --build -d
 
 전체 응답 스키마: `backend/api/schemas.py` 참고
 
+> **Phase 1 진행 중**: Conviction Composite Score v1 계산 엔진 (`core/conviction_calculator.py`) TDD 완료 (아직 엔드포인트에 노출되지 않음). Watchlist/Daily 응답에 `conviction_score` + `conviction_label` 추가 예정.
+
 ---
 
 ## 기술 스택
@@ -228,6 +230,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 
 - yfinance는 개발·테스트용 무료 API입니다 (15분 지연 데이터). 운영 환경에서는 유료 데이터 소스 권장.
 - **yfinance 데이터 정확도 강화 + 최소 연계 개선 (full plan: Task 2/3 + Phase 2 + Phase 4 + Phase 5 + exec-8)**: `backend/core/data_adapter.py` is the SINGLE SOURCE OF TRUTH — full centralization + delegation (data_service now thin; daily/watchlist/regime/etc endpoints direct import get_multi_daily for hardened path). Phase 2: `backend/core/signal_engine.py:calculate_stage2_analysis` detects adj_close (preserved by adapter) and uses adjusted prices (scaled high/low + adj series) for long-term metrics (52w high/low, RS 63d, EMA200 slope, pullback, pivot/entry) on split symbols (e.g. NVDA); short-term signals/GC/intraday/raw paths 100% unchanged for full backward compat. Task 3: daily paths + AI endpoints return `meta: {fetched_at, age_minutes, source}`. Phase 4: FE minimal ⏱ freshness badges (OverviewBoard AI Insight + Earnings Calendar + light in Sentiment). Phase 5: full test suites green (sniperboard 29 incl. dedicated adapter+signal_engine; msd 48), mandatory docs updates (PROJECT_CONTEXT/README per CLAUDE.md), final manual verification (endpoints spot-checks, no-breakage non-split/intraday, badges conceptually sound). Cross-repo linkage: market-sentiment-data `collect/collect_earnings.py` hardening (structured logging, fallbacks, schema validation, partial graceful output, --dry-run) + improved services/brief/earnings linkage via GitHub raw + meta transparency. (2026-05-24, feat/yf-accuracy-harden-2026-05-25 branch complete)
+- **Phase 1 Conviction Composite Score v1 (연계 강화)**: `backend/core/conviction_calculator.py` + `tests/test_conviction_calculator.py` TDD 완료 (RED-GREEN, 2026-05-25). 40/30/30 weighted (Stage2 score 0-7 + Sentiment + Regime total). 아직 어떤 엔드포인트에도 노출되지 않음. 다음 슬라이스에서 /api/watchlist 등 연동 예정. (PROJECT_CONTEXT.md + README.md 동시 업데이트 per CLAUDE.md)
 - 매매 신호와 분석은 **참고용**입니다. 투자 손실에 대한 책임은 사용자 본인에게 있습니다.
 - Risk Regime · Distribution Day는 **후행 지표**입니다 — 매매 신호가 아닌 시장 환경 진단입니다.
 - 미국 주식 시장 운영 시간(ET 09:30–16:00) 외에는 단기 데이터가 갱신되지 않습니다.

@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-24; Phase 5 COMPLETE + full yf-accuracy-harden plan: data_adapter as single source of truth + full delegation (Task 2: get_ohlcv_intraday + get_multi_daily + direct endpoint imports for daily paths); Phase 2 adjusted prices (adj_close preserved + used in signal_engine Stage2 long-horizon: 52w/RS/EMA200_slope/pullback/pivot/entry on splits, raw/GC/intraday unchanged); Task 3 endpoint updates + meta freshness on /sentiment /brief /earnings; Phase 4 minimal FE freshness badges (Overview AI+Earnings + light Sentiment); cross-repo linkage (market-sentiment-data earnings collector hardening + services); full tests green (29 sniperboard + 48 msd); docs updated per CLAUDE.md; manual verification passed. All phases + exec-8 complete.)
+# SniperBoard — Project Context (UPDATED 2026-05-25; Phase 5 COMPLETE + yf-accuracy-harden foundation; Phase 1 Conviction Composite Score v1 TDD started: core/conviction_calculator.py (pure 40/30/30 calculator using Stage2 'score' + regime 'total' + external sentiment) + test_conviction_calculator.py (3 tests, RED-GREEN passed); full tests green (sniperboard 29 + new Conviction + 48 msd); docs updated per CLAUDE.md. All prior phases + exec-8 complete.)
 
 ## 0. 이 문서의 목적
 
@@ -30,6 +30,7 @@ sniperboard/
 │   │   ├── regime_engine.py      # Risk Regime 5요소 종합 점수 (0~100)
 │   │   ├── distribution_day.py   # O'Neil Distribution Day 카운트 (25거래일 기준)
 │   │   └── data_adapter.py       # SINGLE SOURCE OF TRUTH: yfinance MultiIndex 정규화 + fetch 전담 (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily). yf 1.3+ 대응. Task2: full delegation (data_service thin layer; endpoints daily paths direct import). test_data_adapter.py full coverage (incl get_multi_daily targeted post-review). Phase 2: adj_close preserved (no longer dropped) for daily paths → Stage2 long-term accuracy (adjusted on splits). Phase 5: centralization verified in full tests + manual endpoint checks.
+│   │   └── conviction_calculator.py  # Phase 1: Conviction Composite Score v1 (TDD). 40/30/30 weighted (Stage2 0-7 norm + Sentiment + Regime total). Pure function, regime=None → 50 neutral. Returns score+label+components. See test_conviction_calculator.py. Not yet wired to endpoints. (2026-05-25)
 │   ├── services/
 │   │   ├── base.py               # BaseDataService 추상 클래스
 │   │   ├── data_service.py       # YFinanceDataService 구현체 + 모듈 레벨 헬퍼 함수
@@ -38,6 +39,7 @@ sniperboard/
 │   └── tests/
 │       ├── test_data_adapter.py (29 tests total incl. adapter+signal_engine; Phase 5 full suite green)
 │       ├── test_signal_engine.py (incl. adjusted vs raw split symbol TDD)
+│       ├── test_conviction_calculator.py (Phase 1 TDD: 3 tests for weighted Conviction v1, RED-GREEN passed 2026-05-25)
 │       └── (service tests: brief/earnings/sentiment)
 ├── frontend/
 │   ├── package.json              # Next.js 16.2.6, React 19.2.4, TanStack Query 5, Zustand 5, lightweight-charts 4.2.3, Tailwind v4
@@ -366,6 +368,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | Regime 임계값 | `backend/core/regime_engine.py: TREND_LOW/HIGH, ...` 상수 |
 | DD 기준일 변경 | `backend/core/distribution_day.py: DD_LOOKBACK, DD_THRESHOLD_PCT` |
 | yfinance MultiIndex / daily+intraday data 정확도 | `backend/core/data_adapter.py` (SINGLE SOURCE OF TRUTH: normalize_yf_dataframe + get_* family) — full centralization+fetch. Task2 complete: full delegation (data_service thin; direct adapter in endpoints for daily paths) + extensive tests (get_multi_daily targeted + more). Task3: endpoints use hardened path + attach meta. Phase 2: adj_close preserve + selective adjusted in signal_engine.calculate_stage2_analysis (long-term only). Phase 4: types/hooks for meta + FE badges. Phase 5: full 29 tests green (adapter+signal_engine specific), docs updated per CLAUDE.md rules, manual verification (endpoints daily/AI meta, no-breakage non-split/intraday). Cross-repo linkage: market-sentiment-data earnings hardening reflected in collect_earnings.py + services. |
+| Conviction Composite Score v1 (Phase 1) | `backend/core/conviction_calculator.py` (pure TDD calculator, 40/30/30, Stage2 'score' + regime 'total' + sentiment). `backend/tests/test_conviction_calculator.py`. Not yet exposed in endpoints/schemas. (2026-05-25) |
 | 워치리스트 종목 추가 | `backend/api/endpoints.py: WATCHLIST_SYMS` + `frontend/app/types.ts: SYMBOLS` |
 | 매크로 심볼 추가 | `backend/api/endpoints.py: MACRO_SYMBOLS` |
 | API 주소 변경 | `frontend/app/types.ts: API_BASE` + `docker-compose.yml: NEXT_PUBLIC_API_URL` |
