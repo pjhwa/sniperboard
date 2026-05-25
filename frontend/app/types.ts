@@ -100,6 +100,9 @@ export interface WatchlistItem {
   target: number;
   latest_atr: number;
   pivot_high: number;
+  // Phase 1 Conviction
+  conviction_score?: number;
+  conviction_label?: string;
 }
 
 export interface LatestData {

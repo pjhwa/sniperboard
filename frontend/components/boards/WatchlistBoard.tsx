@@ -16,6 +16,7 @@ const WATCHLIST_GLOSSARY: GlossaryItem[] = [
   { term: 'Stop (손절가)', plain: '이 가격 아래로 내려가면 손실을 제한하기 위해 팔아야 하는 가격입니다. 주가 변동폭(ATR)의 2배를 기준으로 설정합니다.', color: 'var(--bear)' },
   { term: 'Target (목표가 3R)', plain: '목표 수익 가격입니다. 리스크(손절폭)의 3배만큼 수익을 노리는 1:3 전략입니다. 예) 손절폭이 5달러면 목표 수익은 15달러.', color: 'var(--bull)' },
   { term: 'Checks (7개 점)', plain: '초록색 점은 조건 충족, 회색 점은 미달입니다. 7가지 조건: ① 모든 이평선 위 ② EMA200 상승 ③ 52주 고점 근처 ④ 52주 저점 위 ⑤ 조정 폭 작음 ⑥ RS 강세 ⑦ 거래량 수축' },
+  { term: 'Conviction (확신 점수)', plain: 'Stage2 + 시장 심리 + Regime을 40/30/30으로 종합한 0~100 확신 점수. 높을수록 기술적·심리적으로 강한 구간. (Phase 1 실험적 기능)', color: 'var(--bull)' },
 ];
 
 
@@ -46,6 +47,7 @@ export function WatchlistBoard() {
                   <th>Stop</th>
                   <th>Target</th>
                   <th>Checks</th>
+                  <th>Conviction</th>
                   <th></th>
                 </tr>
               </thead>
@@ -80,6 +82,14 @@ export function WatchlistBoard() {
                         {Object.values(w.checks).map((c, i) => (
                           <div key={i} style={{ width: 8, height: 8, borderRadius: 2, background: c ? 'var(--bull)' : 'var(--border)' }} />
                         ))}
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'column', fontSize: 11, lineHeight: 1.1 }}>
+                        <span style={{ fontWeight: 600, color: (w.conviction_score ?? 0) >= 70 ? 'var(--bull)' : 'var(--teal)' }}>
+                          {w.conviction_score?.toFixed(0) ?? '-'}
+                        </span>
+                        <span className="subtle" style={{ fontSize: 10 }}>{w.conviction_label ?? ''}</span>
                       </div>
                     </td>
                     <td>
