@@ -259,6 +259,7 @@ class BriefResponse(BaseModel):
     data: Optional[BriefData] = None
     error: Optional[str] = None
     meta: Optional[FreshnessMeta] = None
+    context: Optional[dict] = None   # Phase 1: Context Attribution snapshot at generation time
 
 
 # --- Earnings Intelligence ---

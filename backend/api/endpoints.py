@@ -367,7 +367,18 @@ async def get_brief_endpoint():
             return {"available": False, "error": result.get("error", "데이터 없음")}
         data = result["data"]
         gen_at = data.get("generated_at") if isinstance(data, dict) else None
-        return {"available": True, "data": data, "meta": _freshness_meta(gen_at)}
+
+        # Phase 1 Context Attribution: GitHub JSON의 context를 응답 최상위로 승격 (api-spec 준수)
+        context = None
+        if isinstance(data, dict):
+            context = data.pop("context", None)
+
+        return {
+            "available": True,
+            "data": data,
+            "meta": _freshness_meta(gen_at),
+            "context": context,
+        }
     except Exception as e:
         logger.error(f"Error in /brief endpoint: {e}", exc_info=True)
         return {"available": False, "error": "Brief 데이터 처리 중 오류 발생"}

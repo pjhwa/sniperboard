@@ -178,7 +178,9 @@ docker compose up --build -d
 
 전체 응답 스키마: `backend/api/schemas.py` 참고
 
-> **Phase 1 진행 중**: Conviction Composite Score v1 계산 엔진 (`core/conviction_calculator.py`) TDD 완료 (아직 엔드포인트에 노출되지 않음). Watchlist/Daily 응답에 `conviction_score` + `conviction_label` 추가 예정.
+> **Phase 1 진행 중**:
+> - Conviction Composite Score v1 계산 엔진 (`core/conviction_calculator.py`) TDD 완료.
+> - Brief Context Attribution: `/api/brief` 응답에 최상위 `context` 필드 추가 (생성 시점의 regime/technical/sentiment 스냅샷). market-sentiment-data 쪽 수집기도 업데이트됨.
 
 ---
 
