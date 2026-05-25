@@ -27,7 +27,7 @@
 
 ## 업데이트 이력
 
-- 2026-05-25: 초기 문서 세트 작성 (Phase 1 중심) + complete-plan.md 실제 구현 내용으로 작성 (Conviction + Context Attribution 전체 달성)
+- 2026-05-25: Phase 1 완성. complete-plan.md 대폭 확장 (아키텍처 결정, 가중치 공식, 테스트 커버리지, 제한사항, 로드맵 포함)
 
 ---
 

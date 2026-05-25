@@ -47,8 +47,82 @@
 - `collect/test_collect_brief_context.py`
 
 ### 검증 도구 (sniperboard)
-- `scripts/verify_conviction.sh`
-- `scripts/verify_conviction_local.py`
+- `scripts/verify_conviction.sh` (full stack)
+- `scripts/verify_conviction_local.py` (no Docker)
+
+---
+
+## 3. 아키텍처 주요 결정
+
+- **Calculator는 순수 함수**: `calculate_conviction()`은 I/O 없이 입력만으로 결과를 반환. 테스트 용이 + 재사용성 높음.
+- **Regime label 기반 가중치 조정**: 최초 고정 40/30/30 → Task 2에서 동적 조정 (CONSTRUCTIVE 시 Sentiment 비중 35%, RISK_OFF 시 Regime 비중 35%).
+- **Context Attribution 설계**: Brief 생성 **직전**에 스냅샷을 캡처하여 brief JSON에 영구 저장. 나중에 `/api/brief`에서 최상위로 노출.
+- **Sentiment 소싱 우선순위 (Task 4)**: Conviction 계산 시 Brief의 context.market_sentiment를 우선 사용 → Brief와 Conviction이 동일한 sentiment 시점을 공유.
+- **UI는 점진적**: WatchlistBoard → DailyBoard 카드 내부 → OverviewBoard 미리보기 순으로 자연스럽게 확장.
+
+---
+
+## 4. 정확한 가중치 공식 (최종)
+
+기본:
+- Stage2: 40%
+- Sentiment: 30%
+- Regime: 30%
+
+Regime-conditioned (refined):
+- CONSTRUCTIVE / RISK_ON : Sentiment 35% / Regime 25%
+- DEFENSIVE / RISK_OFF   : Sentiment 25% / Regime 35%
+- MIXED / 그 외          : 30% / 30% (중립)
+
+Stage2 정규화: `min(7, max(0, stage2)) / 7 * 100`
+
+---
+
+## 5. 테스트 커버리지
+
+- `test_conviction_calculator.py`: 9개 테스트
+  - 기본 가중치 계산
+  - Regime=None 처리
+  - Clamp & bounds
+  - Schema 호환성
+  - Watchlist-like integration
+  - Regime-conditioned (CONSTRUCTIVE, RISK_OFF, MIXED, weight transparency)
+
+- `test_collect_brief_context.py`: Context 스냅샷 빌더 테스트
+- `verify_conviction_local.py`: 현실 데이터 기반 스모크
+- `verify_conviction.sh`: 실제 Docker 환경 E2E 검증
+
+---
+
+## 6. 알려진 제한사항 및 주의점
+
+- Conviction은 **참고 지표**이며 투자 결정의 유일한 근거가 되어서는 안 됨.
+- 현재 per-symbol sentiment는 sentiment 서비스에 의존 (brief context는 시장 전체 중심).
+- Regime label은 5요소 평균 기반 (극단적 상황에서 민감할 수 있음).
+- Docker frontend 빌드는 환경에 따라 추가 의존성 필요할 수 있음.
+
+---
+
+## 7. 검증 방법 (권장 순서)
+
+1. Local: `PYTHONPATH=backend python3 scripts/verify_conviction_local.py`
+2. Full stack: `./run_docker.sh` → `./scripts/verify_conviction.sh`
+3. 수동: 브라우저에서 http://localhost:4000 접속 → Watchlist / Daily 탭 확인
+
+---
+
+## 8. 다음 단계 제안 (Phase 2 힌트)
+
+- Conviction 히스토리 차트 (OverviewBoard)
+- Conviction 기반 알림 / 스크리너
+- Divergence Detector (기술 vs 심리 충돌 탐지)
+- 더 정교한 per-symbol sentiment 모델 (Grok brief 내부 신호 활용)
+
+---
+
+**이 문서는 Phase 1의 공식 종합 보고서입니다.**
+
+모든 주요 변경은 `feat/yf-accuracy-harden-2026-05-25` 브랜치에 커밋되어 있으며, CLAUDE.md 규칙을 준수했습니다.
 
 ---
 
