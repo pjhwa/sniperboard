@@ -11,9 +11,7 @@ v1 목표:
 - Sentiment: 30%
 - Regime: 30% (None → 50 neutral 폴백, v1)
 
-Regime-conditioned weight 조정 (RISK_ON / RISK_OFF)은
-yf-accuracy-harden-complete-plan.md 상세 알고리즘 부재로 v1에서는 미구현.
-후속 TDD 슬라이스에서 추가 예정.
+Regime-conditioned weight 조정 (RISK_ON / RISK_OFF) 은 Task 2에서 구현 완료.
 
 이 모듈은 순수 계산 (side-effect free). 호출 측에서
 signal_engine.calculate_stage2_analysis()['score'],
@@ -61,8 +59,14 @@ def calculate_conviction(
     stage2_score: float,
     sentiment_composite: float,
     regime_total: Optional[float] = None,
+    regime_label: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Conviction Composite Score v1 계산.
+    """Conviction Composite Score v1 계산 (Regime-conditioned weights 지원).
+
+    Regime-conditioned adjustment (Phase 2 logic, now enabled):
+    - RISK_ON / CONSTRUCTIVE: Sentiment 가중치 상향 (35%), Regime 하향 (25%)
+    - RISK_OFF / DEFENSIVE: Regime 가중치 상향 (35%), Sentiment 하향 (25%)
+    - 그 외: 기본 40/30/30 유지
 
     Returns:
         {
@@ -70,8 +74,8 @@ def calculate_conviction(
             "label": str,
             "components": {
                 "stage2": {"raw": float, "norm": float, "weight": 0.4},
-                "sentiment": {"raw": float, "weight": 0.3},
-                "regime": {"raw": Optional[float], "filled": float, "weight": 0.3},
+                "sentiment": {"raw": float, "weight": ...},
+                "regime": {"raw": Optional[float], "filled": float, "weight": ...},
             }
         }
     """
@@ -79,14 +83,25 @@ def calculate_conviction(
     sentiment = max(0.0, min(100.0, float(sentiment_composite)))
     regime_filled = _fill_regime(regime_total)
 
-    # 40/30/30 weighted (이미 정규화된 0-100 스케일)
+    # Regime-conditioned weight adjustment
+    s_weight = 0.30
+    r_weight = 0.30
+
+    if regime_label in ("RISK_ON", "CONSTRUCTIVE"):
+        s_weight = 0.35
+        r_weight = 0.25
+    elif regime_label in ("RISK_OFF", "DEFENSIVE"):
+        s_weight = 0.25
+        r_weight = 0.35
+
+    stage2_weight = 0.40
+
     raw_score = (
-        0.4 * stage2_norm +
-        0.3 * sentiment +
-        0.3 * regime_filled
+        stage2_weight * stage2_norm +
+        s_weight * sentiment +
+        r_weight * regime_filled
     )
 
-    # Clamp + round to 1 decimal for stability
     score = round(max(0.0, min(100.0, raw_score)), 1)
 
     return {
@@ -96,16 +111,16 @@ def calculate_conviction(
             "stage2": {
                 "raw": float(stage2_score),
                 "norm": round(stage2_norm, 1),
-                "weight": 0.4,
+                "weight": stage2_weight,
             },
             "sentiment": {
                 "raw": sentiment,
-                "weight": 0.3,
+                "weight": round(s_weight, 2),
             },
             "regime": {
                 "raw": regime_total,
                 "filled": regime_filled,
-                "weight": 0.3,
+                "weight": round(r_weight, 2),
             },
         },
     }

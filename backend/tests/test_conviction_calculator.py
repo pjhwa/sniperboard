@@ -110,3 +110,35 @@ def test_conviction_for_watchlist_like_item():
     )
     assert 65 <= result["score"] <= 80
     assert result["label"] in {"강한 확신 구간", "중립적 확신", "매우 강한 확신"}
+
+
+# --- Task 2: Regime-conditioned weight tests ---
+
+def test_regime_conditioned_risk_on_increases_sentiment_weight():
+    """RISK_ON / CONSTRUCTIVE일 때 Sentiment 가중치가 올라가야 함."""
+    result = calculate_conviction(
+        stage2_score=5,
+        sentiment_composite=80.0,
+        regime_total=70.0,
+        regime_label="CONSTRUCTIVE",
+    )
+    # Sentiment weight should be 0.35 instead of 0.30
+    # Expected higher score than default 40/30/30
+    default_result = calculate_conviction(5, 80.0, 70.0)  # no label
+    assert result["score"] > default_result["score"]
+    assert result["components"]["sentiment"]["weight"] == 0.35
+    assert result["components"]["regime"]["weight"] == 0.25
+
+
+def test_regime_conditioned_risk_off_increases_regime_weight():
+    """RISK_OFF / DEFENSIVE일 때 Regime 가중치가 올라가야 함."""
+    result = calculate_conviction(
+        stage2_score=4,
+        sentiment_composite=30.0,
+        regime_total=75.0,
+        regime_label="RISK_OFF",
+    )
+    default_result = calculate_conviction(4, 30.0, 75.0)
+    assert result["score"] > default_result["score"]  # Regime pull is stronger
+    assert result["components"]["regime"]["weight"] == 0.35
+    assert result["components"]["sentiment"]["weight"] == 0.25

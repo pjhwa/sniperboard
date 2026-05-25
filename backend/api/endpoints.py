@@ -180,8 +180,10 @@ async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주
             regime_dfs = get_multi_daily(["SPY", "RSP", "HYG", "IEF", "^VIX"], period="1y")
             regime = compute_regime(regime_dfs)
             regime_total = regime.get("total", 50.0) if regime else 50.0
+            regime_label = regime.get("regime") if regime else None
         except Exception:
             regime_total = 50.0
+            regime_label = None
 
         try:
             sent = fetch_latest()
@@ -193,6 +195,7 @@ async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주
             stage2_score=stage2.get("score", 0),
             sentiment_composite=market_sentiment,
             regime_total=regime_total,
+            regime_label=regime_label,  # Task 2: Regime-conditioned weights
         )
 
         return {
@@ -318,8 +321,10 @@ async def get_watchlist_endpoint():
             regime_dfs = get_multi_daily(["SPY", "RSP", "HYG", "IEF", "^VIX"], period="1y")
             regime = compute_regime(regime_dfs)
             regime_total = regime.get("total", 50.0) if regime else 50.0
+            regime_label = regime.get("regime") if regime else None
         except Exception:
             regime_total = 50.0
+            regime_label = None
 
         try:
             sent = fetch_latest()
@@ -350,6 +355,7 @@ async def get_watchlist_endpoint():
                     stage2_score=stage2_score,
                     sentiment_composite=sym_sentiment,
                     regime_total=regime_total,
+                    regime_label=regime_label,  # Task 2: Regime-conditioned weights
                 )
 
                 result.append({
