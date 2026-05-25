@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-24; post Task2 review: get_multi_daily test coverage + docstring cleanup)
+# SniperBoard — Project Context (UPDATED 2026-05-25; post Task 3: endpoints daily paths now direct adapter + AI freshness meta on /sentiment /brief /earnings)
 
 ## 0. 이 문서의 목적
 
@@ -104,9 +104,9 @@ sniperboard/
 | `GET /watchlist` | — | WATCHLIST_SYMS 6종목 Stage2 점수 내림차순 |
 | `GET /regime` | — | Risk Regime 5요소 점수 + 종합 regime 문자열 |
 | `GET /distribution-days` | — | SPY·QQQ DD count/level/dates |
-| `GET /sentiment` | — | 소셜 심리 JSON (GitHub raw 30분 캐시) |
-| `GET /brief` | — | AI Daily Brief JSON (GitHub raw 30분 캐시) |
-| `GET /earnings` | — | Earnings Intelligence JSON (GitHub raw 60분 캐시) |
+| `GET /sentiment` | — | 소셜 심리 JSON (GitHub raw 30분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
+| `GET /brief` | — | AI Daily Brief JSON (GitHub raw 30분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
+| `GET /earnings` | — | Earnings Intelligence JSON (GitHub raw 60분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
 
 ---
 
@@ -345,7 +345,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | CORS | 개발용 `allow_origins=["*"]` — 운영 시 변경 필요 |
 | API_BASE 재빌드 | `NEXT_PUBLIC_API_URL`은 빌드 시 번들되므로 런타임 변경 불가 |
 | 매크로 데이터 | 시장 마감 후에는 당일 데이터 미갱신 |
-| yfinance MultiIndex | 멀티 종목 다운로드 시 컬럼 구조 주의. **정규화 로직은 `core/data_adapter.py:normalize_yf_dataframe` 로 일원화. Task2: get_ohlcv + get_multi_daily 모두 어댑터에 완전 위임 완료 (data_service의 yf download/ad-hoc 제거)** (post-review: get_multi_daily targeted tests 추가) |
+| yfinance MultiIndex | 멀티 종목 다운로드 시 컬럼 구조 주의. **정규화 로직은 `core/data_adapter.py:normalize_yf_dataframe` 로 일원화. Task2: get_ohlcv + get_multi_daily 모두 어댑터에 완전 위임 완료 (data_service의 yf download/ad-hoc 제거)** (post-review: get_multi_daily targeted tests 추가). Task3: `/daily /watchlist /regime /distribution-days /macro` 엔드포인트가 `get_multi_daily` 를 `core.data_adapter` 에서 **직접 import** 하여 hardened path 명시 (data_service는 intraday 전용 thin layer 유지). AI 엔드포인트에 freshness meta 추가. |
 
 ---
 
@@ -357,7 +357,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | Stage2 체크리스트 기준 | `backend/core/signal_engine.py: calculate_stage2_analysis()` |
 | Regime 임계값 | `backend/core/regime_engine.py: TREND_LOW/HIGH, ...` 상수 |
 | DD 기준일 변경 | `backend/core/distribution_day.py: DD_LOOKBACK, DD_THRESHOLD_PCT` |
-| yfinance MultiIndex / daily+intraday data 정확도 | `backend/core/data_adapter.py` (normalize_yf_dataframe, get_daily, get_ohlcv_intraday, get_multi_daily) — 정규화+fetch 전담. Task2: 위임 완료 + test_data_adapter.py 에 get_multi_daily unit test coverage 추가 (Code Review fix) |
+| yfinance MultiIndex / daily+intraday data 정확도 | `backend/core/data_adapter.py` (normalize_yf_dataframe, get_daily, get_ohlcv_intraday, get_multi_daily) — 정규화+fetch 전담. Task2: 위임 완료 + test_data_adapter.py 에 get_multi_daily unit test coverage 추가 (Code Review fix). Task3: `backend/api/endpoints.py` 의 daily 계열 엔드포인트가 adapter 직접 import 로 hardened path 사용; `/sentiment /brief /earnings` 에 `meta` freshness 추가 + schemas.py FreshnessMeta. |
 | 워치리스트 종목 추가 | `backend/api/endpoints.py: WATCHLIST_SYMS` + `frontend/app/types.ts: SYMBOLS` |
 | 매크로 심볼 추가 | `backend/api/endpoints.py: MACRO_SYMBOLS` |
 | API 주소 변경 | `frontend/app/types.ts: API_BASE` + `docker-compose.yml: NEXT_PUBLIC_API_URL` |

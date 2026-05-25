@@ -1,8 +1,10 @@
 import pandas as pd
 import logging
 from datetime import datetime, timezone
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
-from services.data_service import get_ohlcv, get_multi_daily
+from services.data_service import get_ohlcv
+from core.data_adapter import get_multi_daily
 from core.signal_engine import (
     calculate_signals, add_daily_indicators, calculate_stage2_analysis,
     detect_market_structure, ema, rsi
@@ -22,6 +24,32 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 WATCHLIST_SYMS = ["TSLA", "AAPL", "NVDA", "META", "AMZN", "GOOGL"]
+
+
+def _freshness_meta(generated_at: Optional[str] = None) -> dict:
+    """Return freshness meta for AI endpoints (fetched_at, age_minutes, source).
+    Uses generated_at from upstream payload (cron-generated) when available to compute age.
+    Falls back to now with age=0. Source indicates origin (github raw cache).
+    """
+    now = datetime.now(timezone.utc)
+    fetched_at = generated_at or now.isoformat()
+    age_minutes = 0.0
+    if generated_at:
+        try:
+            # Support 'Z' suffix and naive datetimes (assume UTC)
+            s = generated_at.replace("Z", "+00:00")
+            dt = datetime.fromisoformat(s)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            delta = (now - dt).total_seconds() / 60.0
+            age_minutes = round(delta, 1)
+        except Exception:
+            age_minutes = 0.0
+    return {
+        "fetched_at": fetched_at,
+        "age_minutes": age_minutes,
+        "source": "github_raw",
+    }
 
 
 @router.get("/ohlcv", response_model=OHLCVResponse)
@@ -315,6 +343,7 @@ async def get_sentiment_endpoint():
         today_slots = fetch_today_slots(today_str)
 
         latest_data = {k: v for k, v in snapshot.items() if k != "available"}
+        gen_at = latest_data.get("generated_at") if isinstance(latest_data, dict) else None
         return {
             "available": True,
             "latest": latest_data,
@@ -322,6 +351,7 @@ async def get_sentiment_endpoint():
                 "pre_open": today_slots["pre_open"],
                 "post_close": today_slots["post_close"],
             },
+            "meta": _freshness_meta(gen_at),
         }
     except Exception as e:
         logger.error(f"Error in /sentiment endpoint: {e}", exc_info=True)
@@ -335,7 +365,9 @@ async def get_brief_endpoint():
         result = fetch_brief()
         if not result.get("available"):
             return {"available": False, "error": result.get("error", "데이터 없음")}
-        return {"available": True, "data": result["data"]}
+        data = result["data"]
+        gen_at = data.get("generated_at") if isinstance(data, dict) else None
+        return {"available": True, "data": data, "meta": _freshness_meta(gen_at)}
     except Exception as e:
         logger.error(f"Error in /brief endpoint: {e}", exc_info=True)
         return {"available": False, "error": "Brief 데이터 처리 중 오류 발생"}
@@ -348,7 +380,9 @@ async def get_earnings_endpoint():
         result = fetch_earnings()
         if not result.get("available"):
             return {"available": False, "error": result.get("error", "데이터 없음")}
-        return {"available": True, "data": result["data"]}
+        data = result["data"]
+        gen_at = data.get("generated_at") if isinstance(data, dict) else None
+        return {"available": True, "data": data, "meta": _freshness_meta(gen_at)}
     except Exception as e:
         logger.error(f"Error in /earnings endpoint: {e}", exc_info=True)
         return {"available": False, "error": "Earnings 데이터 처리 중 오류 발생"}

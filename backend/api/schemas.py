@@ -173,6 +173,15 @@ class DistributionDayResponse(BaseModel):
     qqq: DDDetailSchema
 
 
+class FreshnessMeta(BaseModel):
+    """Freshness metadata for externally-sourced AI data (sentiment/brief/earnings).
+    Added in Task 3 for yfinance accuracy hardening follow-up.
+    """
+    fetched_at: str
+    age_minutes: float
+    source: str
+
+
 # --- Sentiment (소셜 심리) ---
 
 class SymbolSentiment(BaseModel):
@@ -219,6 +228,7 @@ class SentimentResponse(BaseModel):
     latest: Optional[SnapshotData] = None
     today: Optional[TodaySlots] = None
     error: Optional[str] = None
+    meta: Optional[FreshnessMeta] = None
 
 
 # --- AI Brief ---
@@ -248,6 +258,7 @@ class BriefResponse(BaseModel):
     available: bool
     data: Optional[BriefData] = None
     error: Optional[str] = None
+    meta: Optional[FreshnessMeta] = None
 
 
 # --- Earnings Intelligence ---
@@ -281,3 +292,4 @@ class EarningsResponse(BaseModel):
     available: bool
     data: Optional[EarningsData] = None
     error: Optional[str] = None
+    meta: Optional[FreshnessMeta] = None

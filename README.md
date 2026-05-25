@@ -172,9 +172,9 @@ docker compose up --build -d
 | `GET /api/watchlist` | 6종목 Stage2 점수 순 정렬 |
 | `GET /api/regime` | Risk Regime 5요소 종합 점수 |
 | `GET /api/distribution-days` | SPY·QQQ Distribution Day 카운트 |
-| `GET /api/sentiment` | 소셜 심리 데이터 (GitHub raw 캐시) |
-| `GET /api/brief` | AI Daily Brief — Grok 시장 분석 (GitHub raw 캐시) |
-| `GET /api/earnings` | Earnings Intelligence — 실적 발표 일정 + AI 해석 (GitHub raw 캐시) |
+| `GET /api/sentiment` | 소셜 심리 데이터 (GitHub raw 캐시) + `meta {fetched_at, age_minutes, source}` (Task 3) |
+| `GET /api/brief` | AI Daily Brief — Grok 시장 분석 (GitHub raw 캐시) + `meta {fetched_at, age_minutes, source}` (Task 3) |
+| `GET /api/earnings` | Earnings Intelligence — 실적 발표 일정 + AI 해석 (GitHub raw 캐시) + `meta {fetched_at, age_minutes, source}` (Task 3) |
 
 전체 응답 스키마: `backend/api/schemas.py` 참고
 
@@ -227,7 +227,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 ## 주의사항
 
 - yfinance는 개발·테스트용 무료 API입니다 (15분 지연 데이터). 운영 환경에서는 유료 데이터 소스 권장.
-- **yfinance 데이터 정확도 강화 (Task 2 완료)**: `backend/core/data_adapter.py` (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily) 에 yfinance fetch + MultiIndex 정규화 TDD 로 전담 격리. `data_service` 의 get_ohlcv와 get_multi_daily 모두 어댑터로 완전 위임 (중앙화, download/ad-hoc 제거). (2026-05; post-review: get_multi_daily unit tests in test_data_adapter.py)
+- **yfinance 데이터 정확도 강화 (Task 2 완료 + Task 3 follow-up)**: `backend/core/data_adapter.py` 가 yfinance fetch + MultiIndex 정규화의 single source of truth. Task3: `/daily /watchlist /regime /distribution-days /macro` 가 `core.data_adapter.get_multi_daily` 를 직접 사용. AI 엔드포인트(`/sentiment /brief /earnings`) 응답에 `meta: {fetched_at, age_minutes, source}` freshness 정보 추가 (Pydantic 스키마 갱신). (2026-05-25)
 - 매매 신호와 분석은 **참고용**입니다. 투자 손실에 대한 책임은 사용자 본인에게 있습니다.
 - Risk Regime · Distribution Day는 **후행 지표**입니다 — 매매 신호가 아닌 시장 환경 진단입니다.
 - 미국 주식 시장 운영 시간(ET 09:30–16:00) 외에는 단기 데이터가 갱신되지 않습니다.
