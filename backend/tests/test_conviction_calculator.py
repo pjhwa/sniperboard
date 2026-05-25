@@ -84,3 +84,29 @@ def test_calculate_conviction_clamps_and_bounds():
 
     result_high = calculate_conviction(7.0, 100.0, 100.0)
     assert result_high["score"] == 100.0
+
+
+# --- C: Simple integration-style tests for watchlist/daily usage ---
+
+from api.schemas import WatchlistItemSchema
+
+
+def test_watchlist_item_schema_has_conviction_fields():
+    """WatchlistItemSchema에 conviction 필드가 선언되어 있는지 확인 (C task)."""
+    fields = WatchlistItemSchema.model_fields
+    assert "conviction_score" in fields
+    assert "conviction_label" in fields
+
+
+def test_conviction_for_watchlist_like_item():
+    """워치리스트 스타일 데이터로 conviction 계산 (C: integration smoke)."""
+    # Typical watchlist item data
+    stage2_score = 5
+    # Simulate per-symbol or market sentiment
+    result = calculate_conviction(
+        stage2_score=stage2_score,
+        sentiment_composite=68.0,
+        regime_total=72.0,
+    )
+    assert 65 <= result["score"] <= 80
+    assert result["label"] in {"강한 확신 구간", "중립적 확신", "매우 강한 확신"}
