@@ -19,6 +19,7 @@ from services.brief_service import fetch_brief
 from services.earnings_service import fetch_earnings
 from core.distribution_day import count_distribution_days
 from core.regime_engine import compute_regime
+from core.conviction_calculator import calculate_conviction
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -289,6 +290,21 @@ async def get_watchlist_endpoint():
         rsp_close = rsp_df["close"] if rsp_df is not None and not rsp_df.empty else None
 
         result = []
+
+        # Phase 1: Conviction을 위해 regime와 market sentiment를 한 번만 가져옴
+        try:
+            regime_dfs = get_multi_daily(["SPY", "RSP", "HYG", "IEF", "^VIX"], period="1y")
+            regime = compute_regime(regime_dfs)
+            regime_total = regime.get("total", 50.0) if regime else 50.0
+        except Exception:
+            regime_total = 50.0
+
+        try:
+            sent = fetch_latest()
+            market_sentiment = sent.get("market", {}).get("composite_score", 50.0) if sent else 50.0
+        except Exception:
+            market_sentiment = 50.0
+
         for sym in WATCHLIST_SYMS:
             df = dfs.get(sym)
             if df is None or df.empty:
@@ -296,10 +312,19 @@ async def get_watchlist_endpoint():
             try:
                 df = add_daily_indicators(df)
                 stage2 = calculate_stage2_analysis(df, spy_close, rsp_close)
+                stage2_score = stage2.get("score", 0)
+
+                # Conviction 계산 (v1: market-level sentiment + global regime 사용)
+                conv = calculate_conviction(
+                    stage2_score=stage2_score,
+                    sentiment_composite=market_sentiment,
+                    regime_total=regime_total,
+                )
+
                 result.append({
                     "symbol": sym,
                     "price": round(float(df["close"].iloc[-1]), 2),
-                    "score": stage2.get("score", 0),
+                    "score": stage2_score,
                     "rs_score": stage2.get("rs_score", 50.0),
                     "pct_from_52w_high": stage2.get("pct_from_52w_high", 0.0),
                     "checks": stage2.get("checks", {}),
@@ -308,6 +333,9 @@ async def get_watchlist_endpoint():
                     "target": stage2.get("target", 0.0),
                     "latest_atr": stage2.get("latest_atr", 0.0),
                     "pivot_high": stage2.get("pivot_high", 0.0),
+                    # Phase 1 Conviction
+                    "conviction_score": conv["score"],
+                    "conviction_label": conv["label"],
                 })
             except Exception as e:
                 logger.error(f"Watchlist error for {sym}: {e}", exc_info=True)

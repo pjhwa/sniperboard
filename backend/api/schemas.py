@@ -92,6 +92,9 @@ class WatchlistItemSchema(BaseModel):
     target: float
     latest_atr: float
     pivot_high: float
+    # Phase 1: Conviction Composite Score
+    conviction_score: Optional[float] = None
+    conviction_label: Optional[str] = None
 
 class MacroItemSchema(BaseModel):
     symbol: str

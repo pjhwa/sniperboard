@@ -180,7 +180,8 @@ docker compose up --build -d
 
 > **Phase 1 진행 중**:
 > - Conviction Composite Score v1 계산 엔진 (`core/conviction_calculator.py`) TDD 완료.
-> - Brief Context Attribution: `/api/brief` 응답에 최상위 `context` 필드 추가 (생성 시점의 regime/technical/sentiment 스냅샷). market-sentiment-data 쪽 수집기도 업데이트됨.
+> - `/api/watchlist` 응답에 `conviction_score` + `conviction_label` 필드 추가 (각 종목에 대해 Stage2 + 시장 Sentiment + Regime 기반 40/30/30 계산).
+> - Brief Context Attribution: `/api/brief` 응답에 최상위 `context` 필드 추가. market-sentiment-data 쪽 수집기도 업데이트됨.
 
 ---
 
