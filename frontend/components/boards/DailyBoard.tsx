@@ -131,13 +131,36 @@ export function DailyBoard() {
               </div>
             </div>
 
-            {/* Phase 1: Conviction - more natural placement inside Stage 2 card */}
+            {/* Phase 1: Conviction - integrated in Stage 2 card */}
             {dailyData?.conviction_score != null && (
-              <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
-                <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase' }}>Conviction (Phase 1)</div>
-                <div style={{ fontSize: 18, fontWeight: 600, color: dailyData.conviction_score >= 65 ? 'var(--bull)' : 'var(--teal)' }}>
-                  {dailyData.conviction_score} <span style={{ fontSize: 12, fontWeight: 400 }}>({dailyData.conviction_label})</span>
+              <div style={{ 
+                marginTop: 10, 
+                padding: '6px 10px', 
+                borderRadius: 6, 
+                background: 'var(--border-soft)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', minWidth: 70 }}>Conviction</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: dailyData.conviction_score >= 65 ? 'var(--bull)' : 'var(--teal)' }}>
+                  {dailyData.conviction_score}
                 </div>
+                <div style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
+                  {dailyData.conviction_label}
+                </div>
+                {dailyData.conviction_reliability && (
+                  <span style={{ 
+                    fontSize: 10, 
+                    padding: '1px 5px', 
+                    borderRadius: 3, 
+                    background: dailyData.conviction_reliability === 'high' ? 'var(--bull)' : 
+                               dailyData.conviction_reliability === 'medium' ? 'var(--teal)' : 'var(--warn)',
+                    color: '#fff'
+                  }}>
+                    {dailyData.conviction_reliability}
+                  </span>
+                )}
               </div>
             )}
             <div>

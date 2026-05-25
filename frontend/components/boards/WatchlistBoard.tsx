@@ -104,13 +104,28 @@ export function WatchlistBoard() {
                       </div>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', flexDirection: 'column', fontSize: 11, lineHeight: 1.1 }}>
+                      <div style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: 6, 
+                        padding: '2px 8px', 
+                        borderRadius: 4, 
+                        background: 'var(--border-soft)',
+                        fontSize: 11 
+                      }}>
                         <span style={{ fontWeight: 600, color: (w.conviction_score ?? 0) >= 70 ? 'var(--bull)' : 'var(--teal)' }}>
                           {w.conviction_score?.toFixed(0) ?? '-'}
                         </span>
                         <span className="subtle" style={{ fontSize: 10 }}>{w.conviction_label ?? ''}</span>
                         {w.conviction_reliability && (
-                          <span style={{ fontSize: 9, color: w.conviction_reliability === 'high' ? 'var(--bull)' : w.conviction_reliability === 'medium' ? 'var(--teal)' : 'var(--warn)' }}>
+                          <span style={{ 
+                            fontSize: 9, 
+                            padding: '0 3px',
+                            borderRadius: 2,
+                            background: w.conviction_reliability === 'high' ? 'var(--bull)' : 
+                                       w.conviction_reliability === 'medium' ? 'var(--teal)' : 'var(--warn)',
+                            color: '#fff'
+                          }}>
                             {w.conviction_reliability}
                           </span>
                         )}
