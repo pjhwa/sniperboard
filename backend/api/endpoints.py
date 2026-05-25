@@ -327,21 +327,23 @@ async def get_watchlist_endpoint():
             regime_label = None
 
         try:
-            sent = fetch_latest()
-            market_sentiment = sent.get("market", {}).get("composite_score", 50.0) if sent else 50.0
-            # B improvement: per-symbol sentiment if available
+            # Task 4: Prefer the brief's context market_sentiment (tied to when the Brief was generated)
+            # for consistency between Conviction and the AI Brief.
+            brief = fetch_brief()
+            if brief.get("available") and brief.get("context"):
+                ctx = brief.get("context", {})
+                market_sentiment = ctx.get("market_sentiment", {}).get("composite_score", 50.0)
+            else:
+                sent = fetch_latest()
+                market_sentiment = sent.get("market", {}).get("composite_score", 50.0) if sent else 50.0
+
+            # Per-symbol sentiment still from sentiment service (more granular)
             symbol_sentiment_map = {}
+            sent = fetch_latest()  # still needed for per-symbol
             for s in sent.get("symbols", []) if sent else []:
                 sym_key = s.get("symbol")
                 if sym_key:
                     symbol_sentiment_map[sym_key] = s.get("composite_score", market_sentiment)
-
-            # Task 4: Also consider the latest brief's context market_sentiment as additional signal
-            brief = fetch_brief()
-            if brief.get("available") and brief.get("context"):
-                ctx_sent = brief["context"].get("market_sentiment", {}).get("composite_score")
-                if ctx_sent is not None:
-                    market_sentiment = (market_sentiment + ctx_sent) / 2  # simple blend
         except Exception:
             market_sentiment = 50.0
             symbol_sentiment_map = {}
