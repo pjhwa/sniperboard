@@ -36,15 +36,15 @@ fi
 # Show sample for first symbol
 echo ""
 echo "Sample watchlist item (first symbol):"
-echo "$WATCHLIST" | python3 -c '
+python3 -c '
 import sys, json
-data = json.load(sys.stdin)
+data = json.loads(sys.stdin.read())
 if data.get("watchlist"):
     item = data["watchlist"][0]
-    print(f"  Symbol: {item.get(\"symbol\")}")
-    print(f"  Stage2 Score: {item.get(\"score\")}")
-    print(f"  Conviction: {item.get(\"conviction_score\")} ({item.get(\"conviction_label\")})")
-'
+    print("  Symbol:", item.get("symbol"))
+    print("  Stage2 Score:", item.get("score"))
+    print("  Conviction:", item.get("conviction_score"), "(", item.get("conviction_label"), ")")
+' <<< "$WATCHLIST"
 
 echo ""
 echo "[2/4] Checking /api/daily?symbol=NVDA for conviction fields..."
@@ -58,12 +58,12 @@ fi
 
 echo ""
 echo "Daily conviction for NVDA:"
-echo "$DAILY" | python3 -c '
+python3 -c '
 import sys, json
-data = json.load(sys.stdin)
-print(f"  Conviction: {data.get(\"conviction_score\")} ({data.get(\"conviction_label\")})")
-print(f"  Stage2 Score inside stage2: {data.get(\"stage2\", {}).get(\"score\")}")
-'
+data = json.loads(sys.stdin.read())
+print("  Conviction:", data.get("conviction_score"), "(", data.get("conviction_label"), ")")
+print("  Stage2 Score inside stage2:", data.get("stage2", {}).get("score"))
+' <<< "$DAILY"
 
 echo ""
 echo "[3/4] Checking /api/brief for context field (Phase 1 Context Attribution)..."
