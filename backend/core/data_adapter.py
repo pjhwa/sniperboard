@@ -11,6 +11,10 @@ Public API:
 - get_ohlcv_intraday(symbol, timeframe="5m", period="5d") -> Optional[pd.DataFrame]
 - get_multi_daily(symbols, period="2y") -> Dict[str, Optional[pd.DataFrame]]
   (Task 2 completion: full delegation of multi-daily yf download + normalize path)
+
+Phase 2 (yf accuracy): adj_close (from 'Adj Close') is now preserved in daily output frames
+when present in yf response (for Stage2 long-horizon metrics on split symbols). Intraday
+paths unchanged in behavior. normalize no longer drops adj_close.
 """
 import pandas as pd
 import yfinance as yf
@@ -26,8 +30,9 @@ def normalize_yf_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     처리 규칙 (TDD 요구사항 충족하는 최소 구현):
     1. MultiIndex 인 경우 → get_level_values(-1) 로 price field 레벨만 추출
        (ticker 가 level 0 에 있는 group_by 스타일과 single-wrapped 스타일 모두 커버)
-    2. 'Adj Close' / 'adj_close' 는 제거 (daily 에서는 보통 불필요)
-    3. 표준 5개 컬럼(open/high/low/close/volume) 만 유지, 소문자 rename
+    2. 'Adj Close' / 'adj_close' 는 adj_close 로 rename 하여 보존 (Phase 2: daily long-term
+       Stage2 metrics 정확도 위해; intraday/GC/short-term은 raw close 유지)
+    3. 표준 컬럼(open/high/low/close/volume + optional adj_close) 유지, 소문자 rename
     4. dropna() 적용 (기존 서비스와 동일)
     5. 빈 DF / None 은 그대로 반환
 
@@ -53,12 +58,14 @@ def normalize_yf_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     }
     result = result.rename(columns=rename_map)
 
-    # Adj Close 제거 (있으면)
-    if "adj_close" in result.columns:
-        result = result.drop(columns=["adj_close"], errors="ignore")
+    # Phase 2: adj_close 보존 (drop 제거). daily get_multi_daily/get_daily 경로에서
+    # yf가 제공하는 Adj Close를 'adj_close' 컬럼으로 유지 → signal_engine Stage2가
+    # split 심볼(NVDA 등)에서 adjusted prices 사용 가능. backward compat: 컬럼 없으면
+    # 기존 raw close 경로 그대로.
+    # intraday는 auto_adjust=False 여도 영향 최소 (short-term 신호 미사용).
 
-    # 표준 컬럼만 선택 (존재하는 것만)
-    keep_cols = [c for c in ["open", "high", "low", "close", "volume"] if c in result.columns]
+    # 표준 컬럼만 선택 (존재하는 것만; adj_close optional)
+    keep_cols = [c for c in ["open", "high", "low", "close", "volume", "adj_close"] if c in result.columns]
     if keep_cols:
         result = result[keep_cols]
 
@@ -148,7 +155,7 @@ def get_multi_daily(symbols: List[str], period: str = "2y") -> Dict[str, Optiona
                         continue
                     raw_df = data[sym].copy()
 
-                # Normalize (MultiIndex handling + rename + adj drop + dropna) 위임
+                # Normalize (MultiIndex handling + rename + optional adj_close preserve + dropna) 위임
                 df = normalize_yf_dataframe(raw_df)
                 result[sym] = df if df is not None and not df.empty else None
             except Exception as e:

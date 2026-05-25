@@ -67,7 +67,7 @@ def test_normalize_yf_dataframe_single_ticker_multindex():
 
     assert isinstance(result, pd.DataFrame)
     assert not result.empty
-    # 정확한 5개 컬럼만 존재 (Adj Close 드롭)
+    # 정확한 5개 컬럼 (이 mock에는 Adj Close 없음 → adj_close 컬럼도 없음)
     expected_cols = ["open", "high", "low", "close", "volume"]
     assert list(result.columns) == expected_cols
     # 데이터 값 보존 (특히 close)
@@ -81,20 +81,23 @@ def test_normalize_yf_dataframe_single_ticker_multindex():
 
 def test_normalize_yf_dataframe_group_by_ticker_multindex():
     """group_by='ticker' 스타일 MultiIndex (ticker, Field) 를 올바르게 처리.
-    'Adj Close' 는 제거하고, 필드명은 소문자로 정규화.
+    Phase 2: 'Adj Close' 는 'adj_close' 로 rename+보존 (Stage2 adjusted support).
     """
     bad_df = _make_group_by_ticker_multindex_df("AAPL", n=4)
     original_close = bad_df[("AAPL", "Close")].copy()
 
     result = normalize_yf_dataframe(bad_df)
 
-    expected_cols = ["open", "high", "low", "close", "volume"]
+    # 6 cols: 5 OHLCV + adj_close (mock에 Adj Close 있음)
+    expected_cols = ["open", "high", "low", "close", "volume", "adj_close"]
     assert list(result.columns) == expected_cols
     pd.testing.assert_series_equal(
         result["close"], original_close, check_names=False
     )
-    assert "adj close" not in result.columns
+    assert "adj_close" in result.columns
+    # 원본 대소문자 Adj Close 키는 normalize 후 존재하지 않음 (rename됨)
     assert "Adj Close" not in result.columns
+    assert "adj close" not in result.columns
 
 
 def test_get_daily_uses_normalize_and_returns_clean_df():
@@ -113,7 +116,7 @@ def test_get_daily_uses_normalize_and_returns_clean_df():
         assert symbol in str(call_kwargs.get("tickers", "")) or symbol == call_kwargs.get("tickers")
         assert call_kwargs.get("interval") == "1d"
 
-        # 결과는 정규화된 깨끗한 DF
+        # 결과는 정규화된 깨끗한 DF (이 mock에 Adj 없음 → 5 cols)
         assert result is not None
         assert list(result.columns) == ["open", "high", "low", "close", "volume"]
         assert len(result) == 3
@@ -137,7 +140,7 @@ def test_get_ohlcv_intraday_uses_normalize_and_explicit_auto_adjust():
         assert call_kwargs.get("period") == "5d"
         assert call_kwargs.get("auto_adjust") is False   # 핵심: 명시적 False
 
-        # normalize 결과 검증 (MultiIndex -> flat ohlcv)
+        # normalize 결과 검증 (MultiIndex -> flat ohlcv; intraday mock에 Adj Close 없음)
         assert result is not None
         assert list(result.columns) == ["open", "high", "low", "close", "volume"]
         assert len(result) == 4
@@ -198,7 +201,8 @@ def test_get_multi_daily_happy_path_multiple_symbols():
             df = result[sym]
             assert df is not None
             assert not df.empty
-            assert list(df.columns) == ["open", "high", "low", "close", "volume"]
+            # multi mock에 Adj Close 포함 → Phase2: adj_close 보존 (6 cols)
+            assert list(df.columns) == ["open", "high", "low", "close", "volume", "adj_close"]
             assert len(df) == 7
             assert isinstance(df.index, pd.DatetimeIndex)
 
@@ -214,6 +218,7 @@ def test_get_multi_daily_single_symbol_case():
         assert list(result.keys()) == ["NVDA"]
         df = result["NVDA"]
         assert df is not None
+        # single mock no Adj Close → 5 cols (backward)
         assert list(df.columns) == ["open", "high", "low", "close", "volume"]
         assert len(df) == 3
 
@@ -229,7 +234,8 @@ def test_get_multi_daily_missing_symbol_and_overall_error_handling():
         result = get_multi_daily(symbols, period="5d")
         assert result["MISSING"] is None
         assert result["PRESENT"] is not None
-        assert list(result["PRESENT"].columns) == ["open", "high", "low", "close", "volume"]
+        # PRESENT mock (multi group_by style) has Adj Close → 6 cols with adj_close preserved
+        assert list(result["PRESENT"].columns) == ["open", "high", "low", "close", "volume", "adj_close"]
 
     # download 자체 실패 (outer except)
     with patch("core.data_adapter.yf.download", side_effect=Exception("network timeout")):
