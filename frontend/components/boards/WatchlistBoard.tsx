@@ -32,7 +32,26 @@ export function WatchlistBoard() {
     <div className="board fade-in" style={{ gridTemplateColumns: '1fr', alignContent: 'start' }}>
       <Card title="Watchlist · Stage 2 정렬" action={`${watchlist.length} 종목 · 점수 내림차순`}>
         {isLoading ? (
-          <div className="subtle">로딩 중...</div>
+          <div className="scroll" style={{ maxHeight: 'calc(100vh - 260px)' }}>
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>Symbol</th><th>Price</th><th>Stage 2</th><th>RS</th>
+                  <th>52w 고점</th><th>Entry</th><th>Stop</th><th>Target</th>
+                  <th>Checks</th><th>Conviction</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i}>
+                    <td colSpan={11} className="subtle" style={{ padding: '12px 8px' }}>
+                      로딩 중...
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <div className="scroll" style={{ maxHeight: 'calc(100vh - 260px)' }}>
             <table className="tbl">

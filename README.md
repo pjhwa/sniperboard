@@ -180,7 +180,7 @@ docker compose up --build -d
 
 > **Phase 1 진행 중**:
 > - Conviction Composite Score v1 계산 엔진 (`core/conviction_calculator.py`) TDD 완료.
-> - Conviction에 reliability + notes 추가. 계산 실패 시에도 API가 안전하게 동작 (에러 대응 강화). 테스트 12개.
+> - Conviction 신뢰성 강화 (reliability + notes). 에러 대응 + 로딩 상태 개선. 테스트 12개.
 
 **Phase 1 빠른 검증 방법**:
 

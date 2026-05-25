@@ -91,7 +91,9 @@ export function DailyBoard() {
             </div>
           )}
           {isLoading ? (
-            <div className="subtle" style={{ padding: 24 }}>차트 로딩 중...</div>
+            <div className="subtle" style={{ padding: 24 }}>
+              차트 + Conviction 로딩 중...
+            </div>
           ) : dailyData ? (
             <DailyChart data={dailyData} />
           ) : null}
