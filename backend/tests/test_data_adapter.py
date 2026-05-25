@@ -241,3 +241,44 @@ def test_get_multi_daily_missing_symbol_and_overall_error_handling():
     with patch("core.data_adapter.yf.download", side_effect=Exception("network timeout")):
         result = get_multi_daily(["ANY"])
         assert result == {}
+
+
+# =============================================================================
+# Phase 5 verification fix: cover yf 1.3+ single-ticker intraday (Price, Ticker) orientation
+# (names=["Price", "Ticker"], level0=fields) — previously caused 'close' KeyError in signals.
+# =============================================================================
+
+def _make_intraday_single_ticker_price_first_multindex(symbol: str = "AAPL", n: int = 4) -> pd.DataFrame:
+    """Real yf 1.3+ intraday single-ticker (no group_by) raw structure.
+    columns: MultiIndex(level0=Price/Field e.g. 'Close', level1=Ticker) names=['Price','Ticker']
+    This was not covered by prior (ticker,field) mocks; normalize now robustly detects.
+    """
+    dates = pd.date_range("2025-04-01", periods=n, freq="5min")
+    base = np.linspace(200, 205, n)
+    data = {
+        ("Adj Close", symbol): base + 0.1,
+        ("Close", symbol): base,
+        ("High", symbol): base + 1,
+        ("Low", symbol): base - 1,
+        ("Open", symbol): base + 0.2,
+        ("Volume", symbol): [1000000 + i*100 for i in range(n)],
+    }
+    df = pd.DataFrame(data, index=dates)
+    df.columns = pd.MultiIndex.from_tuples(df.columns.tolist())
+    df.columns.names = ["Price", "Ticker"]
+    return df
+
+
+def test_normalize_yf_dataframe_intraday_price_first_multindex():
+    """(field, ticker) orientation from live intraday yf.download must yield clean ohlcv + adj_close optional."""
+    bad_df = _make_intraday_single_ticker_price_first_multindex("AAPL", n=4)
+    result = normalize_yf_dataframe(bad_df)
+
+    assert isinstance(result, pd.DataFrame)
+    assert not result.empty
+    expected = ["open", "high", "low", "close", "volume", "adj_close"]
+    assert list(result.columns) == expected
+    assert "close" in result.columns
+    # value preservation spot
+    assert abs(float(result["close"].iloc[0]) - 200.0) < 0.5
+    assert isinstance(result.index, pd.DatetimeIndex)

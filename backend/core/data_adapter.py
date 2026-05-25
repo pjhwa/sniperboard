@@ -15,6 +15,10 @@ Public API:
 Phase 2 (yf accuracy): adj_close (from 'Adj Close') is now preserved in daily output frames
 when present in yf response (for Stage2 long-horizon metrics on split symbols). Intraday
 paths unchanged in behavior. normalize no longer drops adj_close.
+
+Full delegation (Task 2): all yf access paths (intraday via data_service, daily direct in endpoints + multi)
+now route through this adapter. Phase 5 verification exposed + fixed single-ticker intraday
+(field, ticker) MultiIndex orientation (previously only (ticker, field) covered by tests).
 """
 import pandas as pd
 import yfinance as yf
@@ -27,27 +31,42 @@ logger = logging.getLogger(__name__)
 def normalize_yf_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """yfinance download 결과 DF 의 MultiIndex 컬럼을 일관된 flat lowercase 로 정규화.
 
-    처리 규칙 (TDD 요구사항 충족하는 최소 구현):
-    1. MultiIndex 인 경우 → get_level_values(-1) 로 price field 레벨만 추출
-       (ticker 가 level 0 에 있는 group_by 스타일과 single-wrapped 스타일 모두 커버)
+    처리 규칙 (TDD + yf 1.3+ live 대응):
+    1. MultiIndex 인 경우 → 가격 필드(level containing 'Close'/'Open' 등)를 자동 감지하여 추출.
+       - group_by="ticker" (multi_daily paths): (Ticker, Field) → Field level
+       - default single (intraday/daily): (Field/Price, Ticker) names=['Price','Ticker'] → Field level
+       (이전 항상 -1 방식은 intraday에서 ticker 컬럼만 남겨 'close' 누락 → 신호 계산 실패 유발)
     2. 'Adj Close' / 'adj_close' 는 adj_close 로 rename 하여 보존 (Phase 2: daily long-term
        Stage2 metrics 정확도 위해; intraday/GC/short-term은 raw close 유지)
     3. 표준 컬럼(open/high/low/close/volume + optional adj_close) 유지, 소문자 rename
     4. dropna() 적용 (기존 서비스와 동일)
     5. 빈 DF / None 은 그대로 반환
 
-    이 함수가 올바르면 data_service.py 의 기존 버그 (get_level_values(0) 로 ticker 명이
-    컬럼 전체를 덮는 현상, levels[0] KeyError 등)가 제거된다.
+    data_adapter.py = single source of truth: 이 한 곳에서 모든 yf MultiIndex 변이 처리.
     """
     if df is None or df.empty:
         return df
 
     result = df.copy()
 
-    # === MultiIndex 정규화 (핵심) ===
+    # === MultiIndex 정규화 (핵심) — robust to yf 1.3+ single-ticker orientations ===
+    # Common cases:
+    # - group_by="ticker" (multi_daily): level0=Ticker, level1=Field/Price  → use level1
+    # - default single ticker (intraday/get_daily): level0=Field/Price (names=['Price','Ticker']), level1=Ticker → use level0
     if isinstance(result.columns, pd.MultiIndex):
-        # price 필드는 거의 항상 마지막 레벨(-1). level 0 이 ticker 인 경우를 안전하게 처리
-        result.columns = result.columns.get_level_values(-1)
+        lv0 = result.columns.get_level_values(0)
+        lv1 = result.columns.get_level_values(1)
+        price_keywords = {"Open", "High", "Low", "Close", "Adj Close", "Volume",
+                          "open", "high", "low", "close", "adj close", "volume"}
+        lv0_has_price = any(str(x) in price_keywords for x in set(lv0))
+        lv1_has_price = any(str(x) in price_keywords for x in set(lv1))
+        if lv0_has_price and not lv1_has_price:
+            result.columns = lv0
+        elif lv1_has_price and not lv0_has_price:
+            result.columns = lv1
+        else:
+            # fallback (prefer last level which works for group_by style)
+            result.columns = lv1 if lv1_has_price else lv0
 
     # 대소문자 무관 rename 매핑 (실제 yf 출력 + lower 대비)
     rename_map = {

@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-24; Phase 4: AI meta freshness + minimal FE badges (⏱ age_minutes in OverviewBoard AI Insight/Earnings + light Sentiment); types/hooks updated; backend meta attachment complete (no gaps); tsc clean. Phase 2 yf accuracy: signal_engine Stage2 now supports adj_close for long-horizon metrics on splits + data_adapter preserves adj_close in daily frames; all tests green)
+# SniperBoard — Project Context (UPDATED 2026-05-24; Phase 5 COMPLETE + full yf-accuracy-harden plan: data_adapter as single source of truth + full delegation (Task 2: get_ohlcv_intraday + get_multi_daily + direct endpoint imports for daily paths); Phase 2 adjusted prices (adj_close preserved + used in signal_engine Stage2 long-horizon: 52w/RS/EMA200_slope/pullback/pivot/entry on splits, raw/GC/intraday unchanged); Task 3 endpoint updates + meta freshness on /sentiment /brief /earnings; Phase 4 minimal FE freshness badges (Overview AI+Earnings + light Sentiment); cross-repo linkage (market-sentiment-data earnings collector hardening + services); full tests green (29 sniperboard + 48 msd); docs updated per CLAUDE.md; manual verification passed. All phases + exec-8 complete.)
 
 ## 0. 이 문서의 목적
 
@@ -29,15 +29,15 @@ sniperboard/
 │   │   ├── signal_engine.py      # 핵심: 모든 기술적 지표·신호 계산 (700+ lines). Phase 2: calculate_stage2_analysis detects 'adj_close' and uses adjusted (scaled high/low + adj_close series) for 52w/RS/ema200_slope/pullback/pivot/entry on split symbols. GC/intraday/raw unchanged.
 │   │   ├── regime_engine.py      # Risk Regime 5요소 종합 점수 (0~100)
 │   │   ├── distribution_day.py   # O'Neil Distribution Day 카운트 (25거래일 기준)
-│   │   └── data_adapter.py       # yfinance MultiIndex 정규화 전담 (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily). yf 1.3+ 대응. Task2: get_ohlcv + get_multi_daily 완전 위임 + test_data_adapter.py coverage (post-review). Phase 2: adj_close preserved (no longer dropped) for daily paths → Stage2 long-term accuracy.
+│   │   └── data_adapter.py       # SINGLE SOURCE OF TRUTH: yfinance MultiIndex 정규화 + fetch 전담 (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily). yf 1.3+ 대응. Task2: full delegation (data_service thin layer; endpoints daily paths direct import). test_data_adapter.py full coverage (incl get_multi_daily targeted post-review). Phase 2: adj_close preserved (no longer dropped) for daily paths → Stage2 long-term accuracy (adjusted on splits). Phase 5: centralization verified in full tests + manual endpoint checks.
 │   ├── services/
 │   │   ├── base.py               # BaseDataService 추상 클래스
 │   │   ├── data_service.py       # YFinanceDataService 구현체 + 모듈 레벨 헬퍼 함수
 │   │   ├── brief_service.py      # GitHub raw fetch + 30분 인메모리 캐시 (BRIEF_DATA_URL)
 │   │   └── earnings_service.py   # GitHub raw fetch + 60분 인메모리 캐시 (EARNINGS_DATA_URL)
 │   └── tests/
-│       ├── test_data_adapter.py
-│       ├── test_signal_engine.py
+│       ├── test_data_adapter.py (29 tests total incl. adapter+signal_engine; Phase 5 full suite green)
+│       ├── test_signal_engine.py (incl. adjusted vs raw split symbol TDD)
 │       └── (service tests: brief/earnings/sentiment)
 ├── frontend/
 │   ├── package.json              # Next.js 16.2.6, React 19.2.4, TanStack Query 5, Zustand 5, lightweight-charts 4.2.3, Tailwind v4
@@ -155,7 +155,7 @@ Minervini 7개 체크리스트 (score 0~7):
 - rs_score 공식: min(100, max(0, 50 + (stock_63d_ret - spy_63d_ret) × 2))
 - breadth_narrow: SPY가 20일 신고가인데 RSP가 아닐 때 True
 
-Phase 2: long-horizon metrics (52w pcts, RS 63d, EMA200 slope 20d, pullback, pivot high/entry) now use adj_close + scaled high/low when 'adj_close' column present (from data_adapter daily). Non-split or legacy path unchanged (full compat). GC/detects/short-term on raw.
+Phase 2 (part of yf-accuracy-harden): long-horizon metrics (52w pcts, RS 63d, EMA200 slope 20d, pullback, pivot high/entry) now use adj_close + scaled high/low when 'adj_close' column present (from data_adapter daily, single source of truth). Non-split or legacy path unchanged (full compat). GC/detects/short-term on raw. (Phase 5: adapter full delegation + endpoint direct use confirmed via tests + manual verification.)
 
 추가 패턴 감지:
 - `market_structure` (UPTREND/DOWNTREND/DISTRIBUTION/ACCUMULATION/NEUTRAL): `detect_market_structure()`
@@ -254,16 +254,21 @@ export const EARNINGS_RISK_META = { high: {color:'bear',dot:'●'}, med: {color:
 
 ```
 yfinance (외부 API, 15분 지연, 무료)
-    ↓ data_service (get_ohlcv → delegates to core.data_adapter.get_ohlcv_intraday)
-    ↓ data_service (get_multi_daily → delegates to core.data_adapter.get_multi_daily)
-    ↓ signal_engine / regime_engine / distribution_day
-FastAPI (port 8000 내부 / 5001 외부 Docker)
-    ↓ JSON (Pydantic 직렬화)
+    ↓ core/data_adapter.py  [SINGLE SOURCE OF TRUTH — full centralization]
+        ├─ normalize_yf_dataframe (MultiIndex yf1.3+ handling + adj_close preserve)
+        ├─ get_ohlcv_intraday (delegated by data_service)
+        ├─ get_multi_daily (delegated by data_service + direct import in daily endpoints)
+        └─ get_daily (for tests/adapter consumers)
+    ↓ data_service (thin delegation layer for intraday only now)
+    ↓ signal_engine (Phase 2: Stage2 long-horizon metrics detect adj_close → use adjusted for 52w/RS/ema200_slope/pullback/pivot/entry on splits; raw/GC/short-term unchanged for compat)
+    ↓ regime_engine / distribution_day (mostly raw recent windows)
+FastAPI (port 8000 내부 / 5001 외부 Docker)  [Task 3: daily/watchlist/regime/distribution/macro use hardened adapter path + AI endpoints attach meta]
+    ↓ JSON (Pydantic + FreshnessMeta for /sentiment /brief /earnings)
 TanStack Query 훅 (React 컴포넌트 트리)
     ↓ props / Zustand 상태
-lightweight-charts + Tailwind 카드 UI
+lightweight-charts + Tailwind 카드 UI  [Phase 4: minimal ⏱ freshness badges via age_minutes meta in OverviewBoard AI Insight + Earnings + light Sentiment]
 
-─── AI 파이프라인 (별도 경로) ───────────────────────────────────────
+─── AI 파이프라인 + Cross-Repo Linkage (market-sentiment-data) ───────────────────────────────────────
 Mac Mini cron (06:00/22:00 UTC)
     ↓ collect_sentiment.py → GitHub: market-sentiment-data/latest.json
 Mac Mini cron (06:30/22:30 UTC)
@@ -272,17 +277,17 @@ Mac Mini cron (06:30/22:30 UTC)
         ├─ read latest.json  (소셜 심리)
         └─ Hermes/Grok → JSON
     ↓ GitHub push: market-sentiment-data/brief/latest.json
-Mac Mini cron (06:30 UTC, 하루 1회)
-    ↓ collect_earnings.py
+Mac Mini cron (06:30 UTC, 하루 1회)  [earnings collector hardening Phase 3: structured logging per-sym/raw shapes, calendar→earnings_dates/estimate fallback, numeric/date validation, jsonschema+light schema pre-write, partial flag + graceful usable output on hermes/fail (no crash), --dry-run]
+    ↓ collect_earnings.py (hardened)
         ├─ yfinance .calendar + .earnings_history
         └─ Hermes/Grok → JSON
     ↓ GitHub push: market-sentiment-data/earnings/latest.json
 
 GitHub raw CDN
-    ↓ brief_service.py / earnings_service.py (30~60분 인메모리 캐시, Cache-Control: no-cache 헤더)
-FastAPI /api/brief, /api/earnings
+    ↓ brief_service.py / earnings_service.py (30~60분 인메모리 캐시, Cache-Control: no-cache 헤더; meta age_minutes computed)
+FastAPI /api/brief, /api/earnings  [meta: {fetched_at, age_minutes, source}]
     ↓ TanStack Query useBrief / useEarnings
-OverviewBoard (AI Insight 카드 + Earnings Calendar)
+OverviewBoard (AI Insight 카드 + Earnings Calendar) [freshness badges]
 DailyBoard (⚡ EARNINGS IN Nd 배너)
 SentimentBoard (종목별 셋업 품질 배지 A+~D)
 ```
@@ -348,7 +353,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | CORS | 개발용 `allow_origins=["*"]` — 운영 시 변경 필요 |
 | API_BASE 재빌드 | `NEXT_PUBLIC_API_URL`은 빌드 시 번들되므로 런타임 변경 불가 |
 | 매크로 데이터 | 시장 마감 후에는 당일 데이터 미갱신 |
-| yfinance MultiIndex / accuracy | 멀티 종목 다운로드 시 컬럼 구조 주의. **정규화 로직은 `core/data_adapter.py:normalize_yf_dataframe` 로 일원화. Task2: get_ohlcv + get_multi_daily 모두 어댑터에 완전 위임 완료 (data_service의 yf download/ad-hoc 제거)** (post-review: get_multi_daily targeted tests 추가). Task3: `/daily /watchlist /regime /distribution-days /macro` 엔드포인트가 `get_multi_daily` 를 `core.data_adapter` 에서 **직접 import** 하여 hardened path 명시 (data_service는 intraday 전용 thin layer 유지). AI 엔드포인트에 freshness meta 추가. **Phase 2: normalize preserves 'adj_close' (daily)**; signal_engine.calculate_stage2_analysis detects it and applies to long-horizon metrics only. |
+| yfinance MultiIndex / accuracy | 멀티 종목 다운로드 시 컬럼 구조 주의. **data_adapter.py is the SINGLE SOURCE OF TRUTH for ALL yf data access (normalize + fetch)**: full delegation complete (Task 2: data_service thin wrapper only for intraday; endpoints daily paths direct import get_multi_daily). Phase 2: adj_close preserved in daily frames + used selectively in Stage2 long-horizon metrics (split symbols accurate 52w/RS etc while short-term/GC/raw paths unchanged for full backward compat). Task3: daily endpoints + meta on AI. Phase4/5: FE badges + full test+doc+manual verification green. Cross-repo: market-sentiment-data earnings collector hardening + linkage via GitHub raw + meta freshness. (Phase 5 2026-05-24) |
 
 ---
 
@@ -360,7 +365,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | Stage2 체크리스트 기준 | `backend/core/signal_engine.py: calculate_stage2_analysis()` |
 | Regime 임계값 | `backend/core/regime_engine.py: TREND_LOW/HIGH, ...` 상수 |
 | DD 기준일 변경 | `backend/core/distribution_day.py: DD_LOOKBACK, DD_THRESHOLD_PCT` |
-| yfinance MultiIndex / daily+intraday data 정확도 | `backend/core/data_adapter.py` (normalize_yf_dataframe, get_daily, get_ohlcv_intraday, get_multi_daily) — 정규화+fetch 전담. Task2: 위임 완료 + test_data_adapter.py 에 get_multi_daily unit test coverage 추가 (Code Review fix). Task3: `backend/api/endpoints.py` 의 daily 계열 엔드포인트가 adapter 직접 import 로 hardened path 사용; `/sentiment /brief /earnings` 에 `meta` freshness 추가 + schemas.py FreshnessMeta. **Phase 2 (2026-05-24)**: adj_close 보존 (drop 제거) + `signal_engine.py:calculate_stage2_analysis` 에 adjusted path (52w/RS/ema_slope/pullback/pivot) + TDD in test_signal_engine.py (NVDA split mock) + adapter test updates. Full suite green. |
+| yfinance MultiIndex / daily+intraday data 정확도 | `backend/core/data_adapter.py` (SINGLE SOURCE OF TRUTH: normalize_yf_dataframe + get_* family) — full centralization+fetch. Task2 complete: full delegation (data_service thin; direct adapter in endpoints for daily paths) + extensive tests (get_multi_daily targeted + more). Task3: endpoints use hardened path + attach meta. Phase 2: adj_close preserve + selective adjusted in signal_engine.calculate_stage2_analysis (long-term only). Phase 4: types/hooks for meta + FE badges. Phase 5: full 29 tests green (adapter+signal_engine specific), docs updated per CLAUDE.md rules, manual verification (endpoints daily/AI meta, no-breakage non-split/intraday). Cross-repo linkage: market-sentiment-data earnings hardening reflected in collect_earnings.py + services. |
 | 워치리스트 종목 추가 | `backend/api/endpoints.py: WATCHLIST_SYMS` + `frontend/app/types.ts: SYMBOLS` |
 | 매크로 심볼 추가 | `backend/api/endpoints.py: MACRO_SYMBOLS` |
 | API 주소 변경 | `frontend/app/types.ts: API_BASE` + `docker-compose.yml: NEXT_PUBLIC_API_URL` |
