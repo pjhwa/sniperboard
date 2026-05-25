@@ -20,6 +20,11 @@ from core.conviction_calculator import calculate_conviction
 print("=" * 60)
 print("SniperBoard Phase 1 Conviction - Local Verification")
 print("=" * 60)
+print()
+print("이 스크립트는 Conviction 값이 실제 투자 판단에 얼마나 신뢰할 수 있는지")
+print("기본적인 시나리오로 검증합니다.")
+print("주의: 실제 투자 결정은 절대 이 값만으로 내리지 마세요.")
+print()
 
 # Realistic test cases based on current market conditions
 
@@ -100,5 +105,12 @@ for item in simulated_watchlist:
 
 print("\n" + "=" * 60)
 print("Local verification completed successfully.")
+print()
+print("=== Conviction 사용 가이드 (중요) ===")
+print("• reliability가 'high'이고 notes가 없을 때 가장 신뢰할 수 있습니다.")
+print("• reliability 'low' 또는 notes가 있으면 참고용으로만 사용하세요.")
+print("• Conviction은 '참고 지표'이며, 단독으로 매수/매도 결정을 내리면 안 됩니다.")
+print("• 시장 급변 시 (큰 이벤트 직후) 신뢰도가 급격히 떨어질 수 있습니다.")
+print()
 print("Next: Run the full stack with ./run_docker.sh + ./scripts/verify_conviction.sh")
 print("=" * 60)

@@ -111,6 +111,26 @@ Stage2 정규화: `min(7, max(0, stage2)) / 7 * 100`
 
 ---
 
+## 8. Conviction 사용 가이드라인 (Phase 1 마무리)
+
+**신뢰할 수 있는 경우**
+- `reliability: "high"`
+- `notes` 배열이 비어 있음
+- 최근 데이터 (1시간 이내) 기반
+
+**주의해야 하는 경우**
+- `reliability: "low"` 또는 "medium"
+- notes에 "Regime 데이터 부족", "오류 발생" 등이 포함된 경우
+- 큰 시장 이벤트 직후 (데이터 품질이 급격히 떨어질 수 있음)
+
+**절대 하지 말아야 할 일**
+- Conviction 점수만 보고 즉시 매수/매도 결정
+- 신뢰도가 낮은데도 불구하고 큰 비중으로 투자
+
+Conviction은 **의사결정 지원 도구**이지, 자동매매 신호가 아닙니다.
+
+---
+
 ## 8. 다음 단계 제안 (Phase 2 힌트)
 
 - Conviction 히스토리 차트 (OverviewBoard)
