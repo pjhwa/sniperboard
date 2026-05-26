@@ -30,6 +30,8 @@ const OVERVIEW_GLOSSARY: GlossaryItem[] = [
   { term: 'Credit Stress · HYG/JNK/LQD/IEF', plain: 'HYG·JNK는 고수익(고위험) 채권, LQD는 투자등급 회사채, IEF는 미국 국채입니다. 안전 자산(IEF)이 강하고 위험 자산(HYG)이 약하면 투자자들이 공포를 느끼고 있다는 뜻입니다.' },
   { term: 'Daily Heat Strip (일봉 히트맵)', plain: '최근 60거래일의 일별 등락률을 색깔로 표현합니다. 초록색이 짙을수록 큰 상승, 빨간색이 짙을수록 큰 하락입니다. 패턴을 보며 종목의 건강도를 확인합니다.' },
   { term: 'Watchlist Top 3', plain: 'Stage 2 점수가 가장 높은 3개 종목입니다. Stage 2는 Minervini의 이상적인 매수 구간 기준으로, 점수가 높을수록 지금 진입하기 좋은 환경임을 의미합니다.' },
+  { term: 'Sector Momentum · 섹터 모멘텀', plain: '5개 테마 ETF의 최근 5일 수익률을 비교합니다. SMH(반도체), XLE(에너지), XLY(소비재), XHB(홈빌더), ITA(방산) 순위가 높을수록 현재 시장에서 선호받는 섹터입니다. ↑EMA는 21일 이동평균선 위에서 거래 중인 강세 상태를 의미합니다.' },
+  { term: '종목별 AI 분석 · Setup Quality', plain: 'AI가 워치리스트 각 종목의 셋업 품질을 A+/A/B/C/D로 평가합니다. A+는 즉시 진입 가능한 최상의 구조, D는 진입을 피해야 할 상태입니다. 매수/보유/관망/회피 바이어스도 함께 제공합니다. AI 의견이므로 최종 판단은 본인이 해야 합니다.' },
 ];
 
 const REGIME_LABELS: Record<string, [string, string]> = {
@@ -168,6 +170,47 @@ export function OverviewBoard() {
               </>
             ) : (
               <div style={{ color: 'var(--fg-muted)' }}>AI Brief 로딩 중...</div>
+            )}
+
+            {/* Symbol Briefs — briefData가 있을 때만 표시 */}
+            {briefData?.symbol_briefs && briefData.symbol_briefs.length > 0 && (
+              <>
+                <div style={{ borderTop: '1px solid var(--border-soft)', marginTop: 10, paddingTop: 10 }}>
+                  <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                    종목별 AI 분석
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px' }}>
+                    {briefData.symbol_briefs.map(sb => {
+                      const gradeColor =
+                        sb.setup_quality === 'A+' || sb.setup_quality === 'A' ? 'var(--bull)' :
+                        sb.setup_quality === 'B' ? 'var(--teal)' :
+                        sb.setup_quality === 'C' ? 'var(--warn)' : 'var(--bear)';
+                      const biasClass =
+                        sb.action_bias === 'buy'   ? 'bull' :
+                        sb.action_bias === 'hold'  ? 'teal' :
+                        sb.action_bias === 'watch' ? 'warn' : 'bear';
+                      const biasLabel =
+                        sb.action_bias === 'buy'   ? '매수' :
+                        sb.action_bias === 'hold'  ? '보유' :
+                        sb.action_bias === 'watch' ? '관망' : '회피';
+                      return (
+                        <div key={sb.symbol} style={{ padding: '6px 0', borderBottom: '1px solid var(--border-soft)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                            <span style={{ fontWeight: 700, fontSize: 12, fontFamily: 'var(--mono)' }}>{sb.symbol}</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: gradeColor }}>{sb.setup_quality}</span>
+                            <span className={`badge ${biasClass}`} style={{ fontSize: 9.5, marginLeft: 'auto' }}>{biasLabel}</span>
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--fg-muted)', lineHeight: 1.45, marginBottom: 3 }}>{sb.brief}</div>
+                          <div style={{ display: 'flex', gap: 8, fontSize: 10, color: 'var(--fg-subtle)' }}>
+                            <span>▲ {sb.key_opportunity}</span>
+                            <span style={{ color: 'var(--bear)', opacity: 0.8 }}>▼ {sb.key_risk}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -436,6 +479,48 @@ export function OverviewBoard() {
             </div>
           </>
         ) : <div className="subtle">로딩 중...</div>}
+      </Card>
+
+      {/* Sector Momentum */}
+      <Card title="Sector Momentum" action="5D 수익률">
+        {(() => {
+          const sectors: [string, string][] = [
+            ['SMH', '반도체'],
+            ['XLE', '에너지'],
+            ['XLY', '소비재'],
+            ['XHB', '홈빌더'],
+            ['ITA', '방산'],
+          ];
+          const items = sectors.map(([sym, label]) => ({ sym, label, m: findMacro(macro, sym) })).filter(x => x.m);
+          if (items.length === 0) return <div className="subtle">로딩 중...</div>;
+          const sorted = [...items].sort((a, b) => (b.m!.change_pct_5d ?? 0) - (a.m!.change_pct_5d ?? 0));
+          const maxAbs = Math.max(...sorted.map(x => Math.abs(x.m!.change_pct_5d ?? 0)), 0.1);
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              {sorted.map(({ sym, label, m }) => {
+                const chg = m!.change_pct_5d ?? 0;
+                const up = chg >= 0;
+                const barW = Math.min(100, (Math.abs(chg) / maxAbs) * 100);
+                const aboveEma = m!.above_ema21;
+                return (
+                  <div key={sym} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '5px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 11.5 }}>
+                    <div style={{ width: 34, fontWeight: 600, fontFamily: 'var(--mono)', fontSize: 11 }}>{sym}</div>
+                    <div style={{ width: 38, fontSize: 10, color: 'var(--fg-subtle)' }}>{label}</div>
+                    <div className="bar" style={{ flex: 1, height: 5 }}>
+                      <div className="bar__fill" style={{ width: barW + '%', background: up ? 'var(--bull)' : 'var(--bear)' }} />
+                    </div>
+                    <span className={'mono ' + (up ? 'chg up' : 'chg down')} style={{ width: 50, textAlign: 'right', fontSize: 11 }}>
+                      {up ? '+' : ''}{chg.toFixed(2)}%
+                    </span>
+                    <span style={{ fontSize: 9.5, color: aboveEma ? 'var(--bull)' : 'var(--bear)', width: 28, textAlign: 'right' }}>
+                      {aboveEma ? '↑EMA' : '↓EMA'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </Card>
 
       {/* Top watchlist preview */}
