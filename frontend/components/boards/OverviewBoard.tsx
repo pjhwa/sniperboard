@@ -178,38 +178,47 @@ export function OverviewBoard() {
                 <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
                   종목별 AI 분석
                 </div>
-                {briefData.symbol_briefs.map(sb => {
-                  const gradeColor =
-                    sb.setup_quality === 'A+' || sb.setup_quality === 'A' ? 'var(--bull)' :
-                    sb.setup_quality === 'B' ? 'var(--teal)' :
-                    sb.setup_quality === 'C' ? 'var(--warn)' : 'var(--bear)';
-                  // avoid=0 watch=1 hold=2 buy=3
+                {(() => {
                   const BIAS_LEVELS = ['avoid', 'watch', 'hold', 'buy'] as const;
                   const BIAS_COLORS = ['var(--bear)', 'var(--warn)', 'var(--teal)', 'var(--bull)'];
                   const BIAS_LABELS: Record<string, string> = { buy: '매수', hold: '보유', watch: '관망', avoid: '회피' };
-                  const biasIdx = BIAS_LEVELS.indexOf(sb.action_bias as typeof BIAS_LEVELS[number]);
-                  const biasColor = BIAS_COLORS[biasIdx] ?? 'var(--fg-subtle)';
-                  return (
-                    <div key={sb.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: '1px solid var(--border-soft)' }}>
-                      <span style={{ fontWeight: 700, width: 44, fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>{sb.symbol}</span>
-                      <span style={{ fontWeight: 700, fontSize: 11, color: gradeColor, width: 20, flexShrink: 0 }}>{sb.setup_quality}</span>
-                      {/* 4칸 신호강도 미터 */}
-                      <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                        {BIAS_LEVELS.map((_, i) => (
-                          <div key={i} style={{
-                            width: 14, height: 8, borderRadius: 2,
-                            background: i <= biasIdx ? BIAS_COLORS[i] : 'var(--bg-subtle)',
-                            opacity: i <= biasIdx ? 0.85 : 0.35,
-                            transition: 'background 0.2s',
-                          }} />
-                        ))}
+
+                  const renderItem = (sb: typeof briefData.symbol_briefs[number]) => {
+                    const gradeColor =
+                      sb.setup_quality === 'A+' || sb.setup_quality === 'A' ? 'var(--bull)' :
+                      sb.setup_quality === 'B' ? 'var(--teal)' :
+                      sb.setup_quality === 'C' ? 'var(--warn)' : 'var(--bear)';
+                    const biasIdx = BIAS_LEVELS.indexOf(sb.action_bias as typeof BIAS_LEVELS[number]);
+                    const biasColor = BIAS_COLORS[biasIdx] ?? 'var(--fg-subtle)';
+                    return (
+                      <div key={sb.symbol} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
+                        <span style={{ fontWeight: 700, width: 42, fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>{sb.symbol}</span>
+                        <span style={{ fontWeight: 700, fontSize: 11, color: gradeColor, width: 18, flexShrink: 0 }}>{sb.setup_quality}</span>
+                        <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                          {BIAS_LEVELS.map((_, i) => (
+                            <div key={i} style={{
+                              width: 12, height: 7, borderRadius: 2,
+                              background: i <= biasIdx ? BIAS_COLORS[i] : 'var(--bg-subtle)',
+                              opacity: i <= biasIdx ? 0.85 : 0.35,
+                            }} />
+                          ))}
+                        </div>
+                        <span style={{ fontSize: 10, color: biasColor, fontWeight: 600, flexShrink: 0 }}>
+                          {BIAS_LABELS[sb.action_bias]}
+                        </span>
                       </div>
-                      <span style={{ fontSize: 10, color: biasColor, fontWeight: 600, width: 24, flexShrink: 0 }}>
-                        {BIAS_LABELS[sb.action_bias]}
-                      </span>
+                    );
+                  };
+
+                  const items = briefData.symbol_briefs!;
+                  const mid = Math.ceil(items.length / 2);
+                  return (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
+                      <div>{items.slice(0, mid).map(renderItem)}</div>
+                      <div>{items.slice(mid).map(renderItem)}</div>
                     </div>
                   );
-                })}
+                })()}
               </div>
             )}
           </div>
