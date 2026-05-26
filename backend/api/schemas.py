@@ -92,6 +92,11 @@ class WatchlistItemSchema(BaseModel):
     target: float
     latest_atr: float
     pivot_high: float
+    # Phase 1: Conviction Composite Score
+    conviction_score: Optional[float] = None
+    conviction_label: Optional[str] = None
+    conviction_reliability: Optional[str] = None  # high / medium / low
+    conviction_notes: Optional[List[str]] = None
 
 class MacroItemSchema(BaseModel):
     symbol: str
@@ -132,6 +137,11 @@ class DailyResponse(BaseModel):
     indicators: DailyIndicatorsSchema
     vol_avg20: List[int]
     stage2: Stage2Schema
+    # Phase 1: Conviction Composite Score
+    conviction_score: Optional[float] = None
+    conviction_label: Optional[str] = None
+    conviction_reliability: Optional[str] = None  # high / medium / low
+    conviction_notes: Optional[List[str]] = None
 
 class WatchlistResponse(BaseModel):
     watchlist: List[WatchlistItemSchema]
@@ -171,6 +181,15 @@ class DDDetailSchema(BaseModel):
 class DistributionDayResponse(BaseModel):
     spy: DDDetailSchema
     qqq: DDDetailSchema
+
+
+class FreshnessMeta(BaseModel):
+    """Freshness metadata for externally-sourced AI data (sentiment/brief/earnings).
+    Added in Task 3 for yfinance accuracy hardening follow-up.
+    """
+    fetched_at: str
+    age_minutes: float
+    source: str
 
 
 # --- Sentiment (소셜 심리) ---
@@ -219,6 +238,7 @@ class SentimentResponse(BaseModel):
     latest: Optional[SnapshotData] = None
     today: Optional[TodaySlots] = None
     error: Optional[str] = None
+    meta: Optional[FreshnessMeta] = None
 
 
 # --- AI Brief ---
@@ -248,6 +268,8 @@ class BriefResponse(BaseModel):
     available: bool
     data: Optional[BriefData] = None
     error: Optional[str] = None
+    meta: Optional[FreshnessMeta] = None
+    context: Optional[dict] = None   # Phase 1: Context Attribution snapshot at generation time
 
 
 # --- Earnings Intelligence ---
@@ -281,3 +303,4 @@ class EarningsResponse(BaseModel):
     available: bool
     data: Optional[EarningsData] = None
     error: Optional[str] = None
+    meta: Optional[FreshnessMeta] = None

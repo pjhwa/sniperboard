@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 EARNINGS_DATA_URL = os.environ.get("EARNINGS_DATA_URL", "")
 SENTIMENT_DATA_TOKEN = os.environ.get("SENTIMENT_DATA_TOKEN", "")
 
-CACHE_TTL = 3600  # 60분
+CACHE_TTL = 300  # 5분 — earnings는 하루 2회 갱신, push 후 빠른 반영을 위해 단축
 _cache: dict[str, Any] = {"data": None, "ts": 0.0}
 
 

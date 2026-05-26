@@ -86,6 +86,11 @@ export interface DailyData {
   indicators: DailyIndicators;
   vol_avg20: number[];
   stage2: Stage2;
+  // Phase 1 Conviction (added to backend DailyResponse)
+  conviction_score?: number;
+  conviction_label?: string;
+  conviction_reliability?: 'high' | 'medium' | 'low';
+  conviction_notes?: string[];
 }
 
 export interface WatchlistItem {
@@ -100,6 +105,11 @@ export interface WatchlistItem {
   target: number;
   latest_atr: number;
   pivot_high: number;
+  // Phase 1 Conviction
+  conviction_score?: number;
+  conviction_label?: string;
+  conviction_reliability?: 'high' | 'medium' | 'low';
+  conviction_notes?: string[];
 }
 
 export interface LatestData {
@@ -257,6 +267,7 @@ export interface SentimentData {
     post_close?: SnapshotData | null;
   };
   error?: string;
+  meta?: FreshnessMeta;  // Phase 4: freshness from backend (fetched_at, age_minutes, source)
 }
 
 export type SentimentEnum = 'very_fearful' | 'fearful' | 'neutral' | 'optimistic' | 'euphoric';
@@ -315,6 +326,7 @@ export interface BriefResponse {
   available: boolean;
   data?: BriefData | null;
   error?: string | null;
+  meta?: FreshnessMeta;  // Phase 4: freshness from backend (fetched_at, age_minutes, source)
 }
 
 // --- Earnings Intelligence ---
@@ -352,6 +364,7 @@ export interface EarningsResponse {
   available: boolean;
   data?: EarningsData | null;
   error?: string | null;
+  meta?: FreshnessMeta;  // Phase 4: freshness from backend (fetched_at, age_minutes, source)
 }
 
 export const SETUP_QUALITY_META: Record<string, { color: string; label: string }> = {
@@ -367,3 +380,10 @@ export const EARNINGS_RISK_META: Record<string, { color: string; dot: string }> 
   med:  { color: 'warn', dot: '●' },
   low:  { color: 'teal', dot: '●' },
 };
+
+// Freshness metadata for AI-sourced data (sentiment/brief/earnings) — mirrors backend FreshnessMeta (Task 3 / Phase 4)
+export interface FreshnessMeta {
+  fetched_at: string;
+  age_minutes: number;
+  source: string;
+}

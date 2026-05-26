@@ -273,16 +273,48 @@ def detect_bear_flag(df: pd.DataFrame, pole_bars: int = 10, flag_bars: int = 10)
 def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None, rsp_close: pd.Series = None) -> dict:
     """
     Minervini Stage 2 분석을 수행합니다.
+
+    Phase 2 yfinance accuracy hardening:
+    - Detection: presence of 'adj_close' column (populated by data_adapter for daily/get_multi_daily
+      when yf provides 'Adj Close').
+    - When present (split symbols e.g. NVDA-style), the following long-horizon Stage2 metrics
+      (20–252d) prefer adjusted prices for correctness:
+        * 52-week high/low (pct_from_52w_high/low)
+        * RS score (63-day returns vs SPY, using adj for stock)
+        * EMA200 slope (20-day, recomputed on adj_close)
+        * Pullback percentage (20d high)
+        * Pivot high for entry/stop/target calc
+      High/low are scaled by (adj_close / close) ratio at each bar for consistent current-scale levels.
+    - No behavior change when adj_close absent (raw/close path identical to pre-Phase2).
+    - Unchanged (per plan): Gaussian Channel (uses raw), short-term intraday signals,
+      detect_* patterns, price_above_emas alignment (uses precomputed emas on close),
+      returned latest_ema*/latest_atr values (chart consistency), volume checks.
+    - ATR for R:R uses recent raw (post-split unaffected).
     """
     if df.empty:
         return {}
 
+    # Raw columns (always present for GC, detects, short-term, chart data)
     close = df['close']
     high_arr = df['high']
     low_arr = df['low']
     volume = df['volume']
 
-    latest_close = float(close.iloc[-1])
+    # === Phase 2: adjusted price support (detection mechanism via column) ===
+    has_adj = 'adj_close' in df.columns
+    if has_adj:
+        adj_close = df['adj_close']
+        # Per-bar ratio to adjust historical high/low to current price scale (handles splits/divs)
+        ratio = adj_close / close
+        adj_high = high_arr * ratio
+        adj_low = low_arr * ratio
+        price_for_long = adj_close  # for RS returns + latest in long-term pcts (last bar value == raw)
+    else:
+        adj_high = high_arr
+        adj_low = low_arr
+        price_for_long = close
+
+    latest_close = float(price_for_long.iloc[-1])
     latest_ema21 = float(df['ema21'].iloc[-1])
     latest_ema50 = float(df['ema50'].iloc[-1])
     latest_ema200 = float(df['ema200'].iloc[-1])
@@ -290,19 +322,26 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None, rsp
 
     ema200_slope = 0.0
     if len(df) >= 20:
-        base = float(df['ema200'].iloc[-20])
-        if base != 0:
-            ema200_slope = (float(df['ema200'].iloc[-1]) - base) / base * 100
+        if has_adj:
+            # Recompute long-term EMA200 on adjusted closes (accurate slope across splits)
+            ema200_adj = ema(adj_close, 200)
+            base = float(ema200_adj.iloc[-20])
+            if base != 0:
+                ema200_slope = (float(ema200_adj.iloc[-1]) - base) / base * 100
+        else:
+            base = float(df['ema200'].iloc[-20])
+            if base != 0:
+                ema200_slope = (float(df['ema200'].iloc[-1]) - base) / base * 100
 
     window = min(252, len(df))
-    high52 = float(high_arr.iloc[-window:].max())
-    low52 = float(low_arr.iloc[-window:].min())
+    high52 = float(adj_high.iloc[-window:].max())
+    low52 = float(adj_low.iloc[-window:].min())
     pct_from_52w_high = (latest_close - high52) / high52 * 100 if high52 != 0 else 0.0
     pct_from_52w_low = (latest_close - low52) / low52 * 100 if low52 != 0 else 0.0
 
-    # 피벗 고점: 일봉 고가(high) 20일 최대 — close 최대가 아닌 실제 고가 기준
-    recent_high = float(high_arr.rolling(20).max().iloc[-1])
-    # 눌림목 % 계산은 종가 기준
+    # 피벗 고점: 20일 고가 (adj scaled when available) — entry calc 정확도 for split symbols
+    recent_high = float(adj_high.rolling(20).max().iloc[-1])
+    # 눌림목 % 계산 (adj scale)
     pullback_pct = (recent_high - latest_close) / recent_high * 100 if recent_high > 0 else 0.0
 
     vol_avg20 = float(volume.rolling(20).mean().iloc[-1])
@@ -312,7 +351,7 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None, rsp
     rs_score = 50.0
     if spy_close is not None and len(df) >= 63 and len(spy_close) >= 63:
         try:
-            stock_ret = (float(close.iloc[-1]) - float(close.iloc[-63])) / float(close.iloc[-63]) * 100
+            stock_ret = (float(price_for_long.iloc[-1]) - float(price_for_long.iloc[-63])) / float(price_for_long.iloc[-63]) * 100
             spy_ret = (float(spy_close.iloc[-1]) - float(spy_close.iloc[-63])) / float(spy_close.iloc[-63]) * 100
             rs_score = min(100.0, max(0.0, 50.0 + (stock_ret - spy_ret) * 2.0))
         except Exception:
@@ -335,7 +374,7 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None, rsp
     risk_per_share = entry - stop
     target = round(entry + 3 * risk_per_share, 2)
 
-    # Gaussian Channel 분석
+    # Gaussian Channel 분석 (explicitly on raw close/high/low per hardening plan)
     gc_upper_val = gc_mid_val = gc_lower_val = None
     gc_above = gc_below = gc_breakout = gc_retest = False
 
@@ -364,7 +403,7 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None, rsp
         near_upper = abs(cl[-1] - gc_upper_val) / gc_upper_val * 100 <= 3.0
         gc_retest = bool(recent_was_above and near_upper and not gc_above)
 
-    # 시장 구조 / RSI 다이버전스 / 베어플래그
+    # 시장 구조 / RSI 다이버전스 / 베어플래그 (raw df per plan)
     mkt_struct   = detect_market_structure(df)
     rsi_div      = detect_rsi_divergence(df)
     bear_flag    = detect_bear_flag(df)

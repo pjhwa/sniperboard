@@ -12,7 +12,7 @@ import { RadialGauge } from '@/components/ui/RadialGauge';
 import { Sparkline } from '@/components/ui/Sparkline';
 import { HeatStrip } from '@/components/ui/HeatStrip';
 import { Sparkle } from '@/components/ui/Icons';
-import { MacroItem, RegimeDiagnostics, UpcomingEarning, EARNINGS_RISK_META } from '@/app/types';
+import { MacroItem, RegimeDiagnostics, UpcomingEarning, EARNINGS_RISK_META, FreshnessMeta } from '@/app/types';
 import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
 import { useBrief } from '@/hooks/useBrief';
 import { useEarnings } from '@/hooks/useEarnings';
@@ -52,6 +52,29 @@ const SIGNAL_BADGE: Record<string, [string, string]> = {
   downtrend:    ['bear',   'Downtrend'],
 };
 
+// Minimal freshness badge helper (Phase 4) — uses existing CSS vars + .badge.neutral patterns. No new styles.
+function FreshnessBadge({ meta }: { meta?: FreshnessMeta | null }) {
+  if (!meta || typeof meta.age_minutes !== 'number') return null;
+  const mins = meta.age_minutes;
+  const ageStr = mins < 1 ? 'now' : `${Math.round(mins)}m ago`;
+  const stale = mins > 90;
+  return (
+    <span
+      style={{
+        fontSize: '10px',
+        color: stale ? 'var(--warn)' : 'var(--fg-subtle)',
+        marginLeft: 6,
+        opacity: 0.8,
+        fontFamily: 'var(--font-mono, monospace)',
+        whiteSpace: 'nowrap',
+      }}
+      title={`source: ${meta.source || 'github_raw'}`}
+    >
+      ⏱ {ageStr}
+    </span>
+  );
+}
+
 function findMacro(macro: MacroItem[], sym: string) {
   return macro.find(m => m.symbol === sym);
 }
@@ -77,8 +100,8 @@ export function OverviewBoard() {
   const lqd   = findMacro(macro, 'LQD');
   const ief   = findMacro(macro, 'IEF');
 
-  const { briefData } = useBrief();
-  const { earningsData } = useEarnings();
+  const { briefData, briefMeta } = useBrief();
+  const { earningsData, earningsMeta } = useEarnings();
 
   const candles = ohlcvData?.candles ?? [];
   const signals = ohlcvData?.signals;
@@ -119,6 +142,7 @@ export function OverviewBoard() {
             <div className="ico"><Sparkle /></div>
             <h3>오늘의 한마디 — Market Snapshot</h3>
             <small>{new Date().toLocaleDateString('ko-KR')}</small>
+            <FreshnessBadge meta={briefMeta} />
           </div>
           <div className="ai-card__body">
             {briefData?.market_brief ? (
@@ -253,6 +277,11 @@ export function OverviewBoard() {
         ) : (
           <div style={{ color: 'var(--fg-muted)', fontSize: 12 }}>
             {earningsData === null ? 'Earnings 로딩 중...' : '30일 이내 어닝 없음'}
+          </div>
+        )}
+        {earningsMeta && (
+          <div style={{ marginTop: 6, paddingTop: 4, borderTop: '1px solid var(--border-soft)' }}>
+            <FreshnessBadge meta={earningsMeta} />
           </div>
         )}
       </Card>
@@ -544,6 +573,11 @@ export function OverviewBoard() {
               <div className="mono" style={{ fontSize: 11.5 }}>${w.price.toFixed(2)}</div>
             </div>
             <ScorePill score={w.score} />
+            {w.conviction_score != null && (
+              <span style={{ fontSize: 10, marginLeft: 4, color: w.conviction_score >= 65 ? 'var(--bull)' : 'var(--teal)' }}>
+                C:{w.conviction_score}
+              </span>
+            )}
           </div>
         ))}
         {watchlist.length === 0 && <div className="subtle">로딩 중...</div>}

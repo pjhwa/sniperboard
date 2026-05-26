@@ -11,13 +11,14 @@ export function useEarnings() {
   const { data, isLoading, error } = useQuery<EarningsResponse>({
     queryKey: ['earnings'],
     queryFn: fetchEarnings,
-    staleTime: 60 * 60 * 1000,
-    refetchInterval: 60 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
     retry: 2,
   });
 
   return {
     earningsData: data?.available ? data.data : null,
+    earningsMeta: data?.meta ?? null,  // Phase 4: expose freshness meta for badge
     isLoading,
     error: data?.error ?? (error ? String(error) : null),
   };

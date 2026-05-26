@@ -168,6 +168,10 @@ environment:
 - 가우시안 채널 상태 (돌파·리테스트·이탈)
 - R:R 계산기 패널
 
+**AI Daily Brief & Earnings** (OverviewBoard 통합)
+- AI Insight 카드: Grok이 기술 지표 + 소셜 심리를 결합한 시장 내러티브 (tone·key_themes) — subtle ⏱ freshness (age_minutes) badge
+- Earnings Calendar: 워치리스트 종목 실적 발표 일정 + 리스크 등급(high/med/low) + Grok 요약 — subtle ⏱ freshness badge (Phase 4)
+
 ### Watchlist
 
 - TSLA·AAPL·NVDA·META·AMZN·GOOGL Stage 2 점수 내림차순 정렬
@@ -248,11 +252,28 @@ environment:
 | `GET /api/watchlist` | 6종목 Stage2 점수 순 정렬 |
 | `GET /api/regime` | Risk Regime 5요소 종합 점수 |
 | `GET /api/distribution-days` | SPY·QQQ Distribution Day 카운트 |
-| `GET /api/sentiment` | 소셜 심리 데이터 (GitHub raw 캐시) |
-| `GET /api/brief` | AI Daily Brief — Grok 시장 분석 (GitHub raw 캐시) |
-| `GET /api/earnings` | Earnings Intelligence — 실적 발표 일정 + AI 해석 (GitHub raw 캐시) |
+| `GET /api/sentiment` | 소셜 심리 데이터 (GitHub raw 캐시) + `meta {fetched_at, age_minutes, source}` (Task 3) |
+| `GET /api/brief` | AI Daily Brief — Grok 시장 분석 (GitHub raw 캐시) + `meta {fetched_at, age_minutes, source}` (Task 3) |
+| `GET /api/earnings` | Earnings Intelligence — 실적 발표 일정 + AI 해석 (GitHub raw 캐시) + `meta {fetched_at, age_minutes, source}` (Task 3) |
 
 전체 응답 스키마: `backend/api/schemas.py` 참고
+
+> **Phase 1 진행 중**:
+> - Conviction Composite Score v1 계산 엔진 (`core/conviction_calculator.py`) TDD 완료.
+> - Conviction 신뢰성 강화 + 에러/로딩 대응 + UI 세련되게 다듬음 (WatchlistBoard, DailyBoard). 테스트 12개.
+
+**Phase 1 빠른 검증 방법**:
+
+```bash
+# Option A: Full stack (recommended for real data)
+./run_docker.sh
+# (wait 30-60s)
+./scripts/verify_conviction.sh
+
+# Option B: Quick local verification (no Docker, tests the calculator logic)
+PYTHONPATH=backend python3 scripts/verify_conviction_local.py
+```
+> - Brief Context Attribution: `/api/brief` 응답에 최상위 `context` 필드 추가. market-sentiment-data 쪽 수집기도 업데이트됨.
 
 ---
 
@@ -303,6 +324,8 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 ## 주의사항
 
 - yfinance는 개발·테스트용 무료 API입니다 (15분 지연 데이터). 운영 환경에서는 유료 데이터 소스 권장.
+- **yfinance 데이터 정확도 강화 + 최소 연계 개선 (full plan: Task 2/3 + Phase 2 + Phase 4 + Phase 5 + exec-8)**: `backend/core/data_adapter.py` is the SINGLE SOURCE OF TRUTH — full centralization + delegation (data_service now thin; daily/watchlist/regime/etc endpoints direct import get_multi_daily for hardened path). Phase 2: `backend/core/signal_engine.py:calculate_stage2_analysis` detects adj_close (preserved by adapter) and uses adjusted prices (scaled high/low + adj series) for long-term metrics (52w high/low, RS 63d, EMA200 slope, pullback, pivot/entry) on split symbols (e.g. NVDA); short-term signals/GC/intraday/raw paths 100% unchanged for full backward compat. Task 3: daily paths + AI endpoints return `meta: {fetched_at, age_minutes, source}`. Phase 4: FE minimal ⏱ freshness badges (OverviewBoard AI Insight + Earnings Calendar + light in Sentiment). Phase 5: full test suites green (sniperboard 29 incl. dedicated adapter+signal_engine; msd 48), mandatory docs updates (PROJECT_CONTEXT/README per CLAUDE.md), final manual verification (endpoints spot-checks, no-breakage non-split/intraday, badges conceptually sound). Cross-repo linkage: market-sentiment-data `collect/collect_earnings.py` hardening (structured logging, fallbacks, schema validation, partial graceful output, --dry-run) + improved services/brief/earnings linkage via GitHub raw + meta transparency. (2026-05-24, feat/yf-accuracy-harden-2026-05-25 branch complete)
+- **Phase 1 Conviction Composite Score v1 (연계 강화)**: `backend/core/conviction_calculator.py` + `tests/test_conviction_calculator.py` TDD 완료 (RED-GREEN, 2026-05-25). 40/30/30 weighted (Stage2 score 0-7 + Sentiment + Regime total). 아직 어떤 엔드포인트에도 노출되지 않음. 다음 슬라이스에서 /api/watchlist 등 연동 예정. (PROJECT_CONTEXT.md + README.md 동시 업데이트 per CLAUDE.md)
 - 매매 신호와 분석은 **참고용**입니다. 투자 손실에 대한 책임은 사용자 본인에게 있습니다.
 - Risk Regime · Distribution Day는 **후행 지표**입니다 — 매매 신호가 아닌 시장 환경 진단입니다.
 - 미국 주식 시장 운영 시간(ET 09:30–16:00) 외에는 단기 데이터가 갱신되지 않습니다.
