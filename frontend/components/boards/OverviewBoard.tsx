@@ -172,45 +172,35 @@ export function OverviewBoard() {
               <div style={{ color: 'var(--fg-muted)' }}>AI Brief 로딩 중...</div>
             )}
 
-            {/* Symbol Briefs — briefData가 있을 때만 표시 */}
+            {/* Symbol Briefs — 심볼당 1줄 요약 */}
             {briefData?.symbol_briefs && briefData.symbol_briefs.length > 0 && (
-              <>
-                <div style={{ borderTop: '1px solid var(--border-soft)', marginTop: 10, paddingTop: 10 }}>
-                  <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-                    종목별 AI 분석
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px' }}>
-                    {briefData.symbol_briefs.map(sb => {
-                      const gradeColor =
-                        sb.setup_quality === 'A+' || sb.setup_quality === 'A' ? 'var(--bull)' :
-                        sb.setup_quality === 'B' ? 'var(--teal)' :
-                        sb.setup_quality === 'C' ? 'var(--warn)' : 'var(--bear)';
-                      const biasClass =
-                        sb.action_bias === 'buy'   ? 'bull' :
-                        sb.action_bias === 'hold'  ? 'teal' :
-                        sb.action_bias === 'watch' ? 'warn' : 'bear';
-                      const biasLabel =
-                        sb.action_bias === 'buy'   ? '매수' :
-                        sb.action_bias === 'hold'  ? '보유' :
-                        sb.action_bias === 'watch' ? '관망' : '회피';
-                      return (
-                        <div key={sb.symbol} style={{ padding: '6px 0', borderBottom: '1px solid var(--border-soft)' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                            <span style={{ fontWeight: 700, fontSize: 12, fontFamily: 'var(--mono)' }}>{sb.symbol}</span>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: gradeColor }}>{sb.setup_quality}</span>
-                            <span className={`badge ${biasClass}`} style={{ fontSize: 9.5, marginLeft: 'auto' }}>{biasLabel}</span>
-                          </div>
-                          <div style={{ fontSize: 11, color: 'var(--fg-muted)', lineHeight: 1.45, marginBottom: 3 }}>{sb.brief}</div>
-                          <div style={{ display: 'flex', gap: 8, fontSize: 10, color: 'var(--fg-subtle)' }}>
-                            <span>▲ {sb.key_opportunity}</span>
-                            <span style={{ color: 'var(--bear)', opacity: 0.8 }}>▼ {sb.key_risk}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+              <div style={{ borderTop: '1px solid var(--border-soft)', marginTop: 10, paddingTop: 8 }}>
+                <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                  종목별 AI 분석
                 </div>
-              </>
+                {briefData.symbol_briefs.map(sb => {
+                  const gradeColor =
+                    sb.setup_quality === 'A+' || sb.setup_quality === 'A' ? 'var(--bull)' :
+                    sb.setup_quality === 'B' ? 'var(--teal)' :
+                    sb.setup_quality === 'C' ? 'var(--warn)' : 'var(--bear)';
+                  const biasClass =
+                    sb.action_bias === 'buy'   ? 'bull' :
+                    sb.action_bias === 'hold'  ? 'teal' :
+                    sb.action_bias === 'watch' ? 'warn' : 'bear';
+                  const biasLabel =
+                    sb.action_bias === 'buy'   ? '매수' :
+                    sb.action_bias === 'hold'  ? '보유' :
+                    sb.action_bias === 'watch' ? '관망' : '회피';
+                  return (
+                    <div key={sb.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 11.5 }}>
+                      <span style={{ fontWeight: 700, width: 44, fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>{sb.symbol}</span>
+                      <span style={{ fontWeight: 700, fontSize: 11, color: gradeColor, width: 20, flexShrink: 0 }}>{sb.setup_quality}</span>
+                      <span className={`badge ${biasClass}`} style={{ fontSize: 9.5, flexShrink: 0 }}>{biasLabel}</span>
+                      <span style={{ fontSize: 11, color: 'var(--fg-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sb.brief}</span>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
