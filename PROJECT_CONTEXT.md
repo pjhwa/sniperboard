@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-25; Phase 5 COMPLETE + yf-accuracy-harden foundation; Phase 1 Conviction Composite Score v1 TDD started: core/conviction_calculator.py (pure 40/30/30 calculator using Stage2 'score' + regime 'total' + external sentiment) + test_conviction_calculator.py (3 tests, RED-GREEN passed); full tests green (sniperboard 29 + new Conviction + 48 msd); docs updated per CLAUDE.md. All prior phases + exec-8 complete.)
+# SniperBoard — Project Context (UPDATED 2026-05-26)
 
 ## 0. 이 문서의 목적
 
@@ -237,18 +237,30 @@ export const EARNINGS_RISK_META = { high: {color:'bear',dot:'●'}, med: {color:
 - `IntradayChart`: 캔들 + 볼륨 + EMA21(황색)/EMA50(인디고) + 신호 마커(▲▼)
 - `DailyChart`: 캔들 + 볼륨 + EMA8(에메랄드)/21(황색)/50(인디고)/200(로즈) + GC 채널(보라 점선) + Entry Pivot 라인
 
-### 5-6. DashboardOverview 구성 (항상 상단 표시)
+### 5-6. OverviewBoard 카드 구성 (4컬럼 그리드)
 
-| 섹션 | 데이터 소스 | 내용 |
-|------|------------|------|
-| RegimeCard | `useRegime` | 5요소 바 + 총점 + regime 라벨 |
-| DDCard (SPY·QQQ) | `useDistributionDays` | DD 카운트 + 도트 시각화 |
-| AI Insight | `useBrief` | Grok 시장 분석 — tone 배지·summary·key_themes·watch_points; briefData=null이면 regime 텍스트로 fallback |
-| Earnings Calendar | `useEarnings` | 워치리스트 종목 실적 일정 + risk_level 배지 + action_note; earningsData=null이면 카드 숨김 |
-| IndexSnapshot | `useMacro` | SPY·QQQ·IWM·DXY·GLD 가격·1D/5D |
-| VIXPanel | `useMacro` | ^VIX + ^VIX9D + ^VVIX + 백워데이션 감지 |
-| BreadthPanel | `useMacro` | SPY/QQQ/RSP/MAGS/IWM 가로 바 + 협소 랠리 경고 |
-| CreditPanel | `useMacro` | HYG·JNK·LQD·IEF + 스트레스 레벨 |
+| 카드 | span | 데이터 소스 | 내용 |
+|------|------|------------|------|
+| AI Market Snapshot | 2 | `useBrief` | tone 배지·summary·key_themes·watch_points + symbol_briefs(종목별 AI 분석: 2컬럼 그리드, Action Bias 신호강도 미터); briefData=null이면 regime 텍스트 fallback |
+| Earnings Calendar | 1 | `useEarnings` | 30일 이내 실적 일정 + risk_level 배지 + relevance_tier(임박/진입권/관망) |
+| Risk Regime | 1 | `useRegime` | RadialGauge + 5요소 바 + 원시 수치 |
+| Distribution Days | 1 | `useDistributionDays` | SPY·QQQ DD 카운트 + 도트 시각화 |
+| Market Breadth | 1 | `useMacro` | SPY·RSP·MAGS·IWM 5D 수익률 바 + 협소 랠리 경고 |
+| Volatility · VIX | 1 | `useMacro` | ^VIX + ^VIX9D 레벨 + rsi-gauge 바 + 백워데이션 감지 |
+| Credit Stress | 1 | `useMacro` | HYG·JNK·LQD·IEF 가격·5D 변화율 |
+| Symbol Intraday | 1 | `useIntraday` | 선택 종목 5분봉 Sparkline + 활성 신호 배지 + RSI/EMA21/ATR |
+| Daily Heat · 60d | 1 | `useDaily` | HeatStrip(3행×20열) + 상승/하락일 통계 |
+| Sector Momentum | 1 | `useMacro` | SMH·XLE·XLY·XHB·ITA 5D 수익률 순위 바 + EMA21 위/아래 |
+| Watchlist Top 3 | 1 | `useWatchlist` | Stage 2 점수 상위 3종목 미리보기 |
+
+### 5-7. WatchlistBoard 카드 구성 (3컬럼 그리드)
+
+| 카드 | span | 내용 |
+|------|------|------|
+| Stage 2 정렬 테이블 | 3 | 6종목 × 10컬럼 (Symbol·Price·Stage2·RS·52W·Entry·Stop·Target·Checks·분석버튼) |
+| RS Score 순위 바 | 1 | 6종목 RS Score 가로 막대 정렬 (≥70 녹 / 50~70 청록 / <50 적) |
+| Stage 2 체크 히트맵 | 1 | 6종목 × 7조건 매트릭스 (충족=녹 칸) |
+| Risk / Reward | 1 | Entry 중심 좌(risk 적)·우(reward 녹) 대칭 바 + 1:N 비율 |
 
 ---
 
@@ -300,7 +312,9 @@ SentimentBoard (종목별 셋업 품질 배지 A+~D)
 
 ### Docker Compose (권장)
 ```bash
-docker-compose up -d
+cp .env.example .env          # 최초 1회
+# .env 수정 후
+docker compose up --build -d
 # 백엔드: http://localhost:5001  (API docs: /docs)
 # 프론트엔드: http://localhost:4000
 ```
@@ -316,12 +330,30 @@ cd frontend && npm install
 NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 ```
 
-### 주요 환경변수
-- `NEXT_PUBLIC_API_URL`: 빌드 시 번들됨. docker-compose에서 `http://localhost:5001` 하드코딩.
-  변경 시 반드시 **재빌드** 필요.
-- `BRIEF_DATA_URL`: GitHub raw URL for `brief/latest.json` (backend 환경변수)
-- `EARNINGS_DATA_URL`: GitHub raw URL for `earnings/latest.json` (backend 환경변수)
-- `SENTIMENT_DATA_TOKEN`: GitHub PAT (private 리포인 경우 sentiment/brief/earnings 모두 사용)
+### 환경변수 전체 목록
+
+#### `.env` (루트) — 프론트엔드 빌드 인자
+| 변수 | 기본값 | 설명 |
+|------|--------|------|
+| `NEXT_PUBLIC_API_URL` | `http://localhost:5001` | 프론트가 호출하는 백엔드 주소. **빌드 시 번들** → 변경 시 재빌드 필수. |
+
+`.env.example` → `.env`로 복사 후 수정. `docker-compose.yml`에서 `${NEXT_PUBLIC_API_URL:-http://localhost:5001}`으로 참조.
+
+#### `docker-compose.yml` `environment` 블록 — 백엔드 런타임 변수
+| 변수 | 필수 | 미설정 시 동작 | 설명 |
+|------|------|----------------|------|
+| `SENTIMENT_DATA_URL` | 선택 | Sentiment 보드 비활성화 | 소셜 심리 JSON GitHub raw URL |
+| `SENTIMENT_DATA_HISTORY_BASE` | 선택 | 히스토리 조회 불가 | 심리 히스토리 디렉토리 base URL (파일명 제외) |
+| `BRIEF_DATA_URL` | 선택 | AI Insight → Regime 텍스트로 fallback | AI Brief JSON GitHub raw URL |
+| `EARNINGS_DATA_URL` | 선택 | Earnings Calendar 카드 숨김 | Earnings Intelligence JSON GitHub raw URL |
+| `SENTIMENT_DATA_TOKEN` | 선택 | Public 리포는 불필요 | GitHub PAT — private 리포일 때만 설정 |
+
+#### 캐시 TTL (backend 인메모리)
+| 서비스 | TTL | 상수 위치 |
+|--------|-----|-----------|
+| Brief | 30분 (1800초) | `brief_service.py: CACHE_TTL` |
+| Earnings | 60분 (3600초) | `earnings_service.py: CACHE_TTL` |
+| Sentiment | 30분 (1800초) | `sentiment_service.py: CACHE_TTL` |
 
 ---
 
