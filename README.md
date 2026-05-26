@@ -33,6 +33,12 @@ SniperBoard는 미국 주식 스윙 트레이딩을 위한 웹 기반 매매 신
 ```bash
 git clone <repo-url>
 cd sniperboard
+
+# 1. 환경변수 파일 생성 (최초 1회)
+cp .env.example .env
+# .env 내용을 필요에 맞게 수정 (아래 "환경변수 설정" 섹션 참고)
+
+# 2. 빌드 및 실행
 docker compose up --build -d
 ```
 
@@ -42,6 +48,60 @@ docker compose up --build -d
 | API 문서 | http://localhost:5001/docs |
 
 > 첫 로딩 시 yfinance 데이터 다운로드로 30초~2분 소요될 수 있습니다.
+
+---
+
+## 환경변수 설정
+
+SniperBoard는 두 곳에서 환경변수를 관리합니다.
+
+### 1. `.env` — 프론트엔드 빌드 변수
+
+루트의 `.env.example`을 복사해 `.env`를 만듭니다.
+
+```bash
+cp .env.example .env
+```
+
+| 변수 | 기본값 | 설명 |
+|------|--------|------|
+| `NEXT_PUBLIC_API_URL` | `http://localhost:5001` | 프론트엔드가 호출하는 백엔드 API 주소. 외부 서버나 다른 IP에 배포할 경우 해당 주소로 변경. |
+
+> **주의**: `NEXT_PUBLIC_API_URL`은 **빌드 시 번들**됩니다. 값을 바꾼 후에는 반드시 `docker compose up --build`로 재빌드해야 반영됩니다.
+
+```env
+# 로컬 기본값 (변경 불필요)
+NEXT_PUBLIC_API_URL=http://localhost:5001
+
+# 외부 IP로 접근하는 경우 예시
+NEXT_PUBLIC_API_URL=http://192.168.1.100:5001
+```
+
+---
+
+### 2. `docker-compose.yml` — 백엔드 환경변수
+
+백엔드 컨테이너의 환경변수는 `docker-compose.yml`의 `environment` 블록에서 직접 수정합니다.
+
+| 변수 | 필수 | 설명 |
+|------|------|------|
+| `SENTIMENT_DATA_URL` | 선택 | 소셜 심리 데이터 JSON의 GitHub raw URL. 미설정 시 Sentiment 보드 비활성화. |
+| `SENTIMENT_DATA_HISTORY_BASE` | 선택 | 심리 히스토리 파일들이 있는 디렉토리 base URL (파일명 제외). |
+| `BRIEF_DATA_URL` | 선택 | AI Daily Brief JSON의 GitHub raw URL. 미설정 시 Market Snapshot에 Regime 텍스트로 대체. |
+| `EARNINGS_DATA_URL` | 선택 | Earnings Intelligence JSON의 GitHub raw URL. 미설정 시 Earnings Calendar 카드 숨김. |
+| `SENTIMENT_DATA_TOKEN` | 선택 | GitHub PAT. 데이터 리포가 **private**일 때만 필요. Public이면 빈 값으로 둬도 됩니다. |
+
+```yaml
+# docker-compose.yml 수정 예시
+environment:
+  SENTIMENT_DATA_URL: "https://raw.githubusercontent.com/<user>/<repo>/main/latest.json"
+  SENTIMENT_DATA_HISTORY_BASE: "https://raw.githubusercontent.com/<user>/<repo>/main/history"
+  BRIEF_DATA_URL: "https://raw.githubusercontent.com/<user>/<repo>/main/brief/latest.json"
+  EARNINGS_DATA_URL: "https://raw.githubusercontent.com/<user>/<repo>/main/earnings/latest.json"
+  SENTIMENT_DATA_TOKEN: ""   # private 리포인 경우 GitHub PAT 입력
+```
+
+> **선택 변수 미설정 시 동작**: 오류 없이 실행되며, 해당 데이터를 사용하는 카드만 "로딩 중..." 또는 fallback 텍스트로 표시됩니다. 기본 매매 신호(Intraday·Daily·Watchlist·Macro·Regime)는 환경변수 없이도 정상 동작합니다.
 
 ---
 
