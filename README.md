@@ -18,7 +18,7 @@ SniperBoard는 미국 주식 스윙 트레이딩을 위한 웹 기반 매매 신
 - **프론트엔드**: Next.js 16 + lightweight-charts로 인터랙티브 차트 제공
 - **신호 철학**: VCP·Sniper·Pullback(O'Neil/Livermore) + Stage 2(Minervini) + Risk Regime + Distribution Day
 
-딥 네이비 다크 테마(`#07091a`) 기반의 프리미엄 트레이딩 UI. 글래스모피즘 카드, 색상 글로우, 실시간 신호 펄스 애니메이션을 적용합니다.
+딥 다크 테마 기반의 프리미엄 트레이딩 UI. 글래스모피즘 카드, 색상 글로우, 실시간 신호 펄스 애니메이션을 적용합니다.
 
 ---
 
@@ -47,69 +47,85 @@ docker compose up --build -d
 
 ## 화면 스크린샷
 
-### Market Overview — 시장 한눈에 보기
+### Overview — 시장 한눈에 보기
 
-![Market Overview](docs/images/screenshot-market-overview.png)
+![Overview](docs/images/screenshot-overview.png)
 
-### 단기 (Intraday) — 실시간 신호 대시보드
+### Intraday — 실시간 신호 대시보드
 
 ![Intraday](docs/images/screenshot-intraday.png)
 
-### 일봉 분석 (Daily) — Stage 2 + Gaussian Channel
+### Daily — Stage 2 + Gaussian Channel
 
 ![Daily](docs/images/screenshot-daily.png)
 
-### 매크로 (Macro) — 섹터 로테이션 + 글로벌 지표
+### Watchlist — Stage 2 정렬 테이블
+
+![Watchlist](docs/images/screenshot-watchlist.png)
+
+### Macro — 섹터 로테이션 + 글로벌 지표
 
 ![Macro](docs/images/screenshot-macro.png)
 
+### Sentiment — 시장 심리 분석
+
+![Sentiment](docs/images/screenshot-sentiment.png)
+
 ---
 
-## 화면 구성
+## 화면 구성 (6 보드)
 
-### Market Overview (항상 상단 표시)
+### Overview
 
-모든 탭 위에 고정되는 시장 한눈에 보기 패널입니다.
+시장 전체 상황을 한 화면에서 파악하는 메인 보드입니다. 8개 카드로 구성됩니다.
 
-- **Risk Regime 카드**: 매크로 환경을 0~100점으로 종합 (5요소: 추세·폭·신용·변동성·모멘텀)
-- **Distribution Day 카드**: SPY·QQQ 기관 분배일 수 (O'Neil 원전, 25거래일 기준)
-- **핵심 지수 스냅샷**: SPY·QQQ·IWM·DXY·GLD 가격 및 1D/5D 수익률
-- **VIX 패널**: ^VIX + ^VIX9D + ^VVIX + 백워데이션 자동 감지
-- **시장 폭 패널**: SPY vs RSP 비교 — 협소한 랠리 자동 경고
-- **신용 스트레스 패널**: HYG·JNK·LQD·IEF 관계 분석
+- **AI Market Snapshot**: Grok AI가 생성한 시장 내러티브 (tone · key_themes · watch_points) + 종목별 AI 분석 (Setup Quality A+~D · Action Bias · 한 줄 요약)
+- **Earnings Calendar**: 워치리스트 30일 이내 실적 발표 일정 — 리스크 등급(high/med/low) + 임박/진입권/관망 티어
+- **Risk Regime**: 매크로 환경 0~100점 종합 (5요소: Trend·Breadth·Credit·Volatility·Momentum + 원시 수치)
+- **Distribution Days**: SPY·QQQ 기관 분배일 카운트 (O'Neil, 25거래일 기준 · OK/WARNING/DANGER)
+- **Market Breadth**: SPY·RSP·MAGS·IWM 5일 수익률 비교 — 협소 랠리(Mag7 주도) 자동 경고
+- **Volatility · VIX**: ^VIX + ^VIX9D 레벨 + 게이지 바 + 백워데이션 자동 감지
+- **Credit Stress**: HYG·JNK·LQD·IEF 5일 변화율 — 신용 위험 선행 지표
+- **Sector Momentum**: SMH·XLE·XLY·XHB·ITA 5D 수익률 순위 + EMA21 위/아래 상태
+- **Symbol Intraday**: 선택 종목 5분봉 스파크라인 + 활성 신호 배지 + RSI/EMA21/ATR
+- **Daily Heat · 60d**: 60거래일 등락률 히트맵 + 상승/하락일 통계
+- **Watchlist Top 3**: Stage 2 점수 상위 3종목 미리보기
 
-### 4개 탭
+### Intraday (30초 자동 갱신)
 
-**단기 (Intraday)** — 30초 자동 갱신
-- 5분봉/1분봉 캔들차트 (EMA21·EMA50 오버레이)
-- 6개 매매 신호 마커 (▲ 매수 / ▼ 경고)
+- 5분봉/1분봉/15분봉/1시간봉 캔들차트 (EMA21·EMA50 오버레이)
+- 6개 매매 신호 마커 차트 위 오버레이 (▲ 매수 / ▼ 경고)
+- 활성 신호 카드 — 신호별 조건 가이드 (진입 가격·RSI·EMA 기준)
 - RSI(14) 게이지 바
-- 현재 활성 신호 카드 + 신호별 조건 가이드
-
-**일봉 분석 (Daily)**
-- 1년 일봉 차트 (EMA8·21·50·200 + 가우시안 채널)
-- Minervini Stage 2 체크리스트 (7항목 점수)
-- 시장 구조 감지 (HH/HL/LH/LL)
-- RSI 다이버전스 / 베어 플래그 패턴 감지
-- 가우시안 채널 상태 (돌파·리테스트·이탈)
 - R:R 계산기 (ATR 기반 자동 진입·손절·목표가 + 포지션 크기)
 
-**워치리스트**
-- TSLA·AAPL·NVDA·META·AMZN·GOOGL Stage 2 점수 순 정렬
-- 7개 체크 항목, RS Score, 52주 고점 이격, 진입/손절/목표가
+### Daily
 
-**심리 분석 (Sentiment)**
-- 소셜 심리 게이지: 시장 전체 감정 스코어 및 트렌드
-- 종목별 심리 카드: 멘션량·봇 의심도·다이버전스 + Grok AI 셋업 품질 배지(A+~D)
+- 252봉(1년) 일봉 차트 (EMA8·21·50·200 + 가우시안 채널)
+- Minervini Stage 2 체크리스트 (7항목 / 점수)
+- 시장 구조 감지 (HH·HL·LH·LL)
+- RSI 다이버전스(상승/하락) + 베어 플래그 패턴 감지
+- 가우시안 채널 상태 (돌파·리테스트·이탈)
+- R:R 계산기 패널
 
-**AI Daily Brief & Earnings** (OverviewBoard 통합)
-- AI Insight 카드: Grok이 기술 지표 + 소셜 심리를 결합한 시장 내러티브 (tone·key_themes)
-- Earnings Calendar: 워치리스트 종목 실적 발표 일정 + 리스크 등급(high/med/low) + Grok 요약
+### Watchlist
 
-**매크로 (Macro)**
-- 섹터 로테이션 바 (SMH·XLE·XLY·XHB·ITA 1일 수익률 정렬)
-- VIX 백워데이션 배지 자동 표시
-- 21개 심볼 6그룹 카드 (변동성·폭·신용·달러금리·원자재·섹터)
+- TSLA·AAPL·NVDA·META·AMZN·GOOGL Stage 2 점수 내림차순 정렬
+- 컬럼: 가격 · Stage 2 점수 · RS Score · 52주 고점 이격 · 진입/손절/목표가 · 7체크 인디케이터
+- 행 클릭 시 해당 종목으로 전환 후 Daily 보드 이동
+
+### Macro
+
+- 섹터 로테이션 바 (SMH·ITA·XLE·XHB·XLY 1일 수익률 정렬)
+- 6그룹 카드: 변동성(VIX·VIX9D·VVIX) · 시장 폭(SPY·RSP·MAGS·IWM) · 신용(HYG·JNK·LQD·IEF) · 달러금리(DXY·TNX·TLT) · 원자재(CL=F·GLD) · 섹터 ETF(SMH·XLE·XLY·XHB·ITA)
+- 21개 심볼 가격 · 1D 변화율 · EMA8/21 위치 · 시장 구조
+
+### Sentiment
+
+- 시장 전체 심리 게이지 (극도공포~도취 5단계 + 복합점수)
+- 종목별 심리 카드: 감정 점수·트렌드·멘션량·봇 의심도·핵심 이유
+- Setup Quality 배지 (A+~D) — Grok AI 셋업 평가
+- 장 전/장 후 슬롯 구분 표시
 
 ---
 
@@ -153,7 +169,7 @@ docker compose up --build -d
 ### R:R 계산기
 
 ```
-진입가 = 20일 고점 × 1.005
+진입가 = 피벗 고점 × 1.005
 손절가 = 진입가 − 2 × ATR(14)
 목표가 = 진입가 + 3 × (진입가 − 손절가)   → R:R = 1:3
 매수 수량 = (계좌 × 리스크%) ÷ (진입가 − 손절가)
