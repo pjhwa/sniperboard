@@ -172,7 +172,7 @@ export function OverviewBoard() {
               <div style={{ color: 'var(--fg-muted)' }}>AI Brief 로딩 중...</div>
             )}
 
-            {/* Symbol Briefs — 심볼당 1줄 요약 */}
+            {/* Symbol Briefs — Action Bias 신호강도 미터 */}
             {briefData?.symbol_briefs && briefData.symbol_briefs.length > 0 && (
               <div style={{ borderTop: '1px solid var(--border-soft)', marginTop: 10, paddingTop: 8 }}>
                 <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
@@ -183,20 +183,30 @@ export function OverviewBoard() {
                     sb.setup_quality === 'A+' || sb.setup_quality === 'A' ? 'var(--bull)' :
                     sb.setup_quality === 'B' ? 'var(--teal)' :
                     sb.setup_quality === 'C' ? 'var(--warn)' : 'var(--bear)';
-                  const biasClass =
-                    sb.action_bias === 'buy'   ? 'bull' :
-                    sb.action_bias === 'hold'  ? 'teal' :
-                    sb.action_bias === 'watch' ? 'warn' : 'bear';
-                  const biasLabel =
-                    sb.action_bias === 'buy'   ? '매수' :
-                    sb.action_bias === 'hold'  ? '보유' :
-                    sb.action_bias === 'watch' ? '관망' : '회피';
+                  // avoid=0 watch=1 hold=2 buy=3
+                  const BIAS_LEVELS = ['avoid', 'watch', 'hold', 'buy'] as const;
+                  const BIAS_COLORS = ['var(--bear)', 'var(--warn)', 'var(--teal)', 'var(--bull)'];
+                  const BIAS_LABELS: Record<string, string> = { buy: '매수', hold: '보유', watch: '관망', avoid: '회피' };
+                  const biasIdx = BIAS_LEVELS.indexOf(sb.action_bias as typeof BIAS_LEVELS[number]);
+                  const biasColor = BIAS_COLORS[biasIdx] ?? 'var(--fg-subtle)';
                   return (
-                    <div key={sb.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 11.5 }}>
+                    <div key={sb.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: '1px solid var(--border-soft)' }}>
                       <span style={{ fontWeight: 700, width: 44, fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>{sb.symbol}</span>
                       <span style={{ fontWeight: 700, fontSize: 11, color: gradeColor, width: 20, flexShrink: 0 }}>{sb.setup_quality}</span>
-                      <span className={`badge ${biasClass}`} style={{ fontSize: 9.5, flexShrink: 0 }}>{biasLabel}</span>
-                      <span style={{ fontSize: 11, color: 'var(--fg-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sb.brief}</span>
+                      {/* 4칸 신호강도 미터 */}
+                      <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                        {BIAS_LEVELS.map((_, i) => (
+                          <div key={i} style={{
+                            width: 14, height: 8, borderRadius: 2,
+                            background: i <= biasIdx ? BIAS_COLORS[i] : 'var(--bg-subtle)',
+                            opacity: i <= biasIdx ? 0.85 : 0.35,
+                            transition: 'background 0.2s',
+                          }} />
+                        ))}
+                      </div>
+                      <span style={{ fontSize: 10, color: biasColor, fontWeight: 600, width: 24, flexShrink: 0 }}>
+                        {BIAS_LABELS[sb.action_bias]}
+                      </span>
                     </div>
                   );
                 })}
