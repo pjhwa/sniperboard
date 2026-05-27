@@ -140,6 +140,10 @@ class TestEnrichWithDeltaNewSlot(unittest.TestCase):
 
 
 class TestFetchSentimentHistory(unittest.TestCase):
+    def setUp(self):
+        # 테스트 간 캐시 누수 방지
+        svc._history_cache.clear()
+
     def _make_snapshot(self, slot: str, as_of: str, sym_score: float, mkt_score: float):
         return {
             "generated_at": as_of,
@@ -209,6 +213,24 @@ class TestFetchSentimentHistory(unittest.TestCase):
         with patch.dict("os.environ", env, clear=True):
             result = svc.fetch_sentiment_history("TSLA", 7)
         self.assertEqual(result["points"], [])
+
+    def test_cache_is_reused_within_ttl(self):
+        snap = self._make_snapshot("post_close", "2026-05-27T21:00:00Z", 0.3, -0.5)
+
+        def side_effect(url, headers=None, timeout=None):
+            if "post_close" in url:
+                return _make_resp(snap)
+            r = MagicMock()
+            r.raise_for_status.side_effect = Exception("not found")
+            return r
+
+        with patch("requests.get", side_effect=side_effect) as mock_get:
+            with patch.dict("os.environ", {"SENTIMENT_DATA_HISTORY_BASE": "https://example.com/history"}):
+                svc.fetch_sentiment_history("TSLA", 1)
+                svc.fetch_sentiment_history("TSLA", 1)  # TTL 이내 재호출
+        # 첫 번째 호출에서만 슬롯 fetch (pre_open + 레거시 폴백 + post_close = 3회)
+        # 두 번째 호출은 캐시 히트 → requests.get 추가 호출 없음
+        self.assertEqual(mock_get.call_count, 3)
 
     def test_skips_missing_symbol(self):
         snap = self._make_snapshot("post_close", "2026-05-27T21:00:00Z", 0.3, -0.5)

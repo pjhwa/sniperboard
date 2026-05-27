@@ -132,7 +132,7 @@ def fetch_sentiment_history(symbol: str, days: int) -> dict:
     """최근 days일치 pre_open/post_close 심리 포인트를 반환.
 
     symbol: 종목 코드("TSLA" 등) 또는 "MARKET"
-    days: 조회할 일수 (7 또는 30)
+    days: 조회할 일수
     반환: {"symbol": str, "days": int, "points": [{"time", "score", "slot", "sentiment"}]}
     """
     cache_key = f"{symbol}:{days}"
@@ -178,9 +178,13 @@ def fetch_sentiment_history(symbol: str, days: int) -> dict:
             if score is None:
                 continue
 
+            try:
+                score_f = round(float(score), 2)
+            except (TypeError, ValueError):
+                continue
             points.append({
                 "time": obj.get("as_of") or data.get("generated_at", date_str),
-                "score": round(float(score), 2),
+                "score": score_f,
                 "slot": data.get("slot", slot),
                 "sentiment": obj.get("sentiment", "neutral"),
             })
