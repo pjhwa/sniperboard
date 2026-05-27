@@ -314,6 +314,7 @@ class SentimentHistoryPoint(BaseModel):
     slot: str
     sentiment: str
 
+
 class SentimentHistoryResponse(BaseModel):
     symbol: str
     days: int

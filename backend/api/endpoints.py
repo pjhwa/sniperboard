@@ -14,7 +14,7 @@ from api.schemas import (
     MacroResponse, RegimeResponse, DistributionDayResponse, SentimentResponse,
     BriefResponse, EarningsResponse, SentimentHistoryResponse,
 )
-from services.sentiment_service import fetch_latest, enrich_with_delta, fetch_today_slots
+from services.sentiment_service import fetch_latest, enrich_with_delta, fetch_today_slots, fetch_sentiment_history
 from services.brief_service import fetch_brief
 from services.earnings_service import fetch_earnings
 from core.distribution_day import count_distribution_days
@@ -466,9 +466,8 @@ async def get_sentiment_history_endpoint(
     days: int = Query(7, ge=1, le=30, description="조회 일수 (1-30)"),
 ):
     """N일치 심리 history 포인트 반환."""
-    from services.sentiment_service import fetch_sentiment_history
     try:
-        return fetch_sentiment_history(symbol, days)
+        return fetch_sentiment_history(symbol.upper(), days)
     except Exception as e:
         logger.error(f"Error in /sentiment/history: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="심리 히스토리 조회 중 오류 발생")
