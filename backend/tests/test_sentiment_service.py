@@ -139,5 +139,95 @@ class TestEnrichWithDeltaNewSlot(unittest.TestCase):
         self.assertEqual(tsla["score_delta"], 1)  # 1 - 0 = 1
 
 
+class TestFetchSentimentHistory(unittest.TestCase):
+    def _make_snapshot(self, slot: str, as_of: str, sym_score: float, mkt_score: float):
+        return {
+            "generated_at": as_of,
+            "slot": slot,
+            "market": {
+                "as_of": as_of,
+                "sentiment": "neutral",
+                "composite_score": mkt_score,
+                "sentiment_score": 0,
+            },
+            "symbols": [
+                {
+                    "symbol": "TSLA",
+                    "as_of": as_of,
+                    "sentiment": "optimistic",
+                    "composite_score": sym_score,
+                    "sentiment_score": 1,
+                }
+            ],
+        }
+
+    def test_returns_points_for_symbol(self):
+        pre  = self._make_snapshot("pre_open",  "2026-05-27T14:30:00Z", 0.3, -0.5)
+        post = self._make_snapshot("post_close", "2026-05-27T21:00:00Z", 0.8, -0.1)
+
+        def side_effect(url, headers=None, timeout=None):
+            if "pre_open" in url:
+                return _make_resp(pre)
+            if "post_close" in url:
+                return _make_resp(post)
+            r = MagicMock()
+            r.raise_for_status.side_effect = Exception("not found")
+            return r
+
+        with patch("requests.get", side_effect=side_effect):
+            with patch.dict("os.environ", {"SENTIMENT_DATA_HISTORY_BASE": "https://example.com/history"}):
+                result = svc.fetch_sentiment_history("TSLA", 1)
+
+        self.assertEqual(result["symbol"], "TSLA")
+        self.assertEqual(result["days"], 1)
+        self.assertEqual(len(result["points"]), 2)
+        self.assertEqual(result["points"][0]["slot"], "pre_open")
+        self.assertAlmostEqual(result["points"][0]["score"], 0.3)
+        self.assertEqual(result["points"][1]["slot"], "post_close")
+        self.assertAlmostEqual(result["points"][1]["score"], 0.8)
+
+    def test_returns_market_points(self):
+        snap = self._make_snapshot("post_close", "2026-05-27T21:00:00Z", 0.3, -0.5)
+
+        def side_effect(url, headers=None, timeout=None):
+            if "post_close" in url:
+                return _make_resp(snap)
+            r = MagicMock()
+            r.raise_for_status.side_effect = Exception("not found")
+            return r
+
+        with patch("requests.get", side_effect=side_effect):
+            with patch.dict("os.environ", {"SENTIMENT_DATA_HISTORY_BASE": "https://example.com/history"}):
+                result = svc.fetch_sentiment_history("MARKET", 1)
+
+        self.assertEqual(len(result["points"]), 1)
+        self.assertAlmostEqual(result["points"][0]["score"], -0.5)
+
+    def test_returns_empty_when_no_env(self):
+        import os
+        env = {k: v for k, v in os.environ.items() if k != "SENTIMENT_DATA_HISTORY_BASE"}
+        with patch.dict("os.environ", env, clear=True):
+            result = svc.fetch_sentiment_history("TSLA", 7)
+        self.assertEqual(result["points"], [])
+
+    def test_skips_missing_symbol(self):
+        snap = self._make_snapshot("post_close", "2026-05-27T21:00:00Z", 0.3, -0.5)
+        # Remove AAPL from symbols list — AAPL not present
+        snap["symbols"] = [s for s in snap["symbols"] if s["symbol"] != "AAPL"]
+
+        def side_effect(url, headers=None, timeout=None):
+            if "post_close" in url:
+                return _make_resp(snap)
+            r = MagicMock()
+            r.raise_for_status.side_effect = Exception("not found")
+            return r
+
+        with patch("requests.get", side_effect=side_effect):
+            with patch.dict("os.environ", {"SENTIMENT_DATA_HISTORY_BASE": "https://example.com/history"}):
+                result = svc.fetch_sentiment_history("AAPL", 1)
+
+        self.assertEqual(result["points"], [])
+
+
 if __name__ == "__main__":
     unittest.main()

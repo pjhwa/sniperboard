@@ -122,3 +122,69 @@ def enrich_with_delta(snapshot: dict) -> dict:
         enriched_symbols.append({**sym_obj, "score_delta": delta})
 
     return {**snapshot, "symbols": enriched_symbols}
+
+
+_history_cache: dict[str, Any] = {}
+_HISTORY_TTL = 300  # 5분
+
+
+def fetch_sentiment_history(symbol: str, days: int) -> dict:
+    """최근 days일치 pre_open/post_close 심리 포인트를 반환.
+
+    symbol: 종목 코드("TSLA" 등) 또는 "MARKET"
+    days: 조회할 일수 (7 또는 30)
+    반환: {"symbol": str, "days": int, "points": [{"time", "score", "slot", "sentiment"}]}
+    """
+    cache_key = f"{symbol}:{days}"
+    now = time.monotonic()
+    cached = _history_cache.get(cache_key)
+    if cached and (now - cached["ts"]) < _HISTORY_TTL:
+        return cached["data"]
+
+    history_base = os.environ.get("SENTIMENT_DATA_HISTORY_BASE", "")
+    if not history_base:
+        return {"symbol": symbol, "days": days, "points": []}
+
+    base = history_base.rstrip("/")
+    points: list[dict] = []
+    today = datetime.now(timezone.utc).date()
+
+    for day_offset in range(days - 1, -1, -1):
+        target_date = today - timedelta(days=day_offset)
+        date_str = target_date.strftime("%Y-%m-%d")
+
+        for slot in ("pre_open", "post_close"):
+            data = _fetch_json(f"{base}/{date_str}_{slot}.json")
+            if data is None and slot == "pre_open":
+                # 레거시 포맷 (날짜만, 슬롯 없음)
+                data = _fetch_json(f"{base}/{date_str}.json")
+            if data is None:
+                continue
+
+            if symbol == "MARKET":
+                obj: dict | None = data.get("market")
+            else:
+                obj = next(
+                    (s for s in data.get("symbols", []) if s.get("symbol") == symbol),
+                    None,
+                )
+
+            if obj is None:
+                continue
+
+            score = obj.get("composite_score")
+            if score is None:
+                score = obj.get("sentiment_score")
+            if score is None:
+                continue
+
+            points.append({
+                "time": obj.get("as_of") or data.get("generated_at", date_str),
+                "score": round(float(score), 2),
+                "slot": data.get("slot", slot),
+                "sentiment": obj.get("sentiment", "neutral"),
+            })
+
+    result = {"symbol": symbol, "days": days, "points": points}
+    _history_cache[cache_key] = {"data": result, "ts": now}
+    return result
