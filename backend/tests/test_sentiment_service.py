@@ -25,12 +25,14 @@ PRE_OPEN_SNAPSHOT = {
     "market": {"sentiment_score": 0, "sentiment": "neutral",
                "trend_vs_yesterday": "stable", "extreme_flag": "none",
                "key_reason": "test", "confidence": "med", "as_of": "2026-05-21T13:00:00Z",
-               "intraday_shift": None},
+               "intraday_shift": None,
+               "top_news": {"headline": "Fed holds rates steady", "summary": "연준이 금리를 동결했다.", "source": "Reuters"}},
     "symbols": [
         {"symbol": "TSLA", "sentiment_score": -1, "sentiment": "fearful",
          "trend_vs_yesterday": "stable", "mention_volume": "normal",
          "key_reason": "test", "bot_suspected": "no", "confidence": "med",
-         "source": "grok", "as_of": "2026-05-21T13:00:00Z", "intraday_shift": None},
+         "source": "grok", "as_of": "2026-05-21T13:00:00Z", "intraday_shift": None,
+         "top_news": {"headline": "Fed holds rates steady", "summary": "연준이 금리를 동결했다.", "source": "Reuters"}},
     ],
 }
 
@@ -41,12 +43,14 @@ POST_CLOSE_SNAPSHOT = {
     "market": {"sentiment_score": 1, "sentiment": "optimistic",
                "trend_vs_yesterday": "heating", "extreme_flag": "none",
                "key_reason": "test", "confidence": "high", "as_of": "2026-05-21T21:00:00Z",
-               "intraday_shift": "heating"},
+               "intraday_shift": "heating",
+               "top_news": {"headline": "Fed holds rates steady", "summary": "연준이 금리를 동결했다.", "source": "Reuters"}},
     "symbols": [
         {"symbol": "TSLA", "sentiment_score": 0, "sentiment": "neutral",
          "trend_vs_yesterday": "stable", "mention_volume": "normal",
          "key_reason": "test", "bot_suspected": "no", "confidence": "med",
-         "source": "grok", "as_of": "2026-05-21T21:00:00Z", "intraday_shift": "heating"},
+         "source": "grok", "as_of": "2026-05-21T21:00:00Z", "intraday_shift": "heating",
+         "top_news": {"headline": "Fed holds rates steady", "summary": "연준이 금리를 동결했다.", "source": "Reuters"}},
     ],
 }
 

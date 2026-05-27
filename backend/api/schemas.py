@@ -192,6 +192,12 @@ class FreshnessMeta(BaseModel):
     source: str
 
 
+class TopNews(BaseModel):
+    headline: str
+    summary: str
+    source: str
+
+
 # --- Sentiment (소셜 심리) ---
 
 class SymbolSentiment(BaseModel):
@@ -208,6 +214,7 @@ class SymbolSentiment(BaseModel):
     source: str
     score_delta: Optional[float] = None
     intraday_shift: Optional[str] = None
+    top_news: Optional[TopNews] = None
 
 class MarketSentiment(BaseModel):
     as_of: str
@@ -219,6 +226,7 @@ class MarketSentiment(BaseModel):
     key_reason: str
     confidence: str
     intraday_shift: Optional[str] = None
+    top_news: Optional[TopNews] = None
 
 class SnapshotData(BaseModel):
     generated_at: Optional[str] = None
