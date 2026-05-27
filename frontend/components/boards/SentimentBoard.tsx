@@ -213,7 +213,6 @@ export function SentimentBoard() {
           display: 'grid',
           gridTemplateColumns: expandedSymbol ? '1fr' : 'repeat(2, 1fr)',
           gap: 10,
-          transition: 'grid-template-columns 0.2s ease',
         }}>
           {symbols.map(it => {
             const score = it.composite_score ?? it.sentiment_score;
