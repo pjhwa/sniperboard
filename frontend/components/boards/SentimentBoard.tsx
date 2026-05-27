@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useSentiment } from '@/hooks/useSentiment';
 import { useBrief } from '@/hooks/useBrief';
@@ -9,6 +10,7 @@ import { RadialGauge } from '@/components/ui/RadialGauge';
 import { SENTIMENT_META, TREND_META, VOLUME_META } from '@/app/types';
 import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
 import { formatDateTime } from '@/lib/formatDateTime';
+import { SentimentTrendChart } from './SentimentTrendChart';
 
 const SENTIMENT_GLOSSARY: GlossaryItem[] = [
   { term: '복합점수 (Composite Score, −2 ~ +2)', plain: '소셜 미디어와 뉴스에서 수집한 심리를 종합한 점수입니다. +2에 가까울수록 극도의 낙관(과열 주의), −2에 가까울수록 극도의 공포(역발상 매수 기회)를 의미합니다.' },
@@ -98,6 +100,7 @@ function DeltaLabel({ delta }: { delta: number | null }) {
 
 export function SentimentBoard() {
   const { symbol, setSymbol } = useStore();
+  const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
   const { data: sentimentData, isLoading } = useSentiment();
   const { briefData } = useBrief();
   const briefBySymbol = (briefData?.symbol_briefs ?? []).reduce(
@@ -206,7 +209,12 @@ export function SentimentBoard() {
 
       {/* 종목별 카드 */}
       <Card title="Symbol Sentiment" action="워치리스트 심리">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: expandedSymbol ? '1fr' : 'repeat(2, 1fr)',
+          gap: 10,
+          transition: 'grid-template-columns 0.2s ease',
+        }}>
           {symbols.map(it => {
             const score = it.composite_score ?? it.sentiment_score;
             const meta = SENTIMENT_META[it.sentiment];
@@ -215,7 +223,10 @@ export function SentimentBoard() {
             return (
               <div
                 key={it.symbol}
-                onClick={() => setSymbol(it.symbol)}
+                onClick={() => {
+                  setSymbol(it.symbol);
+                  setExpandedSymbol(prev => prev === it.symbol ? null : it.symbol);
+                }}
                 style={{
                   padding: 12,
                   borderRadius: 'var(--r)',
@@ -279,6 +290,9 @@ export function SentimentBoard() {
                   {vol && <span>· {vol.label}</span>}
                   {it.bot_suspected === 'yes' && <span style={{ color: 'var(--warn)' }}>· 봇 의심</span>}
                 </div>
+                {expandedSymbol === it.symbol && (
+                  <SentimentTrendChart symbol={it.symbol} />
+                )}
               </div>
             );
           })}
