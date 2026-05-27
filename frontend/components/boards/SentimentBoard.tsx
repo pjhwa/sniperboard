@@ -5,7 +5,7 @@ import { useStore } from '@/hooks/useStore';
 import { useSentiment } from '@/hooks/useSentiment';
 import { useBrief } from '@/hooks/useBrief';
 import { Card } from '@/components/ui/Card';
-import { SymbolBrief, SETUP_QUALITY_META, FreshnessMeta } from '@/app/types';
+import { SymbolBrief, SETUP_QUALITY_META, FreshnessMeta, TopNews } from '@/app/types';
 import { RadialGauge } from '@/components/ui/RadialGauge';
 import { SENTIMENT_META, TREND_META, VOLUME_META } from '@/app/types';
 import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
@@ -25,7 +25,34 @@ const SENTIMENT_GLOSSARY: GlossaryItem[] = [
   { term: '봇 의심 (Bot Suspected)', plain: '인위적으로 생성된 게시물(봇)이 심리 데이터를 왜곡하고 있을 가능성을 나타냅니다. "봇 의심" 표시가 있으면 해당 심리 데이터를 신중하게 해석해야 합니다.' },
   { term: '스코어 바 (Score Bar)', plain: '복합점수의 위치를 시각적으로 보여주는 막대입니다. 중앙(0)이 중립이고, 오른쪽(녹색)으로 갈수록 낙관, 왼쪽(빨간색)으로 갈수록 공포입니다.' },
   { term: 'Key Reason (핵심 이유)', plain: '이 심리 점수가 나온 주된 이유를 한 문장으로 요약한 것입니다. AI가 소셜 미디어와 뉴스를 분석해 가장 영향력 있는 요인을 추출합니다.' },
+  { term: '주요 뉴스 (Top News)', plain: '이 심리 점수가 수집될 당시 X(트위터)에서 가장 많이 공유되거나 언급된 뉴스 또는 포스트 1건입니다. 소셜 심리의 주된 촉매를 빠르게 파악할 수 있습니다.' },
 ];
+
+function TopNewsBox({ topNews }: { topNews: TopNews | null | undefined }) {
+  if (!topNews) return null;
+  return (
+    <div style={{
+      marginTop: 8,
+      padding: '7px 10px',
+      borderRadius: 6,
+      background: 'var(--em-soft)',
+      borderLeft: '2px solid var(--em-500)',
+    }}>
+      <div style={{ fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--fg-subtle)', marginBottom: 3 }}>
+        주요 뉴스
+      </div>
+      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg)', lineHeight: 1.4, marginBottom: 3 }}>
+        {topNews.headline}
+      </div>
+      <div style={{ fontSize: 10.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 4 }}>
+        {topNews.summary}
+      </div>
+      <div style={{ fontSize: 9.5, color: 'var(--fg-subtle)' }}>
+        출처: {topNews.source}
+      </div>
+    </div>
+  );
+}
 
 // -2 ~ +2 범위를 색상으로 표현
 function compositeColor(score: number): string {
@@ -155,6 +182,7 @@ export function SentimentBoard() {
                 <div style={{ marginTop: 8, fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
                   {market.key_reason}
                 </div>
+                <TopNewsBox topNews={market.top_news} />
                 <div style={{ marginTop: 10, display: 'flex', gap: 12, fontSize: 10.5 }}>
                   <div>
                     <div className="subtle" style={{ fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>전일 대비</div>
@@ -282,6 +310,7 @@ export function SentimentBoard() {
                 <div style={{ fontSize: 10.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 6 }}>
                   {it.key_reason}
                 </div>
+                <TopNewsBox topNews={it.top_news} />
 
                 {/* 메타 */}
                 <div style={{ display: 'flex', gap: 8, fontSize: 10, color: 'var(--fg-subtle)' }}>
