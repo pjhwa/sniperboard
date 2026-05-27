@@ -29,8 +29,7 @@ export function SentimentTrendChart({ symbol }: Props) {
   const isLoading = histLoading || priceLoading;
 
   useEffect(() => {
-    if (!chartContainerRef.current) return;
-    if (isLoading) return;
+    if (!chartContainerRef.current || isLoading || !historyData || !dailyData) return;
 
     // 기존 차트 정리
     if (chartRef.current) {
@@ -57,6 +56,12 @@ export function SentimentTrendChart({ symbol }: Props) {
     });
     chartRef.current = chart;
 
+    // Fix 4: right price scale 고정
+    chart.priceScale('right').applyOptions({
+      autoScale: false,
+      scaleMargins: { top: 0.1, bottom: 0.1 },
+    });
+
     // 주가 라인 (좌측 Y축)
     if (dailyData?.candles?.length) {
       const cutoff = days === 7 ? 7 : 30;
@@ -69,8 +74,12 @@ export function SentimentTrendChart({ symbol }: Props) {
         lastValueVisible: true,
         title: symbol,
       });
+      // Fix 2: YYYY-MM-DD string → Unix epoch (seconds)
       priceSeries.setData(
-        sliced.map((c) => ({ time: c.time as Time, value: c.close }))
+        sliced.map((c) => ({
+          time: (new Date(c.time).getTime() / 1000) as Time,
+          value: c.close,
+        }))
       );
     }
 
@@ -86,23 +95,25 @@ export function SentimentTrendChart({ symbol }: Props) {
         title: 'Score',
       });
 
-      // 데이터 설정
+      // Fix 2: ISO 8601 → Unix epoch (seconds)
       sentimentSeries.setData(
         historyData.points.map((p) => ({
-          time: p.time as Time,
+          time: (new Date(p.time).getTime() / 1000) as Time,
           value: p.score,
         }))
       );
 
-      // pre_open / post_close 마커
+      // Fix 2 + Fix 3: pre_open / post_close 마커 — ISO 8601 → Unix epoch, sorted
       sentimentSeries.setMarkers(
-        historyData.points.map((p) => ({
-          time: p.time as Time,
-          position: 'aboveBar' as const,
-          color: scoreColor(p.score),
-          shape: p.slot === 'pre_open' ? ('arrowUp' as const) : ('circle' as const),
-          size: 0.5,
-        }))
+        [...historyData.points]
+          .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
+          .map((p) => ({
+            time: (new Date(p.time).getTime() / 1000) as Time,
+            position: 'aboveBar' as const,
+            color: scoreColor(p.score),
+            shape: p.slot === 'pre_open' ? ('arrowUp' as const) : ('circle' as const),
+            size: 0.5,
+          }))
       );
 
       // 중립선 (score=0) — 기준선 표시용 더미 시리즈
@@ -115,7 +126,8 @@ export function SentimentTrendChart({ symbol }: Props) {
         lastValueVisible: false,
         title: '',
       });
-      const times = historyData.points.map((p) => p.time as Time);
+      // Fix 2: ISO 8601 → Unix epoch (seconds)
+      const times = historyData.points.map((p) => (new Date(p.time).getTime() / 1000) as Time);
       if (times.length >= 2) {
         zeroSeries.setData([
           { time: times[0], value: 0 },
@@ -137,7 +149,7 @@ export function SentimentTrendChart({ symbol }: Props) {
       chart.remove();
       chartRef.current = null;
     };
-  }, [isLoading, historyData, dailyData, days, symbol]);
+  }, [historyData, dailyData, days, symbol]);  // Fix 1: isLoading 제거 — guard로만 사용
 
   return (
     <div style={{ marginTop: 12, padding: '10px 0 0' }}>
