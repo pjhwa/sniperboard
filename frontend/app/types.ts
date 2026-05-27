@@ -223,6 +223,12 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:500
 
 // --- Sentiment (소셜 심리) ---
 
+export interface TopNews {
+  headline: string;
+  summary: string;
+  source: string;
+}
+
 export interface SymbolSentiment {
   symbol: string;
   as_of: string;
@@ -237,6 +243,7 @@ export interface SymbolSentiment {
   source: string;
   score_delta: number | null;  // composite_score 기준 전일 대비 delta (float)
   intraday_shift: TrendEnum | null;
+  top_news?: TopNews | null;
 }
 
 export interface MarketSentiment {
@@ -249,6 +256,7 @@ export interface MarketSentiment {
   key_reason: string;
   confidence: ConfidenceEnum;
   intraday_shift: TrendEnum | null;
+  top_news?: TopNews | null;
 }
 
 export interface SnapshotData {
