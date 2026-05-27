@@ -56,10 +56,9 @@ export function SentimentTrendChart({ symbol }: Props) {
     });
     chartRef.current = chart;
 
-    // Fix 4: right price scale 고정
+    // right price scale — auto-scale with margin (anchor series enforces -2~+2)
     chart.priceScale('right').applyOptions({
-      autoScale: false,
-      scaleMargins: { top: 0.1, bottom: 0.1 },
+      scaleMargins: { top: 0.05, bottom: 0.05 },
     });
 
     // 주가 라인 (좌측 Y축)
@@ -116,6 +115,23 @@ export function SentimentTrendChart({ symbol }: Props) {
           }))
       );
 
+      // 범위 앵커 시리즈 (투명, 우측 Y축 -2~+2 강제)
+      const rangeSeries = chart.addLineSeries({
+        priceScaleId: 'right',
+        color: 'rgba(0,0,0,0)',
+        lineWidth: 1,
+        priceLineVisible: false,
+        lastValueVisible: false,
+        title: '',
+      });
+      const times = historyData.points.map((p) => (new Date(p.time).getTime() / 1000) as Time);
+      if (times.length >= 2) {
+        rangeSeries.setData([
+          { time: times[0], value: -2 },
+          { time: times[times.length - 1], value: 2 },
+        ]);
+      }
+
       // 중립선 (score=0) — 기준선 표시용 더미 시리즈
       const zeroSeries = chart.addLineSeries({
         priceScaleId: 'right',
@@ -126,8 +142,6 @@ export function SentimentTrendChart({ symbol }: Props) {
         lastValueVisible: false,
         title: '',
       });
-      // Fix 2: ISO 8601 → Unix epoch (seconds)
-      const times = historyData.points.map((p) => (new Date(p.time).getTime() / 1000) as Time);
       if (times.length >= 2) {
         zeroSeries.setData([
           { time: times[0], value: 0 },
