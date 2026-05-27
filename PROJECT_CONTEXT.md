@@ -24,7 +24,7 @@ sniperboard/
 │   ├── Dockerfile
 │   ├── api/
 │   │   ├── endpoints.py          # 7개 REST 엔드포인트 (APIRouter prefix=/api)
-│   │   └── schemas.py            # Pydantic v2 요청/응답 모델 전체
+│   │   └── schemas.py            # Pydantic v2 요청/응답 모델 전체. TopNews(headline/summary/source) + SymbolSentiment.top_news/MarketSentiment.top_news Optional 추가 (2026-05-28)
 │   ├── core/
 │   │   ├── signal_engine.py      # 핵심: 모든 기술적 지표·신호 계산 (700+ lines). Phase 2: calculate_stage2_analysis detects 'adj_close' and uses adjusted (scaled high/low + adj_close series) for 52w/RS/ema200_slope/pullback/pivot/entry on split symbols. GC/intraday/raw unchanged.
 │   │   ├── regime_engine.py      # Risk Regime 5요소 종합 점수 (0~100)
@@ -40,7 +40,7 @@ sniperboard/
 │       ├── test_data_adapter.py (29 tests total incl. adapter+signal_engine; Phase 5 full suite green)
 │       ├── test_signal_engine.py (incl. adjusted vs raw split symbol TDD)
 │       ├── test_conviction_calculator.py (Phase 1 TDD: 3 tests for weighted Conviction v1, RED-GREEN passed 2026-05-25)
-│       └── (service tests: brief/earnings/sentiment)
+│       └── (service tests: brief/earnings/sentiment — test_sentiment_service.py: fixtures updated with top_news)
 ├── frontend/
 │   ├── package.json              # Next.js 16.2.6, React 19.2.4, TanStack Query 5, Zustand 5, lightweight-charts 4.2.3, Tailwind v4
 │   ├── next.config.ts
@@ -69,7 +69,7 @@ sniperboard/
 │   │   │   ├── DailyBoard.tsx    # 일봉: DailyChart + Stage2 체크리스트 + R:R 패널
 │   │   │   ├── WatchlistBoard.tsx # 워치리스트: Stage2 정렬 테이블
 │   │   │   ├── MacroBoard.tsx    # 매크로: 섹터 로테이션 바 + 6그룹 카드
-│   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드 (클릭 시 SentimentTrendChart 펼침)
+│   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드 (클릭 시 SentimentTrendChart 펼침). TopNewsBox 컴포넌트: 각 카드(Market+Symbol)에 top_news(headline/summary/source) 박스 렌더링 (2026-05-28)
 │   │   │   └── SentimentTrendChart.tsx # 심리 추이 차트: 주가 라인(좌축) + composite_score 오버레이(우축), 7/30일 토글
 │   │   ├── charts/               # 기존 lightweight-charts 컴포넌트 유지
 │   │   │   ├── IntradayChart.tsx
