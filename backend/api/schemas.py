@@ -304,3 +304,17 @@ class EarningsResponse(BaseModel):
     data: Optional[EarningsData] = None
     error: Optional[str] = None
     meta: Optional[FreshnessMeta] = None
+
+
+# --- Sentiment History ---
+
+class SentimentHistoryPoint(BaseModel):
+    time: str
+    score: float
+    slot: str
+    sentiment: str
+
+class SentimentHistoryResponse(BaseModel):
+    symbol: str
+    days: int
+    points: List[SentimentHistoryPoint]

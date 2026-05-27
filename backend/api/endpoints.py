@@ -12,7 +12,7 @@ from core.signal_engine import (
 from api.schemas import (
     OHLCVResponse, LatestSignalResponse, DailyResponse, WatchlistResponse,
     MacroResponse, RegimeResponse, DistributionDayResponse, SentimentResponse,
-    BriefResponse, EarningsResponse,
+    BriefResponse, EarningsResponse, SentimentHistoryResponse,
 )
 from services.sentiment_service import fetch_latest, enrich_with_delta, fetch_today_slots
 from services.brief_service import fetch_brief
@@ -458,6 +458,20 @@ async def get_sentiment_endpoint():
     except Exception as e:
         logger.error(f"Error in /sentiment endpoint: {e}", exc_info=True)
         return {"available": False, "error": "심리 데이터 처리 중 오류 발생"}
+
+
+@router.get("/sentiment/history", response_model=SentimentHistoryResponse)
+async def get_sentiment_history_endpoint(
+    symbol: str = Query(..., description="종목 코드 또는 MARKET"),
+    days: int = Query(7, ge=1, le=30, description="조회 일수 (1-30)"),
+):
+    """N일치 심리 history 포인트 반환."""
+    from services.sentiment_service import fetch_sentiment_history
+    try:
+        return fetch_sentiment_history(symbol, days)
+    except Exception as e:
+        logger.error(f"Error in /sentiment/history: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="심리 히스토리 조회 중 오류 발생")
 
 
 @router.get("/brief", response_model=BriefResponse)
