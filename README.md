@@ -188,8 +188,9 @@ environment:
 
 - 시장 전체 심리 게이지 (극도공포~도취 5단계 + 복합점수)
 - 종목별 심리 카드: 감정 점수·트렌드·멘션량·봇 의심도·핵심 이유
+- **카드 클릭 시 심리 추이 차트 펼침**: 주가 라인(좌축) + composite_score 오버레이(우측 −2~+2), 7일/30일 토글
 - Setup Quality 배지 (A+~D) — Grok AI 셋업 평가
-- 장 전/장 후 슬롯 구분 표시
+- 장 전/장 후 슬롯 구분 표시 (▲ pre_open, ● post_close 마커)
 
 ---
 
@@ -253,6 +254,7 @@ environment:
 | `GET /api/regime` | Risk Regime 5요소 종합 점수 |
 | `GET /api/distribution-days` | SPY·QQQ Distribution Day 카운트 |
 | `GET /api/sentiment` | 소셜 심리 데이터 (GitHub raw 캐시) + `meta {fetched_at, age_minutes, source}` (Task 3) |
+| `GET /api/sentiment/history` | N일치 심리 포인트 배열. `?symbol=TSLA&days=7` (days: 1-30). 5분 TTL 캐시. |
 | `GET /api/brief` | AI Daily Brief — Grok 시장 분석 (GitHub raw 캐시) + `meta {fetched_at, age_minutes, source}` (Task 3) |
 | `GET /api/earnings` | Earnings Intelligence — 실적 발표 일정 + AI 해석 (GitHub raw 캐시) + `meta {fetched_at, age_minutes, source}` (Task 3) |
 

@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-26)
+# SniperBoard — Project Context (UPDATED 2026-05-28)
 
 ## 0. 이 문서의 목적
 
@@ -69,7 +69,8 @@ sniperboard/
 │   │   │   ├── DailyBoard.tsx    # 일봉: DailyChart + Stage2 체크리스트 + R:R 패널
 │   │   │   ├── WatchlistBoard.tsx # 워치리스트: Stage2 정렬 테이블
 │   │   │   ├── MacroBoard.tsx    # 매크로: 섹터 로테이션 바 + 6그룹 카드
-│   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드
+│   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드 (클릭 시 SentimentTrendChart 펼침)
+│   │   │   └── SentimentTrendChart.tsx # 심리 추이 차트: 주가 라인(좌축) + composite_score 오버레이(우축), 7/30일 토글
 │   │   ├── charts/               # 기존 lightweight-charts 컴포넌트 유지
 │   │   │   ├── IntradayChart.tsx
 │   │   │   └── DailyChart.tsx
@@ -107,6 +108,7 @@ sniperboard/
 | `GET /regime` | — | Risk Regime 5요소 점수 + 종합 regime 문자열 |
 | `GET /distribution-days` | — | SPY·QQQ DD count/level/dates |
 | `GET /sentiment` | — | 소셜 심리 JSON (GitHub raw 30분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
+| `GET /sentiment/history` | `symbol`(required), `days`(1-30, 기본 7) | N일치 pre_open/post_close 심리 포인트 배열. `symbol="MARKET"` 지원. 5분 TTL 캐시. |
 | `GET /brief` | — | AI Daily Brief JSON (GitHub raw 30분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
 | `GET /earnings` | — | Earnings Intelligence JSON (GitHub raw 60분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
 
@@ -203,6 +205,7 @@ OK(<4) / WARNING(4~5) / DANGER(≥6)
 - `useRegime()`: `/regime`
 - `useDistributionDays()`: `/distribution-days`
 - `useSentiment()`: `/sentiment` — 30분 staleTime, returns full (incl. `meta` for freshness badge)
+- `useSentimentHistory(symbol, days)`: `/sentiment/history` — 5분 staleTime, enabled: !!symbol
 - `useBrief()`: `/brief` — 30분 staleTime, `briefData` + `briefMeta` (FreshnessMeta, Phase 4) for ⏱ badge in Overview
 - `useEarnings()`: `/earnings` — 60분 staleTime, `earningsData` + `earningsMeta` (FreshnessMeta, Phase 4) for badge
 
