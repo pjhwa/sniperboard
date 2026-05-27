@@ -296,6 +296,19 @@ export const VOLUME_META: Record<VolumeEnum, { label: string; color: string }> =
   surging:  { label: '급증',  color: 'text-orange-400'  },
 };
 
+export interface SentimentHistoryPoint {
+  time: string;        // ISO 8601 타임스탬프
+  score: number;       // composite_score (-2 ~ +2)
+  slot: string;        // "pre_open" | "post_close"
+  sentiment: string;   // "fearful" | "neutral" | "optimistic" 등
+}
+
+export interface SentimentHistoryData {
+  symbol: string;
+  days: number;
+  points: SentimentHistoryPoint[];
+}
+
 // --- AI Brief ---
 
 export interface MarketBrief {
