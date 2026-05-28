@@ -39,10 +39,10 @@ export function InfoPopover({ term, body }: Props) {
       document.dispatchEvent(new Event(CLOSE_EVENT));
       if (ref.current) {
         const rect = ref.current.getBoundingClientRect();
-        const popWidth = 280;
+        const popWidth = 300;
         const vpWidth = window.innerWidth;
         const top = rect.bottom + 6;
-        const left = Math.min(rect.left, vpWidth - popWidth - 10);
+        const left = Math.max(10, Math.min(rect.right - popWidth, vpWidth - popWidth - 10));
         setPos({ top, left });
       }
     }
