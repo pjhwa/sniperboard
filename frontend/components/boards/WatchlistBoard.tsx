@@ -1,23 +1,28 @@
 'use client';
 
+import { useState } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useWatchlist } from '@/hooks/useWatchlist';
 import { Card, ScorePill } from '@/components/ui/Card';
 import { ArrowRight } from '@/components/ui/Icons';
-import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
+import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
+import { InfoPopover } from '@/components/ui/InfoPopover';
 import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
+import { G } from '@/app/glossary';
 
-const WATCHLIST_GLOSSARY: GlossaryItem[] = [
-  { term: 'Symbol', plain: '종목 코드. 예) TSLA = Tesla, AAPL = Apple. 미국 주식 시장에서 각 회사를 식별하는 짧은 이름입니다.' },
-  { term: 'Price (현재가)', plain: '지금 이 주식을 살 수 있는 가격(달러)입니다.' },
-  { term: 'Stage 2 점수 (0~7)', plain: 'Minervini의 7가지 기준을 몇 개 충족하는지 나타냅니다. 6~7점이면 "지금 사기 좋은 조건", 3점 이하면 "아직 시기상조"를 의미합니다.', color: 'var(--bull)' },
-  { term: 'RS Score (상대 강도)', plain: 'S&P500 지수(미국 전체 시장)와 비교해 이 주식이 얼마나 강한지 0~100으로 나타냅니다. 70 이상이면 시장 대부분의 주식보다 강하다는 뜻입니다.' },
-  { term: '52W 고점 이격', plain: '최근 1년 중 가장 높았던 가격과 현재 가격의 차이(%)입니다. -10% 이내면 신고가 근처에 있어 강세 구간이고, -40% 이하면 많이 하락한 상태입니다.' },
-  { term: 'Entry (피벗 진입가)', plain: '이 가격을 돌파하면 매수하라는 신호입니다. 최근 20일 최고가보다 0.5% 높게 설정되어, 돌파 확인 후 진입하는 방식입니다.', color: 'var(--info)' },
-  { term: 'Stop (손절가)', plain: '이 가격 아래로 내려가면 손실을 제한하기 위해 팔아야 하는 가격입니다. 주가 변동폭(ATR)의 2배를 기준으로 설정합니다.', color: 'var(--bear)' },
-  { term: 'Target (목표가 3R)', plain: '목표 수익 가격입니다. 리스크(손절폭)의 3배만큼 수익을 노리는 1:3 전략입니다. 예) 손절폭이 5달러면 목표 수익은 15달러.', color: 'var(--bull)' },
-  { term: 'Checks (7개 점)', plain: '초록색 점은 조건 충족, 회색 점은 미달입니다. 7가지 조건: ① 모든 이평선 위 ② EMA200 상승 ③ 52주 고점 근처 ④ 52주 저점 위 ⑤ 조정 폭 작음 ⑥ RS 강세 ⑦ 거래량 수축' },
-  { term: 'Conviction (확신 점수)', plain: 'Stage2 + 시장 심리 + Regime을 40/30/30으로 종합한 0~100 확신 점수. 높을수록 기술적·심리적으로 강한 구간. (Phase 1 실험적 기능)', color: 'var(--bull)' },
+const WATCHLIST_GUIDE: GuideSection[] = [
+  {
+    heading: '이 화면은',
+    body: '워치리스트 종목들의 Stage2 점수를 내림차순으로 보여주는 스크리닝 화면입니다. 가장 좋은 셋업의 종목을 빠르게 찾을 수 있습니다.',
+  },
+  {
+    heading: '핵심 지표 읽는 법',
+    body: 'Stage2 점수가 높을수록 기술적 조건이 좋은 종목입니다. Conviction 점수는 기술적(Stage2) + 소셜 심리 + 시장 Regime을 종합합니다. Checks 점 패턴으로 어떤 조건이 미달인지 한눈에 파악할 수 있습니다.',
+  },
+  {
+    heading: '지금 이렇게 쓰세요',
+    body: 'Stage2 ≥ 5인 종목 확인 → Conviction ≥ 60 추가 확인 → Entry 가격 근처에서 알람 설정 → DeepDive에서 세부 분석 후 진입 결정.',
+  },
 ];
 
 
@@ -38,6 +43,7 @@ const CHECK_LABELS: [keyof ReturnType<typeof useWatchlist>['watchlist'][number][
 export function WatchlistBoard() {
   const { symbol, setSymbol, setBoard } = useStore();
   const { watchlist, isLoading } = useWatchlist();
+  const [guideOpen, setGuideOpen] = useState(false);
 
   // R:R 비교용 최대 편차 계산
   const maxRisk   = Math.max(...watchlist.map(w => w.entry - w.stop), 0.01);
@@ -45,7 +51,9 @@ export function WatchlistBoard() {
   const maxRange  = Math.max(maxRisk, maxReward);
 
   return (
-    <div className="board fade-in" style={{ gridTemplateColumns: '1fr 1fr 1fr', alignContent: 'start' }}>
+    <div className="board fade-in" style={{ gridTemplateColumns: '1fr 1fr 1fr', alignContent: 'start', position: 'relative' }}>
+      <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
+      <BoardGuidePanel title="Watchlist 가이드" sections={WATCHLIST_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
 
       {/* 메인 테이블 — 3컬럼 전체 */}
       <div style={{ gridColumn: 'span 3' }}>
@@ -58,15 +66,15 @@ export function WatchlistBoard() {
                 <tr>
                   <th>Symbol</th>
                   <th>Price</th>
-                  <th>Stage 2</th>
-                  <th>RS</th>
+                  <th><span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>Stage2 <InfoPopover term={G.stage2.term} body={G.stage2.body} /></span></th>
+                  <th><span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>RS <InfoPopover term={G.rs_score.term} body={G.rs_score.body} /></span></th>
                   <th>52w 고점</th>
                   <th>Entry</th>
                   <th>Stop</th>
                   <th>Target</th>
                   <th>Checks</th>
                   <th>월봉</th>
-                  <th>Conviction</th>
+                  <th><span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>Conviction <InfoPopover term={G.conviction.term} body={G.conviction.body} /></span></th>
                   <th></th>
                 </tr>
               </thead>
@@ -241,10 +249,6 @@ export function WatchlistBoard() {
         )}
       </Card>
 
-      {/* 데이터 설명 */}
-      <div style={{ gridColumn: 'span 3' }}>
-        <GlossaryPanel items={WATCHLIST_GLOSSARY} />
-      </div>
     </div>
   );
 }
