@@ -73,7 +73,9 @@ def _fetch_prepost_data(symbol: str) -> dict:
         market_state = info.get("marketState", "CLOSED")
         result["market_state"] = market_state if market_state in ("PRE", "POST", "REGULAR", "CLOSED") else "CLOSED"
 
-        regular_close = info.get("regularMarketPreviousClose") or info.get("regularMarketPrice")
+        regular_close = info.get("regularMarketPreviousClose")
+        if regular_close is None:
+            regular_close = info.get("regularMarketPrice")
         result["regular_close"] = regular_close
 
         pre_price = info.get("preMarketPrice")
@@ -92,13 +94,13 @@ def _fetch_prepost_data(symbol: str) -> dict:
             except Exception as e:
                 logger.warning(f"prepost history fallback failed for {symbol}: {e}")
 
-        if pre_price is not None and regular_close:
+        if pre_price is not None and regular_close is not None:
             result["pre_market_price"] = float(pre_price)
             result["pre_market_change_pct"] = round(
                 (float(pre_price) - float(regular_close)) / float(regular_close) * 100, 3
             )
 
-        if post_price is not None and regular_close:
+        if post_price is not None and regular_close is not None:
             result["post_market_price"] = float(post_price)
             result["post_market_change_pct"] = round(
                 (float(post_price) - float(regular_close)) / float(regular_close) * 100, 3

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { API_BASE, PrePostData } from '../app/types';
 
 const fetchPrePost = async (symbol: string): Promise<PrePostData> => {
-  const res = await fetch(`${API_BASE}/api/prepost?symbol=${symbol}`);
+  const res = await fetch(`${API_BASE}/api/prepost?symbol=${encodeURIComponent(symbol)}`);
   if (!res.ok) throw new Error('Failed to fetch pre/post market data');
   return res.json();
 };

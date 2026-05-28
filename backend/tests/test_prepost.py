@@ -100,3 +100,18 @@ def test_prepost_regular_market_returns_no_prepost_prices():
     assert result["market_state"] == "REGULAR"
     assert result["pre_market_price"] is None
     assert result["post_market_price"] is None
+
+
+def test_prepost_closed_market_with_residual_post_price():
+    """CLOSED 상태에서 postMarketPrice 가 남아있어도 post_market_price 를 반환한다.
+    프론트엔드에서 CLOSED 상태는 별도로 필터링한다."""
+    info = _make_ticker_info(pre=None, post=180.0, regular=181.50, state="CLOSED")
+    mock_ticker = MagicMock()
+    mock_ticker.info = info
+
+    with patch("api.endpoints.yf.Ticker", return_value=mock_ticker):
+        result = _fetch_prepost_data("AAPL")
+
+    assert result["market_state"] == "CLOSED"
+    # Backend correctly returns the price data; frontend filters display by state
+    assert result["post_market_price"] == pytest.approx(180.0)

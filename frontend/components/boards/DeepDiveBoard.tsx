@@ -238,7 +238,7 @@ export function DeepDiveBoard() {
                     </div>
                   );
                 })()}
-                {prePostData && prePostData.market_state !== 'REGULAR' && (() => {
+                {prePostData && (prePostData.market_state === 'PRE' || prePostData.market_state === 'POST') && (() => {
                   const isPre = prePostData.market_state === 'PRE';
                   const price = isPre ? prePostData.pre_market_price : prePostData.post_market_price;
                   const chgPct = isPre ? prePostData.pre_market_change_pct : prePostData.post_market_change_pct;
