@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-28 deepdive-board-verified)
+# SniperBoard — Project Context (UPDATED 2026-05-28 scorebar-fix+deepdive-v2)
 
 ## 0. 이 문서의 목적
 
@@ -66,12 +66,12 @@ sniperboard/
 │   │   │   └── HeatStrip.tsx     # CSS 기반 히트맵 스트립
 │   │   ├── boards/               # 7개 보드 컴포넌트 (실제 훅 사용)
 │   │   │   ├── OverviewBoard.tsx # 시장 개요: AI Insight + Regime + DD + Breadth + VIX + Credit + 종목 미니
-│   │   │   ├── DeepDiveBoard.tsx # 종합분석 (2026-05-28, 검증완료): 4-Zone 레이아웃. Zone0=종목선택바+현재가+스파크라인+배지한줄(Stage2/Conviction/월봉/시장구조/활성신호). Zone1=DailyChart(60%)+Stage2체크리스트2col+KPI4개+R:R진입계획(40%). Zone2=소셜심리+AI Brief+실적/시장심리(3등분). Zone3=DailyHeat60d+Regime게이지(3/2분할). gridTemplateColumns:'3fr 2fr', alignItems:'start'로 카드 잘림 해소.
+│   │   │   ├── DeepDiveBoard.tsx # 종합분석 (2026-05-28 v2, 검증완료): 5-Row 레이아웃. Row1(span2)=종목선택+가격+배지. Row2=DailyChart(3fr)|Stage2체크2col+KPI2×2(2fr). Row3=DailyHeat(3fr)|R:R진입계획(2fr). Row4(span2→3×1fr,stretch)=소셜심리|AI Brief|실적(없으면recent_result로채움). Row5=Regime가로레이아웃(3fr)|시장전체심리ScoreBar(2fr). ScoreBar csColor 버그 수정(var(--emerald)→var(--bull)).
 │   │   │   ├── IntradayBoard.tsx # 단기: IntradayChart + 활성신호 + RSI + 액션바
 │   │   │   ├── DailyBoard.tsx    # 일봉: DailyChart + Stage2 체크리스트 + R:R 패널
 │   │   │   ├── WatchlistBoard.tsx # 워치리스트: Stage2 정렬 테이블
 │   │   │   ├── MacroBoard.tsx    # 매크로: 섹터 로테이션 바 + 6그룹 카드
-│   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드 (클릭 시 SentimentTrendChart 펼침). TopNewsBox 컴포넌트: 각 카드(Market+Symbol)에 top_news(headline/summary/source) 박스 렌더링 (2026-05-28)
+│   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드 (클릭 시 SentimentTrendChart 펼침). TopNewsBox 컴포넌트. compositeColor 버그 수정(var(--emerald/orange/red)→var(--bull)/hsl(20 90% 55%)/var(--bear)) — undefined CSS var로 ScoreBar background transparent 렌더링 문제 해소 (2026-05-28)
 │   │   │   └── SentimentTrendChart.tsx # 심리 추이 차트: 주가 라인(좌축) + composite_score 오버레이(우축), 7/30일 토글
 │   │   ├── charts/               # 기존 lightweight-charts 컴포넌트 유지
 │   │   │   ├── IntradayChart.tsx
@@ -255,28 +255,30 @@ export const EARNINGS_RISK_META = { high: {color:'bear',dot:'●'}, med: {color:
 
 `gridTemplateColumns: '3fr 2fr'` + `alignItems: 'start'` — 카드가 내용 높이에 맞게 자동 조정.
 
-**Zone 0 (gridColumn: span 2, full-width)**
-종목 선택 버튼 (SYMBOLS 전체) | 현재가 + RSI + EMA21 + 스파크라인(60봉) | 우측: Stage2 ScorePill · Conviction 링 배지 · 월봉 단계 배지 · 시장구조 배지 · 활성신호 배지(최대2)
+**Row 1 (span 2): 종목 선택 + 가격 바**
+SYMBOLS 버튼 | 현재가 + RSI + EMA21 + 스파크라인(60봉) | 우측: Stage2 ScorePill · Conviction 링 배지 · 월봉 배지 · 시장구조 배지 · 활성신호 배지(최대2)
 
-**Zone 1 Left (3fr): Daily Chart**
-`DailyChart` 컴포넌트 직접 임베드 (EMA8/21/50/200 + GC 채널 + Entry/Stop 라인). 카드 헤드에 UPTREND/GC 패턴 배지.
+**Row 2: Daily Chart (3fr) + Stage2 분석 (2fr)**
+- 좌: `DailyChart` 임베드 (EMA8/21/50/200 + GC + Entry/Stop). min-height:440px.
+- 우: 7항목 2컬럼 체크리스트 + 월봉 배너 + KPI 2×2 (RS Score·52주이격·최근조정·EMA200기울기)
 
-**Zone 1 Right (2fr): Stage2 + R:R (수직 스택)**
-- Stage2 카드: 7항목 2컬럼 체크리스트 + 월봉 배너 + RS Score·52주고점이격·최근조정·EMA200기울기 KPI 2×2 그리드
-- R:R 카드: Entry/Stop/Target 3-col + 빨강1:녹색3 시각 바 + 포지션 수량 (Max Loss / ATR) + 패턴 배지
+**Row 3: Daily Heat (3fr) + R:R 진입 계획 (2fr)**
+- 좌: HeatStrip 3×20 + 상승/하락일 배지 + 범례 + 평균/max/min
+- 우: Entry/Stop/Target 3-col + 빨강1:녹색3 시각 바 + 포지션 수량(Max Loss/ATR) + 패턴 배지
 
-**Zone 2 (gridColumn: span 2 → internal 3등분)**
+**Row 4 (span 2 → 3×1fr, `alignItems: 'stretch'`)**
 | 카드 | 데이터 | 내용 |
 |------|--------|------|
 | 소셜 심리 | `useSentiment` (symbol 필터) | composite_score + ScoreBar(-2~+2) + 전일 델타 + key_reason + TopNews + 심리 추이 토글 |
-| AI Brief | `useBrief` (symbol 필터) | 그라디언트 카드 + Setup Quality 배지 + Action Bias 배지 + brief 텍스트 + 기회/리스크 블록 |
-| 실적+시장심리 | `useEarnings` + `useSentiment` | 실적: 발표일·D-Day·EPS·Beat율·action_note / 시장심리: composite_score RadialGauge 미니 |
+| AI Brief | `useBrief` (symbol 필터) | 그라디언트 카드 + Setup Quality 배지 + Action Bias + brief + 기회/리스크 블록 |
+| 실적 발표 | `useEarnings` (symbol 필터) | 임박: 발표일·D-Day·EPS·Beat율·ai_summary; 없음: recent_result(EPS실제/추정/서프라이즈/ai_reaction) 표시 |
 
-**Zone 3 (gridColumn: span 2 → internal 3fr/2fr)**
-| 카드 | 데이터 | 내용 |
-|------|--------|------|
-| Daily Heat 60d | `useDaily` (candles) | HeatStrip 3행×20열 + 상승/하락일 배지 + 범례 + 최대등락 |
-| Risk Regime | `useRegime` | RadialGauge(80px) + 레짐 설명 텍스트 + 5요소 바(raw수치 포함) |
+**Row 5: Risk Regime (3fr) + 시장 전체 심리 (2fr)**
+- 좌: RadialGauge(80px) + 레짐 설명 텍스트 / 우: 5요소 바(raw수치 포함) — 2컬럼 내부 레이아웃
+- 우: 시장 composite_score(큰 숫자) + ScoreBar + key_reason + TopNews
+
+**공통 버그 수정 (2026-05-28)**
+`compositeColor`/`csColor` 함수: `var(--emerald)` → `var(--bull)`, `var(--orange)` → `hsl(20 90% 55%)`, `var(--red)` → `var(--bear)` — 미정의 CSS 변수로 ScoreBar background가 transparent 렌더링되던 문제 해소. SentimentBoard + DeepDiveBoard 양쪽 수정.
 
 ---
 

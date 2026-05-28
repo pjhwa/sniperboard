@@ -146,18 +146,22 @@ environment:
 **Zone 0 — 상황 인식 바 (전체 너비)**
 종목 선택 버튼(TSLA·AAPL·NVDA·META·AMZN·GOOGL·PLTR) + 현재가·RSI·EMA21 + 인트라데이 스파크라인 + 우측에 Stage2 점수 / Conviction / 월봉 단계 / 시장구조 / 활성 신호 배지를 한 줄로 표시 — 진입 즉시 "지금 어떤 상태인가" 파악
 
-**Zone 1 — 기술 심층 (60% : 40%)**
+**Row 2 — 기술 심층 (60% : 40%)**
 - 좌: **Daily Chart** — 1년 일봉 캔들 + EMA8/21/50/200 + 가우시안 채널 + Entry/Stop 라인
-- 우(스택): **Stage 2 체크리스트** (7항목 2컬럼 + 월봉 상태 배너 + RS Score · 52주이격 · 조정폭 · EMA200기울기 KPI) → **R:R 진입 계획** (Entry/Stop/Target + 빨강1:녹색3 시각 바 + 포지션 수량 + Max Loss/ATR)
+- 우: **Stage 2 체크리스트** 7항목 2컬럼 + 월봉 배너 + RS Score·52주이격·조정폭·EMA200기울기 KPI 4개
 
-**Zone 2 — 심리 & AI (3등분)**
-- **소셜 심리**: composite_score(-2~+2) ScoreBar + 전일 델타 + 핵심 이유 + 주요 뉴스 + 심리 추이 차트 토글
+**Row 3 — 시각 히트 & 진입 계획 (60% : 40%)**
+- 좌: **Daily Heat 60d** — 60거래일 등락 히트맵(3행×20열) + 평균/최대/최소
+- 우: **R:R 진입 계획** — Entry/Stop/Target + 빨강1:녹색3 시각 바 + 포지션 수량/Max Loss
+
+**Row 4 — 심리 & AI & 실적 (3등분, 동일 높이)**
+- **소셜 심리**: composite_score ScoreBar(-2~+2) + 전일 델타 + 핵심 이유 + 주요 뉴스 + 심리 추이 차트 토글
 - **AI 분석 Brief**: Setup Quality(A+~D) + Action Bias 배지 + 분석문 + 기회/리스크 블록
-- **실적 발표** + **시장 전체 심리**: 발표일·D-Day·EPS추정·Beat율 + 시장 composite_score 게이지
+- **실적 발표**: 임박 시 발표일·D-Day·EPS·Beat율 표시; 없으면 최근 실적 결과(EPS 서프라이즈·AI 반응) 자동 표시
 
-**Zone 3 — 맥락 (60% : 40%)**
-- **Daily Heat 60d**: 60거래일 일봉 등락률 히트맵 (3행×20열) + 최대 등락
-- **Risk Regime**: RadialGauge(0~100) + 레짐 텍스트 설명 + 5요소 바(Trend/Breadth/Credit/Volatility/Momentum)
+**Row 5 — 매크로 맥락 (60% : 40%)**
+- **Risk Regime** — RadialGauge(0~100) + 레짐 설명 + 5요소 바(Trend/Breadth/Credit/Volatility/Momentum)
+- **시장 전체 심리** — composite_score ScoreBar + 핵심 이유 + 주요 뉴스
 
 ---
 
