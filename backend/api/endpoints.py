@@ -410,6 +410,9 @@ async def get_watchlist_endpoint():
                     "conviction_label": c_label,
                     "conviction_reliability": c_rel,
                     "conviction_notes": c_notes,
+                    # 월봉 추세
+                    "monthly_phase": stage2.get("monthly_phase", "UNKNOWN"),
+                    "monthly_uptrend_confirmed": stage2.get("monthly_uptrend_confirmed", False),
                 })
             except Exception as e:
                 logger.error(f"Watchlist error for {sym}: {e}", exc_info=True)

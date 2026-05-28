@@ -78,6 +78,10 @@ export interface Stage2 {
   rsi_divergence_bullish: boolean;
   bear_flag: boolean;
   breadth_narrow: boolean;
+  monthly_phase: string;
+  monthly_uptrend_confirmed: boolean;
+  monthly_ema10: number | null;
+  pct_from_monthly_ema10: number | null;
 }
 
 export interface DailyData {
@@ -110,6 +114,9 @@ export interface WatchlistItem {
   conviction_label?: string;
   conviction_reliability?: 'high' | 'medium' | 'low';
   conviction_notes?: string[];
+  // 월봉 추세
+  monthly_phase?: string;
+  monthly_uptrend_confirmed?: boolean;
 }
 
 export interface LatestData {

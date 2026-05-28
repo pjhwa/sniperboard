@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-28)
+# SniperBoard — Project Context (UPDATED 2026-05-28 monthly-trend)
 
 ## 0. 이 문서의 목적
 
@@ -41,6 +41,7 @@ sniperboard/
 │       ├── test_signal_engine.py (incl. adjusted vs raw split symbol TDD)
 │       ├── test_conviction_calculator.py (Phase 1 TDD: 3 tests for weighted Conviction v1, RED-GREEN passed 2026-05-25)
 │       └── (service tests: brief/earnings/sentiment — test_sentiment_service.py: fixtures updated with top_news)
+        └── (monthly_trend: new fields in signal_engine + schemas, no dedicated test yet)
 ├── frontend/
 │   ├── package.json              # Next.js 16.2.6, React 19.2.4, TanStack Query 5, Zustand 5, lightweight-charts 4.2.3, Tailwind v4
 │   ├── next.config.ts
@@ -165,6 +166,15 @@ Phase 2 (part of yf-accuracy-harden): long-horizon metrics (52w pcts, RS 63d, EM
 - `market_structure` (UPTREND/DOWNTREND/DISTRIBUTION/ACCUMULATION/NEUTRAL): `detect_market_structure()`
 - `rsi_divergence_bearish/bullish`: `detect_rsi_divergence()` — 최근 40봉 스윙 포인트 비교
 - `bear_flag`: `detect_bear_flag()` — 5%+ 급락 후 거래량 감소 횡보
+
+### 4-6b. 월봉 추세 분석 (`signal_engine.py: calculate_stage2_analysis` 내부)
+
+일봉 252봉을 월봉으로 리샘플링해 **10개월 EMA** 기반 추세를 판별:
+- `monthly_phase`: `CONFIRMED_UPTREND` (월봉 EMA10 위 + 기울기 양) / `WEAKENING` (EMA10 위지만 기울기 음) / `NEUTRAL` (EMA10 ±3% 이내) / `DOWNTREND` / `UNKNOWN` (데이터 부족)
+- `monthly_uptrend_confirmed`: bool — CONFIRMED_UPTREND일 때만 True
+- `monthly_ema10`: 최신 10개월 EMA 값
+- `pct_from_monthly_ema10`: 현재가와 EMA10의 이격률 (%)
+- Stage2Schema + WatchlistItemSchema에 포함. DailyBoard에 배지, WatchlistBoard에 "월봉" 열 표시.
 
 ### 4-6. Risk Regime (`regime_engine.py: compute_regime`)
 

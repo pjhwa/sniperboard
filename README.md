@@ -163,6 +163,7 @@ environment:
 
 - 252봉(1년) 일봉 차트 (EMA8·21·50·200 + 가우시안 채널)
 - Minervini Stage 2 체크리스트 (7항목 / 점수)
+- **월봉 추세 배지**: 일봉 데이터를 월봉으로 리샘플링해 10개월 EMA 기준 추세 판별 (상승확인 / 약화 / 중립 / 하락)
 - 시장 구조 감지 (HH·HL·LH·LL)
 - RSI 다이버전스(상승/하락) + 베어 플래그 패턴 감지
 - 가우시안 채널 상태 (돌파·리테스트·이탈)
@@ -175,7 +176,7 @@ environment:
 ### Watchlist
 
 - TSLA·AAPL·NVDA·META·AMZN·GOOGL Stage 2 점수 내림차순 정렬
-- 컬럼: 가격 · Stage 2 점수 · RS Score · 52주 고점 이격 · 진입/손절/목표가 · 7체크 인디케이터
+- 컬럼: 가격 · Stage 2 점수 · RS Score · 52주 고점 이격 · 진입/손절/목표가 · 7체크 인디케이터 · **월봉** · Conviction
 - 행 클릭 시 해당 종목으로 전환 후 Daily 보드 이동
 
 ### Macro

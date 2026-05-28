@@ -79,6 +79,11 @@ class Stage2Schema(BaseModel):
     rsi_divergence_bullish: bool = False
     bear_flag: bool = False
     breadth_narrow: bool = False
+    # 월봉 추세 (10개월 EMA 기반)
+    monthly_phase: str = 'UNKNOWN'
+    monthly_uptrend_confirmed: bool = False
+    monthly_ema10: Optional[float] = None
+    pct_from_monthly_ema10: Optional[float] = None
 
 class WatchlistItemSchema(BaseModel):
     symbol: str
@@ -97,6 +102,9 @@ class WatchlistItemSchema(BaseModel):
     conviction_label: Optional[str] = None
     conviction_reliability: Optional[str] = None  # high / medium / low
     conviction_notes: Optional[List[str]] = None
+    # 월봉 추세
+    monthly_phase: str = 'UNKNOWN'
+    monthly_uptrend_confirmed: bool = False
 
 class MacroItemSchema(BaseModel):
     symbol: str

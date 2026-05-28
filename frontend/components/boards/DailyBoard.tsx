@@ -27,10 +27,19 @@ const DAILY_GLOSSARY: GlossaryItem[] = [
   { term: 'R:R Ratio 1:3', plain: '리스크 대 보상 비율입니다. 1을 잃을 위험을 감수하고 3을 버는 구조입니다. 이 비율을 지키면 3번 중 1번만 성공해도 전체적으로 손익이 맞습니다.' },
   { term: 'Position (매수 수량)', plain: '계좌 금액과 리스크 %를 입력하면 자동으로 계산되는 권장 매수 주수입니다. 한 번의 손절로 잃는 금액이 계좌의 일정 % 이내가 되도록 조절합니다.' },
   { term: 'Conviction (확신 점수)', plain: 'Stage2 + 시장 심리 + Regime을 종합한 0~100 점수. Regime 환경에 따라 가중치가 자동 조정됩니다. (Phase 1)', color: 'var(--teal)' },
+  { term: '월봉 추세 (Monthly Phase)', plain: '일봉 데이터를 월봉으로 합산해 10개월 EMA 기준으로 추세를 판별합니다. "월봉 상승 확인"이면 월봉 10EMA 위에서 기울기가 우상향인 강세 사이클로, 단기 진입 신호의 신뢰도가 높아집니다.', color: 'var(--bull)' },
 ];
 
 const STRUCT_COLOR: Record<string, string> = {
   UPTREND: 'bull', DOWNTREND: 'bear', DISTRIBUTION: 'warn', ACCUMULATION: 'info', NEUTRAL: 'neutral',
+};
+
+const MONTHLY_PHASE_META: Record<string, { label: string; color: string; bg: string }> = {
+  CONFIRMED_UPTREND: { label: '월봉 상승 확인', color: '#fff', bg: 'var(--bull)' },
+  WEAKENING:         { label: '월봉 추세 약화', color: '#000', bg: 'var(--warn)' },
+  NEUTRAL:           { label: '월봉 중립',      color: 'var(--fg)', bg: 'var(--border)' },
+  DOWNTREND:         { label: '월봉 하락',       color: '#fff', bg: 'var(--bear)' },
+  UNKNOWN:           { label: '월봉 데이터 부족', color: 'var(--fg-muted)', bg: 'var(--border-soft)' },
 };
 
 export function DailyBoard() {
@@ -130,6 +139,35 @@ export function DailyBoard() {
                 </div>
               </div>
             </div>
+
+            {/* 월봉 추세 */}
+            {(() => {
+              const mp = stage2.monthly_phase ?? 'UNKNOWN';
+              const meta = MONTHLY_PHASE_META[mp] ?? MONTHLY_PHASE_META.UNKNOWN;
+              return (
+                <div style={{
+                  marginTop: 8,
+                  padding: '5px 10px',
+                  borderRadius: 6,
+                  background: meta.bg,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: meta.color }}>
+                    {meta.label}
+                  </span>
+                  {stage2.monthly_ema10 != null && (
+                    <span style={{ fontSize: 10.5, color: meta.color, opacity: 0.85 }} className="mono">
+                      EMA10 ${stage2.monthly_ema10.toFixed(2)}
+                      {stage2.pct_from_monthly_ema10 != null && (
+                        <> · {stage2.pct_from_monthly_ema10 > 0 ? '+' : ''}{stage2.pct_from_monthly_ema10.toFixed(1)}%</>
+                      )}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Phase 1: Conviction - integrated in Stage 2 card */}
             {dailyData?.conviction_score != null && (

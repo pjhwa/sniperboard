@@ -64,6 +64,7 @@ export function WatchlistBoard() {
                   <th>Stop</th>
                   <th>Target</th>
                   <th>Checks</th>
+                  <th>월봉</th>
                   <th>Conviction</th>
                   <th></th>
                 </tr>
@@ -97,6 +98,20 @@ export function WatchlistBoard() {
                           <div key={i} style={{ width: 8, height: 8, borderRadius: 2, background: c ? 'var(--bull)' : 'var(--border)' }} />
                         ))}
                       </div>
+                    </td>
+                    <td>
+                      {(() => {
+                        const mp = w.monthly_phase ?? 'UNKNOWN';
+                        const cfg: Record<string, { short: string; color: string }> = {
+                          CONFIRMED_UPTREND: { short: '↑확인', color: 'var(--bull)' },
+                          WEAKENING:         { short: '↓약화', color: 'var(--warn)' },
+                          NEUTRAL:           { short: '중립',  color: 'var(--fg-muted)' },
+                          DOWNTREND:         { short: '↓하락', color: 'var(--bear)' },
+                          UNKNOWN:           { short: '—',     color: 'var(--fg-subtle)' },
+                        };
+                        const c = cfg[mp] ?? cfg.UNKNOWN;
+                        return <span style={{ fontSize: 11, fontWeight: 600, color: c.color }}>{c.short}</span>;
+                      })()}
                     </td>
                     <td>
                       <div style={{ 

@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 def ema(series: pd.Series, period: int) -> pd.Series:
     return series.ewm(span=period, adjust=False).mean()
@@ -416,6 +416,37 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None, rsp
         rsp_at_high = float(rsp_close.iloc[-1]) >= float(rsp_close.iloc[-20:].max()) * 0.999
         breadth_narrow = bool(spy_at_high and not rsp_at_high)
 
+    # 월봉 추세 분석: 일봉 데이터를 월봉으로 리샘플링해 10개월 EMA 기반 추세 판별
+    monthly_phase = 'UNKNOWN'
+    monthly_uptrend_confirmed = False
+    monthly_ema10_val: Optional[float] = None
+    pct_from_monthly_ema10: Optional[float] = None
+    try:
+        close_for_monthly = price_for_long if has_adj else close
+        if hasattr(close_for_monthly.index, 'to_period'):
+            monthly_close = close_for_monthly.resample('ME').last().dropna()
+            if len(monthly_close) >= 6:
+                m_ema10 = ema(monthly_close, min(10, len(monthly_close)))
+                latest_mc = float(monthly_close.iloc[-1])
+                latest_me10 = float(m_ema10.iloc[-1])
+                monthly_ema10_val = round(latest_me10, 2)
+                pct_from_monthly_ema10 = round((latest_mc - latest_me10) / latest_me10 * 100, 2) if latest_me10 != 0 else 0.0
+                # 3개월 기울기로 추세 방향 판단
+                slope_bars = min(3, len(m_ema10) - 1)
+                prev_me10 = float(m_ema10.iloc[-1 - slope_bars])
+                ema10_slope_pct = (latest_me10 - prev_me10) / prev_me10 * 100 if prev_me10 != 0 else 0.0
+                if latest_mc > latest_me10 and ema10_slope_pct > 0:
+                    monthly_phase = 'CONFIRMED_UPTREND'
+                    monthly_uptrend_confirmed = True
+                elif latest_mc > latest_me10 and ema10_slope_pct <= 0:
+                    monthly_phase = 'WEAKENING'
+                elif abs(pct_from_monthly_ema10) < 3.0:
+                    monthly_phase = 'NEUTRAL'
+                else:
+                    monthly_phase = 'DOWNTREND'
+    except Exception:
+        pass
+
     return {
         'checks': checks,
         'score': score,
@@ -451,4 +482,9 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None, rsp
         'rsi_divergence_bullish': rsi_div['bullish'],
         'bear_flag':            bear_flag,
         'breadth_narrow':       breadth_narrow,
+        # 월봉 추세 (10개월 EMA 기반)
+        'monthly_phase':             monthly_phase,
+        'monthly_uptrend_confirmed': monthly_uptrend_confirmed,
+        'monthly_ema10':             monthly_ema10_val,
+        'pct_from_monthly_ema10':    pct_from_monthly_ema10,
     }
