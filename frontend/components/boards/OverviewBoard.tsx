@@ -5,14 +5,11 @@ import { useRegime } from '@/hooks/useRegime';
 import { useDistributionDays } from '@/hooks/useDistributionDays';
 import { useMacro } from '@/hooks/useMacro';
 import { useWatchlist } from '@/hooks/useWatchlist';
-import { useIntraday } from '@/hooks/useIntraday';
-import { useDaily } from '@/hooks/useDaily';
 import { Card, ScorePill } from '@/components/ui/Card';
 import { RadialGauge } from '@/components/ui/RadialGauge';
-import { Sparkline } from '@/components/ui/Sparkline';
-import { HeatStrip } from '@/components/ui/HeatStrip';
 import { Sparkle } from '@/components/ui/Icons';
 import { MacroItem, RegimeDiagnostics, UpcomingEarning, EARNINGS_RISK_META, FreshnessMeta } from '@/app/types';
+import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
 import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
 import { useBrief } from '@/hooks/useBrief';
 import { useEarnings } from '@/hooks/useEarnings';
@@ -43,14 +40,6 @@ const REGIME_LABELS: Record<string, [string, string]> = {
   UNKNOWN:      ['Unknown',      '불명'],
 };
 
-const SIGNAL_BADGE: Record<string, [string, string]> = {
-  sniper:       ['bull',   'Sniper'],
-  vcp:          ['info',   'VCP'],
-  pullback:     ['warn',   'Pullback'],
-  strong_trend: ['teal',   'StrongTrend'],
-  overbought:   ['warn',   'Overbought'],
-  downtrend:    ['bear',   'Downtrend'],
-};
 
 // Minimal freshness badge helper (Phase 4) — uses existing CSS vars + .badge.neutral patterns. No new styles.
 function FreshnessBadge({ meta }: { meta?: FreshnessMeta | null }) {
@@ -80,13 +69,11 @@ function findMacro(macro: MacroItem[], sym: string) {
 }
 
 export function OverviewBoard() {
-  const { symbol, timeframe } = useStore();
+  const { symbol } = useStore();
   const { regimeData } = useRegime();
   const { ddData } = useDistributionDays();
   const { macroData } = useMacro();
   const { watchlist } = useWatchlist();
-  const { ohlcvData } = useIntraday(symbol, timeframe);
-  const { dailyData } = useDaily(symbol);
 
   const macro = macroData?.macro ?? [];
   const vix   = findMacro(macro, '^VIX');
@@ -102,30 +89,6 @@ export function OverviewBoard() {
 
   const { briefData, briefMeta } = useBrief();
   const { earningsData, earningsMeta } = useEarnings();
-
-  const candles = ohlcvData?.candles ?? [];
-  const signals = ohlcvData?.signals;
-  const indicators = ohlcvData?.indicators;
-  const lastCandle = candles[candles.length - 1];
-  const lastIdx = candles.length - 1;
-
-  const activeSignals = signals
-    ? ['sniper', 'vcp', 'pullback', 'strong_trend', 'overbought', 'downtrend'].filter(
-        k => signals[k as keyof typeof signals][lastIdx]
-      )
-    : [];
-
-  const dailyCandles = dailyData?.candles ?? [];
-  const dailyChg = dailyCandles.slice(-61).map((c, i, arr) => {
-    if (i === 0) return 0;
-    return ((c.close - arr[i - 1].close) / arr[i - 1].close) * 100;
-  }).slice(1); // 첫 번째 0 제거 → 60거래일 순수 등락률
-
-  const upDays   = dailyChg.filter(v => v > 0.05).length;
-  const downDays = dailyChg.filter(v => v < -0.05).length;
-  const avgChg   = dailyChg.length ? dailyChg.reduce((a, b) => a + b, 0) / dailyChg.length : 0;
-  const maxGain  = dailyChg.length ? Math.max(...dailyChg) : 0;
-  const maxLoss  = dailyChg.length ? Math.min(...dailyChg) : 0;
 
   // 백워데이션: VIX9D(9일) > VIX(30일) — 단기 변동성이 장기보다 높아 역전된 상태
   const backward = vix && vix9d ? vix.price !== null && vix9d.price !== null && (vix9d.price ?? 0) > (vix.price ?? 0) : false;
@@ -444,79 +407,70 @@ export function OverviewBoard() {
         })}
       </Card>
 
-      {/* Symbol mini intraday */}
-      <Card title={`${symbol} · Intraday`} hint={activeSignals.length ? 'LIVE' : null} action="5m">
-        {lastCandle ? (
-          <>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
-              <div className="mono" style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em' }}>
-                ${lastCandle.close.toFixed(2)}
-              </div>
-              {activeSignals.slice(0, 2).map(s => {
-                const meta = SIGNAL_BADGE[s];
-                return meta ? <span key={s} className={'badge ' + meta[0]}>● {meta[1]}</span> : null;
+      {/* 진입 레이더 */}
+      <Card title="진입 레이더" action="Entry 근접순">
+        {watchlist.length === 0 ? (
+          <div className="subtle">로딩 중...</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {[...watchlist]
+              .map(w => ({ ...w, entryDist: w.entry > 0 ? (w.entry - w.price) / w.price * 100 : 999 }))
+              .sort((a, b) => a.entryDist - b.entryDist)
+              .map(w => {
+                const inZone = w.entryDist > 0 && w.entryDist <= 5;
+                const broken = w.entryDist <= 0;
+                return (
+                  <div key={w.symbol} style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '5px 8px', borderRadius: 6,
+                    background: inZone ? 'var(--em-soft)' : 'transparent',
+                  }}>
+                    <span style={{ fontWeight: 600, width: 46, fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>
+                      {w.symbol}
+                    </span>
+                    <ScorePill score={w.score} />
+                    <span style={{ flex: 1 }} />
+                    <span style={{
+                      fontSize: 11, fontWeight: 600,
+                      color: broken ? 'var(--bull)' : inZone ? 'var(--em-500)' : w.entryDist > 15 ? 'var(--fg-subtle)' : 'var(--fg)',
+                    }}>
+                      {broken
+                        ? <span className="badge bull" style={{ fontSize: 10 }}>돌파</span>
+                        : `+${w.entryDist.toFixed(1)}%`}
+                    </span>
+                  </div>
+                );
               })}
+            <div style={{ fontSize: 9.5, color: 'var(--fg-subtle)', marginTop: 4, paddingTop: 4, borderTop: '1px solid var(--border-soft)' }}>
+              ≤5% = 진입 가능 Zone
             </div>
-            {candles.length > 1 && (
-              <Sparkline values={candles.slice(-60).map(c => c.close)} width={220} height={52} strokeWidth={1.6} />
-            )}
-            <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 11 }}>
-              {indicators && (
-                <>
-                  <div><span className="subtle">RSI </span><span className="mono">{(indicators.rsi[lastIdx] ?? 0).toFixed(0)}</span></div>
-                  <div><span className="subtle">EMA21 </span><span className="mono">${(indicators.ema21[lastIdx] ?? 0).toFixed(2)}</span></div>
-                  <div><span className="subtle">ATR </span><span className="mono">{(indicators.atr[lastIdx] ?? 0).toFixed(2)}</span></div>
-                </>
-              )}
-            </div>
-          </>
-        ) : <div className="subtle">로딩 중...</div>}
+          </div>
+        )}
       </Card>
 
-      {/* Daily Heat Strip */}
-      <Card title="Daily Heat · 60d" action={symbol}>
-        {dailyChg.length > 0 ? (
-          <>
-            {/* 요약 통계 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-              <span className="badge bull" style={{ fontSize: 10.5 }}>↑ {upDays}일 상승</span>
-              <span className="badge bear" style={{ fontSize: 10.5 }}>↓ {downDays}일 하락</span>
-              <span style={{ marginLeft: 'auto', fontSize: 10.5, color: avgChg >= 0 ? 'var(--bull)' : 'var(--bear)' }} className="mono">
-                평균 {avgChg >= 0 ? '+' : ''}{avgChg.toFixed(2)}%/일
-              </span>
-            </div>
-
-            {/* 타임라인 레이블 */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9.5, color: 'var(--fg-subtle)', marginBottom: 3 }}>
-              <span>← 60일 전</span>
-              <span>오늘 →</span>
-            </div>
-
-            {/* 열 지도 (3행 × 20열 = 60거래일) */}
-            <HeatStrip values={dailyChg} cols={20} rows={3} />
-
-            {/* 범례 + 최대 등락 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, fontSize: 10, color: 'var(--fg-subtle)', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--bear)', opacity: 0.85 }} />
-                <span>하락</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--bg-subtle)', border: '1px solid var(--border)' }} />
-                <span>보합</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--bull)', opacity: 0.85 }} />
-                <span>상승 · 진할수록 큰 변동</span>
-              </div>
-              <span style={{ marginLeft: 'auto' }}>
-                <span style={{ color: 'var(--bull)' }}>최대 +{maxGain.toFixed(1)}%</span>
-                {' / '}
-                <span style={{ color: 'var(--bear)' }}>{maxLoss.toFixed(1)}%</span>
-              </span>
-            </div>
-          </>
-        ) : <div className="subtle">로딩 중...</div>}
+      {/* Conviction 리더보드 */}
+      <Card title="Conviction 리더보드" action="확신도 순">
+        {watchlist.length === 0 ? (
+          <div className="subtle">로딩 중...</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {[...watchlist]
+              .sort((a, b) => (b.conviction_score ?? 0) - (a.conviction_score ?? 0))
+              .map(w => {
+                const s = w.conviction_score ?? 0;
+                const color = s >= 65 ? 'var(--bull)' : s >= 50 ? 'var(--teal)' : s >= 35 ? 'var(--warn)' : 'var(--bear)';
+                return (
+                  <div key={w.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
+                    <span style={{ fontWeight: 600, width: 46, fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>{w.symbol}</span>
+                    <div className="bar" style={{ flex: 1 }}>
+                      <div className="bar__fill" style={{ width: `${s}%`, background: color }} />
+                    </div>
+                    <ConvictionBadge score={w.conviction_score ?? undefined} label={w.conviction_label} size="sm" />
+                  </div>
+                );
+              })}
+          </div>
+        )}
       </Card>
 
       {/* Sector Momentum */}
@@ -573,11 +527,7 @@ export function OverviewBoard() {
               <div className="mono" style={{ fontSize: 11.5 }}>${w.price.toFixed(2)}</div>
             </div>
             <ScorePill score={w.score} />
-            {w.conviction_score != null && (
-              <span style={{ fontSize: 10, marginLeft: 4, color: w.conviction_score >= 65 ? 'var(--bull)' : 'var(--teal)' }}>
-                C:{w.conviction_score}
-              </span>
-            )}
+            <ConvictionBadge score={w.conviction_score ?? undefined} size="sm" />
           </div>
         ))}
         {watchlist.length === 0 && <div className="subtle">로딩 중...</div>}
