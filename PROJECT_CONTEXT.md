@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-28 prepost-market)
+# SniperBoard — Project Context (UPDATED 2026-05-28 dashboard-dedup)
 
 ## 0. 이 문서의 목적
 
@@ -61,12 +61,13 @@ sniperboard/
 │   │   ├── ui/
 │   │   │   ├── Icons.tsx         # SVG 아이콘 (Crosshair, Activity, Candles, Eye, Globe, Heart 등)
 │   │   │   ├── Card.tsx          # Card/ScorePill 래퍼 컴포넌트
+│   │   │   ├── ConvictionBadge.tsx # Conviction 점수 배지 (score/label/size props). score≥65=bull, ≥50=teal, ≥35=warn, <35=bear. size sm/md. 6군데 통일 적용(2026-05-28).
 │   │   │   ├── Sparkline.tsx     # Canvas 기반 스파크라인
 │   │   │   ├── RadialGauge.tsx   # Canvas 기반 라디얼 게이지
 │   │   │   └── HeatStrip.tsx     # CSS 기반 히트맵 스트립
 │   │   ├── boards/               # 7개 보드 컴포넌트 (실제 훅 사용)
-│   │   │   ├── OverviewBoard.tsx # 시장 개요: AI Insight + Regime + DD + Breadth + VIX + Credit + 종목 미니
-│   │   │   ├── DeepDiveBoard.tsx # 종합분석 (2026-05-28 v2, 검증완료): 5-Row 레이아웃. Row1(span2)=종목선택+가격+배지. PRE/POST 가격 표시 추가 (usePrePost). Row2=DailyChart(3fr)|Stage2체크2col+KPI2×2(2fr). Row3=DailyHeat(3fr)|R:R진입계획(2fr). Row4(span2→3×1fr,stretch)=소셜심리|AI Brief|실적(없으면recent_result로채움). Row5=Regime가로레이아웃(3fr)|시장전체심리ScoreBar(2fr). ScoreBar csColor 버그 수정(var(--emerald)→var(--bull)). 카드겹침버그 수정(2026-05-28): board style에 gridAutoRows:'max-content'+alignContent:'start' 추가 — flex:1 고정높이 컨테이너에서 CSS Grid auto행이 min-content로 축소되어 데이터 로딩 후 카드가 다음 행으로 침범하는 문제 해소.
+│   │   │   ├── OverviewBoard.tsx # 시장 개요: AI Insight + Regime + DD + Breadth + VIX + Credit + 진입레이더 + Conviction리더보드 + Sector + Watchlist Top3. useIntraday/useDaily 제거(2026-05-28 dedup).
+│   │   │   ├── DeepDiveBoard.tsx # 종합분석 (2026-05-28 v3): 5-Row 레이아웃. Row1(span2)=종목선택(패딩축소)+가격+KPI3개(1D변화/일중위치/EMA21이격)+배지. Row2=DailyChart(3fr)|Stage2체크2col+KPI2×2(2fr). Row3=세력참여도분석(3fr)|R:R진입계획(2fr). Row4(span2→3×1fr)=소셜심리|AI Brief|실적. Row5=Regime(3fr)|시장전체심리(2fr). ConvictionBadge 통일 적용. 세력참여도: dailyData.candles 프론트엔드 계산(Up/Down Vol비율+거래량추세+집중일+세력점수0-100+10일acc/dist그리드).
 │   │   │   ├── IntradayBoard.tsx # 단기: IntradayChart + 활성신호 + RSI + 액션바
 │   │   │   ├── DailyBoard.tsx    # 일봉: DailyChart + Stage2 체크리스트 + R:R 패널
 │   │   │   ├── WatchlistBoard.tsx # 워치리스트: Stage2 정렬 테이블
@@ -295,8 +296,8 @@ SYMBOLS 버튼 | 현재가 + RSI + EMA21 + 스파크라인(60봉) | 우측: Stag
 | Market Breadth | 1 | `useMacro` | SPY·RSP·MAGS·IWM 5D 수익률 바 + 협소 랠리 경고 |
 | Volatility · VIX | 1 | `useMacro` | ^VIX + ^VIX9D 레벨 + rsi-gauge 바 + 백워데이션 감지 |
 | Credit Stress | 1 | `useMacro` | HYG·JNK·LQD·IEF 가격·5D 변화율 |
-| Symbol Intraday | 1 | `useIntraday` | 선택 종목 5분봉 Sparkline + 활성 신호 배지 + RSI/EMA21/ATR |
-| Daily Heat · 60d | 1 | `useDaily` | HeatStrip(3행×20열) + 상승/하락일 통계 |
+| 진입 레이더 | 1 | `useWatchlist` | 6종목 Entry까지 거리% 오름차순. ≤5% = em-soft 강조. 이미 돌파시 "돌파" 배지. (2026-05-28 교체) |
+| Conviction 리더보드 | 1 | `useWatchlist` | 6종목 conviction_score 내림차순 바차트 + ConvictionBadge. (2026-05-28 교체) |
 | Sector Momentum | 1 | `useMacro` | SMH·XLE·XLY·XHB·ITA 5D 수익률 순위 바 + EMA21 위/아래 |
 | Watchlist Top 3 | 1 | `useWatchlist` | Stage 2 점수 상위 3종목 미리보기 |
 
