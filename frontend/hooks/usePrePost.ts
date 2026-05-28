@@ -8,12 +8,13 @@ const fetchPrePost = async (symbol: string): Promise<PrePostData> => {
 };
 
 export function usePrePost(symbol: string) {
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, isRefetching, error } = useQuery<PrePostData>({
     queryKey: ['prepost', symbol],
     queryFn: () => fetchPrePost(symbol),
     refetchInterval: 60_000,
     staleTime: 55_000,
+    retry: 2,
   });
 
-  return { prePostData: data, isLoading, isError };
+  return { prePostData: data, isLoading, isError, isRefetching, error };
 }
