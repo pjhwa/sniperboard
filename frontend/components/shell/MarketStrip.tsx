@@ -3,6 +3,7 @@
 import { useStore } from '@/hooks/useStore';
 import { useMacro } from '@/hooks/useMacro';
 import { useIntraday } from '@/hooks/useIntraday';
+import { usePrePost } from '@/hooks/usePrePost';
 import { Sparkline } from '@/components/ui/Sparkline';
 
 const STRIP_SYMBOLS = ['SPY', 'QQQ', 'IWM', '^VIX', 'DX-Y.NYB', 'GLD', 'CL=F'];
@@ -11,6 +12,7 @@ export function MarketStrip() {
   const { symbol, timeframe } = useStore();
   const { macroData } = useMacro();
   const { ohlcvData } = useIntraday(symbol, timeframe);
+  const { prePostData } = usePrePost(symbol);
 
   const macro = macroData?.macro ?? [];
   const items = STRIP_SYMBOLS.map(s => macro.find(m => m.symbol === s)).filter(Boolean) as typeof macro;
@@ -42,6 +44,28 @@ export function MarketStrip() {
             <div className="mono" style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.02em' }}>
               ${lastCandle.close.toFixed(2)}
             </div>
+            {prePostData && prePostData.market_state !== 'REGULAR' && (() => {
+              const isPre = prePostData.market_state === 'PRE';
+              const price = isPre ? prePostData.pre_market_price : prePostData.post_market_price;
+              const chgPct = isPre ? prePostData.pre_market_change_pct : prePostData.post_market_change_pct;
+              if (price == null) return null;
+              const up = (chgPct ?? 0) >= 0;
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
+                  <span style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {isPre ? 'PRE' : 'POST'}
+                  </span>
+                  <span className="mono" style={{ fontSize: 11, fontWeight: 600 }}>
+                    ${price.toFixed(2)}
+                  </span>
+                  {chgPct != null && (
+                    <span style={{ fontSize: 10, color: up ? 'var(--bull)' : 'var(--bear)' }}>
+                      {up ? '+' : ''}{chgPct.toFixed(2)}%
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
           </div>
           {sparkValues.length > 1 && (
             <Sparkline values={sparkValues} width={72} height={28} />
