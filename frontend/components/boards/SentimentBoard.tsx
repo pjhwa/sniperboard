@@ -163,9 +163,10 @@ export function SentimentBoard() {
   const symbols = latest.symbols ?? [];
 
   return (
-    <div className="board fade-in" style={{ gridTemplateColumns: '380px 1fr', gridTemplateRows: 'auto 1fr auto', alignContent: 'start', position: 'relative' }}>
+    <div className="board-wrap">
       <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
       <BoardGuidePanel title="Sentiment 가이드" sections={SENTIMENT_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+    <div className="board fade-in" style={{ gridTemplateColumns: '380px 1fr', gridTemplateRows: 'auto 1fr auto', alignContent: 'start' }}>
       {/* 시장 전체 */}
       <Card title="Market Sentiment" action={formatDateTime(market?.as_of)} info={G.composite_score}>
         {market ? (
@@ -333,6 +334,7 @@ export function SentimentBoard() {
         )}
       </Card>
 
+    </div>
     </div>
   );
 }

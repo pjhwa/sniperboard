@@ -220,12 +220,13 @@ export function DeepDiveBoard() {
   //         2fr : 시장 전체 심리
   // ───────────────────────────────────────────────────────────────────────────
   return (
-    <div
-      className="board fade-in"
-      style={{ gridTemplateColumns: '3fr 2fr', alignItems: 'start', alignContent: 'start', gridAutoRows: 'max-content', position: 'relative' }}
-    >
+    <div className="board-wrap">
       <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
       <BoardGuidePanel title="DeepDive 가이드" sections={DEEPDIVE_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+    <div
+      className="board fade-in"
+      style={{ gridTemplateColumns: '3fr 2fr', alignItems: 'start', alignContent: 'start', gridAutoRows: 'max-content' }}
+    >
 
       {/* ════════════════════════════════════════════════════════════════
           ROW 1 — Zone 0: 종목 선택 + 가격 + 상황 배지
@@ -942,6 +943,7 @@ export function DeepDiveBoard() {
         </div>
       </div>
 
+    </div>
     </div>
   );
 }

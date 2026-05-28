@@ -64,12 +64,13 @@ export function DailyBoard() {
   const stopLossPct = entry > 0 ? ((entry - stop) / entry) * 100 : 0;
 
   return (
-    <div
-      className="board fade-in"
-      style={{ gridTemplateColumns: '1fr 340px', gridTemplateRows: 'auto 1fr auto', position: 'relative' }}
-    >
+    <div className="board-wrap">
       <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
       <BoardGuidePanel title="Daily 가이드" sections={DAILY_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+    <div
+      className="board fade-in"
+      style={{ gridTemplateColumns: '1fr 340px', gridTemplateRows: 'auto 1fr auto' }}
+    >
       {/* Daily chart */}
       <div className="card" style={{ gridRow: 'span 2' }}>
         <div className="card__hd">
@@ -243,6 +244,7 @@ export function DailyBoard() {
         )}
       </Card>
 
+    </div>
     </div>
   );
 }

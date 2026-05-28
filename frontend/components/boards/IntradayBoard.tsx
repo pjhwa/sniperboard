@@ -87,12 +87,13 @@ export function IntradayBoard() {
   }
 
   return (
-    <div
-      className="board fade-in"
-      style={{ gridTemplateColumns: '1fr 300px', gridTemplateRows: 'auto 1fr auto', position: 'relative' }}
-    >
+    <div className="board-wrap">
       <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
       <BoardGuidePanel title="Intraday 가이드" sections={INTRADAY_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+    <div
+      className="board fade-in"
+      style={{ gridTemplateColumns: '1fr 300px', gridTemplateRows: 'auto 1fr auto' }}
+    >
       {/* Chart */}
       <div className="card" style={{ gridRow: 'span 2' }}>
         <div className="card__hd">
@@ -266,6 +267,7 @@ export function IntradayBoard() {
         </div>
       )}
 
+    </div>
     </div>
   );
 }

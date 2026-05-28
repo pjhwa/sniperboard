@@ -51,9 +51,10 @@ export function WatchlistBoard() {
   const maxRange  = Math.max(maxRisk, maxReward);
 
   return (
-    <div className="board fade-in" style={{ gridTemplateColumns: '1fr 1fr 1fr', alignContent: 'start', position: 'relative' }}>
+    <div className="board-wrap">
       <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
       <BoardGuidePanel title="Watchlist 가이드" sections={WATCHLIST_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+    <div className="board fade-in" style={{ gridTemplateColumns: '1fr 1fr 1fr', alignContent: 'start' }}>
 
       {/* 메인 테이블 — 3컬럼 전체 */}
       <div style={{ gridColumn: 'span 3' }}>
@@ -249,6 +250,7 @@ export function WatchlistBoard() {
         )}
       </Card>
 
+    </div>
     </div>
   );
 }

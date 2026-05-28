@@ -96,11 +96,18 @@ export function OverviewBoard() {
   const backward = vix && vix9d ? vix.price !== null && vix9d.price !== null && (vix9d.price ?? 0) > (vix.price ?? 0) : false;
 
   return (
+    <div className="board-wrap">
+      <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
+      <BoardGuidePanel
+        title="Overview 가이드"
+        sections={OVERVIEW_GUIDE}
+        isOpen={guideOpen}
+        onClose={() => setGuideOpen(false)}
+      />
     <div
       className="board fade-in"
-      style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', gridTemplateRows: 'auto auto auto auto', alignContent: 'start', position: 'relative' }}
+      style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', gridTemplateRows: 'auto auto auto auto', alignContent: 'start' }}
     >
-      <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
       {/* AI Insight — span 2 */}
       <div style={{ gridColumn: 'span 2' }}>
         <div className="ai-card">
@@ -549,12 +556,7 @@ export function OverviewBoard() {
         {watchlist.length === 0 && <div className="subtle">로딩 중...</div>}
       </Card>
 
-      <BoardGuidePanel
-        title="Overview 가이드"
-        sections={OVERVIEW_GUIDE}
-        isOpen={guideOpen}
-        onClose={() => setGuideOpen(false)}
-      />
+    </div>
     </div>
   );
 }

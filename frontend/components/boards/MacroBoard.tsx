@@ -50,9 +50,10 @@ export function MacroBoard() {
   const maxAbs = sectorItems.length ? Math.max(...sectorItems.map(s => Math.abs(s.change_pct_1d ?? 0))) || 1 : 1;
 
   return (
-    <div className="board fade-in" style={{ gridTemplateColumns: '1fr 1fr 1fr', gridAutoRows: 'min-content', position: 'relative' }}>
+    <div className="board-wrap">
       <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
       <BoardGuidePanel title="Macro 가이드" sections={MACRO_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+    <div className="board fade-in" style={{ gridTemplateColumns: '1fr 1fr 1fr', gridAutoRows: 'min-content' }}>
       {/* Sector rotation */}
       <div style={{ gridColumn: 'span 3' }}>
         <Card title="Sector Rotation · 1D" action="섹터별 상대 강도" info={G.sector_momentum}>
@@ -114,6 +115,7 @@ export function MacroBoard() {
         );
       })}
 
+    </div>
     </div>
   );
 }
