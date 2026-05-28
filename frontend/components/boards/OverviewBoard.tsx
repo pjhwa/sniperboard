@@ -8,7 +8,7 @@ import { useWatchlist } from '@/hooks/useWatchlist';
 import { Card, ScorePill } from '@/components/ui/Card';
 import { RadialGauge } from '@/components/ui/RadialGauge';
 import { Sparkle } from '@/components/ui/Icons';
-import { MacroItem, RegimeDiagnostics, UpcomingEarning, EARNINGS_RISK_META, FreshnessMeta } from '@/app/types';
+import { MacroItem, RegimeDiagnostics, UpcomingEarning, EARNINGS_RISK_META, FreshnessMeta, SYMBOLS, SymbolBrief } from '@/app/types';
 import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
 import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
 import { useBrief } from '@/hooks/useBrief';
@@ -160,7 +160,7 @@ export function OverviewBoard() {
             )}
 
             {/* Symbol Briefs — Action Bias 신호강도 미터 */}
-            {briefData?.symbol_briefs && briefData.symbol_briefs.length > 0 && (
+            {briefData && (
               <div style={{ borderTop: '1px solid var(--border-soft)', marginTop: 10, paddingTop: 8 }}>
                 <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
                   종목별 AI 분석
@@ -170,7 +170,21 @@ export function OverviewBoard() {
                   const BIAS_COLORS = ['var(--bear)', 'var(--warn)', 'var(--teal)', 'var(--bull)'];
                   const BIAS_LABELS: Record<string, string> = { buy: '매수', hold: '보유', watch: '관망', avoid: '회피' };
 
-                  const renderItem = (sb: typeof briefData.symbol_briefs[number]) => {
+                  const briefMap = new Map((briefData.symbol_briefs ?? []).map(sb => [sb.symbol, sb]));
+                  const items: (SymbolBrief | { symbol: string; pending: true })[] = SYMBOLS.map(sym =>
+                    briefMap.get(sym) ?? { symbol: sym, pending: true as const }
+                  );
+
+                  const renderItem = (item: typeof items[number]) => {
+                    if ('pending' in item) {
+                      return (
+                        <div key={item.symbol} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
+                          <span style={{ fontWeight: 700, width: 42, fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>{item.symbol}</span>
+                          <span style={{ fontSize: 10, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>분석 준비 중</span>
+                        </div>
+                      );
+                    }
+                    const sb = item as SymbolBrief;
                     const gradeColor =
                       sb.setup_quality === 'A+' || sb.setup_quality === 'A' ? 'var(--bull)' :
                       sb.setup_quality === 'B' ? 'var(--teal)' :
@@ -197,7 +211,6 @@ export function OverviewBoard() {
                     );
                   };
 
-                  const items = briefData.symbol_briefs!;
                   const mid = Math.ceil(items.length / 2);
                   return (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
