@@ -85,7 +85,7 @@ def test_prepost_returns_nulls_on_exception():
 
     assert result["pre_market_price"] is None
     assert result["post_market_price"] is None
-    assert result["market_state"] in ("CLOSED", "UNKNOWN")
+    assert result["market_state"] == "CLOSED"
 
 
 def test_prepost_regular_market_returns_no_prepost_prices():

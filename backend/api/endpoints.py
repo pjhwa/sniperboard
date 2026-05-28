@@ -56,8 +56,9 @@ def _freshness_meta(generated_at: Optional[str] = None) -> dict:
 
 def _fetch_prepost_data(symbol: str) -> dict:
     """Fetch pre/after-market price. Primary: ticker.info. Fallback: history(prepost=True)."""
+    symbol = symbol.strip().upper()
     result = {
-        "symbol": symbol.upper(),
+        "symbol": symbol,
         "market_state": "CLOSED",
         "pre_market_price": None,
         "pre_market_change_pct": None,
@@ -72,7 +73,7 @@ def _fetch_prepost_data(symbol: str) -> dict:
         market_state = info.get("marketState", "CLOSED")
         result["market_state"] = market_state if market_state in ("PRE", "POST", "REGULAR", "CLOSED") else "CLOSED"
 
-        regular_close = info.get("regularMarketPrice")
+        regular_close = info.get("regularMarketPreviousClose") or info.get("regularMarketPrice")
         result["regular_close"] = regular_close
 
         pre_price = info.get("preMarketPrice")
@@ -88,8 +89,8 @@ def _fetch_prepost_data(symbol: str) -> dict:
                         pre_price = last_close
                     else:
                         post_price = last_close
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"prepost history fallback failed for {symbol}: {e}")
 
         if pre_price is not None and regular_close:
             result["pre_market_price"] = float(pre_price)
@@ -103,8 +104,8 @@ def _fetch_prepost_data(symbol: str) -> dict:
                 (float(post_price) - float(regular_close)) / float(regular_close) * 100, 3
             )
 
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"prepost fetch failed for {symbol}: {e}")
 
     return result
 
