@@ -335,3 +335,13 @@ class SentimentHistoryResponse(BaseModel):
     symbol: str
     days: int
     points: List[SentimentHistoryPoint]
+
+
+class PrePostResponse(BaseModel):
+    symbol: str
+    market_state: str  # "PRE" | "POST" | "REGULAR" | "CLOSED"
+    pre_market_price: Optional[float] = None
+    pre_market_change_pct: Optional[float] = None
+    post_market_price: Optional[float] = None
+    post_market_change_pct: Optional[float] = None
+    regular_close: Optional[float] = None
