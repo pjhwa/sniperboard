@@ -20,6 +20,9 @@ import {
   UpcomingEarning, RecentResult, SymbolBrief, TopNews,
 } from '@/app/types';
 import { SentimentTrendChart } from './SentimentTrendChart';
+import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
+import { InfoPopover } from '@/components/ui/InfoPopover';
+import { G } from '@/app/glossary';
 
 // ─── 색상 헬퍼 ─────────────────────────────────────────────────────────────────
 // var(--emerald/orange/red) 은 globals.css 에 없음 → bull/orange-literal/bear 사용
@@ -97,11 +100,29 @@ function TopNewsBox({ news }: { news: TopNews | null | undefined }) {
   );
 }
 
+// ─── 가이드 섹션 ────────────────────────────────────────────────────────────────
+
+const DEEPDIVE_GUIDE: GuideSection[] = [
+  {
+    heading: '이 화면은',
+    body: '선택한 종목의 모든 분석 지표를 한 화면에서 심층 검토하는 종합 분석 화면입니다. 진입 결정 전 최종 확인 화면으로 사용합니다.',
+  },
+  {
+    heading: '핵심 지표 읽는 법',
+    body: 'Row1 배지(Stage2/Conviction/월봉/구조)가 전체 품질을 요약합니다. Row2 KPI 4개(RS Score, 52W 이격, 조정폭, EMA200 기울기)가 Stage2 조건의 핵심. Row3 좌측 세력참여도에서 기관 매집 여부를, 우측 R:R에서 트레이드 계획을 확인합니다.',
+  },
+  {
+    heading: '지금 이렇게 쓰세요',
+    body: 'Row1 배지 전체 확인 → Row2 KPI(RS≥70, 조정≤10%) → Row3 세력참여도(세력점수≥60이면 매집 우위) → Row3 R:R(1:2 이상) → Row4 AI Brief(촉매 확인) → Row5 Regime ≥ 60 확인 → 진입.',
+  },
+];
+
 // ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
 export function DeepDiveBoard() {
   const { symbol, setSymbol, timeframe, rrAccount, rrRiskPct } = useStore();
   const [showSentTrend, setShowSentTrend] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   const { ohlcvData }                = useIntraday(symbol, timeframe);
   const { dailyData, isLoading: chartLoading } = useDaily(symbol);
@@ -201,8 +222,10 @@ export function DeepDiveBoard() {
   return (
     <div
       className="board fade-in"
-      style={{ gridTemplateColumns: '3fr 2fr', alignItems: 'start', alignContent: 'start', gridAutoRows: 'max-content' }}
+      style={{ gridTemplateColumns: '3fr 2fr', alignItems: 'start', alignContent: 'start', gridAutoRows: 'max-content', position: 'relative' }}
     >
+      <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
+      <BoardGuidePanel title="DeepDive 가이드" sections={DEEPDIVE_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
 
       {/* ════════════════════════════════════════════════════════════════
           ROW 1 — Zone 0: 종목 선택 + 가격 + 상황 배지
@@ -399,8 +422,10 @@ export function DeepDiveBoard() {
       <div className="card">
         <div className="card__hd">
           <h3>Minervini Stage 2</h3>
+          <InfoPopover term={G.stage2.term} body={G.stage2.body} />
           {stage2 && <ScorePill score={stage2.score} />}
           <ConvictionBadge score={cv} label={dailyData?.conviction_label} size="md" />
+          <InfoPopover term={G.conviction.term} body={G.conviction.body} />
           <small>{stage2 ? (stage2.score >= 6 ? '진입 고려' : stage2.score >= 4 ? '관망' : '회피') : '—'}</small>
         </div>
         <div className="card__bd">
@@ -434,13 +459,15 @@ export function DeepDiveBoard() {
               {/* KPI 4개 — 2×2 그리드 */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {([
-                  ['RS Score', `${stage2.rs_score}`, stage2.rs_score >= 70 ? 'var(--bull)' : stage2.rs_score >= 50 ? 'var(--teal)' : 'var(--bear)', 'vs SPY 63일'],
-                  ['52주 고점', `${stage2.pct_from_52w_high.toFixed(1)}%`, stage2.pct_from_52w_high >= -25 ? 'var(--bull)' : 'var(--bear)', '고점 대비'],
-                  ['최근 조정', `${stage2.pullback_pct.toFixed(1)}%`, stage2.pullback_pct <= 15 ? 'var(--bull)' : 'var(--bear)', '20일 고점 대비'],
-                  ['EMA200 기울기', `${stage2.ema200_slope >= 0 ? '+' : ''}${stage2.ema200_slope.toFixed(3)}`, stage2.ema200_slope >= 0 ? 'var(--bull)' : 'var(--bear)', '20일 기울기'],
-                ] as [string, string, string, string][]).map(([label, val, color, sub]) => (
+                  ['RS Score', `${stage2.rs_score}`, stage2.rs_score >= 70 ? 'var(--bull)' : stage2.rs_score >= 50 ? 'var(--teal)' : 'var(--bear)', 'vs SPY 63일', G.rs_score],
+                  ['52주 고점', `${stage2.pct_from_52w_high.toFixed(1)}%`, stage2.pct_from_52w_high >= -25 ? 'var(--bull)' : 'var(--bear)', '고점 대비', null],
+                  ['최근 조정', `${stage2.pullback_pct.toFixed(1)}%`, stage2.pullback_pct <= 15 ? 'var(--bull)' : 'var(--bear)', '20일 고점 대비', null],
+                  ['EMA200 기울기', `${stage2.ema200_slope >= 0 ? '+' : ''}${stage2.ema200_slope.toFixed(3)}`, stage2.ema200_slope >= 0 ? 'var(--bull)' : 'var(--bear)', '20일 기울기', null],
+                ] as [string, string, string, string, { term: string; body: string } | null][]).map(([label, val, color, sub, info]) => (
                   <div key={label} style={{ padding: '7px 10px', borderRadius: 8, background: 'var(--card-elev)', border: '1px solid var(--border-soft)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{label}</div>
+                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 3 }}>
+                      {label}{info && <InfoPopover term={info.term} body={info.body} />}
+                    </div>
                     <div className="mono" style={{ fontSize: 16, fontWeight: 700, color, lineHeight: 1.1 }}>{val}</div>
                     <div style={{ fontSize: 9.5, color: 'var(--fg-muted)', marginTop: 2 }}>{sub}</div>
                   </div>
@@ -459,6 +486,7 @@ export function DeepDiveBoard() {
       <div className="card">
         <div className="card__hd">
           <h3>세력 참여도 · {symbol}</h3>
+          <InfoPopover term={G.institutional_activity.term} body={G.institutional_activity.body} />
           {forceData && (() => {
             const { forceScore } = forceData;
             const cls = forceScore >= 70 ? 'bull' : forceScore >= 50 ? 'teal' : forceScore >= 30 ? 'warn' : 'bear';
@@ -565,6 +593,7 @@ export function DeepDiveBoard() {
       <div className="card">
         <div className="card__hd">
           <h3>진입 계획 · R:R</h3>
+          <InfoPopover term={G.rr_ratio.term} body={G.rr_ratio.body} />
           <small>피벗 × 1.005 기준</small>
         </div>
         <div className="card__bd">
