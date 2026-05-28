@@ -2,10 +2,11 @@
 
 import React from 'react';
 import { useStore, Board } from '@/hooks/useStore';
-import { Crosshair, Activity, Candles, Eye, Globe, Heart, Bell } from '@/components/ui/Icons';
+import { Crosshair, Activity, Candles, Eye, Globe, Heart, Bell, Layers } from '@/components/ui/Icons';
 
 const BOARDS: { id: Board; label: string; ko: string; Icon: () => React.ReactElement }[] = [
   { id: 'overview',  label: 'Overview',  ko: '시장',       Icon: Crosshair },
+  { id: 'deepdive',  label: 'Deep Dive', ko: '종합분석',   Icon: Layers },
   { id: 'intraday',  label: 'Intraday',  ko: '단기',       Icon: Activity },
   { id: 'daily',     label: 'Daily',     ko: '일봉',       Icon: Candles },
   { id: 'watchlist', label: 'Watchlist', ko: '워치리스트',  Icon: Eye },

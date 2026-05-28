@@ -12,6 +12,7 @@ import { DailyBoard } from '@/components/boards/DailyBoard';
 import { WatchlistBoard } from '@/components/boards/WatchlistBoard';
 import { MacroBoard } from '@/components/boards/MacroBoard';
 import { SentimentBoard } from '@/components/boards/SentimentBoard';
+import { DeepDiveBoard } from '@/components/boards/DeepDiveBoard';
 
 export default function Page() {
   const { board, theme, cmdOpen, setCmdOpen } = useStore();
@@ -45,6 +46,7 @@ export default function Page() {
         {board === 'watchlist' && <WatchlistBoard />}
         {board === 'macro'     && <MacroBoard />}
         {board === 'sentiment' && <SentimentBoard />}
+        {board === 'deepdive'  && <DeepDiveBoard />}
       </main>
       <CommandPalette />
     </div>

@@ -7,6 +7,7 @@ import { SYMBOLS } from '@/app/types';
 
 const BOARD_LABELS: Record<string, { label: string; ko: string }> = {
   overview:  { label: 'Overview',  ko: '시장' },
+  deepdive:  { label: 'Deep Dive', ko: '종합분석' },
   intraday:  { label: 'Intraday',  ko: '단기' },
   daily:     { label: 'Daily',     ko: '일봉' },
   watchlist: { label: 'Watchlist', ko: '워치리스트' },

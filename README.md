@@ -133,7 +133,27 @@ environment:
 
 ---
 
-## 화면 구성 (6 보드)
+## 화면 구성 (7 보드)
+
+### Deep Dive — 종합 종목 분석 (신규)
+
+레일에서 **Layers 아이콘** 클릭. 화면 상단 종목 버튼으로 즉시 전환 (기본: TSLA).
+
+한 종목에 대한 모든 관점을 한 화면에서 확인하는 종합 분석 보드입니다.
+
+- **보드 내 종목 선택 바**: TSLA · AAPL · NVDA · META · AMZN · GOOGL · PLTR 즉시 전환
+- **종목 스냅샷**: 인트라데이 스파크라인 + 활성 신호(VCP/Sniper/Pullback 등) + RSI/EMA21/ATR
+- **Daily Heat · 60일**: 일봉 등락률 히트맵
+- **Minervini Stage 2**: 7항목 체크리스트 + 월봉 추세 배지 + Conviction 점수
+- **R:R 진입 계획**: Entry/Stop/Target + 포지션 크기 + 패턴 감지 (GC/Bear Flag/RSI Div)
+- **핵심 수치**: 52주 고·저점 이격, 조정폭, 모든 EMA, ATR, 가우시안 채널 레벨
+- **소셜 심리 (종목)**: composite_score 게이지 + ScoreBar + 전일 대비 + 언급량 + 주요 뉴스 + 심리 추이 차트 토글
+- **시장 전체 심리**: Market sentiment 게이지 + key_reason + 주요 뉴스
+- **AI 분석 Brief**: Setup Quality(A+~D) + Action Bias + 분석문 + 기회/리스크 요인 박스
+- **실적 발표**: 임박 여부 · EPS 추정 · 과거 Beat율 · AI 한 줄 요약
+- **Risk Regime**: 5요소 바 + 매크로 환경 점수 + 종목 시장구조 배지
+
+---
 
 ### Overview
 

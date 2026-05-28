@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-28 monthly-trend)
+# SniperBoard — Project Context (UPDATED 2026-05-28 deepdive-board)
 
 ## 0. 이 문서의 목적
 
@@ -64,8 +64,9 @@ sniperboard/
 │   │   │   ├── Sparkline.tsx     # Canvas 기반 스파크라인
 │   │   │   ├── RadialGauge.tsx   # Canvas 기반 라디얼 게이지
 │   │   │   └── HeatStrip.tsx     # CSS 기반 히트맵 스트립
-│   │   ├── boards/               # 6개 보드 컴포넌트 (실제 훅 사용)
+│   │   ├── boards/               # 7개 보드 컴포넌트 (실제 훅 사용)
 │   │   │   ├── OverviewBoard.tsx # 시장 개요: AI Insight + Regime + DD + Breadth + VIX + Credit + 종목 미니
+│   │   │   ├── DeepDiveBoard.tsx # 종합분석: 선택 종목의 모든 데이터 종합 (인트라데이+Stage2+심리+AI+실적+R:R+Regime). 보드 내 종목 선택 바 포함. 기본 TSLA. (2026-05-28)
 │   │   │   ├── IntradayBoard.tsx # 단기: IntradayChart + 활성신호 + RSI + 액션바
 │   │   │   ├── DailyBoard.tsx    # 일봉: DailyChart + Stage2 체크리스트 + R:R 패널
 │   │   │   ├── WatchlistBoard.tsx # 워치리스트: Stage2 정렬 테이블
@@ -202,7 +203,7 @@ OK(<4) / WARNING(4~5) / DANGER(≥6)
 |------|--------|------|
 | `symbol` | `'TSLA'` | 선택된 종목 |
 | `timeframe` | `'5m'` | 단기 타임프레임 |
-| `tab` | `'intraday'` | 현재 탭 |
+| `tab` | `'intraday'` | 현재 탭 (Board: overview/deepdive/intraday/daily/watchlist/macro/sentiment) |
 | `rrAccount` | `'100000'` | RR 계산기 계좌 크기 |
 | `rrRiskPct` | `'1'` | RR 계산기 리스크 % |
 
