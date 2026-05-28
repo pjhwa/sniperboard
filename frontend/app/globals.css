@@ -311,7 +311,7 @@ body {
    Strip
    ============================================================ */
 .strip {
-  display: flex; align-items: stretch;
+  display: flex; align-items: center;
   border-bottom: 1px solid var(--border);
   background: var(--bg);
   height: var(--strip);

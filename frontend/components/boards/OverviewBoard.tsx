@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useRegime } from '@/hooks/useRegime';
 import { useDistributionDays } from '@/hooks/useDistributionDays';
@@ -92,12 +92,17 @@ export function OverviewBoard() {
 
   const [guideOpen, setGuideOpen] = useState(false);
 
+  useEffect(() => {
+    const handler = () => setGuideOpen(true);
+    document.addEventListener('guide:open', handler);
+    return () => document.removeEventListener('guide:open', handler);
+  }, []);
+
   // 백워데이션: VIX9D(9일) > VIX(30일) — 단기 변동성이 장기보다 높아 역전된 상태
   const backward = vix && vix9d ? vix.price !== null && vix9d.price !== null && (vix9d.price ?? 0) > (vix.price ?? 0) : false;
 
   return (
     <div className="board-wrap">
-      <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
       <BoardGuidePanel
         title="Overview 가이드"
         sections={OVERVIEW_GUIDE}

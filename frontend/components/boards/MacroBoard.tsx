@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMacro } from '@/hooks/useMacro';
 import { Card } from '@/components/ui/Card';
 import { MacroItem } from '@/app/types';
@@ -28,13 +28,13 @@ const SECTOR_NAMES: Record<string, string> = {
   XLE: 'Energy', XHB: 'Homebuilders',
 };
 
-const MACRO_GROUPS: { key: string; label: string; subtitle: string; symbols: string[] }[] = [
-  { key: 'volatility', label: '변동성',    subtitle: 'Fear Gauge',   symbols: ['^VIX', '^VIX9D', '^VVIX'] },
-  { key: 'breadth',    label: '시장 폭',   subtitle: 'Broad Market', symbols: ['SPY', 'RSP', 'MAGS', 'IWM'] },
-  { key: 'credit',     label: '신용 스트레스', subtitle: 'Credit',  symbols: ['HYG', 'JNK', 'LQD', 'IEF'] },
-  { key: 'rates',      label: '달러·금리', subtitle: 'Rates/USD',   symbols: ['DX-Y.NYB', '^TNX', 'TLT'] },
-  { key: 'commodities',label: '원자재',    subtitle: 'Commodities',  symbols: ['CL=F', 'GLD'] },
-  { key: 'sectors',    label: '섹터 ETF',  subtitle: 'Rotation',     symbols: ['SMH', 'XLE', 'XLY', 'XHB', 'ITA'] },
+const MACRO_GROUPS: { key: string; label: string; subtitle: string; symbols: string[]; infoKey: string }[] = [
+  { key: 'volatility',  label: '변동성',       subtitle: 'Fear Gauge',   symbols: ['^VIX', '^VIX9D', '^VVIX'],       infoKey: 'vix_index' },
+  { key: 'breadth',     label: '시장 폭',      subtitle: 'Broad Market', symbols: ['SPY', 'RSP', 'MAGS', 'IWM'],     infoKey: 'breadth' },
+  { key: 'credit',      label: '신용 스트레스', subtitle: 'Credit',       symbols: ['HYG', 'JNK', 'LQD', 'IEF'],     infoKey: 'credit' },
+  { key: 'rates',       label: '달러·금리',    subtitle: 'Rates/USD',    symbols: ['DX-Y.NYB', '^TNX', 'TLT'],       infoKey: 'rates_dollar' },
+  { key: 'commodities', label: '원자재',       subtitle: 'Commodities',  symbols: ['CL=F', 'GLD'],                   infoKey: 'commodities' },
+  { key: 'sectors',     label: '섹터 ETF',     subtitle: 'Rotation',     symbols: ['SMH', 'XLE', 'XLY', 'XHB', 'ITA'], infoKey: 'sector_momentum' },
 ];
 
 function displaySym(s: string) {
@@ -43,6 +43,12 @@ function displaySym(s: string) {
 
 export function MacroBoard() {
   const [guideOpen, setGuideOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setGuideOpen(true);
+    document.addEventListener('guide:open', handler);
+    return () => document.removeEventListener('guide:open', handler);
+  }, []);
   const { macroData, isLoading } = useMacro();
   const macro = macroData?.macro ?? [];
 
@@ -51,7 +57,6 @@ export function MacroBoard() {
 
   return (
     <div className="board-wrap">
-      <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
       <BoardGuidePanel title="Macro 가이드" sections={MACRO_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <div className="board fade-in" style={{ gridTemplateColumns: '1fr 1fr 1fr', gridAutoRows: 'min-content' }}>
       {/* Sector rotation */}
@@ -90,7 +95,7 @@ export function MacroBoard() {
       {MACRO_GROUPS.map(g => {
         const items = g.symbols.map(s => macro.find(m => m.symbol === s)).filter(Boolean) as MacroItem[];
         return (
-          <Card key={g.key} title={g.label} action={g.subtitle} info={g.key === 'volatility' ? G.vix_index : undefined}>
+          <Card key={g.key} title={g.label} action={g.subtitle} info={G[g.infoKey]}>
             <div className="macro-group">
               {items.map(m => {
                 const chg = m.change_pct_1d ?? 0;

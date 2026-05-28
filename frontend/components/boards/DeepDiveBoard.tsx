@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useIntraday } from '@/hooks/useIntraday';
 import { useDaily } from '@/hooks/useDaily';
@@ -124,6 +124,12 @@ export function DeepDiveBoard() {
   const [showSentTrend, setShowSentTrend] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
 
+  useEffect(() => {
+    const handler = () => setGuideOpen(true);
+    document.addEventListener('guide:open', handler);
+    return () => document.removeEventListener('guide:open', handler);
+  }, []);
+
   const { ohlcvData }                = useIntraday(symbol, timeframe);
   const { dailyData, isLoading: chartLoading } = useDaily(symbol);
   const { data: sentimentData }      = useSentiment();
@@ -221,7 +227,6 @@ export function DeepDiveBoard() {
   // ───────────────────────────────────────────────────────────────────────────
   return (
     <div className="board-wrap">
-      <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
       <BoardGuidePanel title="DeepDive 가이드" sections={DEEPDIVE_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <div
       className="board fade-in"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useDaily } from '@/hooks/useDaily';
 import { useEarnings } from '@/hooks/useEarnings';
@@ -43,6 +43,12 @@ const MONTHLY_PHASE_META: Record<string, { label: string; color: string; bg: str
 
 export function DailyBoard() {
   const [guideOpen, setGuideOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setGuideOpen(true);
+    document.addEventListener('guide:open', handler);
+    return () => document.removeEventListener('guide:open', handler);
+  }, []);
   const { symbol, rrAccount, rrRiskPct } = useStore();
   const { dailyData, isLoading } = useDaily(symbol);
   const { earningsData } = useEarnings();
@@ -65,7 +71,6 @@ export function DailyBoard() {
 
   return (
     <div className="board-wrap">
-      <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
       <BoardGuidePanel title="Daily 가이드" sections={DAILY_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <div
       className="board fade-in"

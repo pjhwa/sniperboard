@@ -97,6 +97,13 @@ export function MarketStrip() {
           </div>
         );
       })}
+      <button
+        className="guide-btn"
+        style={{ position: 'relative', top: 'unset', right: 'unset', marginLeft: 'auto', marginRight: 14, alignSelf: 'center', flexShrink: 0 }}
+        onClick={() => document.dispatchEvent(new Event('guide:open'))}
+      >
+        ? 가이드
+      </button>
     </div>
   );
 }

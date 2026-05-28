@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useSentiment } from '@/hooks/useSentiment';
 import { useBrief } from '@/hooks/useBrief';
@@ -129,6 +129,12 @@ export function SentimentBoard() {
   const { symbol, setSymbol } = useStore();
   const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
   const [guideOpen, setGuideOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setGuideOpen(true);
+    document.addEventListener('guide:open', handler);
+    return () => document.removeEventListener('guide:open', handler);
+  }, []);
   const { data: sentimentData, isLoading } = useSentiment();
   const { briefData } = useBrief();
   const briefBySymbol = (briefData?.symbol_briefs ?? []).reduce(
@@ -164,7 +170,6 @@ export function SentimentBoard() {
 
   return (
     <div className="board-wrap">
-      <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
       <BoardGuidePanel title="Sentiment 가이드" sections={SENTIMENT_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <div className="board fade-in" style={{ gridTemplateColumns: '380px 1fr', gridTemplateRows: 'auto 1fr auto', alignContent: 'start' }}>
       {/* 시장 전체 */}
@@ -333,6 +338,108 @@ export function SentimentBoard() {
           <div className="subtle" style={{ textAlign: 'center', padding: 24 }}>심리 데이터 없음</div>
         )}
       </Card>
+
+      {/* 소셜 심리 데이터 이해 카드 */}
+      <div style={{ gridColumn: '1 / -1' }}>
+        <div className="card">
+          <div className="card__hd">
+            <h3>소셜 심리 데이터란?</h3>
+            <small>데이터 특성 · 활용 방법 · 주의사항</small>
+          </div>
+          <div className="card__bd">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
+
+              {/* 데이터 수집 */}
+              <div style={{ padding: 14, borderRadius: 'var(--r)', background: 'var(--bg-muted)', border: '1px solid var(--border-soft)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <span style={{ fontSize: 20 }}>📡</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg)' }}>데이터 수집 방식</span>
+                </div>
+                <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+                  Reddit·X(Twitter)·뉴스 등 소셜 미디어에서 종목 언급을 AI로 분석합니다. 긍정/부정 감성을 자동 분류하고, 봇 의심 계정을 필터링하여 신뢰도를 높입니다.
+                </div>
+              </div>
+
+              {/* 점수 해석 */}
+              <div style={{ padding: 14, borderRadius: 'var(--r)', background: 'var(--bg-muted)', border: '1px solid var(--border-soft)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <span style={{ fontSize: 20 }}>📊</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg)' }}>복합점수 해석 (−2 ~ +2)</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 11 }}>
+                  {[
+                    { range: '+1.5 ~ +2.0', label: '극도 낙관', color: 'var(--bull)', bg: 'var(--bull-soft)', note: '⚠ 과열 — 역발상 매도 고려' },
+                    { range: '+0.5 ~ +1.5', label: '낙관',     color: 'var(--teal)', bg: 'var(--bg-subtle)', note: '상승 추세 유지' },
+                    { range: '−0.5 ~ +0.5', label: '중립',     color: 'var(--fg-muted)', bg: 'var(--bg-subtle)', note: '방향성 불분명' },
+                    { range: '−1.5 ~ −0.5', label: '비관',     color: 'hsl(20 90% 55%)', bg: 'var(--bg-subtle)', note: '하락 압력 주의' },
+                    { range: '−2.0 ~ −1.5', label: '극도 공포', color: 'var(--bear)', bg: 'var(--bear-soft)', note: '✓ 역발상 매수 고려' },
+                  ].map(row => (
+                    <div key={row.range} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 6, background: row.bg }}>
+                      <span className="mono" style={{ fontSize: 10, color: row.color, fontWeight: 600, minWidth: 90 }}>{row.range}</span>
+                      <span style={{ fontWeight: 600, color: row.color, minWidth: 56 }}>{row.label}</span>
+                      <span style={{ color: 'var(--fg-subtle)', fontSize: 10 }}>{row.note}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 역발상 전략 */}
+              <div style={{ padding: 14, borderRadius: 'var(--r)', background: 'var(--bg-muted)', border: '1px solid var(--border-soft)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <span style={{ fontSize: 20 }}>🔄</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg)' }}>역발상 전략의 원리</span>
+                </div>
+                <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+                  소셜 심리가 극단에 달하면 시장은 반전하는 경향이 있습니다. 모두가 공포에 빠졌을 때가 매수 기회, 모두가 흥분했을 때가 매도 기회입니다. 단, 기술적 신호(Stage2, 가우시안 채널)와 반드시 같이 확인하세요.
+                </div>
+              </div>
+
+              {/* 활용 방법 */}
+              <div style={{ padding: 14, borderRadius: 'var(--r)', background: 'var(--bg-muted)', border: '1px solid var(--border-soft)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <span style={{ fontSize: 20 }}>✅</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg)' }}>올바른 활용법</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11.5 }}>
+                  {[
+                    '기술적 신호와 방향이 일치할 때 진입 확신도 높임',
+                    'Confidence가 HIGH일 때만 적극 활용',
+                    '봇 의심(Bot Suspected) 표시 시 신뢰도 낮춤',
+                    '단독 지표로 사용하지 말고 보조 지표로 활용',
+                  ].map((tip, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                      <span style={{ color: 'var(--teal)', fontWeight: 700, flexShrink: 0 }}>→</span>
+                      <span style={{ color: 'var(--fg-muted)', lineHeight: 1.5 }}>{tip}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 주의사항 */}
+              <div style={{ padding: 14, borderRadius: 'var(--r)', background: 'var(--warn-soft)', border: '1px solid color-mix(in srgb, var(--warn) 30%, transparent)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <span style={{ fontSize: 20 }}>⚠️</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg)' }}>주의사항 · 한계</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11.5 }}>
+                  {[
+                    '소셜 데이터는 외부 AI(Grok/Hermes)가 생성 — 실시간이 아님',
+                    '언급량이 적은 종목(저유동성)은 신뢰도 낮음',
+                    '단기 뉴스 이벤트로 점수가 급변할 수 있음',
+                    'Confidence LOW이면 데이터 부족 상태',
+                  ].map((warn, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                      <span style={{ color: 'var(--warn)', fontWeight: 700, flexShrink: 0 }}>!</span>
+                      <span style={{ color: 'var(--fg-muted)', lineHeight: 1.5 }}>{warn}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
 
     </div>
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useWatchlist } from '@/hooks/useWatchlist';
 import { Card, ScorePill } from '@/components/ui/Card';
@@ -45,6 +45,12 @@ export function WatchlistBoard() {
   const { watchlist, isLoading } = useWatchlist();
   const [guideOpen, setGuideOpen] = useState(false);
 
+  useEffect(() => {
+    const handler = () => setGuideOpen(true);
+    document.addEventListener('guide:open', handler);
+    return () => document.removeEventListener('guide:open', handler);
+  }, []);
+
   // R:R 비교용 최대 편차 계산
   const maxRisk   = Math.max(...watchlist.map(w => w.entry - w.stop), 0.01);
   const maxReward = Math.max(...watchlist.map(w => w.target - w.entry), 0.01);
@@ -52,7 +58,6 @@ export function WatchlistBoard() {
 
   return (
     <div className="board-wrap">
-      <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
       <BoardGuidePanel title="Watchlist 가이드" sections={WATCHLIST_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <div className="board fade-in" style={{ gridTemplateColumns: '1fr 1fr 1fr', alignContent: 'start' }}>
 

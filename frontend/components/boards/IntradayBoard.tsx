@@ -1,12 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useIntraday } from '@/hooks/useIntraday';
 import { useDaily } from '@/hooks/useDaily';
 import { Card } from '@/components/ui/Card';
 import IntradayChart from '@/components/charts/IntradayChart';
-import { ArrowRight } from '@/components/ui/Icons';
 import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
 import { InfoPopover } from '@/components/ui/InfoPopover';
 import { G } from '@/app/glossary';
@@ -46,9 +45,14 @@ const SIG_META: Record<string, { name: string; color: string; action: string; de
 
 export function IntradayBoard() {
   const [tf, setTf] = useState('5m');
-  const [copied, setCopied] = useState(false);
   const [sigGuide, setSigGuide] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setGuideOpen(true);
+    document.addEventListener('guide:open', handler);
+    return () => document.removeEventListener('guide:open', handler);
+  }, []);
   const { symbol, rrAccount, rrRiskPct, setRrAccount, setRrRiskPct } = useStore();
   const { ohlcvData, isLoading } = useIntraday(symbol, tf);
   const { dailyData } = useDaily(symbol);
@@ -76,19 +80,8 @@ export function IntradayBoard() {
   const riskAmt = accountNum * (riskPct / 100);
   const qty = stop > 0 && entry > stop ? Math.floor(riskAmt / (entry - stop)) : 0;
 
-  function handleCopyEntry() {
-    const text = `${symbol} | 진입: $${entry.toFixed(2)} | 손절: $${stop.toFixed(2)} | 목표: $${target.toFixed(2)} | 수량: ${qty > 0 ? qty + '주' : '—'} | R:R 1:3`;
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }).catch(() => {
-      // clipboard unavailable (headless / no permission) — silent fail
-    });
-  }
-
   return (
     <div className="board-wrap">
-      <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
       <BoardGuidePanel title="Intraday 가이드" sections={INTRADAY_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <div
       className="board fade-in"
@@ -230,13 +223,6 @@ export function IntradayBoard() {
           <div className="spacer" />
           <button className="btn btn--ghost" onClick={() => setSigGuide(v => !v)}>
             {sigGuide ? '신호 가이드 닫기' : '신호 가이드'}
-          </button>
-          <button
-            className="btn btn--em"
-            onClick={handleCopyEntry}
-            style={copied ? { background: 'var(--bull)', borderColor: 'var(--bull)' } : undefined}
-          >
-            {copied ? '복사됨 ✓' : <><span>진입 복사</span> <ArrowRight /></>}
           </button>
         </div>
       </div>

@@ -11,16 +11,15 @@ interface Props {
 
 export function InfoPopover({ term, body }: Props) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const ref = useRef<HTMLDivElement>(null);
 
-  // Close when another popover opens
   useEffect(() => {
     const handler = () => setOpen(false);
     document.addEventListener(CLOSE_EVENT, handler);
     return () => document.removeEventListener(CLOSE_EVENT, handler);
   }, []);
 
-  // Outside click + Escape when open
   useEffect(() => {
     if (!open) return;
     const onOutside = (e: MouseEvent) => {
@@ -36,7 +35,17 @@ export function InfoPopover({ term, body }: Props) {
   }, [open]);
 
   function toggle() {
-    if (!open) document.dispatchEvent(new Event(CLOSE_EVENT));
+    if (!open) {
+      document.dispatchEvent(new Event(CLOSE_EVENT));
+      if (ref.current) {
+        const rect = ref.current.getBoundingClientRect();
+        const popWidth = 280;
+        const vpWidth = window.innerWidth;
+        const top = rect.bottom + 6;
+        const left = Math.min(rect.left, vpWidth - popWidth - 10);
+        setPos({ top, left });
+      }
+    }
     setOpen(o => !o);
   }
 
@@ -51,7 +60,11 @@ export function InfoPopover({ term, body }: Props) {
         ⓘ
       </button>
       {open && (
-        <div className="info-pop__body" role="tooltip">
+        <div
+          className="info-pop__body"
+          role="tooltip"
+          style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 1000 }}
+        >
           <div className="info-pop__term">{term}</div>
           <p className="info-pop__text">{body}</p>
         </div>
