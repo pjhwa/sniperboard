@@ -13,6 +13,7 @@ import { STAGE2_META } from '@/app/types';
 import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
 import { G } from '@/app/glossary';
 import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
+import { InfoPopover } from '@/components/ui/InfoPopover';
 
 const DAILY_GUIDE: GuideSection[] = [
   {
@@ -82,7 +83,10 @@ export function DailyBoard() {
           <h3>{symbol} · Daily</h3>
           {stage2 && <span className={'badge ' + structColor}>{stage2.market_structure}</span>}
           <ConvictionBadge score={dailyData?.conviction_score} size="md" />
-          <small>1Y · Gaussian Channel</small>
+          <small style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            1Y · Gaussian Channel
+            <InfoPopover term={G.gc_status.term} body={G.gc_status.body} />
+          </small>
         </div>
         <div className="card__bd" style={{ paddingTop: 0 }}>
           {/* watching tier(22-30일, 추정치 미형성)는 배너 노출 안 함 — 노이즈 */}

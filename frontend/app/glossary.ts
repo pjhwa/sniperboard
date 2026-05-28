@@ -61,7 +61,7 @@ export const GLOSSARY: GlossaryEntry[] = [
   {
     key: 'gc_status',
     term: '가우시안 채널 (Gaussian Channel)',
-    body: '인과 가우시안 커널로 그린 통계적 추세 밴드입니다(look-ahead bias 없음). Breakout=채널 상단 돌파(강한 모멘텀), Above=채널 위 강세, Retest=돌파 후 채널 재접촉(눌림 진입 기회), Below=채널 이탈 약세입니다.',
+    body: '차트에 표시된 파란 밴드입니다. 주가가 "정상 범위" 안에 있는지를 통계적으로 보여주며, 미래 데이터를 쓰지 않아 실시간으로 신뢰할 수 있습니다.\n\n• Breakout — 주가가 채널 상단을 뚫고 위로 솟음. 강한 매수 에너지 신호, 진입 검토\n• Above Channel — 채널 위에 머물며 강세 지속 중. 보유 유지\n• Retest — 상단 돌파 후 채널로 다시 내려와 닿음. 눌림목 진입 기회\n• Below Channel — 채널 하단 아래로 이탈. 약세, 신규 진입 자제',
   },
   {
     key: 'conviction',
