@@ -11,8 +11,7 @@ import { useRegime } from '@/hooks/useRegime';
 import { usePrePost } from '@/hooks/usePrePost';
 import { Card, ScorePill } from '@/components/ui/Card';
 import { RadialGauge } from '@/components/ui/RadialGauge';
-import { Sparkline } from '@/components/ui/Sparkline';
-import { HeatStrip } from '@/components/ui/HeatStrip';
+import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
 import { Check, X, Sparkle } from '@/components/ui/Icons';
 import DailyChart from '@/components/charts/DailyChart';
 import {
@@ -125,12 +124,6 @@ export function DeepDiveBoard() {
 
   // ── Daily / Stage2
   const stage2 = dailyData?.stage2;
-  const dailyChg = (dailyData?.candles ?? []).slice(-61).map((c, i, arr) =>
-    i === 0 ? 0 : ((c.close - arr[i - 1].close) / arr[i - 1].close) * 100
-  ).slice(1);
-  const upDays   = dailyChg.filter(v => v > 0.05).length;
-  const downDays = dailyChg.filter(v => v < -0.05).length;
-  const avgChg   = dailyChg.length ? dailyChg.reduce((a, b) => a + b, 0) / dailyChg.length : 0;
 
   // ── R:R
   const entry = stage2?.entry ?? 0;
@@ -150,10 +143,8 @@ export function DeepDiveBoard() {
   const symEarning = earningsData?.upcoming_earnings?.find(e => e.symbol === symbol) as UpcomingEarning | undefined;
   const symRecent  = earningsData?.recent_results?.find(r => r.symbol === symbol) as RecentResult  | undefined;
 
-  // ── Conviction 색상
+  // ── Conviction
   const cv = dailyData?.conviction_score;
-  const cvColor = cv == null ? 'var(--fg-muted)'
-    : cv >= 65 ? 'var(--bull)' : cv >= 50 ? 'var(--teal)' : cv >= 35 ? 'var(--warn)' : 'var(--bear)';
 
   // ── 단축 변수
   const mp     = stage2?.monthly_phase ?? 'UNKNOWN';
@@ -169,6 +160,29 @@ export function DeepDiveBoard() {
   if (stage2?.bear_flag)             patBadges.push(['Bear Flag',   'bear']);
   if (stage2?.rsi_divergence_bullish) patBadges.push(['RSI Bull Div','bull']);
   if (stage2?.rsi_divergence_bearish) patBadges.push(['RSI Bear Div','warn']);
+
+  // ── 세력 참여도 계산 (Row 3L)
+  const forceData = (() => {
+    const dc = dailyData?.candles;
+    if (!dc || dc.length < 20) return null;
+    const r20 = dc.slice(-20);
+    const r10 = dc.slice(-10);
+    const r5  = dc.slice(-5);
+    const upVol   = r20.filter(c => c.close >= c.open).reduce((s, c) => s + c.volume, 0);
+    const downVol = r20.filter(c => c.close < c.open).reduce((s, c) => s + c.volume, 0);
+    const vol20avg = r20.reduce((s, c) => s + c.volume, 0) / 20;
+    const vol5avg  = r5.reduce((s, c) => s + c.volume, 0) / 5;
+    const volTrendRatio = vol20avg > 0 ? vol5avg / vol20avg : 1;
+    const accDays  = r10.filter(c => c.volume > vol20avg && c.close >= c.open).length;
+    const distDays = r10.filter(c => c.volume > vol20avg && c.close < c.open).length;
+    const udRatio  = downVol > 0 ? upVol / downVol : upVol > 0 ? 9 : 1;
+    const udScore    = Math.min(50, Math.max(0, (udRatio - 0.5) / 1.5 * 50));
+    const accScore   = Math.min(30, Math.max(0, (accDays - distDays + 5) / 10 * 30));
+    const trendScore = volTrendRatio < 0.8 ? 20 : volTrendRatio < 1.0 ? 12 : volTrendRatio < 1.3 ? 8 : 4;
+    const forceScore = Math.round(udScore + accScore + trendScore);
+    const maxVol = Math.max(...r20.map(c => c.volume), 1);
+    return { r20, r10, vol20avg, volTrendRatio, accDays, distDays, udRatio, forceScore, maxVol };
+  })();
 
   // ───────────────────────────────────────────────────────────────────────────
   // RENDER
@@ -206,8 +220,8 @@ export function DeepDiveBoard() {
               key={s}
               onClick={() => { setSymbol(s); setShowSentTrend(false); }}
               style={{
-                padding: '5px 13px', borderRadius: 6,
-                fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                padding: '4px 9px', borderRadius: 6,
+                fontSize: 11.5, fontWeight: 700, cursor: 'pointer',
                 background: symbol === s ? 'var(--em-500)' : 'transparent',
                 border: symbol === s ? '1px solid transparent' : '1px solid var(--border-soft)',
                 color: symbol === s ? '#fff' : 'var(--fg-muted)',
@@ -274,11 +288,68 @@ export function DeepDiveBoard() {
                   );
                 })()}
               </div>
-              {candles.length > 10 && (
-                <div style={{ maxWidth: 180, flexShrink: 0 }}>
-                  <Sparkline values={candles.slice(-60).map(c => c.close)} width={180} height={36} strokeWidth={1.5} />
-                </div>
-              )}
+              {/* Zone 0 인트라데이 KPI 3개 */}
+              {(() => {
+                const tiles: { label: string; value: string; color: string; sub?: string }[] = [];
+
+                const dc = dailyData?.candles;
+                if (dc && dc.length >= 2) {
+                  const chg = ((dc[dc.length - 1].close - dc[dc.length - 2].close) / dc[dc.length - 2].close) * 100;
+                  tiles.push({
+                    label: '1D 변화',
+                    value: `${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%`,
+                    color: chg >= 0 ? 'var(--bull)' : 'var(--bear)',
+                  });
+                }
+
+                if (candles.length > 1) {
+                  const slice = candles.slice(-78);
+                  const dayHigh = Math.max(...slice.map(c => c.high));
+                  const dayLow  = Math.min(...slice.map(c => c.low));
+                  const range = dayHigh - dayLow;
+                  if (range > 0 && lastCandle) {
+                    const pos = ((lastCandle.close - dayLow) / range) * 100;
+                    tiles.push({
+                      label: '일중 위치',
+                      value: `${pos.toFixed(0)}%`,
+                      color: pos >= 70 ? 'var(--bull)' : pos <= 30 ? 'var(--bear)' : 'var(--fg)',
+                      sub: pos >= 70 ? '상단 유지' : pos <= 30 ? '하단 압박' : '중간',
+                    });
+                  }
+                }
+
+                if (lastCandle && indicators && indicators.ema21[lastIdx]) {
+                  const ema21 = indicators.ema21[lastIdx]!;
+                  const pct = ((lastCandle.close - ema21) / ema21) * 100;
+                  tiles.push({
+                    label: 'EMA21 이격',
+                    value: `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`,
+                    color: Math.abs(pct) >= 3 ? 'var(--warn)' : pct >= 0 ? 'var(--teal)' : 'var(--fg-muted)',
+                    sub: pct >= 3.2 ? '과열권' : pct <= -2 ? '지지 접근' : undefined,
+                  });
+                }
+
+                if (tiles.length === 0) return null;
+                return (
+                  <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+                    {tiles.map(t => (
+                      <div key={t.label} style={{
+                        padding: '5px 10px', borderRadius: 8,
+                        background: 'var(--card-elev)', border: '1px solid var(--border-soft)',
+                        minWidth: 68,
+                      }}>
+                        <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>
+                          {t.label}
+                        </div>
+                        <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: t.color, lineHeight: 1.1 }}>
+                          {t.value}
+                        </div>
+                        {t.sub && <div style={{ fontSize: 9, color: t.color, opacity: 0.8, marginTop: 1 }}>{t.sub}</div>}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </>
           ) : (
             <div className="subtle" style={{ fontSize: 12 }}>시세 로딩 중...</div>
@@ -287,15 +358,7 @@ export function DeepDiveBoard() {
           {/* 우측 배지 그룹 */}
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {stage2 && <ScorePill score={stage2.score} />}
-            {cv != null && (
-              <div style={{
-                padding: '3px 9px', borderRadius: 20,
-                border: `1px solid ${cvColor}`, fontSize: 11, fontWeight: 700, color: cvColor,
-                display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
-              }}>
-                <span style={{ fontSize: 9, color: 'var(--fg-subtle)', fontWeight: 500 }}>C</span>{cv}
-              </div>
-            )}
+            <ConvictionBadge score={cv} label={dailyData?.conviction_label} size="md" />
             <div style={{ padding: '3px 9px', borderRadius: 20, background: mpMeta.bg, fontSize: 11, fontWeight: 700, color: mpMeta.color, whiteSpace: 'nowrap' }}>
               {mpMeta.label}
             </div>
@@ -337,11 +400,7 @@ export function DeepDiveBoard() {
         <div className="card__hd">
           <h3>Minervini Stage 2</h3>
           {stage2 && <ScorePill score={stage2.score} />}
-          {cv != null && (
-            <span style={{ fontSize: 11, fontWeight: 700, color: cvColor, marginLeft: 2 }}>
-              C:{cv} <span style={{ fontWeight: 400, fontSize: 10, color: 'var(--fg-subtle)' }}>{dailyData?.conviction_label}</span>
-            </span>
-          )}
+          <ConvictionBadge score={cv} label={dailyData?.conviction_label} size="md" />
           <small>{stage2 ? (stage2.score >= 6 ? '진입 고려' : stage2.score >= 4 ? '관망' : '회피') : '—'}</small>
         </div>
         <div className="card__bd">
@@ -395,36 +454,108 @@ export function DeepDiveBoard() {
       </div>
 
       {/* ════════════════════════════════════════════════════════════════
-          ROW 3 LEFT — Daily Heat 60d
+          ROW 3 LEFT — 세력 참여도 분석
       ════════════════════════════════════════════════════════════════ */}
       <div className="card">
         <div className="card__hd">
-          <h3>Daily Heat · 60거래일</h3>
-          <span className="badge bull" style={{ fontSize: 10 }}>↑ {upDays}일</span>
-          <span className="badge bear" style={{ fontSize: 10 }}>↓ {downDays}일</span>
-          <small>{symbol}</small>
+          <h3>세력 참여도 · {symbol}</h3>
+          {forceData && (() => {
+            const { forceScore } = forceData;
+            const cls = forceScore >= 70 ? 'bull' : forceScore >= 50 ? 'teal' : forceScore >= 30 ? 'warn' : 'bear';
+            const lbl = forceScore >= 70 ? '집중 매수' : forceScore >= 50 ? '매수 우위' : forceScore >= 30 ? '혼조' : '분산 매도';
+            return <span className={`badge ${cls}`}>{lbl}</span>;
+          })()}
+          <small>20일 거래량 패턴</small>
         </div>
         <div className="card__bd">
-          {dailyChg.length > 0 ? (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9.5, color: 'var(--fg-subtle)', marginBottom: 4 }}>
-                <span>← 60일 전</span><span>오늘 →</span>
-              </div>
-              <HeatStrip values={dailyChg} cols={20} rows={3} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8, fontSize: 9.5, color: 'var(--fg-subtle)', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}><div style={{ width: 9, height: 9, borderRadius: 2, background: 'var(--bear)' }} /><span>하락</span></div>
-                <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}><div style={{ width: 9, height: 9, borderRadius: 2, background: 'var(--bg-subtle)', border: '1px solid var(--border)' }} /><span>보합</span></div>
-                <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}><div style={{ width: 9, height: 9, borderRadius: 2, background: 'var(--bull)' }} /><span>상승</span></div>
-                <span style={{ marginLeft: 'auto' }}>
-                  평균 <span className="mono" style={{ color: avgChg >= 0 ? 'var(--bull)' : 'var(--bear)' }}>{avgChg >= 0 ? '+' : ''}{avgChg.toFixed(2)}%</span>
-                  {' · '}
-                  <span style={{ color: 'var(--bull)' }}>+{Math.max(...dailyChg).toFixed(1)}%</span>
-                  {' / '}
-                  <span style={{ color: 'var(--bear)' }}>{Math.min(...dailyChg).toFixed(1)}%</span>
-                </span>
-              </div>
-            </>
-          ) : <div className="subtle">로딩 중...</div>}
+          {forceData ? (() => {
+            const { r20, r10, vol20avg, volTrendRatio, accDays, distDays, udRatio, forceScore, maxVol } = forceData;
+            const scoreColor = forceScore >= 70 ? 'var(--bull)' : forceScore >= 50 ? 'var(--teal)' : forceScore >= 30 ? 'var(--warn)' : 'var(--bear)';
+            return (
+              <>
+                {/* 섹션 1: 거래량 스파크라인 20봉 */}
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 52, marginBottom: 10 }}>
+                  {r20.map((c, i) => {
+                    const up = c.close >= c.open;
+                    const h = Math.max(3, (c.volume / maxVol) * 48);
+                    return (
+                      <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                        <div style={{ height: h, borderRadius: 2, background: up ? 'var(--bull)' : 'var(--bear)', opacity: 0.75 }} />
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 섹션 2: 핵심 지표 3개 */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 10 }}>
+                  <div style={{ padding: '6px 8px', borderRadius: 7, background: 'var(--card-elev)', border: '1px solid var(--border-soft)' }}>
+                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>매수/매도량</div>
+                    <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: udRatio >= 1.3 ? 'var(--bull)' : udRatio < 0.7 ? 'var(--bear)' : 'var(--fg)' }}>
+                      {udRatio >= 9 ? '9+' : udRatio.toFixed(1)}×
+                    </div>
+                    <div style={{ fontSize: 9.5, color: 'var(--fg-muted)' }}>
+                      {udRatio >= 1.3 ? '매수 우위' : udRatio < 0.7 ? '매도 우위' : '균형'}
+                    </div>
+                  </div>
+                  <div style={{ padding: '6px 8px', borderRadius: 7, background: 'var(--card-elev)', border: '1px solid var(--border-soft)' }}>
+                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>거래량 추세</div>
+                    <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: volTrendRatio < 0.8 ? 'var(--bull)' : volTrendRatio > 1.2 ? 'var(--warn)' : 'var(--fg)' }}>
+                      {volTrendRatio < 0.8 ? '▽' : volTrendRatio > 1.2 ? '△' : '→'} {volTrendRatio.toFixed(2)}×
+                    </div>
+                    <div style={{ fontSize: 9.5, color: 'var(--fg-muted)' }}>
+                      {volTrendRatio < 0.8 ? 'VCP 수축' : volTrendRatio > 1.2 ? '활발' : '보통'}
+                    </div>
+                  </div>
+                  <div style={{ padding: '6px 8px', borderRadius: 7, background: 'var(--card-elev)', border: '1px solid var(--border-soft)' }}>
+                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>집중일 (10일)</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.2 }}>
+                      <span style={{ color: 'var(--bull)' }}>{accDays}acc</span>
+                      <span style={{ color: 'var(--fg-muted)', fontWeight: 400 }}>/</span>
+                      <span style={{ color: 'var(--bear)' }}>{distDays}dist</span>
+                    </div>
+                    <div style={{ fontSize: 9.5, color: accDays > distDays ? 'var(--bull)' : distDays > accDays ? 'var(--bear)' : 'var(--fg-muted)' }}>
+                      {accDays > distDays ? '매집 우세' : distDays > accDays ? '분산 우세' : '중립'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 섹션 3: 세력 점수 바 */}
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <span style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>세력 점수</span>
+                    <span className="mono" style={{ fontSize: 13, fontWeight: 700, color: scoreColor }}>{forceScore} / 100</span>
+                  </div>
+                  <div className="bar">
+                    <div className="bar__fill" style={{ width: `${forceScore}%`, background: scoreColor }} />
+                  </div>
+                </div>
+
+                {/* 섹션 4: 최근 10일 acc/dist 미니 그리드 */}
+                <div>
+                  <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>최근 10일 세력 행동</div>
+                  <div style={{ display: 'flex', gap: 3 }}>
+                    {r10.map((c, i) => {
+                      const isAcc  = c.volume > vol20avg && c.close >= c.open;
+                      const isDist = c.volume > vol20avg && c.close < c.open;
+                      return (
+                        <div key={i} style={{
+                          flex: 1, height: 14, borderRadius: 3,
+                          background: isAcc ? 'var(--bull)' : isDist ? 'var(--bear)' : 'var(--bg-subtle)',
+                          border: `1px solid ${isAcc ? 'var(--bull)' : isDist ? 'var(--bear)' : 'var(--border)'}`,
+                          opacity: isAcc || isDist ? 0.8 : 0.45,
+                        }} />
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, marginTop: 5, fontSize: 9.5, color: 'var(--fg-subtle)' }}>
+                    <span><span style={{ color: 'var(--bull)' }}>■</span> 매집</span>
+                    <span><span style={{ color: 'var(--bear)' }}>■</span> 분산</span>
+                    <span>□ 보통 (큰거래량 기준)</span>
+                  </div>
+                </div>
+              </>
+            );
+          })() : <div className="subtle">{chartLoading ? '로딩 중...' : '데이터 부족 (20일 미만)'}</div>}
         </div>
       </div>
 
