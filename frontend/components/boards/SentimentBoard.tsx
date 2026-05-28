@@ -8,24 +8,24 @@ import { Card } from '@/components/ui/Card';
 import { SymbolBrief, SETUP_QUALITY_META, FreshnessMeta, TopNews } from '@/app/types';
 import { RadialGauge } from '@/components/ui/RadialGauge';
 import { SENTIMENT_META, TREND_META, VOLUME_META } from '@/app/types';
-import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
+import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
+import { G } from '@/app/glossary';
 import { formatDateTime } from '@/lib/formatDateTime';
 import { SentimentTrendChart } from './SentimentTrendChart';
 
-const SENTIMENT_GLOSSARY: GlossaryItem[] = [
-  { term: '복합점수 (Composite Score, −2 ~ +2)', plain: '소셜 미디어와 뉴스에서 수집한 심리를 종합한 점수입니다. +2에 가까울수록 극도의 낙관(과열 주의), −2에 가까울수록 극도의 공포(역발상 매수 기회)를 의미합니다.' },
-  { term: '극도 공포 (−2)', plain: '시장 참여자들이 극도로 두려워하는 상태입니다. 역설적으로 Warren Buffett의 "남들이 두려워할 때 탐욕스러워지라"는 격언처럼, 이 구간은 역발상 매수 기회일 수 있습니다.', color: 'var(--bear)' },
-  { term: '공포 (−1)', plain: '전반적인 비관론이 우세합니다. 아직 시장 저점을 확인하기 어려운 구간입니다.' },
-  { term: '중립 (0)', plain: '강한 방향성이 없는 관망 국면입니다. 뚜렷한 심리적 편향이 없어 기술적 분석이 더 중요한 시기입니다.' },
-  { term: '낙관 (+1)', plain: '전반적인 낙관론이 우세합니다. 상승 기대감이 높아지고 있는 단계입니다.' },
-  { term: '도취 (+2)', plain: '시장 참여자들이 극도로 흥분한 과열 상태입니다. 역발상적으로 주의가 필요한 구간으로, 신규 매수보다 기존 포지션 점검을 권장합니다.', color: 'var(--bull)' },
-  { term: '전일 대비 (Trend vs Yesterday)', plain: '어제와 비교해 심리가 좋아지고 있는지(heating↑), 유지되고 있는지(stable→), 나빠지고 있는지(cooling↓)를 나타냅니다.' },
-  { term: 'Confidence (신뢰도)', plain: '이 심리 판단이 얼마나 신뢰할 수 있는지를 나타냅니다. HIGH는 데이터 품질이 좋고 신호가 명확함, LOW는 데이터가 부족하거나 신호가 혼재함을 의미합니다.' },
-  { term: '언급량 (Mention Volume)', plain: '소셜 미디어에서 해당 종목이나 시장이 얼마나 자주 언급되고 있는지입니다. "급증(surging)"이면 주목도가 매우 높아진 상태로, 심리 급변 가능성이 있습니다.' },
-  { term: '봇 의심 (Bot Suspected)', plain: '인위적으로 생성된 게시물(봇)이 심리 데이터를 왜곡하고 있을 가능성을 나타냅니다. "봇 의심" 표시가 있으면 해당 심리 데이터를 신중하게 해석해야 합니다.' },
-  { term: '스코어 바 (Score Bar)', plain: '복합점수의 위치를 시각적으로 보여주는 막대입니다. 중앙(0)이 중립이고, 오른쪽(녹색)으로 갈수록 낙관, 왼쪽(빨간색)으로 갈수록 공포입니다.' },
-  { term: 'Key Reason (핵심 이유)', plain: '이 심리 점수가 나온 주된 이유를 한 문장으로 요약한 것입니다. AI가 소셜 미디어와 뉴스를 분석해 가장 영향력 있는 요인을 추출합니다.' },
-  { term: '주요 뉴스 (Top News)', plain: '이 심리 점수가 수집될 당시 X(트위터)에서 가장 많이 공유되거나 언급된 뉴스 또는 포스트 1건입니다. 소셜 심리의 주된 촉매를 빠르게 파악할 수 있습니다.' },
+const SENTIMENT_GUIDE: GuideSection[] = [
+  {
+    heading: '이 화면은',
+    body: '소셜 미디어와 뉴스를 AI로 분석한 시장·종목별 심리 점수를 보여주는 화면입니다. 기술적 신호와 함께 읽으면 확신도를 높일 수 있습니다.',
+  },
+  {
+    heading: '핵심 지표 읽는 법',
+    body: '복합점수(−2~+2)가 핵심. +1.5 이상은 과열 주의, −1.5 이하는 역발상 매수 기회. Confidence가 LOW이면 데이터 신뢰도 낮음. 종목별 점수 클릭 시 최근 7일/30일 추이 차트를 볼 수 있습니다.',
+  },
+  {
+    heading: '지금 이렇게 쓰세요',
+    body: '시장 전체 심리 먼저 확인 → 관심 종목 심리 확인 → 심리가 기술적 신호와 일치(예: Sniper 신호 + 심리 개선)하면 확신 높은 진입으로 판단.',
+  },
 ];
 
 function TopNewsBox({ topNews }: { topNews: TopNews | null | undefined }) {
@@ -128,6 +128,7 @@ function DeltaLabel({ delta }: { delta: number | null }) {
 export function SentimentBoard() {
   const { symbol, setSymbol } = useStore();
   const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
+  const [guideOpen, setGuideOpen] = useState(false);
   const { data: sentimentData, isLoading } = useSentiment();
   const { briefData } = useBrief();
   const briefBySymbol = (briefData?.symbol_briefs ?? []).reduce(
@@ -162,9 +163,11 @@ export function SentimentBoard() {
   const symbols = latest.symbols ?? [];
 
   return (
-    <div className="board fade-in" style={{ gridTemplateColumns: '380px 1fr', gridTemplateRows: 'auto 1fr auto', alignContent: 'start' }}>
+    <div className="board fade-in" style={{ gridTemplateColumns: '380px 1fr', gridTemplateRows: 'auto 1fr auto', alignContent: 'start', position: 'relative' }}>
+      <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
+      <BoardGuidePanel title="Sentiment 가이드" sections={SENTIMENT_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
       {/* 시장 전체 */}
-      <Card title="Market Sentiment" action={formatDateTime(market?.as_of)}>
+      <Card title="Market Sentiment" action={formatDateTime(market?.as_of)} info={G.composite_score}>
         {market ? (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -330,10 +333,6 @@ export function SentimentBoard() {
         )}
       </Card>
 
-      {/* 이 화면 데이터 설명 */}
-      <div style={{ gridColumn: 'span 2' }}>
-        <GlossaryPanel items={SENTIMENT_GLOSSARY} />
-      </div>
     </div>
   );
 }
