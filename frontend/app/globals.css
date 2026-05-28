@@ -55,7 +55,7 @@
 
   --rail: 64px;
   --topbar: 56px;
-  --strip: 52px;
+  --strip: 68px;
 }
 
 .dark, [data-theme="dark"] {
