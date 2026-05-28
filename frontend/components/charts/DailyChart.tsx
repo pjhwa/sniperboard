@@ -1,12 +1,77 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { createChart, ColorType, CrosshairMode, Time } from 'lightweight-charts';
+import {
+  createChart, ColorType, CrosshairMode, Time,
+  ISeriesPrimitive, SeriesAttachedParameter, ISeriesPrimitivePaneView,
+  ISeriesPrimitivePaneRenderer, SeriesType,
+} from 'lightweight-charts';
+import { CanvasRenderingTarget2D } from 'fancy-canvas';
 import { DailyData } from '../../app/types';
 
 interface DailyChartProps {
   data: DailyData;
 }
+
+// ── GC 밴드 프리미티브: gc_upper ~ gc_lower 사이만 정확히 채움 ─────────────
+interface BandPoint { time: Time; upper: number; lower: number; }
+
+class GCBandRenderer implements ISeriesPrimitivePaneRenderer {
+  constructor(
+    private _points: BandPoint[],
+    private _param: SeriesAttachedParameter<Time, SeriesType>,
+  ) {}
+
+  draw(target: CanvasRenderingTarget2D): void {
+    target.useBitmapCoordinateSpace(({ context: ctx, horizontalPixelRatio: hpr, verticalPixelRatio: vpr }) => {
+      const timeScale = this._param.chart.timeScale();
+      const series = this._param.series;
+
+      const upper: [number, number][] = [];
+      const lower: [number, number][] = [];
+
+      for (const p of this._points) {
+        const x = timeScale.timeToCoordinate(p.time);
+        const yu = series.priceToCoordinate(p.upper);
+        const yl = series.priceToCoordinate(p.lower);
+        if (x === null || yu === null || yl === null) continue;
+        upper.push([x * hpr, yu * vpr]);
+        lower.push([x * hpr, yl * vpr]);
+      }
+
+      if (upper.length < 2) return;
+
+      ctx.beginPath();
+      ctx.moveTo(upper[0][0], upper[0][1]);
+      for (let i = 1; i < upper.length; i++) ctx.lineTo(upper[i][0], upper[i][1]);
+      for (let i = lower.length - 1; i >= 0; i--) ctx.lineTo(lower[i][0], lower[i][1]);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(168,85,247,0.15)';
+      ctx.fill();
+    });
+  }
+}
+
+class GCBandPrimitive implements ISeriesPrimitive<Time> {
+  private _param: SeriesAttachedParameter<Time, SeriesType> | null = null;
+
+  constructor(private _points: BandPoint[]) {}
+
+  attached(param: SeriesAttachedParameter<Time, SeriesType>): void {
+    this._param = param;
+  }
+
+  paneViews(): readonly ISeriesPrimitivePaneView[] {
+    if (!this._param) return [];
+    const param = this._param;
+    const points = this._points;
+    return [{
+      zOrder: () => 'bottom' as const,
+      renderer: () => new GCBandRenderer(points, param),
+    }];
+  }
+}
+// ────────────────────────────────────────────────────────────────────────────
 
 export default function DailyChart({ data }: DailyChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -36,47 +101,7 @@ export default function DailyChart({ data }: DailyChartProps) {
 
     const { candles, indicators } = data;
 
-    // ── 1. GC 밴드 음영 (캔들·EMA보다 먼저 추가 → 가장 하위 레이어) ──────────
-    const gcUp = indicators['gc_upper'];
-    const gcLo = indicators['gc_lower'];
-
-    if (gcUp?.length && gcLo?.length) {
-      const upperFillData = candles
-        .map((c, i) => ({ time: c.time as Time, value: gcUp[i] }))
-        .filter((p): p is { time: Time; value: number } => p.value != null);
-
-      const lowerFillData = candles
-        .map((c, i) => ({ time: c.time as Time, value: gcLo[i] }))
-        .filter((p): p is { time: Time; value: number } => p.value != null);
-
-      // Upper → 차트 하단까지 보라 반투명 채움
-      if (upperFillData.length > 0) {
-        const upperFill = chart.addAreaSeries({
-          lineColor: 'rgba(0,0,0,0)',
-          topColor: 'rgba(168,85,247,0.13)',
-          bottomColor: 'rgba(168,85,247,0.13)',
-          lineWidth: 1,
-          priceLineVisible: false,
-          lastValueVisible: false,
-        });
-        upperFill.setData(upperFillData);
-      }
-
-      // Lower → 차트 하단까지 배경색으로 덮어 "채널 아래" 영역을 지움
-      if (lowerFillData.length > 0) {
-        const lowerFill = chart.addAreaSeries({
-          lineColor: 'rgba(0,0,0,0)',
-          topColor: BG,
-          bottomColor: BG,
-          lineWidth: 1,
-          priceLineVisible: false,
-          lastValueVisible: false,
-        });
-        lowerFill.setData(lowerFillData);
-      }
-    }
-
-    // ── 2. 캔들스틱 ──────────────────────────────────────────────────────────
+    // ── 1. 캔들스틱 ──────────────────────────────────────────────────────────
     const candleSeries = chart.addCandlestickSeries({
       upColor: '#22c55e',
       downColor: '#ef4444',
@@ -91,6 +116,20 @@ export default function DailyChart({ data }: DailyChartProps) {
       low: c.low,
       close: c.close,
     })));
+
+    // ── 2. GC 밴드 음영 (캔들 시리즈에 프리미티브로 부착 → 그리드 위, 캔들 아래) ─
+    const gcUp = indicators['gc_upper'];
+    const gcLo = indicators['gc_lower'];
+
+    if (gcUp?.length && gcLo?.length) {
+      const bandPoints: BandPoint[] = candles
+        .map((c, i) => ({ time: c.time as Time, upper: gcUp[i], lower: gcLo[i] }))
+        .filter((p): p is BandPoint => p.upper != null && p.lower != null);
+
+      if (bandPoints.length > 0) {
+        candleSeries.attachPrimitive(new GCBandPrimitive(bandPoints));
+      }
+    }
 
     // ── 3. EMA 라인 ───────────────────────────────────────────────────────────
     const emaConfig = [
@@ -113,7 +152,7 @@ export default function DailyChart({ data }: DailyChartProps) {
       }
     });
 
-    // ── 4. GC 테두리 라인 (채움 위에 선명하게) ───────────────────────────────
+    // ── 4. GC 테두리 라인 ────────────────────────────────────────────────────
     const gcConfig = [
       { key: 'gc_upper' as const, color: '#a855f7', title: 'GC Upper', style: 1 },
       { key: 'gc_mid'   as const, color: 'rgba(168,85,247,0.45)', title: 'GC Mid', style: 2 },
