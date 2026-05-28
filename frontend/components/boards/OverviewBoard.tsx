@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useRegime } from '@/hooks/useRegime';
 import { useDistributionDays } from '@/hooks/useDistributionDays';
@@ -10,26 +11,10 @@ import { RadialGauge } from '@/components/ui/RadialGauge';
 import { Sparkle } from '@/components/ui/Icons';
 import { MacroItem, RegimeDiagnostics, UpcomingEarning, EARNINGS_RISK_META, FreshnessMeta, SYMBOLS, SymbolBrief } from '@/app/types';
 import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
-import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
+import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
+import { G } from '@/app/glossary';
 import { useBrief } from '@/hooks/useBrief';
 import { useEarnings } from '@/hooks/useEarnings';
-
-const OVERVIEW_GLOSSARY: GlossaryItem[] = [
-  { term: 'Risk Regime (리스크 레짐)', plain: '지금 시장이 얼마나 투자하기 좋은 환경인지를 5가지 요소로 종합해 점수로 나타냅니다. 100점에 가까울수록 강세, 낮을수록 위험한 환경입니다.' },
-  { term: 'Trend (추세)', plain: 'SPY(S&P500 ETF)가 200일 이동평균선 위에 있는지 확인합니다. 위에 있으면 시장 전체가 상승 추세임을 의미합니다.' },
-  { term: 'Breadth (시장 폭)', plain: '소수 대형주만 오르는지, 많은 종목이 함께 오르는지를 봅니다. RSP(동일가중 ETF)가 SPY(시총가중)보다 강하면 건강한 상승입니다.' },
-  { term: 'Credit (신용 스트레스)', plain: '회사채 시장의 건전성을 봅니다. 고위험 채권(HYG)이 안전 채권(IEF)보다 강하면 투자자들이 위험을 기꺼이 감수하고 있다는 신호입니다.' },
-  { term: 'Volatility (변동성)', plain: 'VIX 공포 지수입니다. 14 이하면 시장이 안정적, 20 이상이면 불안, 30 이상이면 공포 국면입니다. 낮을수록 좋은 환경입니다.' },
-  { term: 'Momentum (모멘텀)', plain: 'S&P500의 최근 20일 방향성입니다. 지수가 꾸준히 오르고 있으면 긍정 점수를 받습니다.' },
-  { term: 'Distribution Days (분산일)', plain: '기관 투자자들이 대량 매도한 날의 수입니다. 25거래일 내에 4~5일이면 경계, 6일 이상이면 시장 상단 가능성이 높아 신규 진입을 조심해야 합니다.' },
-  { term: 'VIX 백워데이션', plain: 'VIX9D(9일 변동성)가 VIX(30일)보다 높은 상태입니다. 정상적으로는 장기 변동성(VIX)이 더 높은데(콘탱고), 역전되면 지금 당장 시장이 더 불안하다는 뜻으로 위험 신호입니다.' },
-  { term: 'Market Breadth · SPY vs RSP', plain: 'SPY는 시가총액 비례 지수(애플, MS 등 대형주 영향 큼), RSP는 모든 종목을 동일 비중으로 구성한 지수입니다. RSP가 SPY보다 약하면 소수 대형주만 시장을 끌고 있다는 경고입니다.' },
-  { term: 'Credit Stress · HYG/JNK/LQD/IEF', plain: 'HYG·JNK는 고수익(고위험) 채권, LQD는 투자등급 회사채, IEF는 미국 국채입니다. 안전 자산(IEF)이 강하고 위험 자산(HYG)이 약하면 투자자들이 공포를 느끼고 있다는 뜻입니다.' },
-  { term: 'Daily Heat Strip (일봉 히트맵)', plain: '최근 60거래일의 일별 등락률을 색깔로 표현합니다. 초록색이 짙을수록 큰 상승, 빨간색이 짙을수록 큰 하락입니다. 패턴을 보며 종목의 건강도를 확인합니다.' },
-  { term: 'Watchlist Top 3', plain: 'Stage 2 점수가 가장 높은 3개 종목입니다. Stage 2는 Minervini의 이상적인 매수 구간 기준으로, 점수가 높을수록 지금 진입하기 좋은 환경임을 의미합니다.' },
-  { term: 'Sector Momentum · 섹터 모멘텀', plain: '5개 테마 ETF의 최근 5일 수익률을 비교합니다. SMH(반도체), XLE(에너지), XLY(소비재), XHB(홈빌더), ITA(방산) 순위가 높을수록 현재 시장에서 선호받는 섹터입니다. ↑EMA는 21일 이동평균선 위에서 거래 중인 강세 상태를 의미합니다.' },
-  { term: '종목별 AI 분석 · Setup Quality', plain: 'AI가 워치리스트 각 종목의 셋업 품질을 A+/A/B/C/D로 평가합니다. A+는 즉시 진입 가능한 최상의 구조, D는 진입을 피해야 할 상태입니다. 매수/보유/관망/회피 바이어스도 함께 제공합니다. AI 의견이므로 최종 판단은 본인이 해야 합니다.' },
-];
 
 const REGIME_LABELS: Record<string, [string, string]> = {
   RISK_ON:      ['Risk-On',      '강세'],
@@ -39,6 +24,21 @@ const REGIME_LABELS: Record<string, [string, string]> = {
   RISK_OFF:     ['Risk-Off',     '약세'],
   UNKNOWN:      ['Unknown',      '불명'],
 };
+
+const OVERVIEW_GUIDE: GuideSection[] = [
+  {
+    heading: '이 화면은',
+    body: '시장 전체 환경을 한눈에 파악하는 대시보드입니다. 개별 종목 진입 전 "지금 시장이 매수에 적합한가?"를 먼저 확인하는 화면입니다.',
+  },
+  {
+    heading: '핵심 지표 읽는 법',
+    body: 'Risk Regime 점수가 전체 건강도를 요약합니다. Trend(SPY EMA200 위치)와 Breadth(RSP vs SPY)가 시장 구조를, Credit(HYG/IEF)과 Volatility(VIX)가 리스크 선호도를 나타냅니다. Distribution Days는 기관 매도 압력의 누적치로, 6일 이상이면 신규 진입을 자제해야 합니다.',
+  },
+  {
+    heading: '지금 이렇게 쓰세요',
+    body: 'Risk Regime ≥ 60 확인 → VIX 20 이하 확인 → Distribution Days 5 이하 확인 → Breadth에서 RSP ≥ SPY 확인. 4가지 통과하면 종목 진입 검토. 하나라도 불합격이면 포지션 크기를 줄이세요.',
+  },
+];
 
 
 // Minimal freshness badge helper (Phase 4) — uses existing CSS vars + .badge.neutral patterns. No new styles.
@@ -90,14 +90,17 @@ export function OverviewBoard() {
   const { briefData, briefMeta } = useBrief();
   const { earningsData, earningsMeta } = useEarnings();
 
+  const [guideOpen, setGuideOpen] = useState(false);
+
   // 백워데이션: VIX9D(9일) > VIX(30일) — 단기 변동성이 장기보다 높아 역전된 상태
   const backward = vix && vix9d ? vix.price !== null && vix9d.price !== null && (vix9d.price ?? 0) > (vix.price ?? 0) : false;
 
   return (
     <div
       className="board fade-in"
-      style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', gridTemplateRows: 'auto auto auto auto', alignContent: 'start' }}
+      style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', gridTemplateRows: 'auto auto auto auto', alignContent: 'start', position: 'relative' }}
     >
+      <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
       {/* AI Insight — span 2 */}
       <div style={{ gridColumn: 'span 2' }}>
         <div className="ai-card">
@@ -263,7 +266,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Regime gauge */}
-      <Card title="Risk Regime" action="5요소 종합">
+      <Card title="Risk Regime" action="5요소 종합" info={G.risk_regime}>
         {regimeData ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <RadialGauge value={regimeData.total ?? 0} size={100} label={regimeData.total ?? '—'} sublabel="/ 100" />
@@ -306,7 +309,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Distribution Days */}
-      <Card title="Distribution Days" action="O'Neil · 25거래일">
+      <Card title="Distribution Days" action="O'Neil · 25거래일" info={G.distribution_days}>
         {ddData ? (
           <>
             {(['spy', 'qqq'] as const).map(key => {
@@ -341,7 +344,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Market Breadth */}
-      <Card title="Market Breadth" action="SPY vs RSP">
+      <Card title="Market Breadth" action="SPY vs RSP" info={G.market_breadth_spy_rsp}>
         {([
           ['SPY',  spy,  '시가총액'],
           ['RSP',  rsp,  '동일가중'],
@@ -373,7 +376,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* VIX Panel */}
-      <Card title="Volatility · VIX" action={backward ? '⚠ 백워데이션' : '정상'}>
+      <Card title="Volatility · VIX" action={backward ? '⚠ 백워데이션' : '정상'} info={G.volatility}>
         {vix ? (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 8 }}>
@@ -403,7 +406,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Credit Stress */}
-      <Card title="Credit Stress" action="HYG / IEF 5D">
+      <Card title="Credit Stress" action="HYG / IEF 5D" info={G.credit}>
         {([['HYG', hyg], ['JNK', jnk], ['LQD', lqd], ['IEF', ief]] as [string, MacroItem | undefined][]).map(([label, m]) => {
           if (!m) return null;
           const up = (m.change_pct_5d ?? 0) >= 0;
@@ -462,7 +465,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Conviction 리더보드 */}
-      <Card title="Conviction 리더보드" action="확신도 순">
+      <Card title="Conviction 리더보드" action="확신도 순" info={G.conviction}>
         {watchlist.length === 0 ? (
           <div className="subtle">로딩 중...</div>
         ) : (
@@ -487,7 +490,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Sector Momentum */}
-      <Card title="Sector Momentum" action="5D 수익률">
+      <Card title="Sector Momentum" action="5D 수익률" info={G.sector_momentum}>
         {(() => {
           const sectors: [string, string][] = [
             ['SMH', '반도체'],
@@ -546,10 +549,12 @@ export function OverviewBoard() {
         {watchlist.length === 0 && <div className="subtle">로딩 중...</div>}
       </Card>
 
-      {/* 이 화면 데이터 설명 */}
-      <div style={{ gridColumn: 'span 4' }}>
-        <GlossaryPanel items={OVERVIEW_GLOSSARY} />
-      </div>
+      <BoardGuidePanel
+        title="Overview 가이드"
+        sections={OVERVIEW_GUIDE}
+        isOpen={guideOpen}
+        onClose={() => setGuideOpen(false)}
+      />
     </div>
   );
 }
