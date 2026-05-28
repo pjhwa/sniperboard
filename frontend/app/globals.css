@@ -772,56 +772,6 @@ body {
 }
 
 /* ============================================================
-   Glossary Panel — 일반인 친화적 데이터 설명
-   ============================================================ */
-.glossary {
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--bg-muted);
-  overflow: hidden;
-}
-.glossary__toggle {
-  width: 100%;
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 14px;
-  font-size: 11.5px; font-weight: 500;
-  color: var(--fg-muted);
-  background: none; border: none;
-  cursor: pointer; text-align: left;
-}
-.glossary__toggle:hover { color: var(--fg); background: var(--bg-subtle); }
-.glossary__icon {
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  display: grid; place-items: center;
-  font-size: 10px; font-weight: 700;
-  color: var(--fg-subtle); flex-shrink: 0;
-}
-.glossary__arrow { margin-left: auto; font-size: 9px; color: var(--fg-faint); }
-.glossary__body {
-  border-top: 1px solid var(--border);
-  padding: 12px 14px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 10px;
-}
-.glossary__item {
-  display: flex; flex-direction: column; gap: 3px;
-  padding: 8px 10px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--border-soft);
-  background: var(--card);
-}
-.glossary__term {
-  font-size: 11px; font-weight: 600;
-  color: var(--fg); font-family: var(--font-mono);
-}
-.glossary__plain {
-  font-size: 11.5px; color: var(--fg-muted); line-height: 1.45;
-}
-
-/* ============================================================
    InfoPopover — inline ⓘ metric tooltip
    ============================================================ */
 .info-pop {
