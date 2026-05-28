@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useStore, Board } from '@/hooks/useStore';
 import { SYMBOLS } from '@/app/types';
+import { GLOSSARY } from '@/app/glossary';
 import { Bolt, Layers } from '@/components/ui/Icons';
 
 interface Item {
-  type: 'symbol' | 'nav';
+  type: 'symbol' | 'nav' | 'glossary';
   label: string;
   sub: string;
   action: () => void;
@@ -22,7 +23,10 @@ export function CommandPalette() {
 
   if (!cmdOpen) return null;
 
-  const items: Item[] = [
+  const isGlossaryMode = q.startsWith('?');
+  const glossaryQ = isGlossaryMode ? q.slice(1).trim().toLowerCase() : '';
+
+  const navItems: Item[] = [
     ...SYMBOLS.map(s => ({
       type: 'symbol' as const,
       label: s,
@@ -38,28 +42,49 @@ export function CommandPalette() {
     { type: 'nav', label: 'Sentiment', sub: '시장 심리 + 종목별 점수', action: () => { setBoard('sentiment' as Board); setCmdOpen(false); }, meta: 'Board' },
   ];
 
-  const filtered = q
-    ? items.filter(i => i.label.toLowerCase().includes(q.toLowerCase()) || i.sub.toLowerCase().includes(q.toLowerCase()))
-    : items;
+  const glossaryItems: Item[] = GLOSSARY
+    .filter(e =>
+      !glossaryQ ||
+      e.term.toLowerCase().includes(glossaryQ) ||
+      e.body.toLowerCase().includes(glossaryQ)
+    )
+    .map(e => ({
+      type: 'glossary' as const,
+      label: e.term,
+      sub: e.body.length > 80 ? e.body.slice(0, 80) + '…' : e.body,
+      action: () => setCmdOpen(false),
+      meta: '용어',
+    }));
+
+  const items = isGlossaryMode ? glossaryItems : (
+    q
+      ? navItems.filter(i => i.label.toLowerCase().includes(q.toLowerCase()) || i.sub.toLowerCase().includes(q.toLowerCase()))
+      : navItems
+  );
 
   return (
     <div className="cmd-overlay" onClick={() => setCmdOpen(false)}>
       <div className="cmd" onClick={e => e.stopPropagation()}>
         <input
           className="cmd__inp"
-          placeholder="종목, 보드, 신호 검색..."
+          placeholder="종목, 보드 검색… (? 입력 시 용어 검색)"
           autoFocus
           value={q}
           onChange={e => { setQ(e.target.value); setSel(0); }}
           onKeyDown={e => {
-            if (e.key === 'ArrowDown') { e.preventDefault(); setSel(s => Math.min(filtered.length - 1, s + 1)); }
+            if (e.key === 'ArrowDown') { e.preventDefault(); setSel(s => Math.min(items.length - 1, s + 1)); }
             if (e.key === 'ArrowUp')   { e.preventDefault(); setSel(s => Math.max(0, s - 1)); }
-            if (e.key === 'Enter')     { filtered[sel]?.action(); }
+            if (e.key === 'Enter')     { items[sel]?.action(); }
             if (e.key === 'Escape')    { setCmdOpen(false); }
           }}
         />
+        {isGlossaryMode && (
+          <div style={{ padding: '4px 16px', fontSize: 10.5, color: 'var(--fg-subtle)', borderBottom: '1px solid var(--border)' }}>
+            용어 검색 모드 — {items.length}개 결과
+          </div>
+        )}
         <div className="cmd__list">
-          {filtered.map((item, idx) => (
+          {items.map((item, idx) => (
             <div
               key={idx}
               className={'cmd__item ' + (idx === sel ? 'sel' : '')}
@@ -67,11 +92,11 @@ export function CommandPalette() {
               onClick={item.action}
             >
               <div className="ico">
-                {item.type === 'symbol' ? <Bolt /> : <Layers />}
+                {item.type === 'symbol' ? <Bolt /> : item.type === 'glossary' ? <span style={{ fontSize: 12 }}>ⓘ</span> : <Layers />}
               </div>
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 500 }}>{item.label}</div>
-                <div style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>{item.sub}</div>
+                <div style={{ fontSize: 11, color: 'var(--fg-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.sub}</div>
               </div>
               <div className="meta">{item.meta}</div>
             </div>
