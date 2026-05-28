@@ -5,6 +5,7 @@ import { useWatchlist } from '@/hooks/useWatchlist';
 import { Card, ScorePill } from '@/components/ui/Card';
 import { ArrowRight } from '@/components/ui/Icons';
 import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
+import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
 
 const WATCHLIST_GLOSSARY: GlossaryItem[] = [
   { term: 'Symbol', plain: '종목 코드. 예) TSLA = Tesla, AAPL = Apple. 미국 주식 시장에서 각 회사를 식별하는 짧은 이름입니다.' },
@@ -114,23 +115,7 @@ export function WatchlistBoard() {
                       })()}
                     </td>
                     <td>
-                      {(() => {
-                        const s = w.conviction_score ?? 0;
-                        const c = s >= 65 ? 'var(--bull)'
-                                : s >= 50 ? 'var(--teal)'
-                                : s >= 35 ? 'var(--warn)'
-                                : 'var(--bear)';
-                        const bg = s >= 65 ? 'var(--bull-soft)'
-                                 : s >= 50 ? 'rgba(20,184,166,0.12)'
-                                 : s >= 35 ? 'var(--warn-soft)'
-                                 : 'var(--bear-soft)';
-                        return (
-                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 8px', borderRadius: 4, background: bg, fontSize: 11 }}>
-                            <span style={{ fontWeight: 700, color: c, fontSize: 13 }}>{s > 0 ? s.toFixed(0) : '-'}</span>
-                            <span style={{ color: c, fontSize: 10 }}>{w.conviction_label ?? ''}</span>
-                          </div>
-                        );
-                      })()}
+                      <ConvictionBadge score={w.conviction_score ?? undefined} label={w.conviction_label} size="sm" />
                     </td>
                     <td>
                       <button

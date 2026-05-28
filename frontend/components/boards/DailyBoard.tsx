@@ -10,6 +10,7 @@ import DailyChart from '@/components/charts/DailyChart';
 import { Check, X } from '@/components/ui/Icons';
 import { STAGE2_META } from '@/app/types';
 import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
+import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
 
 const DAILY_GLOSSARY: GlossaryItem[] = [
   { term: 'Stage 2 점수 (0~7)', plain: 'Minervini가 정의한 이상적인 매수 구간 조건 7가지를 충족한 개수입니다. 6~7점이면 진입 검토, 4~5점은 관망, 3점 이하면 매수 회피를 권장합니다.', color: 'var(--bull)' },
@@ -73,11 +74,7 @@ export function DailyBoard() {
         <div className="card__hd">
           <h3>{symbol} · Daily</h3>
           {stage2 && <span className={'badge ' + structColor}>{stage2.market_structure}</span>}
-          {dailyData?.conviction_score != null && (() => {
-            const s = dailyData.conviction_score;
-            const bg = s >= 65 ? 'var(--bull)' : s >= 50 ? 'var(--teal)' : s >= 35 ? 'var(--warn)' : 'var(--bear)';
-            return <span className="badge" style={{ background: bg, color: s >= 35 ? '#fff' : '#fff', marginLeft: 8 }}>Conviction {s}</span>;
-          })()}
+          <ConvictionBadge score={dailyData?.conviction_score} size="md" />
           <small>1Y · Gaussian Channel</small>
         </div>
         <div className="card__bd" style={{ paddingTop: 0 }}>
@@ -170,18 +167,11 @@ export function DailyBoard() {
             })()}
 
             {/* Phase 1: Conviction - integrated in Stage 2 card */}
-            {dailyData?.conviction_score != null && (() => {
-              const s = dailyData.conviction_score;
-              const c = s >= 65 ? 'var(--bull)' : s >= 50 ? 'var(--teal)' : s >= 35 ? 'var(--warn)' : 'var(--bear)';
-              const bg = s >= 65 ? 'var(--bull-soft)' : s >= 50 ? 'rgba(20,184,166,0.12)' : s >= 35 ? 'var(--warn-soft)' : 'var(--bear-soft)';
-              return (
-              <div style={{ marginTop: 10, padding: '6px 10px', borderRadius: 6, background: bg, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', minWidth: 70 }}>Conviction</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: c }}>{s}</div>
-                <div style={{ fontSize: 12, color: c }}>{dailyData.conviction_label}</div>
+            {dailyData?.conviction_score != null && (
+              <div style={{ marginTop: 10 }}>
+                <ConvictionBadge score={dailyData.conviction_score} label={dailyData.conviction_label} size="md" />
               </div>
-              );
-            })()}
+            )}
             <div>
               {(Object.keys(STAGE2_META) as (keyof typeof STAGE2_META)[]).map(k => {
                 const pass = stage2.checks[k];
