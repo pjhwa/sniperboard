@@ -8,6 +8,7 @@ import { useSentiment } from '@/hooks/useSentiment';
 import { useBrief } from '@/hooks/useBrief';
 import { useEarnings } from '@/hooks/useEarnings';
 import { useRegime } from '@/hooks/useRegime';
+import { usePrePost } from '@/hooks/usePrePost';
 import { Card, ScorePill } from '@/components/ui/Card';
 import { RadialGauge } from '@/components/ui/RadialGauge';
 import { Sparkline } from '@/components/ui/Sparkline';
@@ -109,6 +110,7 @@ export function DeepDiveBoard() {
   const { briefData }                = useBrief();
   const { earningsData }             = useEarnings();
   const { regimeData }               = useRegime();
+  const { prePostData }              = usePrePost(symbol);
 
   // ── Intraday
   const candles    = ohlcvData?.candles ?? [];
@@ -233,6 +235,33 @@ export function DeepDiveBoard() {
                       </span>
                       {' · '}EMA21{' '}
                       <span className="mono">${(indicators.ema21[lastIdx] ?? 0).toFixed(2)}</span>
+                    </div>
+                  );
+                })()}
+                {prePostData && prePostData.market_state !== 'REGULAR' && (() => {
+                  const isPre = prePostData.market_state === 'PRE';
+                  const price = isPre ? prePostData.pre_market_price : prePostData.post_market_price;
+                  const chgPct = isPre ? prePostData.pre_market_change_pct : prePostData.post_market_change_pct;
+                  if (price == null) return null;
+                  const up = (chgPct ?? 0) >= 0;
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
+                      <span style={{
+                        fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
+                        padding: '1px 5px', borderRadius: 4,
+                        background: isPre ? 'var(--em-soft)' : 'var(--border)',
+                        color: isPre ? 'var(--em-500)' : 'var(--fg-muted)',
+                      }}>
+                        {isPre ? 'PRE' : 'POST'}
+                      </span>
+                      <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>
+                        ${price.toFixed(2)}
+                      </span>
+                      {chgPct != null && (
+                        <span style={{ fontSize: 11, color: up ? 'var(--bull)' : 'var(--bear)' }}>
+                          {up ? '+' : ''}{chgPct.toFixed(2)}%
+                        </span>
+                      )}
                     </div>
                   );
                 })()}
