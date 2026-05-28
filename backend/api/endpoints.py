@@ -73,9 +73,13 @@ def _fetch_prepost_data(symbol: str) -> dict:
         market_state = info.get("marketState", "CLOSED")
         result["market_state"] = market_state if market_state in ("PRE", "POST", "REGULAR", "CLOSED") else "CLOSED"
 
-        regular_close = info.get("regularMarketPreviousClose")
-        if regular_close is None:
+        # During PRE/POST, regularMarketPrice = last regular session close (yesterday).
+        # regularMarketPreviousClose = the session before that (two days ago) — wrong base.
+        # During REGULAR hours, regularMarketPrice = live price; use previousClose instead.
+        if market_state in ("PRE", "POST"):
             regular_close = info.get("regularMarketPrice")
+        else:
+            regular_close = info.get("regularMarketPreviousClose") or info.get("regularMarketPrice")
         result["regular_close"] = regular_close
 
         pre_price = info.get("preMarketPrice")
