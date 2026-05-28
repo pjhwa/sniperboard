@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useMacro } from '@/hooks/useMacro';
 import { useIntraday } from '@/hooks/useIntraday';
@@ -8,11 +9,22 @@ import { Sparkline } from '@/components/ui/Sparkline';
 
 const STRIP_SYMBOLS = ['SPY', 'QQQ', 'IWM', '^VIX', 'DX-Y.NYB', 'GLD', 'CL=F'];
 
+const SYMBOL_TOOLTIPS: Record<string, string> = {
+  'SPY':      'S&P 500 ETF — 미국 대형주 500개 추종. 전체 시장 체온계',
+  'QQQ':      '나스닥 100 ETF — 애플·엔비디아 등 기술주 중심 대형 성장주',
+  'IWM':      '러셀 2000 ETF — 미국 소형주 2000개. 내수 경기·리스크 선호도 반영',
+  '^VIX':     'VIX 공포 지수 — S&P 500 옵션 내재변동성. 20↑ 주의, 30↑ 공포 구간',
+  'DX-Y.NYB': 'DXY 달러 인덱스 — 6개 주요 통화 대비 달러 강도. 달러↑ = 위험자산↓ 경향',
+  'GLD':      '금 ETF — 안전자산·인플레이션 헤지. 달러·금리와 역관계',
+  'CL=F':     'WTI 원유 선물 — 서부 텍사스산 원유. 에너지 섹터·인플레이션 선행 지표',
+};
+
 export function MarketStrip() {
   const { symbol, timeframe } = useStore();
   const { macroData } = useMacro();
   const { ohlcvData } = useIntraday(symbol, timeframe);
   const { prePostData } = usePrePost(symbol);
+  const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
 
   const macro = macroData?.macro ?? [];
   const items = STRIP_SYMBOLS.map(s => macro.find(m => m.symbol === s)).filter(Boolean) as typeof macro;
@@ -82,7 +94,17 @@ export function MarketStrip() {
         const up = (m.change_pct_1d ?? 0) >= 0;
         const displaySym = m.symbol.replace('^', '').replace('-Y.NYB', 'Y');
         return (
-          <div key={m.symbol} className="strip__cell">
+          <div
+            key={m.symbol}
+            className="strip__cell"
+            onMouseEnter={e => {
+              const tip = SYMBOL_TOOLTIPS[m.symbol];
+              if (!tip) return;
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              setTooltip({ text: tip, x: rect.left + rect.width / 2, y: rect.bottom + 6 });
+            }}
+            onMouseLeave={() => setTooltip(null)}
+          >
             <div>
               <div className="strip__label" style={{ marginBottom: 1 }}>{displaySym}</div>
               <div className="strip__val">
@@ -97,6 +119,11 @@ export function MarketStrip() {
           </div>
         );
       })}
+      {tooltip && (
+        <div className="strip__tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
+          {tooltip.text}
+        </div>
+      )}
       <button
         className="guide-btn"
         style={{ position: 'relative', top: 'unset', right: 'unset', marginLeft: 'auto', marginRight: 14, alignSelf: 'center', flexShrink: 0 }}
