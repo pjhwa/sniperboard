@@ -19,7 +19,7 @@ SniperBoard는 미국 주식 스윙 트레이딩을 위한 웹 기반 매매 신
 - **AI 파이프라인**: Grok/Hermes 모델이 기술 지표 + 소셜 심리를 결합해 시장 내러티브 생성 (외부 cron)
 - **신호 철학**: VCP·Sniper·Pullback (O'Neil/Livermore) + Stage 2 (Minervini) + Conviction 종합 점수 + Risk Regime + Distribution Day
 
-Plaid DS 기반 다크/라이트 테마 전환 지원. ⌘K 커맨드 팔레트로 종목·보드 빠른 이동. 각 지표·카드마다 ⓘ 버튼으로 맥락 설명 팝오버 제공, `? 가이드` 버튼으로 보드 전체 사용 가이드를 슬라이드오버로 확인 가능. ⌘K 입력창에 `?`를 입력하면 용어 검색 모드 전환.
+Plaid DS 기반 다크/라이트 테마 전환 지원. ⌘K 커맨드 팔레트로 종목·보드 빠른 이동. 각 지표·카드마다 ⓘ 버튼으로 맥락 설명 팝오버 제공(뷰포트 경계 자동 보정), MarketStrip 우측의 `? 가이드` 버튼으로 보드 전체 사용 가이드를 슬라이드오버로 확인 가능. ⌘K 입력창에 `?`를 입력하면 28개 용어 검색 모드로 전환.
 
 ---
 
@@ -84,21 +84,21 @@ cp .env.example .env
 좌측 **Rail** 아이콘을 클릭해 보드를 전환합니다. 상단 검색창 또는 **⌘K** 커맨드 팔레트로 종목·보드를 빠르게 전환할 수 있습니다.
 
 각 보드에는 **3단계 도움말 시스템**이 통합되어 있습니다:
-- **ⓘ 팝오버**: 카드 제목·지표 이름 옆에 위치. 클릭하면 해당 지표의 쉬운 설명 + 계산 방식을 1단락으로 확인.
-- **? 가이드 버튼**: 보드 우상단. 클릭하면 슬라이드오버 패널이 열리며 "이 화면은 / 핵심 지표 읽는 법 / 지금 이렇게 쓰세요" 3섹션 가이드 제공.
-- **⌘K 용어 검색**: 팔레트 입력창에 `?` 입력 시 용어 검색 모드 전환. `? vix`, `? stage2` 등으로 26개 용어 검색.
+- **ⓘ 팝오버**: 카드 제목·지표 이름 옆에 위치. 클릭하면 해당 지표의 쉬운 설명을 팝오버로 확인. 뷰포트 경계를 자동 감지해 화면 밖으로 벗어나지 않습니다.
+- **? 가이드 버튼**: MarketStrip 우측 끝 고정. 클릭하면 현재 보드의 슬라이드오버 패널이 열리며 "이 화면은 / 핵심 지표 읽는 법 / 지금 이렇게 쓰세요" 3섹션 가이드 제공.
+- **⌘K 용어 검색**: 팔레트 입력창에 `?` 입력 시 용어 검색 모드 전환. `? vix`, `? stage2` 등으로 28개 용어 검색.
 
 ---
 
 ### Overview — 시장 한눈에 보기
 
-![Overview](docs/images/screenshot-overview.png)
+![Overview](assets/images/screenshot-overview.png)
 
 시장 전체 상황을 한 화면에서 파악하는 메인 보드. 11개 카드로 구성됩니다.
 
 | 카드 | 내용 |
 |------|------|
-| **AI Market Snapshot** | Grok AI가 생성한 시장 내러티브 (tone · key_themes · watch_points) + 워치리스트 전 종목 AI 분석 (Setup Quality A+~D · Action Bias · 한 줄 요약). briefData 없을 때는 Regime 텍스트로 자동 대체. ⏱ 데이터 신선도 배지 표시. |
+| **AI Market Snapshot** | Grok AI가 생성한 시장 내러티브 (tone · key_themes · watch_points) + 워치리스트 전 종목 AI 분석 (Setup Quality A+~D · Action Bias · 한 줄 요약). briefData 없을 때는 Regime 텍스트로 자동 대체. ⏱ 데이터 신선도 배지. |
 | **Earnings Calendar** | 워치리스트 30일 이내 실적 발표 일정. 리스크 등급(high/med/low) + 임박/진입권/관망 티어. ⏱ 신선도 배지. |
 | **Risk Regime** | 매크로 환경 0~100점 종합 (5요소: Trend · Breadth · Credit · Volatility · Momentum + 원시 수치). RadialGauge 시각화. |
 | **Distribution Days** | SPY·QQQ 기관 분배일 카운트 (O'Neil, 25거래일 기준). OK / WARNING / DANGER 등급. |
@@ -110,13 +110,11 @@ cp .env.example .env
 | **Sector Momentum** | SMH·XLE·XLY·XHB·ITA 5일 수익률 순위 + EMA21 위/아래 상태. |
 | **Watchlist Top 3** | Stage 2 점수 상위 3종목 미리보기. |
 
-> 각 카드 제목 옆 **ⓘ** 버튼으로 지표별 팝오버 설명을 확인할 수 있습니다. 보드 우상단 **? 가이드** 버튼으로 Overview 전체 해석 가이드를 열 수 있습니다.
-
 ---
 
 ### Deep Dive — 종합 종목 분석
 
-![Deep Dive](docs/images/screenshot-deepdive.png)
+![Deep Dive](assets/images/screenshot-deepdive.png)
 
 한 종목에 대한 모든 관점을 하나의 흐름으로 배치한 종합 분석 보드. 보드 상단에서 종목을 직접 전환할 수 있습니다.
 
@@ -145,11 +143,11 @@ cp .env.example .env
 
 ### Intraday — 실시간 신호 (30초 자동 갱신)
 
-![Intraday](docs/images/screenshot-intraday.png)
+![Intraday](assets/images/screenshot-intraday.png)
 
 - 1분/5분/15분/1시간봉 캔들차트 (EMA21 황색 · EMA50 인디고 오버레이)
 - 6개 매매 신호 마커 차트 위 오버레이 (▲ 매수 / ▼ 경고)
-- **Active Signals 패널**: 활성 신호별 진입 조건 가이드 (가격·RSI·EMA 기준)
+- **Active Signals 패널**: 활성 신호별 진입 조건 가이드 (가격·RSI·EMA 기준). 각 신호명 옆 ⓘ 팝오버로 상세 조건 확인 가능.
 - **RSI(14) 게이지 바**: 과매수/과매도 영역 표시
 - **R:R 계산기**: ATR 기반 자동 진입·손절·목표가 + 포지션 크기 (계좌 크기·리스크 % 설정)
 
@@ -157,7 +155,7 @@ cp .env.example .env
 
 ### Daily — Stage 2 + 가우시안 채널
 
-![Daily](docs/images/screenshot-daily.png)
+![Daily](assets/images/screenshot-daily.png)
 
 - 252봉(1년) 일봉 차트 (EMA8·21·50·200 + 가우시안 채널 + Entry/Stop 라인)
 - **Minervini Stage 2 체크리스트** 7항목: 이평선 정배열 / EMA200 상승 / 52주 고점 근접 / 저점 반등 / 얕은 조정 / RS Score / 거래량 수축. 0~7점 채점.
@@ -167,13 +165,13 @@ cp .env.example .env
 - **베어 플래그 패턴** 감지
 - **가우시안 채널 상태**: 돌파 · 리테스트 · 이탈 구분 (look-ahead bias 없는 인과 커널)
 - **Conviction 배지**: Stage2 + Sentiment + Regime 3요소 가중 종합 점수 (0~100)
-- **R:R 계산기 패널**: Entry/Stop/Target + 포지션 크기
+- **R:R 패널**: Entry/Stop/Target + 포지션 크기. 카드 ⓘ 버튼으로 R:R 개념 팝오버 설명 제공.
 
 ---
 
 ### Watchlist — Stage 2 정렬 테이블
 
-![Watchlist](docs/images/screenshot-watchlist.png)
+![Watchlist](assets/images/screenshot-watchlist.png)
 
 - TSLA · AAPL · NVDA · META · AMZN · GOOGL · PLTR Stage 2 점수 내림차순 정렬
 - 컬럼: 가격 · Stage 2(7점 만점) · RS Score · 52주 고점 이격 · 진입가 · 손절가 · 목표가 · 체크 인디케이터 · 월봉 단계 · **Conviction** 배지
@@ -186,28 +184,29 @@ cp .env.example .env
 
 ### Macro — 섹터 로테이션 + 글로벌 지표
 
-![Macro](docs/images/screenshot-macro.png)
+![Macro](assets/images/screenshot-macro.png)
 
 - **섹터 로테이션 바**: ITA · XLE · SMH · XLY · XHB 1일 수익률 정렬 (상대 강도 한눈에 파악)
-- **6그룹 카드**:
-  - 변동성: VIX · VIX9D · VVIX (공포 게이지)
-  - 시장 폭: SPY · RSP · MAGS · IWM (대형주 vs 전체 시장)
-  - 신용 스트레스: HYG · JNK · LQD · IEF (회사채 vs 국채)
-  - 달러·금리: DXY · TNX · TLT (달러인덱스·10년물·장기채)
-  - 원자재: CL=F(유가) · GLD(금)
-  - 섹터 ETF: SMH · XLE · XLY · XHB · ITA
-- 21개 심볼 가격 · 1D 변화율 · EMA8/21 위치 · 시장 구조 표시
+- **6그룹 카드** (각 카드마다 ⓘ 팝오버로 지표 의미·활용법 설명 제공):
+  - **변동성**: VIX · VIX9D · VVIX (공포 게이지 — 14 이하 안정 / 20 경계 / 30 이상 공포)
+  - **시장 폭**: SPY · RSP · MAGS · IWM (RSP가 SPY보다 약하면 대형주 편중 경고)
+  - **신용 스트레스**: HYG · JNK · LQD · IEF (HYG 강세 = Risk-On, 약세 = 공포)
+  - **달러·금리**: DXY · TNX · TLT (달러 강세·금리 상승은 주식에 역풍)
+  - **원자재**: CL=F(유가) · GLD(금) (원유=경기 선행, 금=안전자산 선호)
+  - **섹터 ETF**: SMH · XLE · XLY · XHB · ITA (돈이 몰리는 섹터 파악)
+- 21개 심볼 가격 · 1D 변화율 · 시장 구조 표시
 
 ---
 
 ### Sentiment — 소셜 심리 분석
 
-![Sentiment](docs/images/screenshot-sentiment.png)
+![Sentiment](assets/images/screenshot-sentiment.png)
 
-- **시장 전체 심리 게이지**: 극도공포 ~ 도취 5단계 + composite_score 수치 (−2 ~ +2 범위)
-- **종목별 심리 카드**: 감정 점수 · 트렌드 · 멘션량 · 봇 의심도 · 핵심 이유 · Setup Quality(A+~D) 배지
-- **심리 추이 차트**: 카드 클릭 시 펼쳐지는 7일/30일 토글 차트 — 주가 라인(좌축) + composite_score 오버레이(우측 −2~+2), 장전/장후 슬롯 마커(▲/●)
+- **시장 전체 심리 게이지**: 극도공포 ~ 도취 5단계 + composite_score 수치 (−2 ~ +2 범위). ⓘ 팝오버로 복합점수 계산 방식 설명.
+- **종목별 심리 카드**: 감정 점수 · ScoreBar 시각화 · 트렌드 · 멘션량 · 봇 의심도 · 핵심 이유 · Setup Quality(A+~D) 배지
+- **심리 추이 차트**: 카드 클릭 시 펼쳐지는 7일/30일 토글 차트 — 주가 라인(좌축) + composite_score 오버레이(우측 −2~+2)
 - **주요 뉴스**: 시장 전체 및 종목별 상위 뉴스 헤드라인·요약·출처 표시
+- **소셜 심리 데이터 이해 카드** (하단 상설): 데이터 수집 방식 · 복합점수 범위 시각화 · 역발상 전략 원리 · 올바른 활용법 · 주의사항 5섹션으로 구성
 - 소셜 데이터는 외부 cron(Mac Mini)이 하루 2회(06:00/22:00 UTC) 수집·갱신
 
 ---
