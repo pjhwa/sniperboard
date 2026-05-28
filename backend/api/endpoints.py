@@ -24,7 +24,7 @@ from core.conviction_calculator import calculate_conviction
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-WATCHLIST_SYMS = ["TSLA", "AAPL", "NVDA", "META", "AMZN", "GOOGL"]
+WATCHLIST_SYMS = ["TSLA", "AAPL", "NVDA", "META", "AMZN", "GOOGL", "PLTR"]
 
 
 def _freshness_meta(generated_at: Optional[str] = None) -> dict:

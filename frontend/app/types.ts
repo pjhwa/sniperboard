@@ -224,7 +224,7 @@ export const STAGE2_META: Record<keyof Stage2Checks, { label: string; desc: stri
   volume_contracting: { label: '거래량 수축',                     desc: '5일 평균 < 20일 평균 (눌림 확인)' },
 };
 
-export const SYMBOLS = ['TSLA', 'AAPL', 'NVDA', 'META', 'AMZN', 'GOOGL'];
+export const SYMBOLS = ['TSLA', 'AAPL', 'NVDA', 'META', 'AMZN', 'GOOGL', 'PLTR'];
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
