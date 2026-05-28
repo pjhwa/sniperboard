@@ -65,6 +65,7 @@ def _fetch_prepost_data(symbol: str) -> dict:
         "post_market_price": None,
         "post_market_change_pct": None,
         "regular_close": None,
+        "regular_change_pct": None,
     }
     try:
         ticker = yf.Ticker(symbol)
@@ -109,6 +110,10 @@ def _fetch_prepost_data(symbol: str) -> dict:
             result["post_market_change_pct"] = round(
                 (float(post_price) - float(regular_close)) / float(regular_close) * 100, 3
             )
+
+        regular_change_pct = info.get("regularMarketChangePercent")
+        if regular_change_pct is not None:
+            result["regular_change_pct"] = round(float(regular_change_pct), 3)
 
     except Exception as e:
         logger.warning(f"prepost fetch failed for {symbol}: {e}")

@@ -345,3 +345,4 @@ class PrePostResponse(BaseModel):
     post_market_price: Optional[float] = None
     post_market_change_pct: Optional[float] = None
     regular_close: Optional[float] = None
+    regular_change_pct: Optional[float] = None  # regularMarketChangePercent from yfinance

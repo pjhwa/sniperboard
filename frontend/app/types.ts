@@ -238,6 +238,7 @@ export interface PrePostData {
   post_market_price: number | null;
   post_market_change_pct: number | null;
   regular_close: number | null;
+  regular_change_pct: number | null;
 }
 
 // --- Sentiment (소셜 심리) ---

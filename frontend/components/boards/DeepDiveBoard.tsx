@@ -222,9 +222,17 @@ export function DeepDiveBoard() {
           {lastCandle ? (
             <>
               <div style={{ flexShrink: 0 }}>
-                <div className="mono" style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1 }}>
-                  ${lastCandle.close.toFixed(2)}
-                </div>
+                {/* PRE/POST 상태에서는 공식 종가(regular_close) 사용 */}
+                {(() => {
+                  const isPP = prePostData?.market_state === 'PRE' || prePostData?.market_state === 'POST';
+                  const px = isPP && prePostData?.regular_close != null ? prePostData.regular_close : lastCandle.close;
+                  return (
+                    <div className="mono" style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1 }}>
+                      ${px.toFixed(2)}
+                    </div>
+                  );
+                })()}
+
                 {indicators && lastIdx >= 0 && (() => {
                   const rsi = indicators.rsi[lastIdx] ?? 0;
                   return (
