@@ -7,23 +7,32 @@ import { useDaily } from '@/hooks/useDaily';
 import { Card } from '@/components/ui/Card';
 import IntradayChart from '@/components/charts/IntradayChart';
 import { ArrowRight } from '@/components/ui/Icons';
-import { GlossaryPanel, GlossaryItem } from '@/components/ui/GlossaryPanel';
+import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
+import { InfoPopover } from '@/components/ui/InfoPopover';
+import { G } from '@/app/glossary';
 
-const INTRADAY_GLOSSARY: GlossaryItem[] = [
-  { term: 'RSI (14)', plain: '상대강도지수. 최근 14봉 기준으로 주가가 얼마나 강한지 0~100으로 나타냅니다. 30 이하면 "너무 많이 떨어져 반등 가능성", 70 이상이면 "과열되어 조정 가능성"을 시사합니다.' },
-  { term: 'EMA21 (21봉 지수이동평균)', plain: '최근 21개 봉의 가중 평균 가격입니다. 주가가 이 선 위에 있으면 단기 강세, 아래면 단기 약세입니다. 트레이더들이 지지/저항선으로 자주 활용합니다.' },
-  { term: 'EMA50 (50봉 지수이동평균)', plain: '최근 50개 봉의 가중 평균 가격입니다. EMA21보다 느린 중기 추세선으로, EMA21이 EMA50 위에 있으면 상승 추세가 강하다는 신호입니다.' },
-  { term: 'ATR (14)', plain: '평균 진폭(Average True Range). 최근 14봉 동안 주가가 평균적으로 얼마나 오르내렸는지를 달러로 나타냅니다. 손절가 설정의 기준이 됩니다.' },
-  { term: '21EMA 이격', plain: '현재가와 EMA21의 거리를 %로 나타냅니다. +3.2% 이상이면 평균에서 너무 많이 올라 단기 과열 위험, -2% 이하면 지지선에 접근 중임을 의미합니다.' },
-  { term: 'Sniper 신호', plain: '가격이 EMA21(21봉 평균선)에 살짝 닿고 반등하면서 RSI가 38~58 사이일 때 뜨는 매수 신호입니다. 추세 중 가장 좋은 진입 타이밍을 포착합니다.', color: 'var(--bull)' },
-  { term: 'VCP (변동성 수축 패턴)', plain: '주가가 신고가를 돌파하면서 거래량이 평소의 2배 이상 급증할 때 나타나는 강력한 돌파 매수 신호입니다. 기관 투자자들의 대량 매수가 확인된 것입니다.', color: 'var(--info)' },
-  { term: 'Pullback (눌림목)', plain: '고점 대비 4.5~9% 조정 후 이동평균선에서 지지를 받을 때 나타납니다. 상승 추세가 잠깐 숨 고르기 후 재개될 가능성이 높은 진입 타이밍입니다.', color: 'var(--warn)' },
-  { term: 'StrongTrend (강한 추세)', plain: '가격 > EMA21 > EMA50 순서로 정렬되고 RSI가 52~78일 때 표시됩니다. 현재 보유 중인 포지션을 계속 유지(홀딩)하라는 신호입니다.', color: 'var(--teal)' },
-  { term: 'Overbought (과열)', plain: 'RSI가 76 이상이고 EMA21에서 +3.2% 이상 떨어진 과열 구간입니다. 일부 물량 분할 매도(익절)를 고려할 타이밍입니다.' },
-  { term: 'Downtrend (하락 추세)', plain: '가격이 EMA21 아래에 있고 거래량이 급증한 상태입니다. "떨어지는 칼날을 잡지 말라" — 이 신호가 있을 때는 매수 접근 금지입니다.', color: 'var(--bear)' },
-  { term: '진입 Entry / 손절 Stop / 목표 Target', plain: '일봉 기준으로 계산된 트레이드 계획입니다. 진입(어디서 살지), 손절(틀렸을 때 어디서 팔지), 목표(어디까지 먹을지)를 미리 정해두는 것이 핵심입니다.' },
-  { term: 'R:R 비율 (Risk:Reward)', plain: '내가 잃을 수 있는 금액 대비 벌 수 있는 금액의 비율입니다. 1:3이면 1만원 잃을 위험에 3만원을 노린다는 뜻으로, 3번 중 1번만 맞아도 수익이 납니다.' },
-  { term: '매수 수량 (Position Size)', plain: '계좌 규모와 리스크 %를 바탕으로 계산한 권장 매수 주수입니다. 계좌의 일정 비율만 위험에 노출시켜 한 번의 실패로 큰 타격을 입지 않도록 합니다.' },
+const SIG_INFO: Record<string, { term: string; body: string }> = {
+  sniper:       G.signal_sniper,
+  vcp:          G.signal_vcp,
+  pullback:     G.signal_pullback,
+  strong_trend: G.signal_strong_trend,
+  overbought:   G.signal_overbought,
+  downtrend:    G.signal_downtrend,
+};
+
+const INTRADAY_GUIDE: GuideSection[] = [
+  {
+    heading: '이 화면은',
+    body: '5분봉 기준 단기 매수·매도 신호를 실시간으로 보여주는 화면입니다. 30초마다 갱신되며, 진입 타이밍과 포지션 사이즈를 계산합니다.',
+  },
+  {
+    heading: '핵심 지표 읽는 법',
+    body: '6개 신호 중 VCP·Sniper·Pullback은 매수 기회, StrongTrend는 보유 유지, Overbought는 익절 검토, Downtrend는 매수 금지 신호입니다. RSI와 EMA 이격은 현재 과열/과매도 여부를 판단합니다.',
+  },
+  {
+    heading: '지금 이렇게 쓰세요',
+    body: '활성 신호 확인 → R:R 비율 2:1 이상 여부 확인 → 포지션 사이즈 계산(손절폭 × 수량 ≤ 계좌의 1~2%) → 진입. 신호가 없으면 관망합니다.',
+  },
 ];
 
 const SIG_META: Record<string, { name: string; color: string; action: string; desc: string }> = {
@@ -39,6 +48,7 @@ export function IntradayBoard() {
   const [tf, setTf] = useState('5m');
   const [copied, setCopied] = useState(false);
   const [sigGuide, setSigGuide] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const { symbol, rrAccount, rrRiskPct, setRrAccount, setRrRiskPct } = useStore();
   const { ohlcvData, isLoading } = useIntraday(symbol, tf);
   const { dailyData } = useDaily(symbol);
@@ -79,8 +89,10 @@ export function IntradayBoard() {
   return (
     <div
       className="board fade-in"
-      style={{ gridTemplateColumns: '1fr 300px', gridTemplateRows: 'auto 1fr auto' }}
+      style={{ gridTemplateColumns: '1fr 300px', gridTemplateRows: 'auto 1fr auto', position: 'relative' }}
     >
+      <button className="guide-btn" onClick={() => setGuideOpen(true)}>? 가이드</button>
+      <BoardGuidePanel title="Intraday 가이드" sections={INTRADAY_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
       {/* Chart */}
       <div className="card" style={{ gridRow: 'span 2' }}>
         <div className="card__hd">
@@ -120,7 +132,12 @@ export function IntradayBoard() {
               <div key={s} className={`sig active ${m.color}`}>
                 <div className="sig__hd">
                   <span className="sig__dot" />
-                  <span className="sig__name">{m.name}</span>
+                  <span className="sig__name">
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                      {m.name}
+                      {SIG_INFO[s] && <InfoPopover term={SIG_INFO[s].term} body={SIG_INFO[s].body} />}
+                    </span>
+                  </span>
                   <span className="sig__action">{m.action}</span>
                 </div>
                 <div className="sig__desc">{m.desc}</div>
@@ -133,7 +150,12 @@ export function IntradayBoard() {
               <div key={s} className={`sig ${m.color}`} style={{ opacity: 0.4 }}>
                 <div className="sig__hd">
                   <span className="sig__dot" />
-                  <span className="sig__name">{m.name}</span>
+                  <span className="sig__name">
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                      {m.name}
+                      {SIG_INFO[s] && <InfoPopover term={SIG_INFO[s].term} body={SIG_INFO[s].body} />}
+                    </span>
+                  </span>
                   <span className="sig__action">{m.action}</span>
                 </div>
                 <div className="sig__desc">{m.desc}</div>
@@ -244,10 +266,6 @@ export function IntradayBoard() {
         </div>
       )}
 
-      {/* 이 화면 데이터 설명 */}
-      <div style={{ gridColumn: 'span 2' }}>
-        <GlossaryPanel items={INTRADAY_GLOSSARY} />
-      </div>
     </div>
   );
 }
