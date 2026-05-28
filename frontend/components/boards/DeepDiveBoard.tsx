@@ -185,7 +185,7 @@ export function DeepDiveBoard() {
   return (
     <div
       className="board fade-in"
-      style={{ gridTemplateColumns: '3fr 2fr', alignItems: 'start' }}
+      style={{ gridTemplateColumns: '3fr 2fr', alignItems: 'start', alignContent: 'start', gridAutoRows: 'max-content' }}
     >
 
       {/* ════════════════════════════════════════════════════════════════
