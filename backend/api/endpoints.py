@@ -1,5 +1,6 @@
 import pandas as pd
 import logging
+import yfinance as yf
 from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
@@ -12,7 +13,7 @@ from core.signal_engine import (
 from api.schemas import (
     OHLCVResponse, LatestSignalResponse, DailyResponse, WatchlistResponse,
     MacroResponse, RegimeResponse, DistributionDayResponse, SentimentResponse,
-    BriefResponse, EarningsResponse, SentimentHistoryResponse,
+    BriefResponse, EarningsResponse, SentimentHistoryResponse, PrePostResponse,
 )
 from services.sentiment_service import fetch_latest, enrich_with_delta, fetch_today_slots, fetch_sentiment_history
 from services.brief_service import fetch_brief
@@ -51,6 +52,67 @@ def _freshness_meta(generated_at: Optional[str] = None) -> dict:
         "age_minutes": age_minutes,
         "source": "github_raw",
     }
+
+
+def _fetch_prepost_data(symbol: str) -> dict:
+    """Fetch pre/after-market price. Primary: ticker.info. Fallback: history(prepost=True)."""
+    result = {
+        "symbol": symbol.upper(),
+        "market_state": "CLOSED",
+        "pre_market_price": None,
+        "pre_market_change_pct": None,
+        "post_market_price": None,
+        "post_market_change_pct": None,
+        "regular_close": None,
+    }
+    try:
+        ticker = yf.Ticker(symbol)
+        info = ticker.info or {}
+
+        market_state = info.get("marketState", "CLOSED")
+        result["market_state"] = market_state if market_state in ("PRE", "POST", "REGULAR", "CLOSED") else "CLOSED"
+
+        regular_close = info.get("regularMarketPrice")
+        result["regular_close"] = regular_close
+
+        pre_price = info.get("preMarketPrice")
+        post_price = info.get("postMarketPrice")
+
+        # Fallback: history(prepost=True) when info fields are absent
+        if pre_price is None and post_price is None and market_state in ("PRE", "POST"):
+            try:
+                hist = ticker.history(period="1d", interval="1m", prepost=True)
+                if hist is not None and not hist.empty:
+                    last_close = float(hist["Close"].iloc[-1])
+                    if market_state == "PRE":
+                        pre_price = last_close
+                    else:
+                        post_price = last_close
+            except Exception:
+                pass
+
+        if pre_price is not None and regular_close:
+            result["pre_market_price"] = float(pre_price)
+            result["pre_market_change_pct"] = round(
+                (float(pre_price) - float(regular_close)) / float(regular_close) * 100, 3
+            )
+
+        if post_price is not None and regular_close:
+            result["post_market_price"] = float(post_price)
+            result["post_market_change_pct"] = round(
+                (float(post_price) - float(regular_close)) / float(regular_close) * 100, 3
+            )
+
+    except Exception:
+        pass
+
+    return result
+
+
+@router.get("/prepost", response_model=PrePostResponse)
+async def get_prepost(symbol: str = Query(..., description="주식 심볼")):
+    data = _fetch_prepost_data(symbol)
+    return data
 
 
 @router.get("/ohlcv", response_model=OHLCVResponse)
