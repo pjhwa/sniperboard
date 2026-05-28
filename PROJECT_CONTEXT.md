@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-28 deepdive-overlap-fix)
+# SniperBoard — Project Context (UPDATED 2026-05-28 prepost-market)
 
 ## 0. 이 문서의 목적
 
@@ -56,7 +56,7 @@ sniperboard/
 │   │   ├── shell/
 │   │   │   ├── Rail.tsx          # 좌측 네비게이션 레일 (7보드 아이콘 + 활성 인디케이터). deepdive=Layers 아이콘 2번째 위치.
 │   │   │   ├── Topbar.tsx        # 상단바 (제목, 검색, 종목 버튼, Regime mini, 테마 토글)
-│   │   │   ├── MarketStrip.tsx   # 슬림 마켓 스트립 (선택종목 + SPY/QQQ/IWM/VIX/DXY/GLD/CL=F)
+│   │   │   ├── MarketStrip.tsx   # 슬림 마켓 스트립 (선택종목 + SPY/QQQ/IWM/VIX/DXY/GLD/CL=F). PRE/POST 가격 표시 (usePrePost)
 │   │   │   └── CommandPalette.tsx # ⌘K 커맨드 팔레트 (종목·보드 검색)
 │   │   ├── ui/
 │   │   │   ├── Icons.tsx         # SVG 아이콘 (Crosshair, Activity, Candles, Eye, Globe, Heart 등)
@@ -66,7 +66,7 @@ sniperboard/
 │   │   │   └── HeatStrip.tsx     # CSS 기반 히트맵 스트립
 │   │   ├── boards/               # 7개 보드 컴포넌트 (실제 훅 사용)
 │   │   │   ├── OverviewBoard.tsx # 시장 개요: AI Insight + Regime + DD + Breadth + VIX + Credit + 종목 미니
-│   │   │   ├── DeepDiveBoard.tsx # 종합분석 (2026-05-28 v2, 검증완료): 5-Row 레이아웃. Row1(span2)=종목선택+가격+배지. Row2=DailyChart(3fr)|Stage2체크2col+KPI2×2(2fr). Row3=DailyHeat(3fr)|R:R진입계획(2fr). Row4(span2→3×1fr,stretch)=소셜심리|AI Brief|실적(없으면recent_result로채움). Row5=Regime가로레이아웃(3fr)|시장전체심리ScoreBar(2fr). ScoreBar csColor 버그 수정(var(--emerald)→var(--bull)). 카드겹침버그 수정(2026-05-28): board style에 gridAutoRows:'max-content'+alignContent:'start' 추가 — flex:1 고정높이 컨테이너에서 CSS Grid auto행이 min-content로 축소되어 데이터 로딩 후 카드가 다음 행으로 침범하는 문제 해소.
+│   │   │   ├── DeepDiveBoard.tsx # 종합분석 (2026-05-28 v2, 검증완료): 5-Row 레이아웃. Row1(span2)=종목선택+가격+배지. PRE/POST 가격 표시 추가 (usePrePost). Row2=DailyChart(3fr)|Stage2체크2col+KPI2×2(2fr). Row3=DailyHeat(3fr)|R:R진입계획(2fr). Row4(span2→3×1fr,stretch)=소셜심리|AI Brief|실적(없으면recent_result로채움). Row5=Regime가로레이아웃(3fr)|시장전체심리ScoreBar(2fr). ScoreBar csColor 버그 수정(var(--emerald)→var(--bull)). 카드겹침버그 수정(2026-05-28): board style에 gridAutoRows:'max-content'+alignContent:'start' 추가 — flex:1 고정높이 컨테이너에서 CSS Grid auto행이 min-content로 축소되어 데이터 로딩 후 카드가 다음 행으로 침범하는 문제 해소.
 │   │   │   ├── IntradayBoard.tsx # 단기: IntradayChart + 활성신호 + RSI + 액션바
 │   │   │   ├── DailyBoard.tsx    # 일봉: DailyChart + Stage2 체크리스트 + R:R 패널
 │   │   │   ├── WatchlistBoard.tsx # 워치리스트: Stage2 정렬 테이블
@@ -86,6 +86,7 @@ sniperboard/
 │       ├── useRegime.ts          # GET /api/regime
 │       ├── useSentiment.ts       # GET /api/sentiment
 │       ├── useBrief.ts           # GET /api/brief (30분 staleTime)
+│       ├── usePrePost.ts         # GET /api/prepost (60초 폴링). prePostData: { market_state, pre/post price+chg_pct, regular_close }
 │       ├── useEarnings.ts        # GET /api/earnings (60분 staleTime)
 │       └── useDistributionDays.ts # GET /api/distribution-days
 ├── docker-compose.yml            # backend 8000→5001, frontend 3000→4000
@@ -111,6 +112,7 @@ sniperboard/
 | `GET /distribution-days` | — | SPY·QQQ DD count/level/dates |
 | `GET /sentiment` | — | 소셜 심리 JSON (GitHub raw 30분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
 | `GET /sentiment/history` | `symbol`(required), `days`(1-30, 기본 7) | N일치 pre_open/post_close 심리 포인트 배열. `symbol="MARKET"` 지원. 5분 TTL 캐시. |
+| `GET /prepost` | `symbol` | 프리/애프터마켓 가격·변화율·market_state (PRE/POST/REGULAR/CLOSED). ticker.info 우선, 없으면 history(prepost=True) 폴백. |
 | `GET /brief` | — | AI Daily Brief JSON (GitHub raw 30분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
 | `GET /earnings` | — | Earnings Intelligence JSON (GitHub raw 60분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
 

@@ -144,7 +144,7 @@ environment:
 #### 화면 구성 (4-Zone)
 
 **Zone 0 — 상황 인식 바 (전체 너비)**
-종목 선택 버튼(TSLA·AAPL·NVDA·META·AMZN·GOOGL·PLTR) + 현재가·RSI·EMA21 + 인트라데이 스파크라인 + 우측에 Stage2 점수 / Conviction / 월봉 단계 / 시장구조 / 활성 신호 배지를 한 줄로 표시 — 진입 즉시 "지금 어떤 상태인가" 파악
+종목 선택 버튼(TSLA·AAPL·NVDA·META·AMZN·GOOGL·PLTR) + 현재가·RSI·EMA21 + 인트라데이 스파크라인 + 우측에 Stage2 점수 / Conviction / 월봉 단계 / 시장구조 / 활성 신호 배지를 한 줄로 표시 — 진입 즉시 "지금 어떤 상태인가" 파악. PRE/POST 가격 표시(usePrePost) — 정규장 외 시간대에 프리/애프터마켓 가격·변화율 표시
 
 **Row 2 — 기술 심층 (60% : 40%)**
 - 좌: **Daily Chart** — 1년 일봉 캔들 + EMA8/21/50/200 + 가우시안 채널 + Entry/Stop 라인
@@ -286,6 +286,7 @@ environment:
 | `GET /api/distribution-days` | SPY·QQQ Distribution Day 카운트 |
 | `GET /api/sentiment` | 소셜 심리 데이터 (GitHub raw 캐시) + `meta {fetched_at, age_minutes, source}` (Task 3) |
 | `GET /api/sentiment/history` | N일치 심리 포인트 배열. `?symbol=TSLA&days=7` (days: 1-30). 5분 TTL 캐시. |
+| `GET /api/prepost` | 프리/애프터마켓 가격 — 종목의 장외 시간대 가격·변화율·market_state 반환. 정규장 시간대에는 최근 종가 및 상태. |
 | `GET /api/brief` | AI Daily Brief — Grok 시장 분석 (GitHub raw 캐시) + `meta {fetched_at, age_minutes, source}` (Task 3) |
 | `GET /api/earnings` | Earnings Intelligence — 실적 발표 일정 + AI 해석 (GitHub raw 캐시) + `meta {fetched_at, age_minutes, source}` (Task 3) |
 
