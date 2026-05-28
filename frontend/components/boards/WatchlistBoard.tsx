@@ -74,7 +74,7 @@ export function WatchlistBoard() {
                   <tr
                     key={w.symbol}
                     className={w.symbol === symbol ? 'selected' : ''}
-                    onClick={() => setSymbol(w.symbol)}
+                    onClick={() => { setSymbol(w.symbol); setBoard('deepdive'); }}
                     style={{ cursor: 'pointer' }}
                   >
                     <td>
@@ -136,7 +136,7 @@ export function WatchlistBoard() {
                       <button
                         className="btn btn--ghost"
                         style={{ height: 24, padding: '0 8px', fontSize: 11 }}
-                        onClick={(e) => { e.stopPropagation(); setSymbol(w.symbol); setBoard('daily'); }}
+                        onClick={(e) => { e.stopPropagation(); setSymbol(w.symbol); setBoard('deepdive'); }}
                       >
                         분석 <ArrowRight />
                       </button>

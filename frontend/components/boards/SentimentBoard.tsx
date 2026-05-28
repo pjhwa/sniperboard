@@ -54,13 +54,13 @@ function TopNewsBox({ topNews }: { topNews: TopNews | null | undefined }) {
   );
 }
 
-// -2 ~ +2 범위를 색상으로 표현
+// -2 ~ +2 범위를 색상으로 표현  (var(--emerald/orange/red)는 미정의 → bull/orange literal/bear)
 function compositeColor(score: number): string {
-  if (score >= 1.5) return 'var(--emerald)';
+  if (score >= 1.5) return 'var(--bull)';
   if (score >= 0.5) return 'var(--teal)';
   if (score > -0.5) return 'var(--fg-muted)';
-  if (score > -1.5) return 'var(--orange)';
-  return 'var(--red)';
+  if (score > -1.5) return 'hsl(20 90% 55%)';
+  return 'var(--bear)';
 }
 
 // -2 ~ +2 위치를 시각화하는 바
