@@ -73,11 +73,11 @@ export function DailyBoard() {
         <div className="card__hd">
           <h3>{symbol} · Daily</h3>
           {stage2 && <span className={'badge ' + structColor}>{stage2.market_structure}</span>}
-          {dailyData?.conviction_score != null && (
-            <span className="badge" style={{ background: 'var(--teal)', color: '#fff', marginLeft: 8 }}>
-              Conviction {dailyData.conviction_score} ({dailyData.conviction_label})
-            </span>
-          )}
+          {dailyData?.conviction_score != null && (() => {
+            const s = dailyData.conviction_score;
+            const bg = s >= 65 ? 'var(--bull)' : s >= 50 ? 'var(--teal)' : s >= 35 ? 'var(--warn)' : 'var(--bear)';
+            return <span className="badge" style={{ background: bg, color: s >= 35 ? '#fff' : '#fff', marginLeft: 8 }}>Conviction {s}</span>;
+          })()}
           <small>1Y · Gaussian Channel</small>
         </div>
         <div className="card__bd" style={{ paddingTop: 0 }}>
@@ -170,37 +170,18 @@ export function DailyBoard() {
             })()}
 
             {/* Phase 1: Conviction - integrated in Stage 2 card */}
-            {dailyData?.conviction_score != null && (
-              <div style={{ 
-                marginTop: 10, 
-                padding: '6px 10px', 
-                borderRadius: 6, 
-                background: 'var(--border-soft)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
+            {dailyData?.conviction_score != null && (() => {
+              const s = dailyData.conviction_score;
+              const c = s >= 65 ? 'var(--bull)' : s >= 50 ? 'var(--teal)' : s >= 35 ? 'var(--warn)' : 'var(--bear)';
+              const bg = s >= 65 ? 'var(--bull-soft)' : s >= 50 ? 'rgba(20,184,166,0.12)' : s >= 35 ? 'var(--warn-soft)' : 'var(--bear-soft)';
+              return (
+              <div style={{ marginTop: 10, padding: '6px 10px', borderRadius: 6, background: bg, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', minWidth: 70 }}>Conviction</div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: dailyData.conviction_score >= 65 ? 'var(--bull)' : 'var(--teal)' }}>
-                  {dailyData.conviction_score}
-                </div>
-                <div style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
-                  {dailyData.conviction_label}
-                </div>
-                {dailyData.conviction_reliability && (
-                  <span style={{ 
-                    fontSize: 10, 
-                    padding: '1px 5px', 
-                    borderRadius: 3, 
-                    background: dailyData.conviction_reliability === 'high' ? 'var(--bull)' : 
-                               dailyData.conviction_reliability === 'medium' ? 'var(--teal)' : 'var(--warn)',
-                    color: '#fff'
-                  }}>
-                    {dailyData.conviction_reliability}
-                  </span>
-                )}
+                <div style={{ fontSize: 16, fontWeight: 700, color: c }}>{s}</div>
+                <div style={{ fontSize: 12, color: c }}>{dailyData.conviction_label}</div>
               </div>
-            )}
+              );
+            })()}
             <div>
               {(Object.keys(STAGE2_META) as (keyof typeof STAGE2_META)[]).map(k => {
                 const pass = stage2.checks[k];

@@ -114,32 +114,23 @@ export function WatchlistBoard() {
                       })()}
                     </td>
                     <td>
-                      <div style={{ 
-                        display: 'inline-flex', 
-                        alignItems: 'center', 
-                        gap: 6, 
-                        padding: '2px 8px', 
-                        borderRadius: 4, 
-                        background: 'var(--border-soft)',
-                        fontSize: 11 
-                      }}>
-                        <span style={{ fontWeight: 600, color: (w.conviction_score ?? 0) >= 70 ? 'var(--bull)' : 'var(--teal)' }}>
-                          {w.conviction_score?.toFixed(0) ?? '-'}
-                        </span>
-                        <span className="subtle" style={{ fontSize: 10 }}>{w.conviction_label ?? ''}</span>
-                        {w.conviction_reliability && (
-                          <span style={{ 
-                            fontSize: 9, 
-                            padding: '0 3px',
-                            borderRadius: 2,
-                            background: w.conviction_reliability === 'high' ? 'var(--bull)' : 
-                                       w.conviction_reliability === 'medium' ? 'var(--teal)' : 'var(--warn)',
-                            color: '#fff'
-                          }}>
-                            {w.conviction_reliability}
-                          </span>
-                        )}
-                      </div>
+                      {(() => {
+                        const s = w.conviction_score ?? 0;
+                        const c = s >= 65 ? 'var(--bull)'
+                                : s >= 50 ? 'var(--teal)'
+                                : s >= 35 ? 'var(--warn)'
+                                : 'var(--bear)';
+                        const bg = s >= 65 ? 'var(--bull-soft)'
+                                 : s >= 50 ? 'rgba(20,184,166,0.12)'
+                                 : s >= 35 ? 'var(--warn-soft)'
+                                 : 'var(--bear-soft)';
+                        return (
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 8px', borderRadius: 4, background: bg, fontSize: 11 }}>
+                            <span style={{ fontWeight: 700, color: c, fontSize: 13 }}>{s > 0 ? s.toFixed(0) : '-'}</span>
+                            <span style={{ color: c, fontSize: 10 }}>{w.conviction_label ?? ''}</span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td>
                       <button

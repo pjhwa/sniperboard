@@ -236,10 +236,10 @@ export function SentimentBoard() {
       </Card>
 
       {/* 종목별 카드 */}
-      <Card title="Symbol Sentiment" action="워치리스트 심리">
+      <Card title="Symbol Sentiment" action="워치리스트 심리" style={{ overflow: 'visible' }}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: expandedSymbol ? '1fr' : 'repeat(2, 1fr)',
+          gridTemplateColumns: expandedSymbol ? '1fr' : 'repeat(3, 1fr)',
           gap: 10,
         }}>
           {symbols.map(it => {
