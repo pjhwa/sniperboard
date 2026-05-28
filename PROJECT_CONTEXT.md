@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-28 docs-refresh)
+# SniperBoard — Project Context (UPDATED 2026-05-29 contextual-help)
 
 ## 0. 이 문서의 목적
 
@@ -52,29 +52,31 @@ sniperboard/
 │   │   ├── page.tsx              # App shell: Rail+Topbar+MarketStrip+Board 라우터 + ⌘K 핸들러
 │   │   ├── providers.tsx         # QueryClientProvider 래퍼
 │   │   ├── types.ts              # 모든 TypeScript 타입 정의 + 메타데이터 상수
-│   │   └── globals.css           # Plaid DS 디자인 토큰 (CSS vars, 다크/라이트 토글, 컴포넌트 클래스)
+│   │   ├── glossary.ts           # 컨텍스트 도움말 데이터 (2026-05-29). GlossaryEntry{key,term,body} + GLOSSARY 배열(26개 항목) + G 맵(키 기반 조회: G.risk_regime.body 등). InfoPopover·CommandPalette·BoardGuidePanel에서 공유 사용.
+│   │   └── globals.css           # Plaid DS 디자인 토큰 (CSS vars, 다크/라이트 토글, 컴포넌트 클래스). .info-pop* + .guide-panel* + .guide-btn + .board-wrap 클래스 포함 (2026-05-29).
 │   ├── components/
 │   │   ├── shell/
 │   │   │   ├── Rail.tsx          # 좌측 네비게이션 레일 (7보드 아이콘 + 활성 인디케이터). deepdive=Layers 아이콘 2번째 위치.
 │   │   │   ├── Topbar.tsx        # 상단바 (제목, 검색, 종목 버튼, Regime mini, 테마 토글)
 │   │   │   ├── MarketStrip.tsx   # 슬림 마켓 스트립 (선택종목 + SPY/QQQ/IWM/VIX/DXY/GLD/CL=F). PRE/POST 가격 표시 (usePrePost)
-│   │   │   └── CommandPalette.tsx # ⌘K 커맨드 팔레트 (종목·보드 검색)
+│   │   │   └── CommandPalette.tsx # ⌘K 커맨드 팔레트 (종목·보드 검색). ? prefix 입력 시 용어 검색 모드 전환 — GLOSSARY 배열 필터링, "용어 검색 모드 — N개 결과" 배너 표시 (2026-05-29).
 │   │   ├── ui/
 │   │   │   ├── Icons.tsx         # SVG 아이콘 (Crosshair, Activity, Candles, Eye, Globe, Heart 등)
-│   │   │   ├── Card.tsx          # Card/ScorePill 래퍼 컴포넌트
-│   │   │   ├── ConvictionBadge.tsx # Conviction 점수 배지 (score/label/size props). score≥65=bull, ≥50=teal, ≥35=warn, <35=bear. size sm/md. OverviewBoard/DeepDiveBoard/DailyBoard/WatchlistBoard 통일 적용.
-│   │   │   ├── GlossaryPanel.tsx # 용어 해설 슬라이드오버 패널 (OverviewBoard 우하단 ? 버튼). GlossaryItem 배열로 초보자용 한국어 설명 제공.
+│   │   │   ├── Card.tsx          # Card/ScorePill 래퍼. optional info?: {term,body} prop 추가(2026-05-29) — 제공 시 card__hd에 InfoPopover 렌더링.
+│   │   │   ├── InfoPopover.tsx   # 인라인 ⓘ 팝오버 (2026-05-29). Props: term, body. 클릭 토글, ESC/외부클릭 닫힘. 'info-pop:close-all' 커스텀 이벤트로 싱글턴 동작(하나만 열림). Card info prop 경유 또는 직접 임베드.
+│   │   │   ├── BoardGuidePanel.tsx # 보드 전체 가이드 슬라이드오버 (2026-05-29). Props: title, sections: GuideSection[], isOpen, onClose. 우측에서 슬라이드인, ESC/오버레이 클릭 닫힘. 각 보드의 board-wrap 안에 렌더링.
+│   │   │   ├── ConvictionBadge.tsx # Conviction 점수 배지 (score/label/size props). score≥65=bull, ≥50=teal, ≥35=warn, <35=bear. size sm/md.
 │   │   │   ├── Sparkline.tsx     # Canvas 기반 스파크라인
 │   │   │   ├── RadialGauge.tsx   # Canvas 기반 라디얼 게이지
 │   │   │   └── HeatStrip.tsx     # CSS 기반 히트맵 스트립
-│   │   ├── boards/               # 7개 보드 컴포넌트 (실제 훅 사용)
-│   │   │   ├── OverviewBoard.tsx # 시장 개요 (11카드): AI Insight + Earnings Calendar + Regime + DD + Breadth + VIX + Credit + 진입레이더 + Conviction리더보드 + Sector + Watchlist Top3. GlossaryPanel(? 버튼) 포함. ⏱ freshness badges.
-│   │   │   ├── DeepDiveBoard.tsx # 종합분석 (5-Row): Row1=종목선택+가격바+배지들(Stage2/Conviction/월봉/구조/신호)+PRE/POST가격. Row2=DailyChart(3fr)|Stage2체크+KPI4(2fr). Row3=세력참여도분석(3fr)|R:R진입계획(2fr). Row4(3×1fr)=소셜심리|AI Brief|실적. Row5=Regime(3fr)|시장전체심리(2fr). 세력참여도: Up/Down Vol비율+거래량추세+집중일+세력점수0-100+10일acc/dist그리드.
-│   │   │   ├── IntradayBoard.tsx # 단기: IntradayChart + 활성신호 + RSI + 액션바
-│   │   │   ├── DailyBoard.tsx    # 일봉: DailyChart + Stage2 체크리스트 + R:R 패널
-│   │   │   ├── WatchlistBoard.tsx # 워치리스트: Stage2 정렬 테이블
-│   │   │   ├── MacroBoard.tsx    # 매크로: 섹터 로테이션 바 + 6그룹 카드
-│   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드 (클릭 시 SentimentTrendChart 펼침). TopNewsBox 컴포넌트. compositeColor 버그 수정(var(--emerald/orange/red)→var(--bull)/hsl(20 90% 55%)/var(--bear)) — undefined CSS var로 ScoreBar background transparent 렌더링 문제 해소 (2026-05-28)
+│   │   ├── boards/               # 7개 보드 컴포넌트. 공통 패턴(2026-05-29): <div className="board-wrap"> 래퍼 → guide-btn + BoardGuidePanel을 board-wrap의 직계 자식으로 배치(board 그리드 외부). GlossaryPanel 완전 제거.
+│   │   │   ├── OverviewBoard.tsx # 시장 개요 (11카드): AI Insight + Earnings Calendar + Regime + DD + Breadth + VIX + Credit + 진입레이더 + Conviction리더보드 + Sector + Watchlist Top3. ⏱ freshness badges. 카드 7개에 info={G.*} prop.
+│   │   │   ├── DeepDiveBoard.tsx # 종합분석 (5-Row): Row1=종목선택+가격바+배지들(Stage2/Conviction/월봉/구조/신호)+PRE/POST가격. Row2=DailyChart(3fr)|Stage2체크+KPI4(2fr). Row3=세력참여도분석(3fr)|R:R진입계획(2fr). Row4(3×1fr)=소셜심리|AI Brief|실적. Row5=Regime(3fr)|시장전체심리(2fr). 세력참여도: Up/Down Vol비율+거래량추세+집중일+세력점수0-100+10일acc/dist그리드. InfoPopover 직접 임베드(Stage2/세력참여도/R:R/RS 등).
+│   │   │   ├── IntradayBoard.tsx # 단기: IntradayChart + 활성신호 + RSI + 액션바. SIG_INFO 맵으로 6개 신호명 옆 InfoPopover 표시.
+│   │   │   ├── DailyBoard.tsx    # 일봉: DailyChart + Stage2 체크리스트 + R:R 패널. Stage2·R:R 카드에 info prop.
+│   │   │   ├── WatchlistBoard.tsx # 워치리스트: Stage2 정렬 테이블. 테이블 헤더(Stage2/RS/Conviction)에 InfoPopover.
+│   │   │   ├── MacroBoard.tsx    # 매크로: 섹터 로테이션 바 + 6그룹 카드. Sector Momentum·VIX 카드에 info prop.
+│   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드 (클릭 시 SentimentTrendChart 펼침). TopNewsBox 컴포넌트. Composite Score 카드에 info prop.
 │   │   │   └── SentimentTrendChart.tsx # 심리 추이 차트: 주가 라인(좌축) + composite_score 오버레이(우축), 7/30일 토글
 │   │   ├── charts/               # 기존 lightweight-charts 컴포넌트 유지
 │   │   │   ├── IntradayChart.tsx
@@ -247,7 +249,7 @@ export const EARNINGS_RISK_META = { high: {color:'bear',dot:'●'}, med: {color:
 - **다크/라이트 토글**: `[data-theme="dark"]` CSS 셀렉터, localStorage `sb_theme`에 영속
 - **CSS 변수**: `--bg`, `--fg`, `--border`, `--bull`, `--bear`, `--warn`, `--info`, `--teal`, `--purple`, `--em-500` 등
 - **App 레이아웃**: CSS Grid `var(--rail)=64px / var(--topbar)=56px / var(--strip)=52px`
-- **컴포넌트 클래스**: `.rail`, `.topbar`, `.strip`, `.board`, `.card`, `.badge`, `.sig`, `.act-bar`, `.tbl`, `.rsi-gauge` 등
+- **컴포넌트 클래스**: `.rail`, `.topbar`, `.strip`, `.board-wrap`, `.board`, `.card`, `.badge`, `.sig`, `.act-bar`, `.tbl`, `.rsi-gauge`, `.info-pop*`, `.guide-panel*`, `.guide-btn` 등
 - **Zustand 스토어** (`hooks/useStore.ts`): `board: Board`, `theme: Theme`, `cmdOpen`, `symbol`, `timeframe`, `rrAccount`, `rrRiskPct` — persist 미들웨어로 localStorage 영속
 
 ### 5-5. 차트 (`components/charts/`)
@@ -286,7 +288,7 @@ SYMBOLS 버튼 | 현재가 + RSI + EMA21 + 스파크라인(60봉) + PRE/POST 가
 
 ### 5-7. OverviewBoard 카드 구성 (4컬럼 그리드)
 
-GlossaryPanel(? 버튼)이 우하단에 포함. OVERVIEW_GLOSSARY 배열로 12개 용어 한국어 해설.
+우상단 `? 가이드` 버튼 → BoardGuidePanel 슬라이드오버(3섹션). 주요 카드 7개에 `info={G.*}` prop → ⓘ 팝오버 제공.
 
 | 카드 | span | 데이터 소스 | 내용 |
 |------|------|------------|------|
@@ -457,6 +459,9 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | API 주소 변경 | `frontend/app/types.ts: API_BASE` + `docker-compose.yml: NEXT_PUBLIC_API_URL` |
 | 신호 메타데이터(색상·설명) | `frontend/app/types.ts: SIGNAL_META` |
 | FreshnessMeta + AI 응답 meta (Phase 4) | `frontend/app/types.ts` (SentimentData/BriefResponse/EarningsResponse); hooks useBrief/useEarnings expose *Meta; badges in OverviewBoard (AI+ Earnings) + light SentimentBoard |
+| 컨텍스트 도움말 — 용어 추가/수정 | `frontend/app/glossary.ts` (GLOSSARY 배열 + G 맵). 26개 항목. key 기반 조회(G.risk_regime 등). InfoPopover에서 직접 사용하거나 Card info prop 경유. |
+| 컨텍스트 도움말 — 보드 가이드 내용 수정 | 각 보드 파일의 `*_GUIDE: GuideSection[]` 상수 (예: OVERVIEW_GUIDE, INTRADAY_GUIDE 등). 3섹션: 이 화면은/핵심 지표 읽는 법/지금 이렇게 쓰세요. |
+| 컨텍스트 도움말 — UI 스타일 | `frontend/app/globals.css` — `.info-pop*`(팝오버), `.guide-panel*`(슬라이드오버), `.guide-btn`(트리거), `.board-wrap`(포지셔닝 컨텍스트) 블록. |
 | 폴링 간격 변경 | `frontend/hooks/useIntraday.ts` (현재 30초) |
 | Brief/Earnings URL 변경 | `docker-compose.yml: BRIEF_DATA_URL / EARNINGS_DATA_URL` |
 | Brief 캐시 TTL 변경 | `backend/services/brief_service.py: CACHE_TTL` (현재 1800초) |
