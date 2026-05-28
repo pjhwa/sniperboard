@@ -228,6 +228,18 @@ export const SYMBOLS = ['TSLA', 'AAPL', 'NVDA', 'META', 'AMZN', 'GOOGL', 'PLTR']
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
+// --- Pre/Post Market Data ---
+
+export interface PrePostData {
+  symbol: string;
+  market_state: 'PRE' | 'POST' | 'REGULAR' | 'CLOSED';
+  pre_market_price: number | null;
+  pre_market_change_pct: number | null;
+  post_market_price: number | null;
+  post_market_change_pct: number | null;
+  regular_close: number | null;
+}
+
 // --- Sentiment (소셜 심리) ---
 
 export interface TopNews {
