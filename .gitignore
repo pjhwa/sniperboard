@@ -29,3 +29,8 @@ Thumbs.db
 .antigravitycli/
 .pytest_cache/
 
+# Dev-only / AI workflow files (not for distribution)
+docs/
+.claude/
+CLAUDE.md
+
