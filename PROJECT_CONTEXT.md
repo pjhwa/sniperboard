@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-28 deepdive-board)
+# SniperBoard — Project Context (UPDATED 2026-05-28 deepdive-board-verified)
 
 ## 0. 이 문서의 목적
 
@@ -54,7 +54,7 @@ sniperboard/
 │   │   └── globals.css           # Plaid DS 디자인 토큰 (CSS vars, 다크/라이트 토글, 컴포넌트 클래스)
 │   ├── components/
 │   │   ├── shell/
-│   │   │   ├── Rail.tsx          # 좌측 네비게이션 레일 (6보드 아이콘 + 활성 인디케이터)
+│   │   │   ├── Rail.tsx          # 좌측 네비게이션 레일 (7보드 아이콘 + 활성 인디케이터). deepdive=Layers 아이콘 2번째 위치.
 │   │   │   ├── Topbar.tsx        # 상단바 (제목, 검색, 종목 버튼, Regime mini, 테마 토글)
 │   │   │   ├── MarketStrip.tsx   # 슬림 마켓 스트립 (선택종목 + SPY/QQQ/IWM/VIX/DXY/GLD/CL=F)
 │   │   │   └── CommandPalette.tsx # ⌘K 커맨드 팔레트 (종목·보드 검색)
@@ -66,7 +66,7 @@ sniperboard/
 │   │   │   └── HeatStrip.tsx     # CSS 기반 히트맵 스트립
 │   │   ├── boards/               # 7개 보드 컴포넌트 (실제 훅 사용)
 │   │   │   ├── OverviewBoard.tsx # 시장 개요: AI Insight + Regime + DD + Breadth + VIX + Credit + 종목 미니
-│   │   │   ├── DeepDiveBoard.tsx # 종합분석: 선택 종목의 모든 데이터 종합 (인트라데이+Stage2+심리+AI+실적+R:R+Regime). 보드 내 종목 선택 바 포함. 기본 TSLA. (2026-05-28)
+│   │   │   ├── DeepDiveBoard.tsx # 종합분석 (2026-05-28, 검증완료): 4-Zone 레이아웃. Zone0=종목선택바+현재가+스파크라인+배지한줄(Stage2/Conviction/월봉/시장구조/활성신호). Zone1=DailyChart(60%)+Stage2체크리스트2col+KPI4개+R:R진입계획(40%). Zone2=소셜심리+AI Brief+실적/시장심리(3등분). Zone3=DailyHeat60d+Regime게이지(3/2분할). gridTemplateColumns:'3fr 2fr', alignItems:'start'로 카드 잘림 해소.
 │   │   │   ├── IntradayBoard.tsx # 단기: IntradayChart + 활성신호 + RSI + 액션바
 │   │   │   ├── DailyBoard.tsx    # 일봉: DailyChart + Stage2 체크리스트 + R:R 패널
 │   │   │   ├── WatchlistBoard.tsx # 워치리스트: Stage2 정렬 테이블
@@ -251,7 +251,36 @@ export const EARNINGS_RISK_META = { high: {color:'bear',dot:'●'}, med: {color:
 - `IntradayChart`: 캔들 + 볼륨 + EMA21(황색)/EMA50(인디고) + 신호 마커(▲▼)
 - `DailyChart`: 캔들 + 볼륨 + EMA8(에메랄드)/21(황색)/50(인디고)/200(로즈) + GC 채널(보라 점선) + Entry Pivot 라인
 
-### 5-6. OverviewBoard 카드 구성 (4컬럼 그리드)
+### 5-6. DeepDiveBoard 레이아웃 (4-Zone, 검증완료 2026-05-28)
+
+`gridTemplateColumns: '3fr 2fr'` + `alignItems: 'start'` — 카드가 내용 높이에 맞게 자동 조정.
+
+**Zone 0 (gridColumn: span 2, full-width)**
+종목 선택 버튼 (SYMBOLS 전체) | 현재가 + RSI + EMA21 + 스파크라인(60봉) | 우측: Stage2 ScorePill · Conviction 링 배지 · 월봉 단계 배지 · 시장구조 배지 · 활성신호 배지(최대2)
+
+**Zone 1 Left (3fr): Daily Chart**
+`DailyChart` 컴포넌트 직접 임베드 (EMA8/21/50/200 + GC 채널 + Entry/Stop 라인). 카드 헤드에 UPTREND/GC 패턴 배지.
+
+**Zone 1 Right (2fr): Stage2 + R:R (수직 스택)**
+- Stage2 카드: 7항목 2컬럼 체크리스트 + 월봉 배너 + RS Score·52주고점이격·최근조정·EMA200기울기 KPI 2×2 그리드
+- R:R 카드: Entry/Stop/Target 3-col + 빨강1:녹색3 시각 바 + 포지션 수량 (Max Loss / ATR) + 패턴 배지
+
+**Zone 2 (gridColumn: span 2 → internal 3등분)**
+| 카드 | 데이터 | 내용 |
+|------|--------|------|
+| 소셜 심리 | `useSentiment` (symbol 필터) | composite_score + ScoreBar(-2~+2) + 전일 델타 + key_reason + TopNews + 심리 추이 토글 |
+| AI Brief | `useBrief` (symbol 필터) | 그라디언트 카드 + Setup Quality 배지 + Action Bias 배지 + brief 텍스트 + 기회/리스크 블록 |
+| 실적+시장심리 | `useEarnings` + `useSentiment` | 실적: 발표일·D-Day·EPS·Beat율·action_note / 시장심리: composite_score RadialGauge 미니 |
+
+**Zone 3 (gridColumn: span 2 → internal 3fr/2fr)**
+| 카드 | 데이터 | 내용 |
+|------|--------|------|
+| Daily Heat 60d | `useDaily` (candles) | HeatStrip 3행×20열 + 상승/하락일 배지 + 범례 + 최대등락 |
+| Risk Regime | `useRegime` | RadialGauge(80px) + 레짐 설명 텍스트 + 5요소 바(raw수치 포함) |
+
+---
+
+### 5-7. OverviewBoard 카드 구성 (4컬럼 그리드)
 
 | 카드 | span | 데이터 소스 | 내용 |
 |------|------|------------|------|
