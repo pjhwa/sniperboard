@@ -73,9 +73,26 @@ class GCBandPrimitive implements ISeriesPrimitive<Time> {
 }
 // ────────────────────────────────────────────────────────────────────────────
 
+const LEGEND_ITEMS = [
+  { color: '#34d399', label: 'EMA 8',   dash: false },
+  { color: '#f59e0b', label: 'EMA 21',  dash: false },
+  { color: '#818cf8', label: 'EMA 50',  dash: false },
+  { color: '#f43f5e', label: 'EMA 200', dash: false },
+  { color: '#a855f7', label: 'GC Band', dash: false },
+];
+
 export default function DailyChart({ data }: DailyChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<any>(null);
+
+  const hasEntry = !!data.stage2?.entry;
+  const { candles, indicators } = data;
+  const hasGC = !!(indicators?.gc_upper?.length && indicators?.gc_lower?.length);
+
+  const legendItems = [
+    ...LEGEND_ITEMS.filter((item) => item.label !== 'GC Band' || hasGC),
+    ...(hasEntry ? [{ color: '#10b981', label: 'Entry Pivot', dash: true }] : []),
+  ];
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -99,8 +116,6 @@ export default function DailyChart({ data }: DailyChartProps) {
 
     chartRef.current = chart;
 
-    const { candles, indicators } = data;
-
     // ── 1. 캔들스틱 ──────────────────────────────────────────────────────────
     const candleSeries = chart.addCandlestickSeries({
       upColor: '#22c55e',
@@ -117,7 +132,7 @@ export default function DailyChart({ data }: DailyChartProps) {
       close: c.close,
     })));
 
-    // ── 2. GC 밴드 음영 (캔들 시리즈에 프리미티브로 부착 → 그리드 위, 캔들 아래) ─
+    // ── 2. GC 밴드 음영 ───────────────────────────────────────────────────────
     const gcUp = indicators['gc_upper'];
     const gcLo = indicators['gc_lower'];
 
@@ -133,20 +148,19 @@ export default function DailyChart({ data }: DailyChartProps) {
 
     // ── 3. EMA 라인 ───────────────────────────────────────────────────────────
     const emaConfig = [
-      { key: 'ema8'   as const, color: '#34d399', title: 'EMA8' },
-      { key: 'ema21'  as const, color: '#f59e0b', title: 'EMA21' },
-      { key: 'ema50'  as const, color: '#818cf8', title: 'EMA50' },
-      { key: 'ema200' as const, color: '#f43f5e', title: 'EMA200' },
+      { key: 'ema8'   as const, color: '#34d399' },
+      { key: 'ema21'  as const, color: '#f59e0b' },
+      { key: 'ema50'  as const, color: '#818cf8' },
+      { key: 'ema200' as const, color: '#f43f5e' },
     ];
 
-    emaConfig.forEach(({ key, color, title }) => {
+    emaConfig.forEach(({ key, color }) => {
       if (indicators[key]?.length === candles.length) {
         const s = chart.addLineSeries({
           color,
           lineWidth: 1,
           priceLineVisible: false,
-          lastValueVisible: true,
-          title,
+          lastValueVisible: false,
         });
         s.setData(candles.map((c, i) => ({ time: c.time as Time, value: indicators[key][i] })));
       }
@@ -154,12 +168,12 @@ export default function DailyChart({ data }: DailyChartProps) {
 
     // ── 4. GC 테두리 라인 ────────────────────────────────────────────────────
     const gcConfig = [
-      { key: 'gc_upper' as const, color: '#a855f7', title: 'GC Upper', style: 1 },
-      { key: 'gc_mid'   as const, color: 'rgba(168,85,247,0.45)', title: 'GC Mid', style: 2 },
-      { key: 'gc_lower' as const, color: '#a855f7', title: 'GC Lower', style: 1 },
+      { key: 'gc_upper' as const, color: '#a855f7', style: 1 },
+      { key: 'gc_mid'   as const, color: 'rgba(168,85,247,0.45)', style: 2 },
+      { key: 'gc_lower' as const, color: '#a855f7', style: 1 },
     ];
 
-    gcConfig.forEach(({ key, color, title, style }) => {
+    gcConfig.forEach(({ key, color, style }) => {
       const vals = indicators[key];
       if (!vals || vals.length === 0) return;
 
@@ -174,7 +188,6 @@ export default function DailyChart({ data }: DailyChartProps) {
           lineStyle: style,
           priceLineVisible: false,
           lastValueVisible: false,
-          title,
         });
         s.setData(gcData);
       }
@@ -203,8 +216,7 @@ export default function DailyChart({ data }: DailyChartProps) {
         lineWidth: 1,
         lineStyle: 2,
         priceLineVisible: false,
-        lastValueVisible: true,
-        title: 'Entry',
+        lastValueVisible: false,
       });
       entryLine.setData(candles.map((c) => ({ time: c.time as Time, value: data.stage2.entry })));
     }
@@ -226,5 +238,28 @@ export default function DailyChart({ data }: DailyChartProps) {
     };
   }, [data]);
 
-  return <div ref={chartContainerRef} className="w-full h-[480px]" />;
+  return (
+    <div className="relative w-full">
+      <div ref={chartContainerRef} className="w-full h-[480px]" />
+      <div className="absolute top-2 left-2 flex flex-wrap gap-x-3 gap-y-1 pointer-events-none z-10">
+        {legendItems.map(({ color, label, dash }) => (
+          <span key={label} className="flex items-center gap-1.5">
+            <span
+              style={{
+                display: 'inline-block',
+                width: 16,
+                height: 2,
+                backgroundColor: color,
+                borderRadius: 1,
+                ...(dash ? { backgroundImage: `repeating-linear-gradient(to right, ${color} 0 4px, transparent 4px 7px)`, backgroundColor: 'transparent' } : {}),
+              }}
+            />
+            <span style={{ color: '#9ca3af', fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.01em' }}>
+              {label}
+            </span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }

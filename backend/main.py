@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Lazy Alpha Signal API",
+    title="SniperBoard Signal API",
     description="Trading signal dashboard backend",
     version="0.1.0",
     lifespan=lifespan,
@@ -35,4 +35,4 @@ app.include_router(router, prefix="/api")
 
 @app.get("/")
 def root():
-    return {"message": "Lazy Alpha Signal Dashboard API is running"}
+    return {"message": "SniperBoard Signal Dashboard API is running"}

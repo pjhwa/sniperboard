@@ -16,6 +16,11 @@ const toTs = (t: string): number => {
   return Math.floor(ms / 1000);
 };
 
+const LEGEND_ITEMS = [
+  { color: '#f59e0b', label: 'EMA 21' },
+  { color: '#818cf8', label: 'EMA 50' },
+];
+
 export default function IntradayChart({ candles, signals, indicators }: IntradayChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<any>(null);
@@ -23,7 +28,6 @@ export default function IntradayChart({ candles, signals, indicators }: Intraday
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    // 차트 인스턴스 초기화
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
       height: 520,
@@ -79,31 +83,29 @@ export default function IntradayChart({ candles, signals, indicators }: Intraday
 
     candleSeries.setData(chartData);
 
-    // EMA21 라인 추가
+    // EMA21 라인
     if (indicators.ema21?.length === validCandles.length) {
       const s = chart.addLineSeries({
         color: '#f59e0b',
         lineWidth: 1,
         priceLineVisible: false,
-        lastValueVisible: true,
-        title: 'EMA21',
+        lastValueVisible: false,
       });
       s.setData(validCandles.map((c, i) => ({ time: toTs(c.time) as Time, value: indicators.ema21[i] })));
     }
 
-    // EMA50 라인 추가
+    // EMA50 라인
     if (indicators.ema50?.length === validCandles.length) {
       const s = chart.addLineSeries({
         color: '#818cf8',
         lineWidth: 1,
         priceLineVisible: false,
-        lastValueVisible: true,
-        title: 'EMA50',
+        lastValueVisible: false,
       });
       s.setData(validCandles.map((c, i) => ({ time: toTs(c.time) as Time, value: indicators.ema50[i] })));
     }
 
-    // Volume 히스토그램 추가
+    // Volume 히스토그램
     const volSeries = chart.addHistogramSeries({
       priceFormat: { type: 'volume' },
       priceScaleId: 'volume',
@@ -119,7 +121,7 @@ export default function IntradayChart({ candles, signals, indicators }: Intraday
       }))
     );
 
-    // 신호 마커 추가
+    // 신호 마커
     const markers: any[] = [];
     const addMarkers = (arr: boolean[] | undefined, pos: string, color: string, shape: string, text: string) => {
       arr?.forEach((active, origIdx) => {
@@ -141,7 +143,6 @@ export default function IntradayChart({ candles, signals, indicators }: Intraday
     candleSeries.setMarkers(markers);
     chart.timeScale().fitContent();
 
-    // 반응형 리사이징 처리
     const handleResize = () => {
       if (chartContainerRef.current) {
         chart.resize(chartContainerRef.current.clientWidth, 520);
@@ -157,5 +158,27 @@ export default function IntradayChart({ candles, signals, indicators }: Intraday
     };
   }, [candles, signals, indicators]);
 
-  return <div ref={chartContainerRef} className="w-full h-[520px]" />;
+  return (
+    <div className="relative w-full">
+      <div ref={chartContainerRef} className="w-full h-[520px]" />
+      <div className="absolute top-2 left-2 flex flex-wrap gap-x-3 gap-y-1 pointer-events-none z-10">
+        {LEGEND_ITEMS.map(({ color, label }) => (
+          <span key={label} className="flex items-center gap-1.5">
+            <span
+              style={{
+                display: 'inline-block',
+                width: 16,
+                height: 2,
+                backgroundColor: color,
+                borderRadius: 1,
+              }}
+            />
+            <span style={{ color: '#9ca3af', fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.01em' }}>
+              {label}
+            </span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
