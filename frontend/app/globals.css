@@ -327,7 +327,7 @@ body {
 .strip__cell:last-child { border-right: none; }
 .strip__tooltip {
   position: fixed;
-  background: var(--bg-elevated, #1e2130);
+  background: var(--card-elev);
   color: var(--fg);
   font-size: 11px;
   line-height: 1.45;
