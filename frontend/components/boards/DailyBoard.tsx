@@ -67,6 +67,7 @@ export function DailyBoard() {
   const heatCloses: number[] = [];
   for (let i = 1; i < heatCandles.length; i++) {
     const prev = heatCandles[i - 1].close;
+    if (prev === 0) continue;
     const curr = heatCandles[i].close;
     heatPcts.push(((curr - prev) / prev) * 100);
     heatDates.push(heatCandles[i].time);
