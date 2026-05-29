@@ -30,7 +30,13 @@ function HeatCell({ v, date, close, onEnter, onLeave }: HeatCellProps) {
       }}
       onMouseEnter={e => {
         const r = (e.target as HTMLElement).getBoundingClientRect();
-        onEnter(tooltipText, r.left + r.width / 2, r.top - 6);
+        const tipHalfW = 100; // conservative half-width estimate
+        const rawX = r.left + r.width / 2;
+        const clampedX = Math.min(
+          Math.max(rawX, tipHalfW + 10),
+          window.innerWidth - tipHalfW - 10
+        );
+        onEnter(tooltipText, clampedX, r.top - 6);
       }}
       onMouseLeave={onLeave}
     />

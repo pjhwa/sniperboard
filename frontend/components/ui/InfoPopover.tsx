@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 const CLOSE_EVENT = 'info-pop:close-all';
 
@@ -11,7 +12,7 @@ interface Props {
 
 export function InfoPopover({ term, body }: Props) {
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [pos, setPos] = useState<{ top: number; left: number; above: boolean }>({ top: 0, left: 0, above: false });
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,13 +42,33 @@ export function InfoPopover({ term, body }: Props) {
         const rect = ref.current.getBoundingClientRect();
         const popWidth = 300;
         const vpWidth = window.innerWidth;
-        const top = rect.bottom + 6;
+        const vpHeight = window.innerHeight;
+        const above = vpHeight - rect.bottom < 220;
+        const top = above ? rect.top - 6 : rect.bottom + 6;
         const left = Math.max(10, Math.min(rect.right - popWidth, vpWidth - popWidth - 10));
-        setPos({ top, left });
+        setPos({ top, left, above });
       }
     }
     setOpen(o => !o);
   }
+
+  const popup = open && typeof document !== 'undefined' ? createPortal(
+    <div
+      className="info-pop__body"
+      role="tooltip"
+      style={{
+        position: 'fixed',
+        top: pos.top,
+        left: pos.left,
+        zIndex: 9999,
+        transform: pos.above ? 'translateY(-100%)' : undefined,
+      }}
+    >
+      <div className="info-pop__term">{term}</div>
+      <p className="info-pop__text">{body}</p>
+    </div>,
+    document.body
+  ) : null;
 
   return (
     <div className="info-pop" ref={ref}>
@@ -59,16 +80,7 @@ export function InfoPopover({ term, body }: Props) {
       >
         ⓘ
       </button>
-      {open && (
-        <div
-          className="info-pop__body"
-          role="tooltip"
-          style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 1000 }}
-        >
-          <div className="info-pop__term">{term}</div>
-          <p className="info-pop__text">{body}</p>
-        </div>
-      )}
+      {popup}
     </div>
   );
 }
