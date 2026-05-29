@@ -232,11 +232,13 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:500
 
 export interface PrePostData {
   symbol: string;
-  market_state: 'PRE' | 'POST' | 'REGULAR' | 'CLOSED';
+  market_state: 'PRE' | 'POST' | 'REGULAR' | 'CLOSED' | 'OVERNIGHT';
   pre_market_price: number | null;
   pre_market_change_pct: number | null;
   post_market_price: number | null;
   post_market_change_pct: number | null;
+  overnight_price: number | null;
+  overnight_change_pct: number | null;
   regular_close: number | null;
   regular_change_pct: number | null;
 }

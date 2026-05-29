@@ -339,10 +339,12 @@ class SentimentHistoryResponse(BaseModel):
 
 class PrePostResponse(BaseModel):
     symbol: str
-    market_state: str  # "PRE" | "POST" | "REGULAR" | "CLOSED"
+    market_state: str  # "PRE" | "POST" | "REGULAR" | "CLOSED" | "OVERNIGHT"
     pre_market_price: Optional[float] = None
     pre_market_change_pct: Optional[float] = None
     post_market_price: Optional[float] = None
     post_market_change_pct: Optional[float] = None
+    overnight_price: Optional[float] = None
+    overnight_change_pct: Optional[float] = None
     regular_close: Optional[float] = None
     regular_change_pct: Optional[float] = None  # regularMarketChangePercent from yfinance

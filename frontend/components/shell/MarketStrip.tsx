@@ -62,7 +62,7 @@ export function MarketStrip() {
               ${(displayPrice ?? lastCandle!.close).toFixed(2)}
             </div>
             {prePostData && (() => {
-              const { market_state, pre_market_price, pre_market_change_pct, post_market_price, post_market_change_pct } = prePostData;
+              const { market_state, pre_market_price, pre_market_change_pct, post_market_price, post_market_change_pct, overnight_price, overnight_change_pct } = prePostData;
               let price: number | null = null;
               let chgPct: number | null = null;
               let label: string | null = null;
@@ -71,6 +71,8 @@ export function MarketStrip() {
                 price = pre_market_price; chgPct = pre_market_change_pct; label = 'PRE';
               } else if (market_state === 'POST' && post_market_price != null) {
                 price = post_market_price; chgPct = post_market_change_pct; label = 'POST';
+              } else if (market_state === 'OVERNIGHT' && overnight_price != null) {
+                price = overnight_price; chgPct = overnight_change_pct; label = '🌙';
               } else if (market_state === 'CLOSED' && post_market_price != null) {
                 price = post_market_price; chgPct = post_market_change_pct; label = 'POST'; dimmed = true;
               }

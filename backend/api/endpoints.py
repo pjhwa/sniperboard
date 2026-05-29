@@ -16,6 +16,7 @@ from api.schemas import (
     BriefResponse, EarningsResponse, SentimentHistoryResponse, PrePostResponse,
 )
 from services.sentiment_service import fetch_latest, enrich_with_delta, fetch_today_slots, fetch_sentiment_history
+from services.overnight_service import get_overnight_price
 from services.brief_service import fetch_brief
 from services.earnings_service import fetch_earnings
 from core.distribution_day import count_distribution_days
@@ -64,6 +65,8 @@ def _fetch_prepost_data(symbol: str) -> dict:
         "pre_market_change_pct": None,
         "post_market_price": None,
         "post_market_change_pct": None,
+        "overnight_price": None,
+        "overnight_change_pct": None,
         "regular_close": None,
         "regular_change_pct": None,
     }
@@ -72,6 +75,26 @@ def _fetch_prepost_data(symbol: str) -> dict:
         info = ticker.info or {}
 
         market_state = info.get("marketState", "CLOSED")
+
+        # PREPRE = Yahoo Finance's label for the overnight session (8 PM–4 AM ET, Blue Ocean ATS)
+        if market_state == "PREPRE":
+            overnight = get_overnight_price(symbol)
+            if overnight:
+                result["market_state"] = "OVERNIGHT"
+                result["overnight_price"] = overnight["price"]
+                result["overnight_change_pct"] = overnight["change_pct"]
+                # regular_close: regularMarketPrice during PREPRE = last regular session close
+                regular_close = info.get("regularMarketPrice")
+                result["regular_close"] = regular_close
+                regular_change_pct = info.get("regularMarketChangePercent")
+                if regular_change_pct is not None:
+                    result["regular_change_pct"] = round(float(regular_change_pct), 3)
+            else:
+                # Overnight session but WebSocket cache not yet populated → treat as CLOSED
+                result["market_state"] = "CLOSED"
+                result["regular_close"] = info.get("regularMarketPrice")
+            return result
+
         result["market_state"] = market_state if market_state in ("PRE", "POST", "REGULAR", "CLOSED") else "CLOSED"
 
         # During PRE/POST, regularMarketPrice = last regular session close (yesterday).

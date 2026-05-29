@@ -265,9 +265,10 @@ export function DeepDiveBoard() {
           {lastCandle ? (
             <>
               <div style={{ flexShrink: 0 }}>
-                {/* PRE/POST 상태에서는 공식 종가(regular_close) 사용 */}
+                {/* PRE/POST/OVERNIGHT 상태에서는 공식 종가(regular_close) 사용 */}
                 {(() => {
-                  const isPP = prePostData?.market_state === 'PRE' || prePostData?.market_state === 'POST';
+                  const ms = prePostData?.market_state;
+                  const isPP = ms === 'PRE' || ms === 'POST' || ms === 'OVERNIGHT';
                   const px = isPP && prePostData?.regular_close != null ? prePostData.regular_close : lastCandle.close;
                   return (
                     <div className="mono" style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1 }}>
@@ -289,10 +290,23 @@ export function DeepDiveBoard() {
                     </div>
                   );
                 })()}
-                {prePostData && (prePostData.market_state === 'PRE' || prePostData.market_state === 'POST') && (() => {
-                  const isPre = prePostData.market_state === 'PRE';
-                  const price = isPre ? prePostData.pre_market_price : prePostData.post_market_price;
-                  const chgPct = isPre ? prePostData.pre_market_change_pct : prePostData.post_market_change_pct;
+                {prePostData && (['PRE', 'POST', 'OVERNIGHT'] as const).includes(prePostData.market_state as 'PRE' | 'POST' | 'OVERNIGHT') && (() => {
+                  const ms = prePostData.market_state;
+                  let price: number | null = null;
+                  let chgPct: number | null = null;
+                  let label = '';
+                  let bgColor = 'var(--border)';
+                  let fgColor = 'var(--fg-muted)';
+                  if (ms === 'PRE') {
+                    price = prePostData.pre_market_price; chgPct = prePostData.pre_market_change_pct;
+                    label = 'PRE'; bgColor = 'var(--em-soft)'; fgColor = 'var(--em-500)';
+                  } else if (ms === 'POST') {
+                    price = prePostData.post_market_price; chgPct = prePostData.post_market_change_pct;
+                    label = 'POST';
+                  } else if (ms === 'OVERNIGHT') {
+                    price = prePostData.overnight_price; chgPct = prePostData.overnight_change_pct;
+                    label = '🌙 OVNT'; bgColor = 'var(--purple-soft, var(--border))'; fgColor = 'var(--purple, var(--fg-muted))';
+                  }
                   if (price == null) return null;
                   const up = (chgPct ?? 0) >= 0;
                   return (
@@ -300,10 +314,9 @@ export function DeepDiveBoard() {
                       <span style={{
                         fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
                         padding: '1px 5px', borderRadius: 4,
-                        background: isPre ? 'var(--em-soft)' : 'var(--border)',
-                        color: isPre ? 'var(--em-500)' : 'var(--fg-muted)',
+                        background: bgColor, color: fgColor,
                       }}>
-                        {isPre ? 'PRE' : 'POST'}
+                        {label}
                       </span>
                       <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>
                         ${price.toFixed(2)}

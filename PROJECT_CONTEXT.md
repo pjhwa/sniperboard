@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-29 ui-improvements)
+# SniperBoard — Project Context (UPDATED 2026-05-29 overnight-price)
 
 ## 0. 이 문서의 목적
 
@@ -36,7 +36,8 @@ sniperboard/
 │   │   ├── base.py               # BaseDataService 추상 클래스
 │   │   ├── data_service.py       # YFinanceDataService 구현체 + 모듈 레벨 헬퍼 함수
 │   │   ├── brief_service.py      # GitHub raw fetch + 30분 인메모리 캐시 (BRIEF_DATA_URL)
-│   │   └── earnings_service.py   # GitHub raw fetch + 60분 인메모리 캐시 (EARNINGS_DATA_URL)
+│   │   ├── earnings_service.py   # GitHub raw fetch + 60분 인메모리 캐시 (EARNINGS_DATA_URL)
+│   │   └── overnight_service.py  # Yahoo Finance WebSocket → Blue Ocean ATS overnight 가격 실시간 수신. asyncio 백그라운드 루프 + 자동 재연결. Protobuf base64 파싱(field2=price, field6=session(8=overnight), field12=chg_pct). FastAPI lifespan에서 start_overnight_service() 호출.
 │   └── tests/
 │       ├── test_data_adapter.py (29 tests total incl. adapter+signal_engine; Phase 5 full suite green)
 │       ├── test_signal_engine.py (incl. adjusted vs raw split symbol TDD)
@@ -114,7 +115,7 @@ sniperboard/
 | `GET /distribution-days` | — | SPY·QQQ DD count/level/dates |
 | `GET /sentiment` | — | 소셜 심리 JSON (GitHub raw 30분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
 | `GET /sentiment/history` | `symbol`(required), `days`(1-30, 기본 7) | N일치 pre_open/post_close 심리 포인트 배열. `symbol="MARKET"` 지원. 5분 TTL 캐시. |
-| `GET /prepost` | `symbol` | 프리/애프터마켓 가격·변화율·market_state (PRE/POST/REGULAR/CLOSED). ticker.info 우선, 없으면 history(prepost=True) 폴백. |
+| `GET /prepost` | `symbol` | 프리/애프터마켓 가격·변화율·market_state (PRE/POST/REGULAR/CLOSED/OVERNIGHT). ticker.info 우선, PREPRE→OVERNIGHT 변환 + overnight_service WebSocket 캐시. |
 | `GET /brief` | — | AI Daily Brief JSON (GitHub raw 30분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
 | `GET /earnings` | — | Earnings Intelligence JSON (GitHub raw 60분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
 
