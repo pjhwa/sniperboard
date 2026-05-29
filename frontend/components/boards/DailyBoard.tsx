@@ -14,6 +14,7 @@ import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
 import { G } from '@/app/glossary';
 import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
 import { InfoPopover } from '@/components/ui/InfoPopover';
+import { HeatStrip } from '@/components/ui/HeatStrip';
 
 const DAILY_GUIDE: GuideSection[] = [
   {
@@ -58,6 +59,30 @@ export function DailyBoard() {
   );
 
   const stage2 = dailyData?.stage2;
+
+  // 90일 VCP 히트맵 데이터
+  const heatCandles = (dailyData?.candles ?? []).slice(-91); // 91개로 90개 변화율 확보
+  const heatPcts: number[] = [];
+  const heatDates: string[] = [];
+  const heatCloses: number[] = [];
+  for (let i = 1; i < heatCandles.length; i++) {
+    const prev = heatCandles[i - 1].close;
+    const curr = heatCandles[i].close;
+    heatPcts.push(((curr - prev) / prev) * 100);
+    heatDates.push(heatCandles[i].time);
+    heatCloses.push(curr);
+  }
+  const heatDays = heatPcts.length;
+  const upDays = heatPcts.filter(v => v > 0).length;
+  const downDays = heatPcts.filter(v => v < 0).length;
+  const winRate = heatDays > 0 ? ((upDays / heatDays) * 100).toFixed(0) : '—';
+  const avgUp = upDays > 0
+    ? (heatPcts.filter(v => v > 0).reduce((a, b) => a + b, 0) / upDays).toFixed(2)
+    : '0.00';
+  const avgDown = downDays > 0
+    ? (heatPcts.filter(v => v < 0).reduce((a, b) => a + b, 0) / downDays).toFixed(2)
+    : '0.00';
+
   const structColor = STRUCT_COLOR[stage2?.market_structure ?? 'NEUTRAL'] ?? 'neutral';
 
   const entry = stage2?.entry ?? 0;
@@ -252,6 +277,40 @@ export function DailyBoard() {
           <div className="subtle">로딩 중...</div>
         )}
       </Card>
+
+      {/* 90일 VCP 히트맵 */}
+      {heatDays > 0 && (
+        <div
+          className="card"
+          style={{ gridColumn: '1 / -1' }}
+        >
+          <div className="card__hd">
+            <h3>{heatDays}일 등락 히트맵</h3>
+            <InfoPopover
+              term="90일 등락 히트맵"
+              body="왼쪽(과거)→오른쪽(최근) 순서입니다. 좋은 셋업은 오른쪽으로 갈수록 셀이 작고 색이 연해집니다 — 변동성이 수축하며 피봇을 준비 중이라는 신호입니다. 반대로 최근 셀이 크고 진하면 아직 변동성이 살아있어 진입 시기가 이릅니다. 초록=상승일, 빨강=하락일. 색의 진하기=움직임의 크기."
+            />
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 16, fontSize: 11.5, color: 'var(--fg-muted)' }}>
+              <span>
+                <span style={{ color: 'var(--bull)', fontWeight: 600 }}>↑{upDays}일</span>
+                {' '}
+                <span style={{ color: 'var(--bear)', fontWeight: 600 }}>↓{downDays}일</span>
+              </span>
+              <span>승률 <span className="mono" style={{ color: 'var(--fg)' }}>{winRate}%</span></span>
+              <span>평균 <span className="mono" style={{ color: 'var(--bull)' }}>+{avgUp}%</span> / <span className="mono" style={{ color: 'var(--bear)' }}>{avgDown}%</span></span>
+            </div>
+          </div>
+          <div className="card__bd">
+            <HeatStrip
+              values={heatPcts}
+              cols={heatDays}
+              rows={1}
+              dates={heatDates}
+              closes={heatCloses}
+            />
+          </div>
+        </div>
+      )}
 
     </div>
     </div>
