@@ -61,16 +61,25 @@ export function MarketStrip() {
             <div className="mono" style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.02em' }}>
               ${(displayPrice ?? lastCandle!.close).toFixed(2)}
             </div>
-            {prePostData && (prePostData.market_state === 'PRE' || prePostData.market_state === 'POST') && (() => {
-              const isPre = prePostData.market_state === 'PRE';
-              const price = isPre ? prePostData.pre_market_price : prePostData.post_market_price;
-              const chgPct = isPre ? prePostData.pre_market_change_pct : prePostData.post_market_change_pct;
+            {prePostData && (() => {
+              const { market_state, pre_market_price, pre_market_change_pct, post_market_price, post_market_change_pct } = prePostData;
+              let price: number | null = null;
+              let chgPct: number | null = null;
+              let label: string | null = null;
+              let dimmed = false;
+              if (market_state === 'PRE' && pre_market_price != null) {
+                price = pre_market_price; chgPct = pre_market_change_pct; label = 'PRE';
+              } else if (market_state === 'POST' && post_market_price != null) {
+                price = post_market_price; chgPct = post_market_change_pct; label = 'POST';
+              } else if (market_state === 'CLOSED' && post_market_price != null) {
+                price = post_market_price; chgPct = post_market_change_pct; label = 'POST'; dimmed = true;
+              }
               if (price == null) return null;
               const up = (chgPct ?? 0) >= 0;
               return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1, opacity: dimmed ? 0.45 : 1 }}>
                   <span style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {isPre ? 'PRE' : 'POST'}
+                    {label}
                   </span>
                   <span className="mono" style={{ fontSize: 11, fontWeight: 600 }}>
                     ${price.toFixed(2)}
