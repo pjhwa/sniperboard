@@ -236,7 +236,7 @@ export function DeepDiveBoard() {
       {/* ════════════════════════════════════════════════════════════════
           ROW 1 — Zone 0: 종목 선택 + 가격 + 상황 배지
       ════════════════════════════════════════════════════════════════ */}
-      <div style={{
+      <div className="mob-order-1" style={{
         gridColumn: 'span 2',
         display: 'flex', alignItems: 'center', gap: 0,
         background: 'var(--card)', border: '1px solid var(--border)',
@@ -420,24 +420,27 @@ export function DeepDiveBoard() {
       {/* ════════════════════════════════════════════════════════════════
           ROW 2 LEFT — Daily Chart
       ════════════════════════════════════════════════════════════════ */}
-      <div className="card" style={{ minHeight: 440 }}>
-        <div className="card__hd">
-          <h3>{symbol} · Daily Chart</h3>
-          {stage2 && <span className={`badge ${STRUCT_CLS[stage2.market_structure] ?? 'neutral'}`}>{stage2.market_structure}</span>}
-          {[...gcBadges, ...patBadges].map(([l, c]) => <span key={l} className={`badge ${c}`}>{l}</span>)}
-          <small>1Y · GC · EMA8/21/50/200</small>
-        </div>
-        <div className="card__bd" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
-          {chartLoading
-            ? <div className="subtle" style={{ padding: '32px 16px' }}>차트 로딩 중...</div>
-            : dailyData ? <DailyChart data={dailyData} /> : null
-          }
+      <div className="mob-order-2">
+        <div className="card" style={{ minHeight: 440 }}>
+          <div className="card__hd">
+            <h3>{symbol} · Daily Chart</h3>
+            {stage2 && <span className={`badge ${STRUCT_CLS[stage2.market_structure] ?? 'neutral'}`}>{stage2.market_structure}</span>}
+            {[...gcBadges, ...patBadges].map(([l, c]) => <span key={l} className={`badge ${c}`}>{l}</span>)}
+            <small>1Y · GC · EMA8/21/50/200</small>
+          </div>
+          <div className="card__bd" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
+            {chartLoading
+              ? <div className="subtle" style={{ padding: '32px 16px' }}>차트 로딩 중...</div>
+              : dailyData ? <div className="mob-chart-limit"><DailyChart data={dailyData} /></div> : null
+            }
+          </div>
         </div>
       </div>
 
       {/* ════════════════════════════════════════════════════════════════
           ROW 2 RIGHT — Stage 2 분석
       ════════════════════════════════════════════════════════════════ */}
+      <div className="mob-order-4">
       <div className="card">
         <div className="card__hd">
           <h3>Minervini Stage 2</h3>
@@ -498,10 +501,12 @@ export function DeepDiveBoard() {
           )}
         </div>
       </div>
+      </div>{/* end mob-order-4 */}
 
       {/* ════════════════════════════════════════════════════════════════
           ROW 3 LEFT — 세력 참여도 분석
       ════════════════════════════════════════════════════════════════ */}
+      <div className="mob-order-5">
       <div className="card">
         <div className="card__hd">
           <h3>세력 참여도 · {symbol}</h3>
@@ -605,10 +610,12 @@ export function DeepDiveBoard() {
           })() : <div className="subtle">{chartLoading ? '로딩 중...' : '데이터 부족 (20일 미만)'}</div>}
         </div>
       </div>
+      </div>{/* end mob-order-5 */}
 
       {/* ════════════════════════════════════════════════════════════════
           ROW 3 RIGHT — R:R 진입 계획
       ════════════════════════════════════════════════════════════════ */}
+      <div className="mob-order-3">
       <div className="card">
         <div className="card__hd">
           <h3>진입 계획 · R:R</h3>
@@ -671,12 +678,13 @@ export function DeepDiveBoard() {
           ) : <div className="subtle">로딩 중...</div>}
         </div>
       </div>
+      </div>{/* end mob-order-3 */}
 
       {/* ════════════════════════════════════════════════════════════════
           ROW 4 — 소셜 심리 | AI Brief | 실적 (span 2 → 내부 3등분)
           alignItems: stretch 로 3카드 동일 높이
       ════════════════════════════════════════════════════════════════ */}
-      <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, alignItems: 'stretch' }}>
+      <div className="mob-order-6" style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, alignItems: 'stretch' }}>
 
         {/* 소셜 심리 (종목) */}
         <div className="card">
@@ -733,7 +741,9 @@ export function DeepDiveBoard() {
         </div>
 
         {/* AI Brief (종목) */}
-        <div className="card" style={{ background: 'linear-gradient(135deg, var(--card-elev) 0%, var(--bg-muted) 100%)', position: 'relative', overflow: 'hidden' }}>
+        <details className="mob-collapse card" style={{ background: 'linear-gradient(135deg, var(--card-elev) 0%, var(--bg-muted) 100%)', position: 'relative', overflow: 'hidden' }}>
+          <summary>AI Brief</summary>
+          <div className="mob-collapse-body">
           <div style={{ position: 'absolute', top: '-40%', right: '-10%', width: 160, height: 160, background: 'radial-gradient(circle, color-mix(in srgb, var(--em-500) 18%, transparent), transparent 70%)', pointerEvents: 'none' }} />
           <div className="card__hd" style={{ position: 'relative' }}>
             <div style={{ width: 22, height: 22, borderRadius: 6, background: 'var(--em-500)', color: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
@@ -778,7 +788,8 @@ export function DeepDiveBoard() {
               </div>
             )}
           </div>
-        </div>
+          </div>
+        </details>
 
         {/* 실적 발표 — 없을 때 최근 결과로 채움 */}
         <div className="card">
@@ -870,6 +881,7 @@ export function DeepDiveBoard() {
       {/* ════════════════════════════════════════════════════════════════
           ROW 5 LEFT — Risk Regime (3fr, 가로 레이아웃)
       ════════════════════════════════════════════════════════════════ */}
+      <div className="mob-order-7">
       <div className="card">
         <div className="card__hd">
           <h3>Risk Regime</h3>
@@ -925,9 +937,12 @@ export function DeepDiveBoard() {
         </div>
       </div>
 
+      </div>{/* end mob-order-7 ROW5 LEFT */}
+
       {/* ════════════════════════════════════════════════════════════════
           ROW 5 RIGHT — 시장 전체 심리 (2fr)
       ════════════════════════════════════════════════════════════════ */}
+      <div className="mob-order-7">
       <div className="card">
         <div className="card__hd">
           <h3>시장 전체 심리</h3>
@@ -960,6 +975,7 @@ export function DeepDiveBoard() {
           ) : <div className="subtle">심리 데이터 없음</div>}
         </div>
       </div>
+      </div>{/* end mob-order-7 ROW5 RIGHT */}
 
     </div>
     </div>
