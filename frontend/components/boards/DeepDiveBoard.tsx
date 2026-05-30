@@ -420,7 +420,7 @@ export function DeepDiveBoard() {
       {/* ════════════════════════════════════════════════════════════════
           ROW 2 LEFT — Daily Chart
       ════════════════════════════════════════════════════════════════ */}
-      <div className="mob-order-2">
+      <div className="mob-order-2 mob-wrap">
         <div className="card" style={{ minHeight: 440 }}>
           <div className="card__hd">
             <h3>{symbol} · Daily Chart</h3>
@@ -440,7 +440,7 @@ export function DeepDiveBoard() {
       {/* ════════════════════════════════════════════════════════════════
           ROW 2 RIGHT — Stage 2 분석
       ════════════════════════════════════════════════════════════════ */}
-      <div className="mob-order-4">
+      <div className="mob-order-4 mob-wrap">
       <div className="card">
         <div className="card__hd">
           <h3>Minervini Stage 2</h3>
@@ -506,7 +506,7 @@ export function DeepDiveBoard() {
       {/* ════════════════════════════════════════════════════════════════
           ROW 3 LEFT — 세력 참여도 분석
       ════════════════════════════════════════════════════════════════ */}
-      <div className="mob-order-5">
+      <div className="mob-order-5 mob-wrap">
       <div className="card">
         <div className="card__hd">
           <h3>세력 참여도 · {symbol}</h3>
@@ -615,7 +615,7 @@ export function DeepDiveBoard() {
       {/* ════════════════════════════════════════════════════════════════
           ROW 3 RIGHT — R:R 진입 계획
       ════════════════════════════════════════════════════════════════ */}
-      <div className="mob-order-3">
+      <div className="mob-order-3 mob-wrap">
       <div className="card">
         <div className="card__hd">
           <h3>진입 계획 · R:R</h3>
@@ -881,7 +881,7 @@ export function DeepDiveBoard() {
       {/* ════════════════════════════════════════════════════════════════
           ROW 5 LEFT — Risk Regime (3fr, 가로 레이아웃)
       ════════════════════════════════════════════════════════════════ */}
-      <div className="mob-order-7">
+      <div className="mob-order-7 mob-wrap">
       <div className="card">
         <div className="card__hd">
           <h3>Risk Regime</h3>
@@ -942,7 +942,7 @@ export function DeepDiveBoard() {
       {/* ════════════════════════════════════════════════════════════════
           ROW 5 RIGHT — 시장 전체 심리 (2fr)
       ════════════════════════════════════════════════════════════════ */}
-      <div className="mob-order-7">
+      <div className="mob-order-7 mob-wrap">
       <div className="card">
         <div className="card__hd">
           <h3>시장 전체 심리</h3>

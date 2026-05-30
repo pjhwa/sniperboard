@@ -950,10 +950,11 @@ body {
   .topbar__regime { display: none !important; }
   .topbar__sep { display: none !important; }
 
-  /* Main 영역: 스크롤 컨테이너 */
+  /* Main 영역: block 스크롤 컨테이너 (flex 제거 → 가장 단순하고 안정적인 스크롤) */
   .main {
-    overflow-x: hidden;
+    display: block;
     overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     padding-bottom: calc(var(--mobile-tabs) + env(safe-area-inset-bottom));
   }
@@ -1062,10 +1063,13 @@ body {
   }
 }
 
-/* BottomTabs: 데스크톱에서 숨김 / details: 데스크톱에서 항상 펼침 */
+/* 데스크톱: BottomTabs 숨김 / details 항상 펼침 / wrapper div 투명 처리 */
 @media (min-width: 768px) {
   .bottom-tabs { display: none; }
   details.mob-collapse { display: contents; }
   details.mob-collapse > summary { display: none; }
+  /* wrapper 전용 div를 데스크톱 grid에서 투명하게 → 자식이 직접 grid item이 됨 */
+  .mob-wrap { display: contents; }
+  .mob-macro-groups { display: contents; }
 }
 *::-webkit-scrollbar-track { background: transparent; }
