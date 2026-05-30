@@ -14,6 +14,7 @@ from api.schemas import (
     OHLCVResponse, LatestSignalResponse, DailyResponse, WatchlistResponse,
     MacroResponse, RegimeResponse, DistributionDayResponse, SentimentResponse,
     BriefResponse, EarningsResponse, SentimentHistoryResponse, PrePostResponse,
+    MacroInsightResponse,
 )
 from services.sentiment_service import fetch_latest, enrich_with_delta, fetch_today_slots, fetch_sentiment_history
 from services.overnight_service import get_overnight_price
@@ -357,62 +358,100 @@ MACRO_SYMBOLS = {
 }
 
 
+def _build_macro_items(syms: dict[str, str], period: str = "3mo") -> list[dict]:
+    """MACRO_SYMBOLS dict를 받아 MacroItemSchema 호환 dict 리스트를 반환."""
+    dfs = get_multi_daily(list(syms.keys()), period=period)
+    result = []
+    for sym, name in syms.items():
+        df = dfs.get(sym)
+        if df is None or df.empty or len(df) < 10:
+            result.append({
+                "symbol": sym, "name": name,
+                "price": None, "change_pct_1d": None, "change_pct_5d": None,
+                "ema8": None, "ema21": None, "above_ema8": False, "above_ema21": False,
+                "market_structure": "NEUTRAL", "rsi14": None,
+            })
+            continue
+        try:
+            close = df["close"]
+            latest = float(close.iloc[-1])
+            prev1d = float(close.iloc[-2]) if len(close) >= 2 else latest
+            prev5d = float(close.iloc[-6]) if len(close) >= 6 else float(close.iloc[0])
+            chg1d = (latest - prev1d) / prev1d * 100 if prev1d else 0.0
+            chg5d = (latest - prev5d) / prev5d * 100 if prev5d else 0.0
+            e8  = ema(close, 8)
+            e21 = ema(close, 21)
+            r14 = rsi(close, 14)
+            e8_val  = float(e8.iloc[-1])  if not e8.empty  else None
+            e21_val = float(e21.iloc[-1]) if not e21.empty else None
+            r14_val = float(r14.iloc[-1]) if not r14.isna().all() else None
+            struct = detect_market_structure(df) if len(df) >= 15 else {"structure": "NEUTRAL"}
+            result.append({
+                "symbol": sym, "name": name,
+                "price": round(latest, 4),
+                "change_pct_1d": round(chg1d, 2),
+                "change_pct_5d": round(chg5d, 2),
+                "ema8":  round(e8_val, 4) if e8_val else None,
+                "ema21": round(e21_val, 4) if e21_val else None,
+                "above_ema8":  bool(latest > e8_val) if e8_val else False,
+                "above_ema21": bool(latest > e21_val) if e21_val else False,
+                "market_structure": struct["structure"],
+                "rsi14": round(r14_val, 1) if r14_val else None,
+            })
+        except Exception as e:
+            logger.error(f"Macro error for {sym}: {e}", exc_info=True)
+    return result
+
+
 @router.get("/macro", response_model=MacroResponse)
 async def get_macro_endpoint():
     try:
-        syms = list(MACRO_SYMBOLS.keys())
-        dfs = get_multi_daily(syms, period="3mo")
-
-        result = []
-        for sym, name in MACRO_SYMBOLS.items():
-            df = dfs.get(sym)
-            if df is None or df.empty or len(df) < 10:
-                result.append({
-                    "symbol": sym, "name": name,
-                    "price": None, "change_pct_1d": None, "change_pct_5d": None,
-                    "ema8": None, "ema21": None, "above_ema8": False, "above_ema21": False,
-                    "market_structure": "NEUTRAL", "rsi14": None,
-                })
-                continue
-            try:
-                close = df["close"]
-                latest = float(close.iloc[-1])
-                prev1d = float(close.iloc[-2]) if len(close) >= 2 else latest
-                prev5d = float(close.iloc[-6]) if len(close) >= 6 else float(close.iloc[0])
-
-                chg1d = (latest - prev1d) / prev1d * 100 if prev1d else 0.0
-                chg5d = (latest - prev5d) / prev5d * 100 if prev5d else 0.0
-
-                e8  = ema(close, 8)
-                e21 = ema(close, 21)
-                r14 = rsi(close, 14)
-
-                e8_val  = float(e8.iloc[-1])  if not e8.empty  else None
-                e21_val = float(e21.iloc[-1]) if not e21.empty else None
-                r14_val = float(r14.iloc[-1]) if not r14.isna().all() else None
-
-                struct = detect_market_structure(df) if len(df) >= 15 else {'structure': 'NEUTRAL'}
-
-                result.append({
-                    "symbol": sym,
-                    "name": name,
-                    "price": round(latest, 4),
-                    "change_pct_1d": round(chg1d, 2),
-                    "change_pct_5d": round(chg5d, 2),
-                    "ema8":  round(e8_val, 4) if e8_val else None,
-                    "ema21": round(e21_val, 4) if e21_val else None,
-                    "above_ema8":  bool(latest > e8_val) if e8_val else False,
-                    "above_ema21": bool(latest > e21_val) if e21_val else False,
-                    "market_structure": struct['structure'],
-                    "rsi14": round(r14_val, 1) if r14_val else None,
-                })
-            except Exception as e:
-                logger.error(f"Macro error for {sym}: {e}", exc_info=True)
-
-        return {"macro": result}
+        return {"macro": _build_macro_items(MACRO_SYMBOLS)}
     except Exception as e:
         logger.error(f"Error in /macro endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error while building macro overview")
+
+
+@router.get("/macro/insight", response_model=MacroInsightResponse)
+async def get_macro_insight_endpoint():
+    from core.macro_rules import compute_macro_signals
+    from services.macro_insight_service import fetch_macro_insight, get_ai_meta
+    from api.schemas import (
+        MacroInsightResponse, MacroOverallInsight, MacroGroupInsight, MacroAiMeta
+    )
+    try:
+        items = _build_macro_items(MACRO_SYMBOLS, period="5d")
+        signals = compute_macro_signals(items)
+
+        ai_raw = fetch_macro_insight()
+        ai_groups = (ai_raw or {}).get("groups", {})
+        ai_overall = (ai_raw or {}).get("overall", {})
+
+        groups = {
+            key: MacroGroupInsight(
+                signal=sig["signal"],
+                direction=sig["direction"],
+                text=ai_groups.get(key, {}).get("text") if ai_groups else None,
+            )
+            for key, sig in signals["groups"].items()
+        }
+
+        overall_sig = signals["overall"]
+        overall = MacroOverallInsight(
+            judgment=overall_sig["judgment"],
+            green_count=overall_sig["green_count"],
+            red_count=overall_sig["red_count"],
+            summary=ai_overall.get("summary") if ai_overall else None,
+            bullets=ai_overall.get("bullets", []) if ai_overall else [],
+        )
+
+        ai_meta_data = get_ai_meta(ai_raw) if ai_raw else None
+        ai_meta = MacroAiMeta(**ai_meta_data) if ai_meta_data else None
+
+        return MacroInsightResponse(overall=overall, groups=groups, ai_meta=ai_meta)
+    except Exception as e:
+        logger.error(f"Error in /macro/insight endpoint: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error in macro insight")
 
 
 @router.get("/watchlist", response_model=WatchlistResponse)
