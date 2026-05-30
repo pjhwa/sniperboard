@@ -16,7 +16,7 @@ services:
       # AI Brief + Earnings Intelligence
       BRIEF_DATA_URL: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/brief/latest.json"
       EARNINGS_DATA_URL: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/earnings/latest.json"
-      MACRO_INSIGHT_URL: ${MACRO_INSIGHT_URL:-}
+      MACRO_INSIGHT_URL: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/macro/latest.json"
       # Private 리포일 때만 필요 (GitHub PAT). Public이면 빈 채로 두세요.
       SENTIMENT_DATA_TOKEN: ""
     restart: unless-stopped

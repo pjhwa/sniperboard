@@ -417,7 +417,7 @@ async def get_macro_endpoint():
 @router.get("/macro/insight", response_model=MacroInsightResponse)
 async def get_macro_insight_endpoint():
     try:
-        items = _build_macro_items(MACRO_SYMBOLS, period="5d")
+        items = _build_macro_items(MACRO_SYMBOLS, period="1mo")
         signals = compute_macro_signals(items)
 
         ai_raw = fetch_macro_insight()
