@@ -1,4 +1,4 @@
-from typing import Any
+"""Rule-based macro signal computation — 6 group indicators aggregated to RISK_ON/MIXED/RISK_OFF judgment."""
 
 
 def _get(items: list[dict], symbol: str) -> dict | None:
