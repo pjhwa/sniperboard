@@ -108,7 +108,7 @@ export function MacroBoard() {
                   </span>
                 )}
                 {insightData.overall.bullets.length > 0 && (
-                  <details className="mob-collapse">
+                  <details className="mob-collapse" open>
                     <summary>상세 해석</summary>
                     <div className="mob-collapse-body">
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 0', fontSize: '0.72rem', color: 'var(--fg-muted)' }}>

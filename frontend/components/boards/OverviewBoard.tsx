@@ -115,7 +115,7 @@ export function OverviewBoard() {
     >
       {/* AI Insight — span 2 */}
       <div style={{ gridColumn: 'span 2' }} className="mob-order-6">
-        <details className="mob-collapse">
+        <details className="mob-collapse" open>
           <summary>AI Insight — Market Snapshot</summary>
           <div className="mob-collapse-body">
         <div className="ai-card">

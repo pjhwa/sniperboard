@@ -741,7 +741,7 @@ export function DeepDiveBoard() {
         </div>
 
         {/* AI Brief (종목) */}
-        <details className="mob-collapse card" style={{ background: 'linear-gradient(135deg, var(--card-elev) 0%, var(--bg-muted) 100%)', position: 'relative', overflow: 'hidden' }}>
+        <details className="mob-collapse card" open style={{ background: 'linear-gradient(135deg, var(--card-elev) 0%, var(--bg-muted) 100%)', position: 'relative', overflow: 'hidden' }}>
           <summary>AI Brief</summary>
           <div className="mob-collapse-body">
           <div style={{ position: 'absolute', top: '-40%', right: '-10%', width: 160, height: 160, background: 'radial-gradient(circle, color-mix(in srgb, var(--em-500) 18%, transparent), transparent 70%)', pointerEvents: 'none' }} />

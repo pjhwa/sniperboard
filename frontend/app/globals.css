@@ -1071,10 +1071,8 @@ body {
 @media (min-width: 768px) {
   .bottom-tabs { display: none; }
 
-  /* details.mob-collapse: summary 숨기고 body 강제 표시
-     (display:contents를 쓰면 UA의 details:not([open])>:not(summary){display:none} 에 막힘) */
+  /* details.mob-collapse: open 속성으로 항상 렌더됨 — summary만 숨김 */
   details.mob-collapse > summary { display: none; }
-  details.mob-collapse > .mob-collapse-body { display: block !important; }
   /* AI Brief: details가 card 역할 — 데스크톱에서 flex 카드처럼 표시 */
   details.mob-collapse.card { display: flex !important; flex-direction: column; }
 
