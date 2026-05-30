@@ -51,6 +51,21 @@ docker compose up --build -d
 
 ---
 
+## 모바일 접근
+
+같은 Wi-Fi에 연결된 스마트폰(iOS/Android)에서 접속:
+
+1. Mac의 로컬 IP 확인: `ifconfig | grep "inet " | grep -v 127.0.0.1`
+2. 개발 서버를 네트워크에 바인딩:
+   ```bash
+   cd frontend && npx next dev -H 0.0.0.0 -p 3000
+   ```
+3. 스마트폰 브라우저에서: `http://<Mac-IP>:3000`
+
+**모바일 최적화 보드**: Overview, DeepDive, Macro, Sentiment (하단 탭바로 전환)
+
+---
+
 ## 환경변수 설정
 
 ### 1. `.env` — 프론트엔드 빌드 변수

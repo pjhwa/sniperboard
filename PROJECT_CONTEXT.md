@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-30 macro-insight)
+# SniperBoard — Project Context (UPDATED 2026-05-30 mobile-responsive)
 
 ## 0. 이 문서의 목적
 
@@ -50,13 +50,14 @@ sniperboard/
 │   ├── package.json              # Next.js 16.2.6, React 19.2.4, TanStack Query 5, Zustand 5, lightweight-charts 4.2.3, Tailwind v4
 │   ├── next.config.ts
 │   ├── Dockerfile                # 빌드 arg: NEXT_PUBLIC_API_URL
+│   ├── components/shell/BottomTabs.tsx  # 모바일 하단 탭바 (4탭: Overview/DeepDive/Macro/Sentiment). max-width:767px에서만 표시.
 │   ├── app/
 │   │   ├── layout.tsx            # 루트 레이아웃 (테마 init 스크립트 포함, data-theme="dark")
 │   │   ├── page.tsx              # App shell: Rail+Topbar+MarketStrip+Board 라우터 + ⌘K 핸들러
 │   │   ├── providers.tsx         # QueryClientProvider 래퍼
 │   │   ├── types.ts              # 모든 TypeScript 타입 정의 + 메타데이터 상수
 │   │   ├── glossary.ts           # 컨텍스트 도움말 데이터 (2026-05-29). GlossaryEntry{key,term,body} + GLOSSARY 배열(28개 항목, rates_dollar·commodities 신규 추가) + G 맵(키 기반 조회). InfoPopover·CommandPalette·BoardGuidePanel에서 공유 사용.
-│   │   └── globals.css           # Plaid DS 디자인 토큰 (CSS vars, 다크/라이트 토글, 컴포넌트 클래스). .info-pop* + .guide-panel* + .guide-btn + .board-wrap 클래스 포함. .strip: align-items center(가이드 버튼 세로 중앙정렬) (2026-05-29).
+│   │   └── globals.css           # Plaid DS 디자인 토큰 (CSS vars, 다크/라이트 토글, 컴포넌트 클래스). .info-pop* + .guide-panel* + .guide-btn + .board-wrap 클래스 포함. .strip: align-items center(가이드 버튼 세로 중앙정렬) (2026-05-29). + 모바일 반응형 블록 (max-width:767px, BottomTabs, mob-order-*, mob-collapse)
 │   ├── components/
 │   │   ├── shell/
 │   │   │   ├── Rail.tsx          # 좌측 네비게이션 레일 (7보드 아이콘 + 활성 인디케이터). deepdive=Layers 아이콘 2번째 위치.
