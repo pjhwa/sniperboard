@@ -236,14 +236,14 @@ export function DeepDiveBoard() {
       {/* ════════════════════════════════════════════════════════════════
           ROW 1 — Zone 0: 종목 선택 + 가격 + 상황 배지
       ════════════════════════════════════════════════════════════════ */}
-      <div className="mob-order-1" style={{
+      <div className="mob-order-1 mob-symbol-bar" style={{
         gridColumn: 'span 2',
         display: 'flex', alignItems: 'center', gap: 0,
         background: 'var(--card)', border: '1px solid var(--border)',
         borderRadius: 'var(--r-md)', overflow: 'hidden',
       }}>
         {/* 종목 버튼 */}
-        <div style={{ display: 'flex', gap: 3, padding: '8px 12px', borderRight: '1px solid var(--border)', flexShrink: 0 }}>
+        <div className="mob-symbol-btns" style={{ display: 'flex', gap: 3, padding: '8px 12px', borderRight: '1px solid var(--border)', flexShrink: 0 }}>
           {SYMBOLS.map(s => (
             <button
               key={s}
