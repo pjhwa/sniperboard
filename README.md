@@ -82,6 +82,11 @@ iOS Safari / Android Chrome 에서 동작하는 모바일 반응형 UI를 제공
 
 ### 모바일 최적화 보드 4개
 
+| Overview | DeepDive | Macro | Sentiment |
+|:---:|:---:|:---:|:---:|
+| ![Mobile Overview](assets/images/mobile-overview.jpg) | ![Mobile DeepDive](assets/images/mobile-deepdive.jpg) | ![Mobile Macro](assets/images/mobile-macro.jpg) | ![Mobile Sentiment](assets/images/mobile-sentiment.jpg) |
+| 시장 | 종합분석 | 매크로 | 심리 |
+
 **Overview (시장)** — Big→Detail 순서
 - Risk Regime → Market Breadth → VIX → Sector Momentum → 진입 레이더 → Conviction 리더보드 → AI Insight(접기/펼치기) → 세부 지표
 
