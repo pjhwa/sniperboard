@@ -1,5 +1,6 @@
 """매크로 인사이트 서비스 — GitHub raw URL fetch + 인메모리 캐시."""
 
+import logging
 import os
 import time
 from datetime import datetime, timezone
@@ -7,8 +8,10 @@ from typing import Optional
 
 import requests
 
+logger = logging.getLogger(__name__)
+
 MACRO_INSIGHT_URL = os.environ.get("MACRO_INSIGHT_URL", "")
-CACHE_TTL = 1800  # 30분
+CACHE_TTL = 1800  # 30분 — macro insights update ~2x daily via cron
 
 _cache: dict = {"data": None, "fetched_at": 0.0}
 
@@ -26,8 +29,9 @@ def fetch_macro_insight() -> Optional[dict]:
         _cache["data"] = resp.json()
         _cache["fetched_at"] = now
         return _cache["data"]
-    except Exception:
-        return _cache["data"]  # stale fallback
+    except Exception as e:
+        logger.warning(f"Macro insight fetch failed: {e} — using stale cache")
+        return _cache["data"]
 
 
 def get_ai_meta(raw: dict) -> Optional[dict]:

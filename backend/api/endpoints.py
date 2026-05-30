@@ -12,14 +12,16 @@ from core.signal_engine import (
 )
 from api.schemas import (
     OHLCVResponse, LatestSignalResponse, DailyResponse, WatchlistResponse,
-    MacroResponse, RegimeResponse, DistributionDayResponse, SentimentResponse,
+    MacroResponse, MacroInsightResponse, MacroOverallInsight, MacroGroupInsight, MacroAiMeta,
+    RegimeResponse, DistributionDayResponse, SentimentResponse,
     BriefResponse, EarningsResponse, SentimentHistoryResponse, PrePostResponse,
-    MacroInsightResponse,
 )
 from services.sentiment_service import fetch_latest, enrich_with_delta, fetch_today_slots, fetch_sentiment_history
 from services.overnight_service import get_overnight_price
 from services.brief_service import fetch_brief
 from services.earnings_service import fetch_earnings
+from core.macro_rules import compute_macro_signals
+from services.macro_insight_service import fetch_macro_insight, get_ai_meta
 from core.distribution_day import count_distribution_days
 from core.regime_engine import compute_regime
 from core.conviction_calculator import calculate_conviction
@@ -414,11 +416,6 @@ async def get_macro_endpoint():
 
 @router.get("/macro/insight", response_model=MacroInsightResponse)
 async def get_macro_insight_endpoint():
-    from core.macro_rules import compute_macro_signals
-    from services.macro_insight_service import fetch_macro_insight, get_ai_meta
-    from api.schemas import (
-        MacroInsightResponse, MacroOverallInsight, MacroGroupInsight, MacroAiMeta
-    )
     try:
         items = _build_macro_items(MACRO_SYMBOLS, period="5d")
         signals = compute_macro_signals(items)
