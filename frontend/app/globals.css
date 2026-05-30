@@ -928,12 +928,13 @@ body {
     grid-template-columns: 1fr;
     grid-template-rows: var(--mobile-header) 1fr;
     grid-template-areas: "topbar" "main";
-    min-height: 100dvh;
     min-height: 100vh;
+    min-height: 100dvh;
   }
 
-  /* Rail/MarketStrip 숨김 */
-  .hide-mobile { display: none !important; }
+  /* Rail/MarketStrip/기타 모바일 숨김 */
+  .hide-mobile,
+  .hide-on-mobile { display: none !important; }
 
   /* Topbar 슬림 */
   .topbar {
@@ -973,9 +974,6 @@ body {
   .mob-order-6 { order: 6; }
   .mob-order-7 { order: 7; }
   .mob-order-8 { order: 8; }
-
-  /* hide-on-mobile 유틸 */
-  .hide-on-mobile { display: none !important; }
 
   /* 접기/펼치기 details 스타일 */
   details.mob-collapse summary {
