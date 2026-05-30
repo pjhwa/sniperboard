@@ -341,8 +341,8 @@ export function SentimentBoard() {
         )}
       </Card>
 
-      {/* Top News 모바일 접기/펼치기 */}
-      <details className="mob-collapse mob-order-3" open style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)' }}>
+      {/* Top News 모바일 전용 — 데스크톱에서는 Market Sentiment 카드 안에 포함됨 */}
+      <details className="mob-collapse mob-order-3 hide-mobile" open style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)' }}>
         <summary>Top News</summary>
         <div className="mob-collapse-body">
           <TopNewsBox topNews={market?.top_news} />
