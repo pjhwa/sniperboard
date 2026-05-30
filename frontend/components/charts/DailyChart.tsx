@@ -101,7 +101,7 @@ export default function DailyChart({ data }: DailyChartProps) {
 
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
-      height: 480,
+      height: chartContainerRef.current.clientHeight || 480,
       layout: {
         background: { type: ColorType.Solid, color: BG },
         textColor: '#d1d5db',
@@ -225,7 +225,7 @@ export default function DailyChart({ data }: DailyChartProps) {
 
     const handleResize = () => {
       if (chartContainerRef.current) {
-        chart.resize(chartContainerRef.current.clientWidth, 480);
+        chart.resize(chartContainerRef.current.clientWidth, chartContainerRef.current.clientHeight || 480);
       }
     };
 

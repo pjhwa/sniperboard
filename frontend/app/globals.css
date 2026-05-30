@@ -955,10 +955,12 @@ body {
     overflow-y: auto;
   }
 
-  /* Board: 단일 컬럼 flexbox로 전환 */
+  /* Board: 단일 컬럼 flexbox, 고정 높이 해제 → .main이 스크롤 담당 */
   .board {
     display: flex !important;
     flex-direction: column !important;
+    flex: none !important;      /* flex:1 해제 — 자연 콘텐츠 높이 사용 */
+    overflow: visible !important; /* 보드 자체 스크롤 해제 */
     padding: 10px 12px !important;
     gap: 10px !important;
   }
@@ -997,8 +999,8 @@ body {
   details.mob-collapse[open] summary::before { transform: rotate(90deg); }
   details.mob-collapse .mob-collapse-body { padding: 0 14px 12px; }
 
-  /* 차트 모바일 높이 제한 */
-  .mob-chart-limit { max-height: 320px; overflow: hidden; }
+  /* 차트: 고정 높이로 chart가 clientHeight를 정확히 읽도록 */
+  .mob-chart-limit { height: 300px; }
 
   /* BottomTabs */
   .bottom-tabs {
