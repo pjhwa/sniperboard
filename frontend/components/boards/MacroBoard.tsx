@@ -174,7 +174,7 @@ export function MacroBoard() {
                : groupInsight.signal === 'red'   ? 'Risk-Off'
                : 'Neutral'}
               </span>
-              <span>{DIRECTION_ARROW[groupInsight.direction]}</span>
+              <span>{DIRECTION_ARROW[groupInsight.direction] ?? '→'}</span>
             </span>
           ) : null;
 

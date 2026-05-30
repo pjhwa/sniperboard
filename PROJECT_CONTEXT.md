@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-29 overnight-price)
+# SniperBoard — Project Context (UPDATED 2026-05-30 macro-insight)
 
 ## 0. 이 문서의 목적
 
@@ -32,12 +32,14 @@ sniperboard/
 │   │   ├── distribution_day.py   # O'Neil Distribution Day 카운트 (25거래일 기준)
 │   │   └── data_adapter.py       # SINGLE SOURCE OF TRUTH: yfinance MultiIndex 정규화 + fetch 전담 (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily). yf 1.3+ 대응. Task2: full delegation (data_service thin layer; endpoints daily paths direct import). test_data_adapter.py full coverage (incl get_multi_daily targeted post-review). Phase 2: adj_close preserved (no longer dropped) for daily paths → Stage2 long-term accuracy (adjusted on splits). Phase 5: centralization verified in full tests + manual endpoint checks.
 │   │   └── conviction_calculator.py  # Phase 1: Conviction Composite Score v1 (TDD). 40/30/30 weighted (Stage2 0-7 norm + Sentiment + Regime total). Pure function, regime=None → 50 neutral. Returns score+label+components. See test_conviction_calculator.py. Not yet wired to endpoints. (2026-05-25)
+│   │   └── macro_rules.py            # Macro Insight 신호등 규칙 엔진. compute_macro_signals(items) → {overall:{judgment,green_count,red_count}, groups:{key:{signal,direction}}}. 6그룹(volatility/breadth/credit/rates/commodities/sectors) 각각 green/yellow/red 판정 + 종합 RISK_ON/MIXED/RISK_OFF. 순수 함수, dict 리스트 입력. TDD 20테스트. (2026-05-30)
 │   ├── services/
 │   │   ├── base.py               # BaseDataService 추상 클래스
 │   │   ├── data_service.py       # YFinanceDataService 구현체 + 모듈 레벨 헬퍼 함수
 │   │   ├── brief_service.py      # GitHub raw fetch + 30분 인메모리 캐시 (BRIEF_DATA_URL)
 │   │   ├── earnings_service.py   # GitHub raw fetch + 60분 인메모리 캐시 (EARNINGS_DATA_URL)
 │   │   └── overnight_service.py  # Yahoo Finance WebSocket → Blue Ocean ATS overnight 가격 실시간 수신. asyncio 백그라운드 루프 + 자동 재연결. Protobuf base64 파싱(field2=price, field6=session(8=overnight), field12=chg_pct). FastAPI lifespan에서 start_overnight_service() 호출.
+│   │   └── macro_insight_service.py  # GitHub raw fetch + 30분 인메모리 캐시 (MACRO_INSIGHT_URL). fetch_macro_insight() → Optional[dict] (전체 AI JSON). get_ai_meta(raw) → {generated_at,age_minutes}. URL 미설정 시 None 반환(graceful). (2026-05-30)
 │   └── tests/
 │       ├── test_data_adapter.py (29 tests total incl. adapter+signal_engine; Phase 5 full suite green)
 │       ├── test_signal_engine.py (incl. adjusted vs raw split symbol TDD)
@@ -76,7 +78,7 @@ sniperboard/
 │   │   │   ├── IntradayBoard.tsx # 단기: IntradayChart + 활성신호 + RSI + 액션바. SIG_INFO 맵으로 6개 신호명 옆 InfoPopover 표시. "진입 복사" 버튼 제거됨(2026-05-29).
 │   │   │   ├── DailyBoard.tsx    # 일봉: DailyChart + Stage2 체크리스트 + R:R 패널. Stage2·R:R 카드에 info prop.
 │   │   │   ├── WatchlistBoard.tsx # 워치리스트: Stage2 정렬 테이블. 테이블 헤더(Stage2/RS/Conviction)에 InfoPopover.
-│   │   │   ├── MacroBoard.tsx    # 매크로: 섹터 로테이션 바 + 6그룹 카드. MACRO_GROUPS 배열에 infoKey 필드 추가 — 6개 카드 전체에 G[infoKey] info prop(변동성/시장폭/신용/달러금리/원자재/섹터ETF) (2026-05-29).
+│   │   │   ├── MacroBoard.tsx    # 매크로: 종합 RISK-ON/MIXED/RISK-OFF 배너 + 섹터 로테이션 바 + 6그룹 카드. 각 카드: 신호등(🟢🟡🔴)·방향(↗↘)·AI 해석 텍스트·freshness badge. useMacroInsight() 결합. AI 없을 때 graceful degrade. (2026-05-30)
 │   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드 (클릭 시 SentimentTrendChart 펼침). TopNewsBox 컴포넌트. Composite Score 카드에 info prop. 하단에 "소셜 심리 데이터란?" 상설 카드 추가(데이터 수집 방식·점수 범위 시각화·역발상 원리·활용법·주의사항 5섹션) (2026-05-29).
 │   │   │   └── SentimentTrendChart.tsx # 심리 추이 차트: 주가 라인(좌축) + composite_score 오버레이(우축), 7/30일 토글
 │   │   ├── charts/               # 기존 lightweight-charts 컴포넌트 유지
@@ -118,6 +120,7 @@ sniperboard/
 | `GET /prepost` | `symbol` | 프리/애프터마켓 가격·변화율·market_state (PRE/POST/REGULAR/CLOSED/OVERNIGHT). ticker.info 우선, PREPRE→OVERNIGHT 변환 + overnight_service WebSocket 캐시. |
 | `GET /brief` | — | AI Daily Brief JSON (GitHub raw 30분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
 | `GET /earnings` | — | Earnings Intelligence JSON (GitHub raw 60분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
+| `GET /macro/insight` | — | 6그룹 신호등(signal/direction) + AI 해석 텍스트(text) + 종합 판정(judgment) + ai_meta(age_minutes). 규칙 기반 실시간 + GitHub 캐시 AI 오버레이. |
 
 ---
 
@@ -218,6 +221,7 @@ OK(<4) / WARNING(4~5) / DANGER(≥6)
 - `useDaily(symbol)`: `/daily`
 - `useWatchlist()`: `/watchlist`
 - `useMacro()`: `/macro`
+- `useMacroInsight()`: `/macro/insight` — 5분 staleTime, `{ insightData, insightLoading }`
 - `useRegime()`: `/regime`
 - `useDistributionDays()`: `/distribution-days`
 - `useSentiment()`: `/sentiment` — 30분 staleTime, returns full (incl. `meta` for freshness badge)
@@ -395,6 +399,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | `SENTIMENT_DATA_HISTORY_BASE` | 선택 | 히스토리 조회 불가 | 심리 히스토리 디렉토리 base URL (파일명 제외) |
 | `BRIEF_DATA_URL` | 선택 | AI Insight → Regime 텍스트로 fallback | AI Brief JSON GitHub raw URL |
 | `EARNINGS_DATA_URL` | 선택 | Earnings Calendar 카드 숨김 | Earnings Intelligence JSON GitHub raw URL |
+| `MACRO_INSIGHT_URL` | 선택 | Macro Insight 카드 AI 텍스트 없음 | Macro Insight JSON GitHub raw URL (macro/latest.json) |
 | `SENTIMENT_DATA_TOKEN` | 선택 | Public 리포는 불필요 | GitHub PAT — private 리포일 때만 설정 |
 
 #### 캐시 TTL (backend 인메모리)
@@ -467,3 +472,5 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | Brief 캐시 TTL 변경 | `backend/services/brief_service.py: CACHE_TTL` (현재 1800초) |
 | Earnings 캐시 TTL 변경 | `backend/services/earnings_service.py: CACHE_TTL` (현재 3600초) |
 | Brief 워치리스트 변경 | `collect/collect_brief.py: WATCHLIST` + `collect/collect_earnings.py: WATCHLIST` |
+| Macro Insight 신호등 규칙 변경 | `backend/core/macro_rules.py` (compute_*_signal 함수들) |
+| Macro Insight AI 캐시 TTL/URL | `backend/services/macro_insight_service.py: CACHE_TTL / MACRO_INSIGHT_URL` |
