@@ -923,13 +923,14 @@ body {
     --mobile-tabs: 56px;
   }
 
-  /* App shell: rail 제거, 단일 컬럼, 하단 탭 공간 확보 */
+  /* App shell: rail 제거, 단일 컬럼, 고정 높이로 main 스크롤 컨텍스트 확보 */
   .app {
     grid-template-columns: 1fr;
     grid-template-rows: var(--mobile-header) 1fr;
     grid-template-areas: "topbar" "main";
-    min-height: 100vh;
-    min-height: 100dvh;
+    height: 100vh;
+    height: 100dvh;
+    min-height: unset;
   }
 
   /* Rail/MarketStrip/기타 모바일 숨김 */
@@ -949,10 +950,12 @@ body {
   .topbar__regime { display: none !important; }
   .topbar__sep { display: none !important; }
 
-  /* Main 영역: 하단 탭바 높이만큼 여백 */
+  /* Main 영역: 스크롤 컨테이너 */
   .main {
-    padding-bottom: calc(var(--mobile-tabs) + env(safe-area-inset-bottom));
+    overflow-x: hidden;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(var(--mobile-tabs) + env(safe-area-inset-bottom));
   }
 
   /* Board: 단일 컬럼 flexbox, 고정 높이 해제 → .main이 스크롤 담당 */
@@ -999,8 +1002,9 @@ body {
   details.mob-collapse[open] summary::before { transform: rotate(90deg); }
   details.mob-collapse .mob-collapse-body { padding: 0 14px 12px; }
 
-  /* 차트: 고정 높이로 chart가 clientHeight를 정확히 읽도록 */
+  /* 차트: 고정 높이, 자식 div(chartContainerRef)도 동일 높이 상속 */
   .mob-chart-limit { height: 300px; }
+  .mob-chart-limit > div { height: 100%; }
 
   /* BottomTabs */
   .bottom-tabs {
