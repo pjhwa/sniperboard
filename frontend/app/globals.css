@@ -913,4 +913,137 @@ body {
 
 *::-webkit-scrollbar { width: 6px; height: 6px; }
 *::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ============================================================
+   Mobile Responsive (max-width: 767px)
+   ============================================================ */
+@media (max-width: 767px) {
+  :root {
+    --mobile-header: 48px;
+    --mobile-tabs: 56px;
+  }
+
+  /* App shell: rail 제거, 단일 컬럼, 하단 탭 공간 확보 */
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: var(--mobile-header) 1fr;
+    grid-template-areas: "topbar" "main";
+    min-height: 100dvh;
+    min-height: 100vh;
+  }
+
+  /* Rail/MarketStrip 숨김 */
+  .hide-mobile { display: none !important; }
+
+  /* Topbar 슬림 */
+  .topbar {
+    height: var(--mobile-header);
+    padding: 0 12px;
+    grid-area: topbar;
+  }
+  .topbar__title { font-size: 13px; }
+  .topbar__title small { display: none; }
+  .topbar__search { display: none; }
+  .topbar__symbols { display: none; }
+  .topbar__regime { display: none; }
+
+  /* Main 영역: 하단 탭바 높이만큼 여백 */
+  .main {
+    padding-bottom: calc(var(--mobile-tabs) + env(safe-area-inset-bottom));
+    overflow-y: auto;
+  }
+
+  /* Board: 단일 컬럼 flexbox로 전환 */
+  .board {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 10px 12px !important;
+    gap: 10px !important;
+  }
+
+  /* Board 내 모든 직계 자식이 full width */
+  .board > * { width: 100%; }
+
+  /* mob-order 유틸 클래스 (1~8) */
+  .mob-order-1 { order: 1; }
+  .mob-order-2 { order: 2; }
+  .mob-order-3 { order: 3; }
+  .mob-order-4 { order: 4; }
+  .mob-order-5 { order: 5; }
+  .mob-order-6 { order: 6; }
+  .mob-order-7 { order: 7; }
+  .mob-order-8 { order: 8; }
+
+  /* hide-on-mobile 유틸 */
+  .hide-on-mobile { display: none !important; }
+
+  /* 접기/펼치기 details 스타일 */
+  details.mob-collapse summary {
+    cursor: pointer;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fg-muted);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  details.mob-collapse summary::-webkit-details-marker { display: none; }
+  details.mob-collapse summary::before {
+    content: '▶';
+    font-size: 9px;
+    transition: transform 0.15s;
+  }
+  details.mob-collapse[open] summary::before { transform: rotate(90deg); }
+  details.mob-collapse .mob-collapse-body { padding: 0 14px 12px; }
+
+  /* 차트 모바일 높이 제한 */
+  .mob-chart-limit { max-height: 250px; overflow: hidden; }
+
+  /* BottomTabs */
+  .bottom-tabs {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: calc(var(--mobile-tabs) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--bg-muted);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+  }
+  .bottom-tabs__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--fg-subtle);
+    font-size: 10px;
+    font-weight: 500;
+    min-height: 44px;
+    padding: 0;
+    transition: color 0.15s;
+  }
+  .bottom-tabs__item.active { color: var(--em-500); }
+  .bottom-tabs__item svg { width: 22px; height: 22px; }
+
+  /* Macro 그룹 신호등 2열 그리드 */
+  .mob-macro-groups {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+}
+
+/* BottomTabs: 데스크톱에서 숨김 / details: 데스크톱에서 항상 펼침 */
+@media (min-width: 768px) {
+  .bottom-tabs { display: none; }
+  details.mob-collapse { display: contents; }
+  details.mob-collapse > summary { display: none; }
+}
 *::-webkit-scrollbar-track { background: transparent; }

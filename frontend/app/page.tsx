@@ -6,6 +6,7 @@ import { Rail } from '@/components/shell/Rail';
 import { Topbar } from '@/components/shell/Topbar';
 import { MarketStrip } from '@/components/shell/MarketStrip';
 import { CommandPalette } from '@/components/shell/CommandPalette';
+import { BottomTabs } from '@/components/shell/BottomTabs';
 import { OverviewBoard } from '@/components/boards/OverviewBoard';
 import { IntradayBoard } from '@/components/boards/IntradayBoard';
 import { DailyBoard } from '@/components/boards/DailyBoard';
@@ -49,6 +50,7 @@ export default function Page() {
         {board === 'deepdive'  && <DeepDiveBoard />}
       </main>
       <CommandPalette />
+      <BottomTabs />
     </div>
   );
 }
