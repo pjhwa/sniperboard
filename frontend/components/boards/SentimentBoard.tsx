@@ -173,7 +173,7 @@ export function SentimentBoard() {
       <BoardGuidePanel title="Sentiment 가이드" sections={SENTIMENT_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <div className="board fade-in" style={{ gridTemplateColumns: '380px 1fr', gridTemplateRows: 'auto 1fr auto', alignContent: 'start' }}>
       {/* 시장 전체 */}
-      <Card title="Market Sentiment" action={formatDateTime(market?.as_of)} info={G.composite_score}>
+      <Card title="Market Sentiment" className="mob-order-1" action={formatDateTime(market?.as_of)} info={G.composite_score}>
         {market ? (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -191,7 +191,9 @@ export function SentimentBoard() {
                 <div style={{ marginTop: 8, fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
                   {market.key_reason}
                 </div>
-                <TopNewsBox topNews={market.top_news} />
+                <div className="hide-on-mobile">
+                  <TopNewsBox topNews={market.top_news} />
+                </div>
                 <div style={{ marginTop: 10, display: 'flex', gap: 12, fontSize: 10.5 }}>
                   <div>
                     <div className="subtle" style={{ fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>전일 대비</div>
@@ -245,7 +247,7 @@ export function SentimentBoard() {
       </Card>
 
       {/* 종목별 카드 */}
-      <Card title="Symbol Sentiment" action="워치리스트 심리" style={{ overflow: 'visible' }}>
+      <Card title="Symbol Sentiment" className="mob-order-2" action="워치리스트 심리" style={{ overflow: 'visible' }}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: expandedSymbol ? '1fr' : 'repeat(3, 1fr)',
@@ -339,8 +341,16 @@ export function SentimentBoard() {
         )}
       </Card>
 
+      {/* Top News 모바일 접기/펼치기 */}
+      <details className="mob-collapse mob-order-3" style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)' }}>
+        <summary>Top News</summary>
+        <div className="mob-collapse-body">
+          <TopNewsBox topNews={market?.top_news} />
+        </div>
+      </details>
+
       {/* 소셜 심리 데이터 이해 카드 */}
-      <div style={{ gridColumn: '1 / -1' }}>
+      <div style={{ gridColumn: '1 / -1' }} className="mob-order-4">
         <div className="card">
           <div className="card__hd">
             <h3>소셜 심리 데이터란?</h3>
