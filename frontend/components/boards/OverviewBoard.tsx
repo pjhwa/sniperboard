@@ -114,7 +114,10 @@ export function OverviewBoard() {
       style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', gridTemplateRows: 'auto auto auto auto', alignContent: 'start' }}
     >
       {/* AI Insight — span 2 */}
-      <div style={{ gridColumn: 'span 2' }}>
+      <div style={{ gridColumn: 'span 2' }} className="mob-order-6">
+        <details className="mob-collapse">
+          <summary>AI Insight — Market Snapshot</summary>
+          <div className="mob-collapse-body">
         <div className="ai-card">
           <div className="ai-card__head">
             <div className="ico"><Sparkle /></div>
@@ -238,10 +241,12 @@ export function OverviewBoard() {
             )}
           </div>
         </div>
+          </div>
+        </details>
       </div>
 
       {/* Earnings Calendar */}
-      <Card title="Earnings Calendar" action="30일 이내">
+      <Card title="Earnings Calendar" action="30일 이내" className="mob-order-7">
         {earningsData?.upcoming_earnings && earningsData.upcoming_earnings.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {earningsData.upcoming_earnings.map((e: UpcomingEarning) => {
@@ -278,7 +283,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Regime gauge */}
-      <Card title="Risk Regime" action="5요소 종합" info={G.risk_regime}>
+      <Card title="Risk Regime" action="5요소 종합" info={G.risk_regime} className="mob-order-1">
         {regimeData ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <RadialGauge value={regimeData.total ?? 0} size={100} label={regimeData.total ?? '—'} sublabel="/ 100" />
@@ -321,7 +326,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Distribution Days */}
-      <Card title="Distribution Days" action="O'Neil · 25거래일" info={G.distribution_days}>
+      <Card title="Distribution Days" action="O'Neil · 25거래일" info={G.distribution_days} className="mob-order-7">
         {ddData ? (
           <>
             {(['spy', 'qqq'] as const).map(key => {
@@ -356,7 +361,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Market Breadth */}
-      <Card title="Market Breadth" action="SPY vs RSP" info={G.market_breadth_spy_rsp}>
+      <Card title="Market Breadth" action="SPY vs RSP" info={G.market_breadth_spy_rsp} className="mob-order-2">
         {([
           ['SPY',  spy,  '시가총액'],
           ['RSP',  rsp,  '동일가중'],
@@ -388,7 +393,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* VIX Panel */}
-      <Card title="Volatility · VIX" action={backward ? '⚠ 백워데이션' : '정상'} info={G.volatility}>
+      <Card title="Volatility · VIX" action={backward ? '⚠ 백워데이션' : '정상'} info={G.volatility} className="mob-order-2">
         {vix ? (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 8 }}>
@@ -418,7 +423,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Credit Stress */}
-      <Card title="Credit Stress" action="HYG / IEF 5D" info={G.credit}>
+      <Card title="Credit Stress" action="HYG / IEF 5D" info={G.credit} className="mob-order-7">
         {([['HYG', hyg], ['JNK', jnk], ['LQD', lqd], ['IEF', ief]] as [string, MacroItem | undefined][]).map(([label, m]) => {
           if (!m) return null;
           const up = (m.change_pct_5d ?? 0) >= 0;
@@ -436,7 +441,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* 진입 레이더 */}
-      <Card title="진입 레이더" action="Entry 근접순">
+      <Card title="진입 레이더" action="Entry 근접순" className="mob-order-4">
         {watchlist.length === 0 ? (
           <div className="subtle">로딩 중...</div>
         ) : (
@@ -477,7 +482,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Conviction 리더보드 */}
-      <Card title="Conviction 리더보드" action="확신도 순" info={G.conviction}>
+      <Card title="Conviction 리더보드" action="확신도 순" info={G.conviction} className="mob-order-5">
         {watchlist.length === 0 ? (
           <div className="subtle">로딩 중...</div>
         ) : (
@@ -502,7 +507,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Sector Momentum */}
-      <Card title="Sector Momentum" action="5D 수익률" info={G.sector_momentum}>
+      <Card title="Sector Momentum" action="5D 수익률" info={G.sector_momentum} className="mob-order-3">
         {(() => {
           const sectors: [string, string][] = [
             ['SMH', '반도체'],
@@ -544,7 +549,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Top watchlist preview */}
-      <Card title="Watchlist · Top 3" action="Stage 2 정렬">
+      <Card title="Watchlist · Top 3" action="Stage 2 정렬" className="mob-order-8">
         {watchlist.slice(0, 3).map(w => (
           <div key={w.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-soft)' }}>
             <span className="sym-pill__badge" style={{ width: 22, height: 22 }}>{w.symbol[0]}</span>
