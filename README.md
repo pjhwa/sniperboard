@@ -51,18 +51,52 @@ docker compose up --build -d
 
 ---
 
-## 모바일 접근
+## 모바일 지원
 
-같은 Wi-Fi에 연결된 스마트폰(iOS/Android)에서 접속:
+iOS Safari / Android Chrome 에서 동작하는 모바일 반응형 UI를 제공합니다.
 
-1. Mac의 로컬 IP 확인: `ifconfig | grep "inet " | grep -v 127.0.0.1`
+### 접속 방법
+
+같은 Wi-Fi에 연결된 스마트폰에서:
+
+1. Mac의 로컬 IP 확인:
+   ```bash
+   ifconfig | grep "inet " | grep -v 127.0.0.1
+   ```
 2. 개발 서버를 네트워크에 바인딩:
    ```bash
    cd frontend && npx next dev -H 0.0.0.0 -p 3000
    ```
 3. 스마트폰 브라우저에서: `http://<Mac-IP>:3000`
 
-**모바일 최적화 보드**: Overview, DeepDive, Macro, Sentiment (하단 탭바로 전환)
+### 모바일 UI 구성
+
+브레이크포인트 `max-width: 767px` 기준으로 자동 전환됩니다.
+
+| 데스크톱 | 모바일 |
+|----------|--------|
+| 좌측 Rail 네비게이션 | 하단 탭바 4탭 (시장/종합분석/매크로/심리) |
+| 상단 MarketStrip | 숨김 |
+| 상단바 (검색·종목버튼·Regime) | 슬림 헤더 (로고·보드명·테마 토글만) |
+| 다열 그리드 카드 배치 | 단일 컬럼 세로 스택 |
+
+### 모바일 최적화 보드 4개
+
+**Overview (시장)** — Big→Detail 순서
+- Risk Regime → Market Breadth → VIX → Sector Momentum → 진입 레이더 → Conviction 리더보드 → AI Insight(접기/펼치기) → 세부 지표
+
+**DeepDive (종합분석)**
+- 종목 선택바(가로 스크롤) → 일봉 차트(300px) → R:R 진입 계획 → Stage 2 체크리스트 → 세력 참여도 → AI Brief(접기/펼치기) → 소셜·실적
+
+**Macro (매크로)**
+- 종합 판정 배너 → 6개 그룹 카드(1열) → Sector Rotation → 상세 해석(접기/펼치기)
+
+**Sentiment (심리)**
+- Market Sentiment → Symbol Sentiment → Top News(접기/펼치기) → 데이터 안내
+
+### 아이폰 홈바 대응
+
+`viewport-fit=cover` + `env(safe-area-inset-bottom)` 적용으로 하단 탭바가 홈 인디케이터와 겹치지 않습니다.
 
 ---
 
@@ -96,7 +130,7 @@ cp .env.example .env
 
 ## 화면 구성 — 7 보드
 
-좌측 **Rail** 아이콘을 클릭해 보드를 전환합니다. 상단 검색창 또는 **⌘K** 커맨드 팔레트로 종목·보드를 빠르게 전환할 수 있습니다.
+좌측 **Rail** 아이콘을 클릭해 보드를 전환합니다 (모바일: 하단 탭바). 상단 검색창 또는 **⌘K** 커맨드 팔레트로 종목·보드를 빠르게 전환할 수 있습니다.
 
 각 보드에는 **3단계 도움말 시스템**이 통합되어 있습니다:
 - **ⓘ 팝오버**: 카드 제목·지표 이름 옆에 위치. 클릭하면 해당 지표의 쉬운 설명을 팝오버로 확인. 뷰포트 경계를 자동 감지해 화면 밖으로 벗어나지 않습니다.

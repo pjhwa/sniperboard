@@ -1,4 +1,4 @@
-# SniperBoard — Project Context (UPDATED 2026-05-30 mobile-responsive)
+# SniperBoard — Project Context (UPDATED 2026-05-30 mobile-ui-verified)
 
 ## 0. 이 문서의 목적
 
@@ -50,19 +50,19 @@ sniperboard/
 │   ├── package.json              # Next.js 16.2.6, React 19.2.4, TanStack Query 5, Zustand 5, lightweight-charts 4.2.3, Tailwind v4
 │   ├── next.config.ts
 │   ├── Dockerfile                # 빌드 arg: NEXT_PUBLIC_API_URL
-│   ├── components/shell/BottomTabs.tsx  # 모바일 하단 탭바 (4탭: Overview/DeepDive/Macro/Sentiment). max-width:767px에서만 표시.
 │   ├── app/
-│   │   ├── layout.tsx            # 루트 레이아웃 (테마 init 스크립트 포함, data-theme="dark")
+│   │   ├── layout.tsx            # 루트 레이아웃 (테마 init 스크립트 포함, data-theme="dark", viewport-fit=cover 모바일 safe-area 대응)
 │   │   ├── page.tsx              # App shell: Rail+Topbar+MarketStrip+Board 라우터 + ⌘K 핸들러
 │   │   ├── providers.tsx         # QueryClientProvider 래퍼
 │   │   ├── types.ts              # 모든 TypeScript 타입 정의 + 메타데이터 상수
 │   │   ├── glossary.ts           # 컨텍스트 도움말 데이터 (2026-05-29). GlossaryEntry{key,term,body} + GLOSSARY 배열(28개 항목, rates_dollar·commodities 신규 추가) + G 맵(키 기반 조회). InfoPopover·CommandPalette·BoardGuidePanel에서 공유 사용.
-│   │   └── globals.css           # Plaid DS 디자인 토큰 (CSS vars, 다크/라이트 토글, 컴포넌트 클래스). .info-pop* + .guide-panel* + .guide-btn + .board-wrap 클래스 포함. .strip: align-items center(가이드 버튼 세로 중앙정렬) (2026-05-29). + 모바일 반응형 블록 (max-width:767px, BottomTabs, mob-order-*, mob-collapse)
+│   │   └── globals.css           # Plaid DS 디자인 토큰 (CSS vars, 다크/라이트 토글, 컴포넌트 클래스). .info-pop* + .guide-panel* + .guide-btn + .board-wrap 클래스 포함. .strip: align-items center(가이드 버튼 세로 중앙정렬) (2026-05-29). + 모바일 반응형 블록: @media(max-width:767px){ .app 1컬럼그리드/height:100dvh, .main display:block overflow-y:auto, .board flex-column, mob-order-1~8 유틸, details.mob-collapse 접기, .mob-chart-limit 300px, .bottom-tabs/.bottom-tabs__item, .mob-macro-groups/.mob-inner-stack/.mob-wrap 1열강제 } + @media(min-width:768px){ .mob-wrap/.mob-macro-groups display:contents 데스크톱투명, details.mob-collapse display:contents }
 │   ├── components/
 │   │   ├── shell/
-│   │   │   ├── Rail.tsx          # 좌측 네비게이션 레일 (7보드 아이콘 + 활성 인디케이터). deepdive=Layers 아이콘 2번째 위치.
-│   │   │   ├── Topbar.tsx        # 상단바 (제목, 검색, 종목 버튼, Regime mini, 테마 토글)
-│   │   │   ├── MarketStrip.tsx   # 슬림 마켓 스트립 (선택종목 + SPY/QQQ/IWM/VIX/DXY/GLD/CL=F). PRE/POST 가격 표시 (usePrePost). 우측 끝에 "? 가이드" 버튼 렌더링 — 클릭 시 'guide:open' 커스텀 이벤트 dispatch (2026-05-29).
+│   │   │   ├── Rail.tsx          # 좌측 네비게이션 레일 (7보드 아이콘 + 활성 인디케이터). deepdive=Layers 아이콘 2번째 위치. 모바일: hide-mobile 클래스로 숨김.
+│   │   │   ├── Topbar.tsx        # 상단바 (제목, 검색, 종목 버튼, Regime mini, 테마 토글). 모바일: topbar__symbols/topbar__regime/topbar__sep/topbar__search 숨김 → 로고+보드명+테마토글만 표시 (48px 슬림).
+│   │   │   ├── BottomTabs.tsx    # 모바일 전용 하단 탭바 (4탭: 시장/종합분석/매크로/심리). max-width:767px에서만 표시. useStore board/setBoard 연결. safe-area-inset-bottom 대응.
+│   │   │   ├── MarketStrip.tsx   # 슬림 마켓 스트립 (선택종목 + SPY/QQQ/IWM/VIX/DXY/GLD/CL=F). PRE/POST 가격 표시 (usePrePost). 우측 끝에 "? 가이드" 버튼 렌더링 — 클릭 시 'guide:open' 커스텀 이벤트 dispatch (2026-05-29). 모바일: hide-mobile 클래스로 숨김.
 │   │   │   └── CommandPalette.tsx # ⌘K 커맨드 팔레트 (종목·보드 검색). ? prefix 입력 시 용어 검색 모드 전환 — GLOSSARY 배열 필터링, "용어 검색 모드 — N개 결과" 배너 표시 (2026-05-29).
 │   │   ├── ui/
 │   │   │   ├── Icons.tsx         # SVG 아이콘 (Crosshair, Activity, Candles, Eye, Globe, Heart 등)
@@ -74,13 +74,13 @@ sniperboard/
 │   │   │   ├── RadialGauge.tsx   # Canvas 기반 라디얼 게이지
 │   │   │   └── HeatStrip.tsx     # CSS 기반 히트맵 스트립
 │   │   ├── boards/               # 7개 보드 컴포넌트. 공통 패턴(2026-05-29): <div className="board-wrap"> 래퍼 → BoardGuidePanel만 board-wrap 직계 자식. 가이드 버튼은 MarketStrip에 위치(이전됨). 각 보드는 useEffect로 'guide:open' 이벤트 수신 → setGuideOpen(true). GlossaryPanel 완전 제거.
-│   │   │   ├── OverviewBoard.tsx # 시장 개요 (11카드): AI Insight + Earnings Calendar + Regime + DD + Breadth + VIX + Credit + 진입레이더 + Conviction리더보드 + Sector + Watchlist Top3. ⏱ freshness badges. 카드 7개에 info={G.*} prop.
-│   │   │   ├── DeepDiveBoard.tsx # 종합분석 (5-Row): Row1=종목선택+가격바+배지들(Stage2/Conviction/월봉/구조/신호)+PRE/POST가격. Row2=DailyChart(3fr)|Stage2체크+KPI4(2fr). Row3=세력참여도분석(3fr)|R:R진입계획(2fr). Row4(3×1fr)=소셜심리|AI Brief|실적. Row5=Regime(3fr)|시장전체심리(2fr). 세력참여도: Up/Down Vol비율+거래량추세+집중일+세력점수0-100+10일acc/dist그리드. InfoPopover 직접 임베드(Stage2/세력참여도/R:R/RS 등).
+│   │   │   ├── OverviewBoard.tsx # 시장 개요 (11카드): AI Insight + Earnings Calendar + Regime + DD + Breadth + VIX + Credit + 진입레이더 + Conviction리더보드 + Sector + Watchlist Top3. ⏱ freshness badges. 카드 7개에 info={G.*} prop. 모바일: mob-order-1~8로 Big→Detail 재배치, AI Insight details.mob-collapse 접기.
+│   │   │   ├── DeepDiveBoard.tsx # 종합분석 (5-Row): Row1=종목선택+가격바+배지들(Stage2/Conviction/월봉/구조/신호)+PRE/POST가격. Row2=DailyChart(3fr)|Stage2체크+KPI4(2fr). Row3=세력참여도분석(3fr)|R:R진입계획(2fr). Row4(3×1fr)=소셜심리|AI Brief|실적. Row5=Regime(3fr)|시장전체심리(2fr). 세력참여도: Up/Down Vol비율+거래량추세+집중일+세력점수0-100+10일acc/dist그리드. InfoPopover 직접 임베드(Stage2/세력참여도/R:R/RS 등). 모바일: mob-wrap(display:contents 데스크톱) + mob-order 재배치, Row1 mob-symbol-bar 가로스크롤, 차트 mob-chart-limit 300px, ROW4 mob-inner-stack 1열, AI Brief details.mob-collapse.
 │   │   │   ├── IntradayBoard.tsx # 단기: IntradayChart + 활성신호 + RSI + 액션바. SIG_INFO 맵으로 6개 신호명 옆 InfoPopover 표시. "진입 복사" 버튼 제거됨(2026-05-29).
 │   │   │   ├── DailyBoard.tsx    # 일봉: DailyChart + Stage2 체크리스트 + R:R 패널. Stage2·R:R 카드에 info prop.
 │   │   │   ├── WatchlistBoard.tsx # 워치리스트: Stage2 정렬 테이블. 테이블 헤더(Stage2/RS/Conviction)에 InfoPopover.
-│   │   │   ├── MacroBoard.tsx    # 매크로: 종합 RISK-ON/MIXED/RISK-OFF 배너 + 섹터 로테이션 바 + 6그룹 카드. 각 카드: 신호등(🟢🟡🔴)·방향(↗↘)·AI 해석 텍스트·freshness badge. useMacroInsight() 결합. AI 없을 때 graceful degrade. (2026-05-30)
-│   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드 (클릭 시 SentimentTrendChart 펼침). TopNewsBox 컴포넌트. Composite Score 카드에 info prop. 하단에 "소셜 심리 데이터란?" 상설 카드 추가(데이터 수집 방식·점수 범위 시각화·역발상 원리·활용법·주의사항 5섹션) (2026-05-29).
+│   │   │   ├── MacroBoard.tsx    # 매크로: 종합 RISK-ON/MIXED/RISK-OFF 배너 + 섹터 로테이션 바 + 6그룹 카드. 각 카드: 신호등(🟢🟡🔴)·방향(↗↘)·AI 해석 텍스트·freshness badge. useMacroInsight() 결합. AI 없을 때 graceful degrade. (2026-05-30). 모바일: mob-order-1~3 재배치(배너→그룹→Sector), mob-macro-groups(display:contents 데스크톱/flex-column 모바일), bullets details.mob-collapse 접기.
+│   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드 (클릭 시 SentimentTrendChart 펼침). TopNewsBox 컴포넌트. Composite Score 카드에 info prop. 하단에 "소셜 심리 데이터란?" 상설 카드 추가(데이터 수집 방식·점수 범위 시각화·역발상 원리·활용법·주의사항 5섹션) (2026-05-29). 모바일: sym-sentiment-grid 1열, TopNews 카드외부 details.mob-collapse, 기존 TopNewsBox hide-on-mobile.
 │   │   │   └── SentimentTrendChart.tsx # 심리 추이 차트: 주가 라인(좌축) + composite_score 오버레이(우축), 7/30일 토글
 │   │   ├── charts/               # 기존 lightweight-charts 컴포넌트 유지
 │   │   │   ├── IntradayChart.tsx
@@ -446,7 +446,45 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 
 ---
 
-## 10. 코드 수정 시 참고 지점
+## 10. 모바일 반응형 구현 (2026-05-30)
+
+### 브레이크포인트
+`max-width: 767px` — iPhone SE~Pro Max, Galaxy S/A 시리즈 전체 커버.
+
+### 핵심 레이아웃 전환 (globals.css)
+| 데스크톱 | 모바일 |
+|----------|--------|
+| `.app` grid 2컬럼(rail+main), min-height:100dvh | `.app` 1컬럼, height:100dvh (고정→스크롤 컨텍스트) |
+| `.main` flex-column, overflow:hidden | `.main` display:block, overflow-y:auto (스크롤 담당) |
+| `.board` grid (각 보드별 gridTemplateColumns) | `.board` flex-column (mob-order로 순서 제어) |
+| Rail + TopBar(full) + MarketStrip | hide-mobile → 숨김, Topbar 48px 슬림, BottomTabs |
+
+### CSS 유틸 클래스 (모바일 전용)
+| 클래스 | 역할 |
+|--------|------|
+| `.mob-order-1`~`.mob-order-8` | CSS order 프로퍼티 — 카드 표시 순서 제어 |
+| `.mob-wrap` | 모바일: flex box / 데스크톱: `display:contents` (grid 투명화) |
+| `.mob-macro-groups` | 모바일: flex-column / 데스크톱: `display:contents` |
+| `.mob-inner-stack` | DeepDive ROW4 3열 → flex-column 1열 강제 |
+| `.mob-chart-limit` | 차트 컨테이너 height:300px 고정 |
+| `.mob-symbol-bar` | DeepDive 종목선택 바 overflow-x:auto (가로스크롤) |
+| `details.mob-collapse` | 접기/펼치기 — 모바일에서 summary 표시, 데스크톱에서 `display:contents` |
+| `.hide-mobile` / `.hide-on-mobile` | `display:none !important` |
+
+### 보드별 모바일 카드 순서
+- **Overview**: Regime(1) → Breadth·VIX(2) → Sector(3) → 진입레이더(4) → Conviction(5) → AI Insight(6,접기) → Earnings·DD·Credit(7) → Watchlist(8)
+- **DeepDive**: 종목바(1) → 차트(2) → R:R(3) → Stage2(4) → 세력(5) → 소셜·Brief·실적(6) → Regime·심리(7)
+- **Macro**: 배너(1) → 6그룹(2) → Sector(3)
+- **Sentiment**: Market(1) → Symbol(2) → TopNews(3,접기) → 안내(4)
+
+### 수정 시 주의사항
+- 데스크톱 grid 구조를 건드리는 wrapper div는 반드시 `mob-wrap` 클래스 + 데스크톱 `display:contents` 적용
+- `details.mob-collapse`는 데스크톱에서 `display:contents`로 투명 처리되므로 기존 레이아웃에 영향 없음
+- `DailyChart.tsx`: height를 `clientHeight || 480`으로 읽으므로 `.mob-chart-limit` 컨테이너에 반드시 `height` 설정 필요 (max-height 불가)
+
+---
+
+## 11. 코드 수정 시 참고 지점
 
 | 수정 대상 | 파일 위치 |
 |-----------|-----------|
