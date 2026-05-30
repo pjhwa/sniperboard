@@ -1067,13 +1067,34 @@ body {
   }
 }
 
-/* 데스크톱: BottomTabs 숨김 / details 항상 펼침 / wrapper div 투명 처리 */
+/* 데스크톱: BottomTabs 숨김 / details 콘텐츠 강제 표시 / wrapper 투명 처리 */
 @media (min-width: 768px) {
   .bottom-tabs { display: none; }
-  details.mob-collapse { display: contents; }
+
+  /* details.mob-collapse: summary 숨기고 body 강제 표시
+     (display:contents를 쓰면 UA의 details:not([open])>:not(summary){display:none} 에 막힘) */
   details.mob-collapse > summary { display: none; }
-  /* wrapper 전용 div를 데스크톱 grid에서 투명하게 → 자식이 직접 grid item이 됨 */
+  details.mob-collapse > .mob-collapse-body { display: block !important; }
+  /* AI Brief: details가 card 역할 — 데스크톱에서 flex 카드처럼 표시 */
+  details.mob-collapse.card { display: flex !important; flex-direction: column; }
+
+  /* mob-wrap: 데스크톱에서 wrapper div 투명화 (grid item 역할 포기) */
   .mob-wrap { display: contents; }
-  .mob-macro-groups { display: contents; }
+
+  /* mob-macro-groups: span 3 서브그리드 — 6개 카드 3열 복원 */
+  .mob-macro-groups {
+    grid-column: span 3;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* mob-inner-stack: DeepDive ROW4 — inline style grid repeat(3) 복원 */
+  .mob-inner-stack {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px !important;
+  }
+  .mob-inner-stack > * { width: auto !important; min-width: 0 !important; }
 }
 *::-webkit-scrollbar-track { background: transparent; }
