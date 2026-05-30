@@ -158,6 +158,30 @@ class MacroResponse(BaseModel):
     macro: List[MacroItemSchema]
 
 
+# --- Macro Insight ---
+
+class MacroGroupInsight(BaseModel):
+    signal: str          # green / yellow / red
+    direction: str       # improving / stable / deteriorating
+    text: Optional[str] = None
+
+class MacroOverallInsight(BaseModel):
+    judgment: str        # RISK_ON / MIXED / RISK_OFF
+    green_count: int
+    red_count: int
+    summary: Optional[str] = None
+    bullets: List[str] = []
+
+class MacroAiMeta(BaseModel):
+    generated_at: str
+    age_minutes: int
+
+class MacroInsightResponse(BaseModel):
+    overall: MacroOverallInsight
+    groups: Dict[str, MacroGroupInsight]
+    ai_meta: Optional[MacroAiMeta] = None
+
+
 # --- Regime + Distribution Day ---
 
 class RegimeComponentsSchema(BaseModel):
