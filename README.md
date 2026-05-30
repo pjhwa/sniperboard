@@ -84,7 +84,7 @@ iOS Safari / Android Chrome 에서 동작하는 모바일 반응형 UI를 제공
 
 | Overview | DeepDive | Macro | Sentiment |
 |:---:|:---:|:---:|:---:|
-| ![Mobile Overview](assets/images/mobile-overview.jpg) | ![Mobile DeepDive](assets/images/mobile-deepdive.jpg) | ![Mobile Macro](assets/images/mobile-macro.jpg) | ![Mobile Sentiment](assets/images/mobile-sentiment.jpg) |
+| <img src="assets/images/mobile-overview.jpg" width="200"/> | <img src="assets/images/mobile-deepdive.jpg" width="200"/> | <img src="assets/images/mobile-macro.jpg" width="200"/> | <img src="assets/images/mobile-sentiment.jpg" width="200"/> |
 | 시장 | 종합분석 | 매크로 | 심리 |
 
 **Overview (시장)** — Big→Detail 순서
