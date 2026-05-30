@@ -43,7 +43,7 @@ export function MarketStrip() {
   const sparkValues = candles.slice(-30).map(c => c.close);
 
   return (
-    <div className="strip">
+    <div className="strip hide-mobile">
       {(lastCandle || displayPrice != null) && (
         <div className="strip__cell" style={{ background: 'var(--bg-muted)', minWidth: 220 }}>
           <span className="sym-pill__badge" style={{ width: 28, height: 28, fontSize: 12 }}>

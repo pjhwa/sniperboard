@@ -40,7 +40,7 @@ export function Topbar() {
       </div>
 
       <div className="topbar__right">
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div className="topbar__symbols" style={{ display: 'flex', gap: 4 }}>
           {SYMBOLS.map(s => (
             <button
               key={s}
@@ -63,7 +63,7 @@ export function Topbar() {
         <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 4px' }} />
 
         {regimeData && (
-          <div className="regime-mini">
+          <div className="regime-mini topbar__regime">
             <div className={'regime-mini__dot ' + regimeData.regime}>
               {regimeData.total ?? '—'}
             </div>

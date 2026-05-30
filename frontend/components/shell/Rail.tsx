@@ -17,7 +17,7 @@ const BOARDS: { id: Board; label: string; ko: string; Icon: () => React.ReactEle
 export function Rail() {
   const { board, setBoard } = useStore();
   return (
-    <aside className="rail">
+    <aside className="rail hide-mobile">
       <div className="rail__logo" title="SniperBoard">S</div>
       {BOARDS.map(({ id, label, ko, Icon }) => (
         <button
