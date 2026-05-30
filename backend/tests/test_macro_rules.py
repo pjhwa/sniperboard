@@ -35,6 +35,16 @@ def test_vix_above_25_is_red():
 def test_vix_missing_defaults_red():
     assert compute_volatility_signal([])["signal"] == "red"
 
+def test_vix_falling_direction_is_improving():
+    # VIX 하락 = 공포 감소 = 시장 환경 개선 → improving
+    result = compute_volatility_signal([_item("^VIX", price=18.0, chg1d=-1.0, chg5d=-2.0)])
+    assert result["direction"] == "improving"
+
+def test_vix_rising_direction_is_deteriorating():
+    # VIX 상승 = 공포 증가 = 시장 환경 악화 → deteriorating
+    result = compute_volatility_signal([_item("^VIX", price=22.0, chg1d=1.0, chg5d=2.0)])
+    assert result["direction"] == "deteriorating"
+
 
 # --- 시장 폭 ---
 def test_breadth_both_above_ema21_is_green():

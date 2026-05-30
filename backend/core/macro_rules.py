@@ -17,6 +17,9 @@ def _direction(item: dict | None) -> str:
     return "stable"
 
 
+_INVERT = {"improving": "deteriorating", "deteriorating": "improving", "stable": "stable"}
+
+
 def compute_volatility_signal(items: list[dict]) -> dict:
     vix = _get(items, "^VIX")
     price = (vix or {}).get("price") or 30.0
@@ -26,7 +29,8 @@ def compute_volatility_signal(items: list[dict]) -> dict:
         signal = "yellow"
     else:
         signal = "red"
-    return {"signal": signal, "direction": _direction(vix)}
+    # VIX 하락 = 공포 감소 = 시장 환경 개선이므로 direction 반전
+    return {"signal": signal, "direction": _INVERT[_direction(vix)]}
 
 
 def compute_breadth_signal(items: list[dict]) -> dict:

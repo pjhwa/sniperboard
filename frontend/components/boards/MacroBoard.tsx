@@ -39,9 +39,9 @@ const MACRO_GROUPS: { key: string; label: string; subtitle: string; symbols: str
 ];
 
 const JUDGMENT_META: Record<string, { label: string; cls: string }> = {
-  RISK_ON:  { label: 'RISK-ON',  cls: 'bull' },
-  MIXED:    { label: 'MIXED',    cls: 'warn' },
-  RISK_OFF: { label: 'RISK-OFF', cls: 'bear' },
+  RISK_ON:  { label: '매수 우호',  cls: 'bull' },
+  MIXED:    { label: '혼조',       cls: 'warn' },
+  RISK_OFF: { label: '위험 경계',  cls: 'bear' },
 };
 
 const SIGNAL_DOT: Record<string, string> = {
@@ -175,9 +175,9 @@ export function MacroBoard() {
                      : groupInsight.signal === 'red'   ? 'var(--bear)'
                      : 'var(--warn)',
               }}>
-                {groupInsight.signal === 'green' ? 'Risk-On'
-               : groupInsight.signal === 'red'   ? 'Risk-Off'
-               : 'Neutral'}
+                {groupInsight.signal === 'green' ? '우호'
+               : groupInsight.signal === 'red'   ? '주의'
+               : '중립'}
               </span>
               <span>{DIRECTION_ARROW[groupInsight.direction] ?? '→'}</span>
             </span>
