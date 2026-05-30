@@ -108,9 +108,14 @@ export function MacroBoard() {
                   </span>
                 )}
                 {insightData.overall.bullets.length > 0 && (
-                  <ul style={{ margin: 0, paddingLeft: '1.1rem', fontSize: '0.72rem', color: 'var(--fg-muted)' }}>
-                    {insightData.overall.bullets.map((b, i) => <li key={i}>{b}</li>)}
-                  </ul>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 0', fontSize: '0.72rem', color: 'var(--fg-muted)' }}>
+                    {insightData.overall.bullets.map((b, i) => (
+                      <span key={i} style={{ display: 'flex', alignItems: 'center' }}>
+                        {i > 0 && <span style={{ margin: '0 6px', color: 'var(--fg-faint)' }}>·</span>}
+                        {b}
+                      </span>
+                    ))}
+                  </div>
                 )}
               </div>
               {insightData.ai_meta && (
