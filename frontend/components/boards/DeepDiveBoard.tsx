@@ -684,7 +684,7 @@ export function DeepDiveBoard() {
           ROW 4 — 소셜 심리 | AI Brief | 실적 (span 2 → 내부 3등분)
           alignItems: stretch 로 3카드 동일 높이
       ════════════════════════════════════════════════════════════════ */}
-      <div className="mob-order-6" style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, alignItems: 'stretch' }}>
+      <div className="mob-order-6 mob-inner-stack" style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, alignItems: 'stretch' }}>
 
         {/* 소셜 심리 (종목) */}
         <div className="card">
