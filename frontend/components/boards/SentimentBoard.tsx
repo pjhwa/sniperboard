@@ -248,7 +248,7 @@ export function SentimentBoard() {
 
       {/* 종목별 카드 */}
       <Card title="Symbol Sentiment" className="mob-order-2" action="워치리스트 심리" style={{ overflow: 'visible' }}>
-        <div style={{
+        <div className="sym-sentiment-grid" style={{
           display: 'grid',
           gridTemplateColumns: expandedSymbol ? '1fr' : 'repeat(3, 1fr)',
           gap: 10,

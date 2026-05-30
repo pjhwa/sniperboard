@@ -944,9 +944,10 @@ body {
   }
   .topbar__title { font-size: 13px; }
   .topbar__title small { display: none; }
-  .topbar__search { display: none; }
-  .topbar__symbols { display: none; }
-  .topbar__regime { display: none; }
+  .topbar__search { display: none !important; }
+  .topbar__symbols { display: none !important; }
+  .topbar__regime { display: none !important; }
+  .topbar__sep { display: none !important; }
 
   /* Main 영역: 하단 탭바 높이만큼 여백 */
   .main {
@@ -1030,12 +1031,22 @@ body {
   .bottom-tabs__item.active { color: var(--em-500); }
   .bottom-tabs__item svg { width: 22px; height: 22px; }
 
-  /* Macro 그룹 신호등 2열 그리드 */
+  /* Symbol Sentiment: 3열 → 2열 */
+  .sym-sentiment-grid { grid-template-columns: 1fr 1fr !important; }
+
+  /* VIX 내부 3열 그리드 — 폰트 축소 */
+  .card__bd [style*="repeat(3"] .mono { font-size: 14px; }
+
+  /* Macro 그룹 신호등 2열 그리드 — 셀 오버플로우 방지 */
   .mob-macro-groups {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
+  .mob-macro-groups > * { min-width: 0; overflow: hidden; }
+  .mob-macro-groups .card__bd { overflow: hidden; }
+  .mob-macro-groups .mono { font-size: 11px; }
+  .mob-macro-groups .card__hd h3 { font-size: 11px; }
 }
 
 /* BottomTabs: 데스크톱에서 숨김 / details: 데스크톱에서 항상 펼침 */

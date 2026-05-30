@@ -60,7 +60,7 @@ export function Topbar() {
           ))}
         </div>
 
-        <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 4px' }} />
+        <div className="topbar__sep" style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 4px' }} />
 
         {regimeData && (
           <div className="regime-mini topbar__regime">
