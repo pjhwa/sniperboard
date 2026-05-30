@@ -84,7 +84,7 @@ export function MacroBoard() {
 
         {/* Overall Insight Banner */}
         {insightData && (
-          <div style={{ gridColumn: 'span 3' }}>
+          <div style={{ gridColumn: 'span 3' }} className="mob-order-1">
             <div style={{
               display: 'flex', alignItems: 'flex-start', gap: 12,
               padding: '10px 14px', marginBottom: 4,
@@ -108,14 +108,19 @@ export function MacroBoard() {
                   </span>
                 )}
                 {insightData.overall.bullets.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 0', fontSize: '0.72rem', color: 'var(--fg-muted)' }}>
-                    {insightData.overall.bullets.map((b, i) => (
-                      <span key={i} style={{ display: 'flex', alignItems: 'center' }}>
-                        {i > 0 && <span style={{ margin: '0 6px', color: 'var(--fg-faint)' }}>·</span>}
-                        {b}
-                      </span>
-                    ))}
-                  </div>
+                  <details className="mob-collapse">
+                    <summary>상세 해석</summary>
+                    <div className="mob-collapse-body">
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 0', fontSize: '0.72rem', color: 'var(--fg-muted)' }}>
+                        {insightData.overall.bullets.map((b, i) => (
+                          <span key={i} style={{ display: 'flex', alignItems: 'center' }}>
+                            {i > 0 && <span style={{ margin: '0 6px', color: 'var(--fg-faint)' }}>·</span>}
+                            {b}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </details>
                 )}
               </div>
               {insightData.ai_meta && (
@@ -128,7 +133,7 @@ export function MacroBoard() {
         )}
 
         {/* Sector Rotation */}
-        <div style={{ gridColumn: 'span 3' }}>
+        <div style={{ gridColumn: 'span 3' }} className="mob-order-3">
           <Card title="Sector Rotation · 1D" action="섹터별 상대 강도" info={G.sector_momentum}>
             {isLoading ? (
               <div className="subtle">로딩 중...</div>
@@ -160,6 +165,7 @@ export function MacroBoard() {
         </div>
 
         {/* Macro Groups */}
+        <div className="mob-order-2 mob-macro-groups">
         {MACRO_GROUPS.map(g => {
           const items = g.symbols.map(s => macro.find(m => m.symbol === s)).filter(Boolean) as MacroItem[];
           const groupInsight = insightData?.groups[g.key];
@@ -227,6 +233,7 @@ export function MacroBoard() {
             </Card>
           );
         })}
+        </div>
 
       </div>
     </div>
