@@ -1069,6 +1069,8 @@ body {
 
 /* 데스크톱: BottomTabs 숨김 / details 콘텐츠 강제 표시 / wrapper 투명 처리 */
 @media (min-width: 768px) {
+  /* 모바일 전용 요소 데스크톱에서 숨김 */
+  .hide-desktop { display: none !important; }
   .bottom-tabs { display: none; }
 
   /* details.mob-collapse: open 속성으로 항상 렌더됨 — summary만 숨김 */
