@@ -17,17 +17,19 @@ interface CardProps {
   style?: React.CSSProperties;
   className?: string;
   info?: CardInfo;
+  extra?: React.ReactNode;
 }
 
-export function Card({ title, hint, action, flush, children, style, className = '', info }: CardProps) {
+export function Card({ title, hint, action, flush, children, style, className = '', info, extra }: CardProps) {
   return (
     <div className={'card ' + className} style={style}>
-      {(title || action || hint || info) && (
+      {(title || action || hint || info || extra) && (
         <div className="card__hd">
           {title && <h3>{title}</h3>}
           {info && <InfoPopover term={info.term} body={info.body} />}
           {hint && <span className="card-flag live">{hint}</span>}
           {action && <small>{action}</small>}
+          {extra}
         </div>
       )}
       <div className={'card__bd ' + (flush ? 'card__bd--flush' : '')}>

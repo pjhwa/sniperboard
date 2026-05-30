@@ -149,6 +149,31 @@ export interface MacroData {
   macro: MacroItem[];
 }
 
+export interface MacroGroupInsight {
+  signal: 'green' | 'yellow' | 'red';
+  direction: 'improving' | 'stable' | 'deteriorating';
+  text: string | null;
+}
+
+export interface MacroOverallInsight {
+  judgment: 'RISK_ON' | 'MIXED' | 'RISK_OFF';
+  green_count: number;
+  red_count: number;
+  summary: string | null;
+  bullets: string[];
+}
+
+export interface MacroAiMeta {
+  generated_at: string;
+  age_minutes: number;
+}
+
+export interface MacroInsightData {
+  overall: MacroOverallInsight;
+  groups: Record<string, MacroGroupInsight>;
+  ai_meta: MacroAiMeta | null;
+}
+
 export type Tab = 'intraday' | 'daily' | 'watchlist' | 'macro' | 'sentiment';
 
 // --- Regime ---
