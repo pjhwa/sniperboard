@@ -27,7 +27,7 @@ sniperboard/
 │   ├── Dockerfile
 │   ├── api/
 │   │   ├── endpoints.py          # REST endpoints (APIRouter prefix=/api). MACRO_SYMBOLS dict uses English names (e.g. "WTI Crude Oil", "Gold ETF (GLD)") — frontend overrides display via MACRO_SYMBOL_NAMES BiLang map.
-│   │   └── schemas.py            # All Pydantic v2 request/response models. TopNews + SymbolSentiment/MarketSentiment top_news Optional. Bilingual _en/_ko Optional fields added (2026-05-31).
+│   │   └── schemas.py            # All Pydantic v2 request/response models. TopNews + SymbolSentiment/MarketSentiment top_news Optional. Bilingual _en/_ko Optional fields added (2026-05-31): MacroOverallInsight (summary_en/ko, bullets_en/ko), MacroGroupInsight (text_en/ko), UpcomingEarning (ai_summary_en/ko, action_note_en/ko), RecentResult (ai_reaction_en/ko). All v1.x fields kept as Optional for backward compat.
 │   ├── core/
 │   │   ├── signal_engine.py      # Core: all technical indicator and signal calculations (700+ lines). Phase 2: calculate_stage2_analysis detects 'adj_close' and uses adjusted (scaled high/low + adj_close series) for 52w/RS/ema200_slope/pullback/pivot/entry on split symbols. GC/intraday/raw unchanged.
 │   │   ├── regime_engine.py      # Risk Regime 5-factor composite score (0~100)
@@ -78,11 +78,11 @@ sniperboard/
 │   │   │   └── HeatStrip.tsx     # CSS-based heatmap strip
 │   │   ├── boards/               # 7 board components. Common pattern: <div className="board-wrap"> wrapper → BoardGuidePanel is a direct child of board-wrap. Guide button lives in MarketStrip (moved there). Each board listens for 'guide:open' event via useEffect → setGuideOpen(true). GlossaryPanel fully removed. All boards converted to bilingual with t()/tField() (2026-05-31).
 │   │   │   ├── OverviewBoard.tsx # Market overview (11 cards): AI Insight + Earnings Calendar + Regime + DD + Breadth + VIX + Credit + Entry Radar + Conviction Leaderboard + Sector + Watchlist Top3. ⏱ freshness badges. 7 cards have info={G.*} props (resolved to locale-aware strings via t()). Mobile: mob-order-1~8 for Big→Detail reordering, AI Insight details.mob-collapse.
-│   │   │   ├── DeepDiveBoard.tsx # Full analysis (5-Row): Row1=symbol selector+price bar+badges(Stage2/Conviction/monthly/structure/signal)+PRE/POST price. Row2=DailyChart(3fr)|Stage2 checks+KPI4(2fr). Row3=Institutional Activity(3fr)|R:R Entry Plan(2fr). Row4(3×1fr)=Social Sentiment|AI Brief|Earnings. Row5=Regime(3fr)|Market-wide Sentiment(2fr). Institutional Activity: Up/Down Vol ratio+volume trend+concentrated days+institutional score 0-100+10-day acc/dist grid. InfoPopover directly embedded (Stage2/institutional/R:R/RS etc). Mobile: mob-wrap(display:contents desktop) + mob-order reordering, Row1 mob-symbol-bar horizontal scroll, chart mob-chart-limit 300px, ROW4 mob-inner-stack 1-col, AI Brief details.mob-collapse. tField() for all AI data fields.
+│   │   │   ├── DeepDiveBoard.tsx # Full analysis (5-Row): Row1=symbol selector+price bar+badges(Stage2/Conviction/monthly/structure/signal)+PRE/POST price. Row2=DailyChart(3fr)|Stage2 checks+KPI4(2fr). Row3=Institutional Activity(3fr)|R:R Entry Plan(2fr). Row4(3×1fr)=Social Sentiment|AI Brief|Earnings. Row5=Regime(3fr)|Market-wide Sentiment(2fr). Institutional Activity: Up/Down Vol ratio+volume trend+concentrated days+institutional score 0-100+10-day acc/dist grid. InfoPopover directly embedded (Stage2/institutional/R:R/RS etc). Mobile: mob-wrap(display:contents desktop) + mob-order reordering, Row1 mob-symbol-bar horizontal scroll, chart mob-chart-limit 300px, ROW4 mob-inner-stack 1-col, AI Brief details.mob-collapse. tField() for all AI data fields. Earnings card uses tField(ai_reaction_en, ai_reaction_ko, ai_reaction, locale) for RecentResult and tField(ai_summary_en, ai_summary_ko, ai_summary, locale) + tField(action_note_en, action_note_ko, action_note, locale) for UpcomingEarning.
 │   │   │   ├── IntradayBoard.tsx # Intraday: IntradayChart + active signals + RSI + action bar. SIG_META BiLang map for signal name InfoPopovers. Bilingual all labels.
-│   │   │   ├── DailyBoard.tsx    # Daily: DailyChart + Stage2 checklist + R:R panel. Stage2·R:R cards have info prop (t() applied to G.* entries).
+│   │   │   ├── DailyBoard.tsx    # Daily: DailyChart + Stage2 checklist + R:R panel. Stage2·R:R cards have info prop (t() applied to G.* entries). Earnings banner uses tField() for bilingual ai_summary/action_note fields (v2.0 _en/_ko pairs, v1.x fallback).
 │   │   │   ├── WatchlistBoard.tsx # Watchlist: Stage2-sorted table. Table headers (Stage2/RS/Conviction) have InfoPopovers (t() applied). Monthly phase bilingual.
-│   │   │   ├── MacroBoard.tsx    # Macro: overall RISK-ON/MIXED/RISK-OFF banner + sector rotation bar + 6 group cards. Each card: traffic light (🟢🟡🔴) · direction (↗↘) · AI interpretation text · freshness badge. useMacroInsight() combined. Graceful degrade when AI absent. Mobile: mob-order-1~3 (banner→groups→Sector), mob-macro-groups (display:contents desktop / flex-column mobile), bullets details.mob-collapse. Bilingual group labels and judgment text. Symbol names from MACRO_SYMBOL_NAMES BiLang map (not backend name field).
+│   │   │   ├── MacroBoard.tsx    # Macro: overall RISK-ON/MIXED/RISK-OFF banner + sector rotation bar + 6 group cards. Each card: traffic light (🟢🟡🔴) · direction (↗↘) · AI interpretation text · freshness badge. useMacroInsight() combined. Graceful degrade when AI absent. Mobile: mob-order-1~3 (banner→groups→Sector), mob-macro-groups (display:contents desktop / flex-column mobile), bullets details.mob-collapse. Bilingual group labels and judgment text. Symbol names from MACRO_SYMBOL_NAMES BiLang map (not backend name field). AI text rendered via tField(text_en, text_ko, text, locale) for v2.0/v1.x compat; bullets via tField(bullets_en[i], bullets_ko[i], bullets[i], locale).
 │   │   │   └── SentimentBoard.tsx # Sentiment: market gauge + per-symbol cards (click expands SentimentTrendChart). TopNewsBox component uses tField() for bilingual headline/summary. Composite Score card has info prop. Bottom: "Social Sentiment Data" explainer card (5 sections: data collection method · score range viz · contrarian principle · usage · caveats). Mobile: sym-sentiment-grid 1-col, TopNews card outside details.mob-collapse, existing TopNewsBox hide-on-mobile.
 │   │   │   └── SentimentTrendChart.tsx # Sentiment trend chart: stock price line (left axis) + composite_score overlay (right axis), 7/30d toggle
 │   │   ├── charts/               # lightweight-charts components
@@ -124,7 +124,7 @@ Base URL: `http://<host>:5001/api`
 | `GET /prepost` | `symbol` | Pre/after-market price · change% · market_state (PRE/POST/REGULAR/CLOSED/OVERNIGHT). ticker.info first, PREPRE→OVERNIGHT conversion + overnight_service WebSocket cache. |
 | `GET /brief` | — | AI Daily Brief JSON (GitHub raw 30-min cache) + `meta: {fetched_at, age_minutes, source}` |
 | `GET /earnings` | — | Earnings Intelligence JSON (GitHub raw 60-min cache) + `meta: {fetched_at, age_minutes, source}` |
-| `GET /macro/insight` | — | 6 group traffic lights (signal/direction) + AI interpretation text (text) + overall judgment + ai_meta (age_minutes). Rule-based real-time + GitHub-cached AI overlay. |
+| `GET /macro/insight` | — | 6 group traffic lights (signal/direction) + AI interpretation text (text/text_en/text_ko) + overall judgment + summary/summary_en/summary_ko + bullets/bullets_en/bullets_ko + ai_meta (age_minutes). Rule-based real-time + GitHub-cached AI overlay. |
 
 ---
 
@@ -271,6 +271,10 @@ export const CONVICTION_LABEL_META: { min: number; label: BiLang }[] = [
 // TopNews: headline_en?, headline_ko?, summary_en?, summary_ko?, headline?, summary? (v1.x)
 // MarketBrief: summary_en/ko?, key_themes_en/ko?, watch_points_en/ko?, summary/key_themes/watch_points? (v1.x)
 // SymbolBrief: brief_en/ko?, key_risk_en/ko?, key_opportunity_en/ko?, brief/key_risk/key_opportunity? (v1.x)
+// UpcomingEarning: ai_summary_en/ko?, action_note_en/ko?, ai_summary?, action_note? (v1.x)
+// RecentResult: ai_reaction_en?, ai_reaction_ko?, ai_reaction? (v1.x)
+// MacroOverallInsight: summary_en/ko?, bullets_en/ko[]?, summary?, bullets[]? (v1.x)
+// MacroGroupInsight: text_en?, text_ko?, text? (v1.x)
 ```
 
 ### 5-4. i18n System (`app/i18n.ts`) — Added 2026-05-31
