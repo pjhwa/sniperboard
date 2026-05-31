@@ -20,7 +20,7 @@ SniperBoard is a web-based trading signal dashboard for US equity swing trading.
 - **Frontend**: Next.js 16 + lightweight-charts — interactive charts and 7 specialized boards
 - **AI Pipeline**: Grok/Hermes models combine technical indicators + social sentiment to generate market narratives (external cron job)
 - **Signal Philosophy**: VCP · Sniper · Pullback (O'Neil/Livermore) + Stage 2 (Minervini) + Conviction composite score + Risk Regime + Distribution Days
-- **Language Support**: EN/KO toggle in the Topbar — all UI labels, glossary, and signal descriptions switch instantly
+- **Language Support**: EN/KO toggle in the Topbar — all UI labels, glossary (28 terms), signal descriptions, macro symbol names, and AI-generated text switch instantly. AI data uses bilingual `_en`/`_ko` fields (schema v2.0); v1.x data falls back gracefully.
 
 Plaid DS-based dark/light theme. ⌘K command palette for fast symbol/board switching. ⓘ popover on each indicator/card for context (auto-corrects for viewport edges). `? Guide` button on MarketStrip opens a board-level slide-over guide. Type `?` in the ⌘K input to enter glossary search mode (28 terms).
 

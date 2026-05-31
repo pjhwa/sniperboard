@@ -1,6 +1,6 @@
 > English docs: [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md)
 
-# SniperBoard — Project Context (UPDATED 2026-05-30 mobile-ui-verified)
+# SniperBoard — Project Context (UPDATED 2026-05-31 i18n-fixes)
 
 ## 0. 이 문서의 목적
 
@@ -33,7 +33,7 @@ sniperboard/
 │   │   ├── regime_engine.py      # Risk Regime 5요소 종합 점수 (0~100)
 │   │   ├── distribution_day.py   # O'Neil Distribution Day 카운트 (25거래일 기준)
 │   │   └── data_adapter.py       # SINGLE SOURCE OF TRUTH: yfinance MultiIndex 정규화 + fetch 전담 (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily). yf 1.3+ 대응. Task2: full delegation (data_service thin layer; endpoints daily paths direct import). test_data_adapter.py full coverage (incl get_multi_daily targeted post-review). Phase 2: adj_close preserved (no longer dropped) for daily paths → Stage2 long-term accuracy (adjusted on splits). Phase 5: centralization verified in full tests + manual endpoint checks.
-│   │   └── conviction_calculator.py  # Phase 1: Conviction Composite Score v1 (TDD). 40/30/30 weighted (Stage2 0-7 norm + Sentiment + Regime total). Pure function, regime=None → 50 neutral. Returns score+label+components. See test_conviction_calculator.py. Not yet wired to endpoints. (2026-05-25)
+│   │   └── conviction_calculator.py  # Phase 1: Conviction Composite Score v1 (TDD). 40/30/30 weighted (Stage2 0-7 norm + Sentiment + Regime total). Pure function, regime=None → 50 neutral. Returns score+label+components. 12 tests. 레이블은 영어 반환: "Very High"(≥80) / "High"(≥65) / "Moderate"(≥50) / "Low"(≥35) / "Very Low"(<35). 프론트엔드가 CONVICTION_LABEL_META로 BiLang 변환.
 │   │   └── macro_rules.py            # Macro Insight 신호등 규칙 엔진. compute_macro_signals(items) → {overall:{judgment,green_count,red_count}, groups:{key:{signal,direction}}}. 6그룹(volatility/breadth/credit/rates/commodities/sectors) 각각 green/yellow/red 판정 + 종합 RISK_ON/MIXED/RISK_OFF. 순수 함수, dict 리스트 입력. TDD 20테스트. (2026-05-30)
 │   ├── services/
 │   │   ├── base.py               # BaseDataService 추상 클래스
@@ -71,7 +71,7 @@ sniperboard/
 │   │   │   ├── Card.tsx          # Card/ScorePill 래퍼. optional info?: {term,body} prop 추가(2026-05-29) — 제공 시 card__hd에 InfoPopover 렌더링.
 │   │   │   ├── InfoPopover.tsx   # 인라인 ⓘ 팝오버 (2026-05-29). Props: term, body. 클릭 토글, ESC/외부클릭 닫힘. 'info-pop:close-all' 커스텀 이벤트로 싱글턴 동작(하나만 열림). Card info prop 경유 또는 직접 임베드. 팝업은 position:fixed + getBoundingClientRect으로 뷰포트 우측 끝 overflow 자동 보정(card overflow:hidden 클리핑 회피) (2026-05-29).
 │   │   │   ├── BoardGuidePanel.tsx # 보드 전체 가이드 슬라이드오버 (2026-05-29). Props: title, sections: GuideSection[], isOpen, onClose. 우측에서 슬라이드인, ESC/오버레이 클릭 닫힘. 각 보드의 board-wrap 안에 렌더링.
-│   │   │   ├── ConvictionBadge.tsx # Conviction 점수 배지 (score/label/size props). score≥65=bull, ≥50=teal, ≥35=warn, <35=bear. size sm/md.
+│   │   │   ├── ConvictionBadge.tsx # Conviction 점수 배지 (score/locale/size props). 백엔드 conviction_label 문자열 사용 안 함 — score를 CONVICTION_LABEL_META로 BiLang 레이블 직접 계산. score≥65=bull, ≥50=teal, ≥35=warn, <35=bear. size sm/md.
 │   │   │   ├── Sparkline.tsx     # Canvas 기반 스파크라인
 │   │   │   ├── RadialGauge.tsx   # Canvas 기반 라디얼 게이지
 │   │   │   └── HeatStrip.tsx     # CSS 기반 히트맵 스트립
@@ -243,8 +243,12 @@ export const REGIME_META = { RISK_ON, CONSTRUCTIVE, MIXED, DEFENSIVE, RISK_OFF, 
 export const DD_META = { OK, WARNING, DANGER };
 export const SETUP_QUALITY_META = { 'A+': {color:'bull'}, 'A': {color:'teal'}, 'B': {color:'warn'}, 'C': {color:'bear'}, 'D': {color:'bear'} };
 export const EARNINGS_RISK_META = { high: {color:'bear',dot:'●'}, med: {color:'warn',dot:'●'}, low: {color:'teal',dot:'●'} };
+// 2026-05-31 이중 언어 추가:
+// SIGNAL_META.action/desc, REGIME_META.label/desc, DD_META.label/desc 등 → BiLang
+// MACRO_SYMBOL_NAMES: 21개 매크로 심볼 BiLang 표시명 ('CL=F': {en:'WTI Crude Oil', ko:'WTI 원유'} 등)
+// CONVICTION_LABEL_META: score 임계값 → BiLang 레이블 (Very High/High/Moderate/Low/Very Low)
 // AI 관련 인터페이스: MarketBrief, SymbolBrief, BriefData, BriefResponse (+ meta: FreshnessMeta Phase 4)
-// Earnings 관련 인터페이스: UpcomingEarning, RecentResult, EarningsData, EarningsResponse (+ meta)
+// Bilingual AI 필드: key_reason_en/ko, headline_en/ko, summary_en/ko, brief_en/ko 등 (v2.0 + v1.x compat)
 // SentimentData + FreshnessMeta (fetched_at/age_minutes/source) — used for minimal ⏱ freshness badges
 ```
 
@@ -495,7 +499,9 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | Regime 임계값 | `backend/core/regime_engine.py: TREND_LOW/HIGH, ...` 상수 |
 | DD 기준일 변경 | `backend/core/distribution_day.py: DD_LOOKBACK, DD_THRESHOLD_PCT` |
 | yfinance MultiIndex / daily+intraday data 정확도 | `backend/core/data_adapter.py` (SINGLE SOURCE OF TRUTH: normalize_yf_dataframe + get_* family) — full centralization+fetch. Task2 complete: full delegation (data_service thin; direct adapter in endpoints for daily paths) + extensive tests (get_multi_daily targeted + more). Task3: endpoints use hardened path + attach meta. Phase 2: adj_close preserve + selective adjusted in signal_engine.calculate_stage2_analysis (long-term only). Phase 4: types/hooks for meta + FE badges. Phase 5: full 29 tests green (adapter+signal_engine specific), manual verification (endpoints daily/AI meta, no-breakage non-split/intraday). Cross-repo linkage: market-sentiment-data earnings hardening reflected in collect_earnings.py + services. |
-| Conviction Composite Score v1 (Phase 1) | `backend/core/conviction_calculator.py` (TDD + refined Regime-conditioned + reliability). Error handling, loading states, and UI polish improved. 12 tests. (2026-05-25) |
+| Conviction Composite Score v1 (Phase 1) | `backend/core/conviction_calculator.py` (TDD, 12 tests). 레이블 영어 반환. |
+| Conviction 표시 레이블 (BiLang) | `frontend/app/types.ts: CONVICTION_LABEL_META` — score → BiLang (Very High/High/Moderate/Low/Very Low ↔ 매우 강한 확신 등) |
+| 매크로 심볼 표시명 | `frontend/app/types.ts: MACRO_SYMBOL_NAMES` — 21개 BiLang. `backend/api/endpoints.py: MACRO_SYMBOLS` 영어 폴백. |
 | Watchlist / Daily 항목에 신규 필드 추가 | `backend/api/schemas.py` (WatchlistItemSchema, DailyResponse) + `endpoints.py` (get_watchlist_endpoint, get_daily_endpoint) |
 | Brief Context Attribution (Phase 1) | `backend/api/endpoints.py:get_brief_endpoint` + `schemas.BriefResponse` now surface top-level `context` (popped from GitHub raw). Pairs with market-sentiment-data collect_brief.py context builder. (2026-05-25) |
 | 워치리스트 종목 추가 | `backend/api/endpoints.py: WATCHLIST_SYMS` + `frontend/app/types.ts: SYMBOLS` |

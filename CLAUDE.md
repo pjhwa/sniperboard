@@ -33,8 +33,9 @@ These two files give you an immediate understanding of the project without readi
 ## Key Project Entry Points
 
 - **Backend**: `backend/core/signal_engine.py` — all signal calculations
-- **Frontend types**: `frontend/app/types.ts` — centralized metadata constants
-- **API router**: `backend/api/endpoints.py` — 7+ endpoints
-- **Global state**: `frontend/hooks/useStore.ts` — Zustand (symbol, board, theme, locale)
+- **Frontend types**: `frontend/app/types.ts` — centralized metadata constants (BiLang: REGIME_META, DD_META, SIGNAL_META, STAGE2_META, SENTIMENT_META, TREND_META, VOLUME_META, MACRO_SYMBOL_NAMES, CONVICTION_LABEL_META)
+- **i18n**: `frontend/app/i18n.ts` — `Locale`, `BiLang`, `t()`, `tField()`. Per-component `const S: Record<string, BiLang>` for static strings. `tField(en, ko, fallback, locale)` for AI data.
+- **API router**: `backend/api/endpoints.py` — 7+ endpoints. `MACRO_SYMBOLS` uses English names.
+- **Global state**: `frontend/hooks/useStore.ts` — Zustand (symbol, board, theme, locale: 'en'|'ko' default 'ko')
 
 See `PROJECT_CONTEXT.md` Section 10 "Code Modification Reference Points" for details.

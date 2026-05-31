@@ -20,6 +20,7 @@ SniperBoard는 미국 주식 스윙 트레이딩을 위한 웹 기반 매매 신
 - **프론트엔드**: Next.js 16 + lightweight-charts — 인터랙티브 차트 및 7개 전문 보드
 - **AI 파이프라인**: Grok/Hermes 모델이 기술 지표 + 소셜 심리를 결합해 시장 내러티브 생성 (외부 cron)
 - **신호 철학**: VCP·Sniper·Pullback (O'Neil/Livermore) + Stage 2 (Minervini) + Conviction 종합 점수 + Risk Regime + Distribution Day
+- **언어 지원**: Topbar의 EN/KO 토글 버튼 — UI 레이블·용어 28개·신호 설명·매크로 심볼명·AI 생성 텍스트 즉시 전환. AI 데이터는 이중 언어 `_en`/`_ko` 필드(schema v2.0) 사용. v1.x 데이터는 자동 폴백 처리.
 
 Plaid DS 기반 다크/라이트 테마 전환 지원. ⌘K 커맨드 팔레트로 종목·보드 빠른 이동. 각 지표·카드마다 ⓘ 버튼으로 맥락 설명 팝오버 제공(뷰포트 경계 자동 보정), MarketStrip 우측의 `? 가이드` 버튼으로 보드 전체 사용 가이드를 슬라이드오버로 확인 가능. ⌘K 입력창에 `?`를 입력하면 28개 용어 검색 모드로 전환.
 

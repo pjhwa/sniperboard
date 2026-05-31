@@ -33,8 +33,9 @@
 ## 프로젝트 핵심 파악
 
 - **백엔드**: `backend/core/signal_engine.py` — 신호 계산의 모든 것
-- **프론트엔드 타입**: `frontend/app/types.ts` — 메타데이터 상수 집중
-- **API 라우터**: `backend/api/endpoints.py` — 엔드포인트 7개
-- **전역 상태**: `frontend/hooks/useStore.ts` — Zustand
+- **프론트엔드 타입**: `frontend/app/types.ts` — 메타데이터 상수 집중 (BiLang: REGIME_META, DD_META, SIGNAL_META, STAGE2_META, SENTIMENT_META, TREND_META, VOLUME_META, MACRO_SYMBOL_NAMES, CONVICTION_LABEL_META)
+- **i18n**: `frontend/app/i18n.ts` — `Locale`, `BiLang`, `t()`, `tField()`. 컴포넌트별 `const S: Record<string, BiLang>`로 정적 문자열 관리. `tField(en, ko, fallback, locale)`로 AI 데이터 렌더링.
+- **API 라우터**: `backend/api/endpoints.py` — 엔드포인트 7개+. `MACRO_SYMBOLS`는 영어 이름 사용.
+- **전역 상태**: `frontend/hooks/useStore.ts` — Zustand (symbol, board, theme, locale: 'en'|'ko' 기본 'ko')
 
 자세한 내용은 `PROJECT_CONTEXT.md` 섹션 10 "코드 수정 시 참고 지점" 참조.

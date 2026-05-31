@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-05-31 i18n)
+# SniperBoard — Project Context (UPDATED 2026-05-31 i18n-fixes)
 
 ## 0. Purpose of This Document
 
@@ -26,14 +26,14 @@ sniperboard/
 │   ├── requirements.txt          # fastapi, uvicorn, yfinance, pandas, python-dotenv, pytest
 │   ├── Dockerfile
 │   ├── api/
-│   │   ├── endpoints.py          # REST endpoints (APIRouter prefix=/api)
+│   │   ├── endpoints.py          # REST endpoints (APIRouter prefix=/api). MACRO_SYMBOLS dict uses English names (e.g. "WTI Crude Oil", "Gold ETF (GLD)") — frontend overrides display via MACRO_SYMBOL_NAMES BiLang map.
 │   │   └── schemas.py            # All Pydantic v2 request/response models. TopNews + SymbolSentiment/MarketSentiment top_news Optional. Bilingual _en/_ko Optional fields added (2026-05-31).
 │   ├── core/
 │   │   ├── signal_engine.py      # Core: all technical indicator and signal calculations (700+ lines). Phase 2: calculate_stage2_analysis detects 'adj_close' and uses adjusted (scaled high/low + adj_close series) for 52w/RS/ema200_slope/pullback/pivot/entry on split symbols. GC/intraday/raw unchanged.
 │   │   ├── regime_engine.py      # Risk Regime 5-factor composite score (0~100)
 │   │   ├── distribution_day.py   # O'Neil Distribution Day count (25 trading days)
 │   │   └── data_adapter.py       # SINGLE SOURCE OF TRUTH: yfinance MultiIndex normalization + fetch (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily). yf 1.3+ compatible. Phase 2: adj_close preserved for daily paths → Stage2 long-term accuracy on splits. Phase 5: centralization verified via full tests + manual endpoint checks.
-│   │   └── conviction_calculator.py  # Phase 1: Conviction Composite Score v1 (TDD). 40/30/30 weighted (Stage2 0-7 norm + Sentiment + Regime total). Pure function, regime=None → 50 neutral. Returns score+label+components. 12 tests.
+│   │   └── conviction_calculator.py  # Phase 1: Conviction Composite Score v1 (TDD). 40/30/30 weighted (Stage2 0-7 norm + Sentiment + Regime total). Pure function, regime=None → 50 neutral. Returns score+label+components. 12 tests. Labels are English: "Very High"(≥80) / "High"(≥65) / "Moderate"(≥50) / "Low"(≥35) / "Very Low"(<35). Notes also English. Frontend maps to BiLang via CONVICTION_LABEL_META.
 │   │   └── macro_rules.py            # Macro Insight traffic-light rule engine. compute_macro_signals(items) → {overall:{judgment,green_count,red_count}, groups:{key:{signal,direction}}}. 6 groups (volatility/breadth/credit/rates/commodities/sectors) each with green/yellow/red + overall RISK_ON/MIXED/RISK_OFF. Pure function, dict list input. TDD 20 tests.
 │   ├── services/
 │   │   ├── base.py               # BaseDataService abstract class
@@ -72,7 +72,7 @@ sniperboard/
 │   │   │   ├── Card.tsx          # Card/ScorePill wrapper. Optional info?: {term, body} prop — if provided, renders InfoPopover in card__hd.
 │   │   │   ├── InfoPopover.tsx   # Inline ⓘ popover. Props: term, body. Click-toggle, closes on ESC/outside click. Singleton behavior via 'info-pop:close-all' custom event. Popup: position:fixed + getBoundingClientRect for auto right-edge correction (avoids card overflow:hidden clipping).
 │   │   │   ├── BoardGuidePanel.tsx # Board-wide guide slide-over. Props: title, sections: GuideSection[], isOpen, onClose. Slides in from right, closes on ESC/overlay click. Rendered inside each board's board-wrap.
-│   │   │   ├── ConvictionBadge.tsx # Conviction score badge (score/label/size props). score≥65=bull, ≥50=teal, ≥35=warn, <35=bear. size sm/md.
+│   │   │   ├── ConvictionBadge.tsx # Conviction score badge (score/locale/size props). Derives BiLang label from score via CONVICTION_LABEL_META — does NOT use backend conviction_label string. score≥65=bull, ≥50=teal, ≥35=warn, <35=bear. size sm/md.
 │   │   │   ├── Sparkline.tsx     # Canvas-based sparkline
 │   │   │   ├── RadialGauge.tsx   # Canvas-based radial gauge
 │   │   │   └── HeatStrip.tsx     # CSS-based heatmap strip
@@ -82,7 +82,7 @@ sniperboard/
 │   │   │   ├── IntradayBoard.tsx # Intraday: IntradayChart + active signals + RSI + action bar. SIG_META BiLang map for signal name InfoPopovers. Bilingual all labels.
 │   │   │   ├── DailyBoard.tsx    # Daily: DailyChart + Stage2 checklist + R:R panel. Stage2·R:R cards have info prop (t() applied to G.* entries).
 │   │   │   ├── WatchlistBoard.tsx # Watchlist: Stage2-sorted table. Table headers (Stage2/RS/Conviction) have InfoPopovers (t() applied). Monthly phase bilingual.
-│   │   │   ├── MacroBoard.tsx    # Macro: overall RISK-ON/MIXED/RISK-OFF banner + sector rotation bar + 6 group cards. Each card: traffic light (🟢🟡🔴) · direction (↗↘) · AI interpretation text · freshness badge. useMacroInsight() combined. Graceful degrade when AI absent. Mobile: mob-order-1~3 (banner→groups→Sector), mob-macro-groups (display:contents desktop / flex-column mobile), bullets details.mob-collapse. Bilingual group labels and judgment text.
+│   │   │   ├── MacroBoard.tsx    # Macro: overall RISK-ON/MIXED/RISK-OFF banner + sector rotation bar + 6 group cards. Each card: traffic light (🟢🟡🔴) · direction (↗↘) · AI interpretation text · freshness badge. useMacroInsight() combined. Graceful degrade when AI absent. Mobile: mob-order-1~3 (banner→groups→Sector), mob-macro-groups (display:contents desktop / flex-column mobile), bullets details.mob-collapse. Bilingual group labels and judgment text. Symbol names from MACRO_SYMBOL_NAMES BiLang map (not backend name field).
 │   │   │   └── SentimentBoard.tsx # Sentiment: market gauge + per-symbol cards (click expands SentimentTrendChart). TopNewsBox component uses tField() for bilingual headline/summary. Composite Score card has info prop. Bottom: "Social Sentiment Data" explainer card (5 sections: data collection method · score range viz · contrarian principle · usage · caveats). Mobile: sym-sentiment-grid 1-col, TopNews card outside details.mob-collapse, existing TopNewsBox hide-on-mobile.
 │   │   │   └── SentimentTrendChart.tsx # Sentiment trend chart: stock price line (left axis) + composite_score overlay (right axis), 7/30d toggle
 │   │   ├── charts/               # lightweight-charts components
@@ -250,6 +250,20 @@ export const TREND_META = { heating, stable, cooling };                         
 export const VOLUME_META = { low, normal, elevated, surging };                              // label: BiLang
 export const SETUP_QUALITY_META = { 'A+': {color:'bull'}, 'A': {color:'teal'}, ... };
 export const EARNINGS_RISK_META = { high: {color:'bear',dot:'●'}, ... };
+
+// 21 macro symbol BiLang display names — MacroBoard uses this, not the backend name field:
+export const MACRO_SYMBOL_NAMES: Record<string, BiLang> = {
+  'CL=F': { en: 'WTI Crude Oil', ko: 'WTI 원유 (Crude)' },
+  'GLD':  { en: 'Gold ETF (GLD)', ko: '금 ETF (GLD)' }, /* ... all 21 symbols */ };
+
+// Conviction score → BiLang label (matches conviction_calculator.py score thresholds):
+export const CONVICTION_LABEL_META: { min: number; label: BiLang }[] = [
+  { min: 80, label: { en: 'Very High', ko: '매우 강한 확신' } },
+  { min: 65, label: { en: 'High',      ko: '강한 확신 구간' } },
+  { min: 50, label: { en: 'Moderate',  ko: '중립적 확신'   } },
+  { min: 35, label: { en: 'Low',       ko: '약한 확신'     } },
+  { min: 0,  label: { en: 'Very Low',  ko: '낮은 확신'     } },
+];
 
 // Bilingual AI data interfaces (v2.0 + v1.x compat):
 // MarketSentiment: key_reason_en?, key_reason_ko?, key_reason? (v1.x)
@@ -520,7 +534,9 @@ Copy `.env.example` → `.env` and edit. Referenced in `docker-compose.yml` as `
 | Regime thresholds | `backend/core/regime_engine.py: TREND_LOW/HIGH, ...` constants |
 | DD lookback period | `backend/core/distribution_day.py: DD_LOOKBACK, DD_THRESHOLD_PCT` |
 | yfinance data access | `backend/core/data_adapter.py` (SINGLE SOURCE OF TRUTH) |
-| Conviction Composite Score | `backend/core/conviction_calculator.py` (TDD, 12 tests) |
+| Conviction Composite Score | `backend/core/conviction_calculator.py` (TDD, 12 tests). Labels: English enum strings. |
+| Conviction display labels (BiLang) | `frontend/app/types.ts: CONVICTION_LABEL_META` — score thresholds → BiLang (Very High/High/Moderate/Low/Very Low ↔ 매우 강한 확신 etc.) |
+| Macro symbol display names | `frontend/app/types.ts: MACRO_SYMBOL_NAMES` — 21 BiLang entries. `backend/api/endpoints.py: MACRO_SYMBOLS` uses English fallback names. |
 | Add field to Watchlist/Daily | `backend/api/schemas.py` (WatchlistItemSchema, DailyResponse) + `endpoints.py` |
 | Add watchlist symbol | `backend/api/endpoints.py: WATCHLIST_SYMS` + `frontend/app/types.ts: SYMBOLS` |
 | Add macro symbol | `backend/api/endpoints.py: MACRO_SYMBOLS` |
