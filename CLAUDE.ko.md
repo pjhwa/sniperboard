@@ -49,7 +49,7 @@
 > **가격 방향은 절대 Grok에 전달하지 않는다. 크기·거래량 비율·위치 단서만 허용한다.**
 
 - `market-sentiment-data`의 `price_context.py`는 중립 단서만 반환 — 모든 dict에 `_assert_no_direction()` 기계적 적용
-- `collect_sentiment.py`의 `build_prompt()`는 모든 Grok 호출 전 방향 단어 assert
+- `collect/collect_sentiment.py`의 `build_prompt()`는 모든 Grok 호출 전 방향 단어 assert
 - `fetch_close_direction()` 결과는 **divergence 후처리에만** 흐름 — 프롬프트로 절대 유출 금지
 
 이 원칙을 위반하면 심리 데이터가 가격의 메아리가 되어 분석 가치가 사라진다. 이 원칙은 `market-sentiment-data`에 위치하지만, SniperBoard의 `/api/sentiment` 소비 코드나 수집기에 데이터를 역으로 전달하는 코드를 수정할 때도 반드시 지켜야 한다.
@@ -62,7 +62,7 @@ SniperBoard는 별도 저장소에서 AI 생성 데이터를 소비합니다: **
 
 | 데이터 종류 | 소스 파일 | SniperBoard 서비스 |
 |------------|---------|------------------|
-| 소셜 심리 | `latest.json` / `history/` | `backend/services/sentiment_service.py` |
+| 소셜 심리 | `sentiment/latest.json` / `sentiment/history/` | `backend/services/sentiment_service.py` |
 | AI 일일 브리프 | `brief/latest.json` | `backend/services/brief_service.py` |
 | 어닝 인텔리전스 | `earnings/latest.json` | `backend/services/earnings_service.py` |
 | 매크로 인사이트 | `macro/latest.json` | `backend/services/macro_insight_service.py` |

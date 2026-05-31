@@ -380,11 +380,11 @@ lightweight-charts + Tailwind card UI  [Phase 4: minimal ⏱ freshness badges vi
 
 ─── AI Pipeline + Cross-Repo Linkage (market-sentiment-data) ───────────────────────────────────────
 Mac Mini cron (06:00/22:00 UTC)
-    ↓ collect_sentiment.py → GitHub: market-sentiment-data/latest.json (schema v2.0: bilingual _en/_ko fields)
+    ↓ collect/collect_sentiment.py → GitHub: market-sentiment-data/sentiment/latest.json (schema v2.0: bilingual _en/_ko fields)
 Mac Mini cron (06:30/22:30 UTC)
-    ↓ collect_brief.py
+    ↓ collect/collect_brief.py
         ├─ GET /api/regime, /api/daily, /api/watchlist  (Sniperboard API)
-        ├─ read latest.json  (social sentiment)
+        ├─ read sentiment/latest.json  (social sentiment)
         └─ Hermes/Grok → bilingual JSON (schema v2.0)
     ↓ GitHub push: market-sentiment-data/brief/latest.json
 Mac Mini cron (06:30 UTC, once/day)
@@ -437,8 +437,8 @@ Copy `.env.example` → `.env` and edit. Referenced in `docker-compose.yml` as `
 #### `docker-compose.yml` `environment` block — Backend runtime vars
 | Variable | Required | If Unset | Description |
 |----------|----------|----------|-------------|
-| `SENTIMENT_DATA_URL` | Optional | Sentiment board disabled | Social sentiment JSON GitHub raw URL |
-| `SENTIMENT_DATA_HISTORY_BASE` | Optional | History queries unavailable | Sentiment history directory base URL (without filename) |
+| `SENTIMENT_DATA_URL` | Optional | Sentiment board disabled | Social sentiment JSON GitHub raw URL — points to `sentiment/latest.json` |
+| `SENTIMENT_DATA_HISTORY_BASE` | Optional | History queries unavailable | Sentiment history base URL (without filename) — points to `sentiment/history` |
 | `BRIEF_DATA_URL` | Optional | AI Insight falls back to Regime text | AI Brief JSON GitHub raw URL |
 | `EARNINGS_DATA_URL` | Optional | Earnings Calendar card hidden | Earnings Intelligence JSON GitHub raw URL |
 | `MACRO_INSIGHT_URL` | Optional | Macro Insight card has no AI text | Macro Insight JSON GitHub raw URL (macro/latest.json) |

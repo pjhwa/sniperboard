@@ -49,7 +49,7 @@ When working on any code that touches sentiment collection or the Grok prompt pi
 > **Price direction must never be passed to Grok. Only magnitude, volume ratio, and key-level position are allowed.**
 
 - `price_context.py` in `market-sentiment-data` returns neutral cues only — mechanical `_assert_no_direction()` on every dict
-- `build_prompt()` in `collect_sentiment.py` asserts no direction words before every Grok call
+- `build_prompt()` in `collect/collect_sentiment.py` asserts no direction words before every Grok call
 - `fetch_close_direction()` result flows **only** into divergence post-processing, never into the prompt
 
 Violating this rule makes sentiment data analytically worthless (it becomes an echo of price). This principle lives in `market-sentiment-data` but must be respected when modifying SniperBoard's `/api/sentiment` consumer or any code that feeds data back to the collector.
@@ -62,7 +62,7 @@ SniperBoard consumes AI-generated data from a separate repository: **`https://gi
 
 | Data type | Source file | SniperBoard service |
 |-----------|-------------|---------------------|
-| Social sentiment | `latest.json` / `history/` | `backend/services/sentiment_service.py` |
+| Social sentiment | `sentiment/latest.json` / `sentiment/history/` | `backend/services/sentiment_service.py` |
 | AI Daily Brief | `brief/latest.json` | `backend/services/brief_service.py` |
 | Earnings Intelligence | `earnings/latest.json` | `backend/services/earnings_service.py` |
 | Macro Insight | `macro/latest.json` | `backend/services/macro_insight_service.py` |
