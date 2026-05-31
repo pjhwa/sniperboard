@@ -334,6 +334,32 @@ export const STAGE2_META: Record<keyof Stage2Checks, { label: string; desc: BiLa
 
 export const SYMBOLS = ['TSLA', 'AAPL', 'NVDA', 'META', 'AMZN', 'GOOGL', 'PLTR'];
 
+// Macro symbol display names (BiLang) — covers all 21 MACRO_SYMBOLS from the backend
+export const MACRO_SYMBOL_NAMES: Record<string, BiLang> = {
+  'DX-Y.NYB': { en: 'Dollar Index (DXY)',        ko: '달러인덱스 (DXY)' },
+  '^TNX':     { en: '10Y Treasury (TNX)',          ko: '10년물 금리 (TNX)' },
+  'TLT':      { en: 'Long Bond ETF (TLT)',         ko: '장기채 ETF (TLT)' },
+  'CL=F':     { en: 'WTI Crude Oil',              ko: 'WTI 원유 (Crude)' },
+  'GLD':      { en: 'Gold ETF (GLD)',              ko: '금 ETF (GLD)' },
+  'SPY':      { en: 'S&P 500 (SPY)',              ko: 'S&P 500 (SPY)' },
+  'QQQ':      { en: 'Nasdaq 100 (QQQ)',           ko: '나스닥 100 (QQQ)' },
+  '^VIX':     { en: 'VIX Volatility',             ko: 'VIX 변동성' },
+  '^VVIX':    { en: 'VIX of VIX (^VVIX)',         ko: 'VIX의 변동성 (^VVIX)' },
+  '^VIX9D':   { en: '9-Day VIX (^VIX9D)',         ko: '9일 VIX (^VIX9D)' },
+  'HYG':      { en: 'High Yield ETF (HYG)',       ko: '하이일드 ETF (HYG)' },
+  'JNK':      { en: 'Junk Bond ETF (JNK)',        ko: '정크본드 ETF (JNK)' },
+  'LQD':      { en: 'Inv. Grade ETF (LQD)',       ko: '투자등급 ETF (LQD)' },
+  'IEF':      { en: 'Mid-Term Treasury (IEF)',    ko: '중기국채 ETF (IEF)' },
+  'RSP':      { en: 'S&P Equal Weight (RSP)',     ko: 'S&P 동등가중 (RSP)' },
+  'MAGS':     { en: 'Magnificent 7 (MAGS)',       ko: 'Magnificent 7 (MAGS)' },
+  'IWM':      { en: 'Russell 2000 (IWM)',         ko: '러셀2000 (IWM)' },
+  'SMH':      { en: 'Semiconductors (SMH)',       ko: '반도체 (SMH)' },
+  'XLE':      { en: 'Energy (XLE)',              ko: '에너지 (XLE)' },
+  'XLY':      { en: 'Consumer Disc. (XLY)',      ko: '소비재 (XLY)' },
+  'XHB':      { en: 'Homebuilders (XHB)',        ko: '홈빌더 (XHB)' },
+  'ITA':      { en: 'Aerospace/Def. (ITA)',      ko: '방산 (ITA)' },
+};
+
 // Conviction score → BiLang label mapping (matches conviction_calculator.py thresholds)
 export const CONVICTION_LABEL_META: { min: number; label: BiLang }[] = [
   { min: 80, label: { en: 'Very High', ko: '매우 강한 확신' } },

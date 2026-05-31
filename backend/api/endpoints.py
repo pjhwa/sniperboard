@@ -329,34 +329,34 @@ async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주
 
 
 MACRO_SYMBOLS = {
-    # 달러/금리/채권/원유
-    "DX-Y.NYB": "달러인덱스 (DXY)",
-    "^TNX":     "10년물 금리 (TNX)",
-    "TLT":      "장기채 ETF (TLT)",
-    "CL=F":     "WTI 원유 (Crude)",
-    "GLD":      "금 ETF (GLD)",
-    # 지수
+    # Dollar / Rates / Bonds / Commodities
+    "DX-Y.NYB": "Dollar Index (DXY)",
+    "^TNX":     "10Y Treasury (TNX)",
+    "TLT":      "Long Bond ETF (TLT)",
+    "CL=F":     "WTI Crude Oil",
+    "GLD":      "Gold ETF (GLD)",
+    # Indices
     "SPY":      "S&P 500 (SPY)",
-    "QQQ":      "나스닥 100 (QQQ)",
-    # 변동성 (지표 #2)
-    "^VIX":     "VIX 변동성",
-    "^VVIX":    "VIX의 변동성 (^VVIX)",
-    "^VIX9D":   "9일 VIX (^VIX9D)",
-    # 신용 스트레스 (지표 #4)
-    "HYG":      "하이일드 ETF (HYG)",
-    "JNK":      "정크본드 ETF (JNK)",
-    "LQD":      "투자등급 ETF (LQD)",
-    "IEF":      "중기국채 ETF (IEF)",
-    # 폭(Breadth) (지표 #3)
-    "RSP":      "S&P 동등가중 (RSP)",
+    "QQQ":      "Nasdaq 100 (QQQ)",
+    # Volatility
+    "^VIX":     "VIX Volatility",
+    "^VVIX":    "VIX of VIX (^VVIX)",
+    "^VIX9D":   "9-Day VIX (^VIX9D)",
+    # Credit Stress
+    "HYG":      "High Yield ETF (HYG)",
+    "JNK":      "Junk Bond ETF (JNK)",
+    "LQD":      "Inv. Grade ETF (LQD)",
+    "IEF":      "Mid-Term Treasury (IEF)",
+    # Breadth
+    "RSP":      "S&P Equal Weight (RSP)",
     "MAGS":     "Magnificent 7 (MAGS)",
-    "IWM":      "러셀2000 (IWM)",
-    # 섹터
-    "SMH":      "반도체 (SMH)",
-    "XLE":      "에너지 (XLE)",
-    "XLY":      "소비재 (XLY)",
-    "XHB":      "홈빌더 (XHB)",
-    "ITA":      "방산 (ITA)",
+    "IWM":      "Russell 2000 (IWM)",
+    # Sectors
+    "SMH":      "Semiconductors (SMH)",
+    "XLE":      "Energy (XLE)",
+    "XLY":      "Consumer Disc. (XLY)",
+    "XHB":      "Homebuilders (XHB)",
+    "ITA":      "Aerospace/Def. (ITA)",
 }
 
 

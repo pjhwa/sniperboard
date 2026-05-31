@@ -5,7 +5,7 @@ import { useMacro } from '@/hooks/useMacro';
 import { useMacroInsight } from '@/hooks/useMacroInsight';
 import { useStore } from '@/hooks/useStore';
 import { Card } from '@/components/ui/Card';
-import { MacroItem } from '@/app/types';
+import { MacroItem, MACRO_SYMBOL_NAMES } from '@/app/types';
 import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
 import { G } from '@/app/glossary';
 import { t } from '@/app/i18n';
@@ -247,7 +247,7 @@ export function MacroBoard() {
                     <div key={m.symbol} className="macro-item">
                       <div>
                         <div className="mi-sym">{displaySym(m.symbol)}</div>
-                        <div className="mi-name">{m.name}</div>
+                        <div className="mi-name">{t(MACRO_SYMBOL_NAMES[m.symbol] ?? { en: m.name, ko: m.name }, locale)}</div>
                       </div>
                       <div className="mi-price">
                         {m.price != null
