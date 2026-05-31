@@ -3,39 +3,37 @@
 import { useStore } from '@/hooks/useStore';
 import { useRegime } from '@/hooks/useRegime';
 import { Search, Sun, Moon } from '@/components/ui/Icons';
-import { SYMBOLS } from '@/app/types';
-
-const BOARD_LABELS: Record<string, { label: string; ko: string }> = {
-  overview:  { label: 'Overview',  ko: '시장' },
-  deepdive:  { label: 'Deep Dive', ko: '종합분석' },
-  intraday:  { label: 'Intraday',  ko: '단기' },
-  daily:     { label: 'Daily',     ko: '일봉' },
-  watchlist: { label: 'Watchlist', ko: '워치리스트' },
-  macro:     { label: 'Macro',     ko: '매크로' },
-  sentiment: { label: 'Sentiment', ko: '심리' },
-};
-
-const REGIME_KO: Record<string, string> = {
-  RISK_ON: '강세', CONSTRUCTIVE: '우호적', MIXED: '혼조', DEFENSIVE: '방어적', RISK_OFF: '약세', UNKNOWN: '불명',
-};
+import { SYMBOLS, REGIME_META } from '@/app/types';
+import { t } from '@/app/i18n';
 
 export function Topbar() {
-  const { board, symbol, theme, setSymbol, setCmdOpen, setTheme } = useStore();
+  const { board, symbol, theme, locale, setSymbol, setCmdOpen, setTheme, setLocale } = useStore();
   const { regimeData } = useRegime();
-  const current = BOARD_LABELS[board] || BOARD_LABELS.overview;
+
+  const BOARD_LABELS: Record<string, { en: string; ko: string }> = {
+    overview:  { en: 'Overview',  ko: '시장' },
+    deepdive:  { en: 'Deep Dive', ko: '종합분석' },
+    intraday:  { en: 'Intraday',  ko: '단기' },
+    daily:     { en: 'Daily',     ko: '일봉' },
+    watchlist: { en: 'Watchlist', ko: '워치리스트' },
+    macro:     { en: 'Macro',     ko: '매크로' },
+    sentiment: { en: 'Sentiment', ko: '심리' },
+  };
+
+  const current = BOARD_LABELS[board] ?? BOARD_LABELS.overview;
 
   return (
     <header className="topbar">
       <div className="topbar__title">
         <span style={{ fontWeight: 700, letterSpacing: '-0.02em' }}>SniperBoard</span>
         <span style={{ color: 'var(--fg-faint)' }}>/</span>
-        <span>{current.label}</span>
+        <span>{current.en}</span>
         <small>· {current.ko}</small>
       </div>
 
       <div className="topbar__search" onClick={() => setCmdOpen(true)}>
         <Search />
-        <input placeholder="종목 · 보드 · 신호 검색" readOnly />
+        <input placeholder={locale === 'en' ? 'Symbol · Board · Signal search' : '종목 · 보드 · 신호 검색'} readOnly />
         <kbd>⌘K</kbd>
       </div>
 
@@ -69,17 +67,39 @@ export function Topbar() {
             </div>
             <div>
               <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.2 }}>
-                {REGIME_KO[regimeData.regime] ?? '—'}
+                {t(REGIME_META[regimeData.regime].label, locale)}
               </div>
               <div style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>Risk Regime</div>
             </div>
           </div>
         )}
 
+        {/* EN/KO locale toggle */}
+        <div style={{ display: 'flex', gap: 2, padding: '2px', background: 'var(--card-elev)', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)' }}>
+          {(['en', 'ko'] as const).map(l => (
+            <button
+              key={l}
+              onClick={() => setLocale(l)}
+              style={{
+                height: 24, padding: '0 8px',
+                borderRadius: 'var(--r-xs)',
+                fontSize: 11, fontWeight: 600,
+                background: locale === l ? 'var(--accent)' : 'transparent',
+                color: locale === l ? '#fff' : 'var(--fg-muted)',
+                border: 'none',
+                cursor: 'pointer',
+                textTransform: 'uppercase',
+              }}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+
         <button
           className="topbar__btn"
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          title={theme === 'dark' ? '라이트 모드' : '다크 모드'}
+          title={locale === 'en' ? (theme === 'dark' ? 'Light mode' : 'Dark mode') : (theme === 'dark' ? '라이트 모드' : '다크 모드')}
         >
           {theme === 'dark' ? <Sun /> : <Moon />}
         </button>
