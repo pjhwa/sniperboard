@@ -39,3 +39,21 @@ These two files give you an immediate understanding of the project without readi
 - **Global state**: `frontend/hooks/useStore.ts` — Zustand (symbol, board, theme, locale: 'en'|'ko' default 'ko')
 
 See `PROJECT_CONTEXT.md` Section 10 "Code Modification Reference Points" for details.
+
+---
+
+## Related Repository: market-sentiment-data
+
+SniperBoard consumes AI-generated data from a separate repository: **`https://github.com/pjhwa/market-sentiment-data`**
+
+| Data type | Source file | SniperBoard service |
+|-----------|-------------|---------------------|
+| Social sentiment | `latest.json` / `history/` | `backend/services/sentiment_service.py` |
+| AI Daily Brief | `brief/latest.json` | `backend/services/brief_service.py` |
+| Earnings Intelligence | `earnings/latest.json` | `backend/services/earnings_service.py` |
+| Macro Insight | `macro/latest.json` | `backend/services/macro_insight_service.py` |
+
+- Data is collected by Mac mini cron jobs (4 collectors) and pushed to that repo as JSON.
+- SniperBoard fetches via raw GitHub URL; token injected via `SENTIMENT_DATA_TOKEN` env var.
+- See `market-sentiment-data/PROJECT_CONTEXT.md` for collector architecture, schema, and data contract.
+- **Schema version**: 2.0 — all AI text fields use `_en`/`_ko` suffix pairs. Use `tField()` in frontend.
