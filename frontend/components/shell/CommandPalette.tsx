@@ -5,6 +5,7 @@ import { useStore, Board } from '@/hooks/useStore';
 import { SYMBOLS } from '@/app/types';
 import { GLOSSARY } from '@/app/glossary';
 import { Bolt, Layers } from '@/components/ui/Icons';
+import { t } from '@/app/i18n';
 
 interface Item {
   type: 'symbol' | 'nav' | 'glossary';
@@ -15,7 +16,7 @@ interface Item {
 }
 
 export function CommandPalette() {
-  const { cmdOpen, setCmdOpen, setSymbol, setBoard } = useStore();
+  const { cmdOpen, setCmdOpen, setSymbol, setBoard, locale } = useStore();
   const [q, setQ] = useState('');
   const [sel, setSel] = useState(0);
 
@@ -34,26 +35,27 @@ export function CommandPalette() {
       action: () => { setSymbol(s); setCmdOpen(false); },
       meta: 'Symbol',
     })),
-    { type: 'nav', label: 'Overview',  sub: '시장 한눈에 보기',         action: () => { setBoard('overview'  as Board); setCmdOpen(false); }, meta: 'Board' },
-    { type: 'nav', label: 'Intraday',  sub: '단기 신호 + 5m 차트',     action: () => { setBoard('intraday'  as Board); setCmdOpen(false); }, meta: 'Board' },
-    { type: 'nav', label: 'Daily',     sub: 'Stage 2 + R:R',          action: () => { setBoard('daily'     as Board); setCmdOpen(false); }, meta: 'Board' },
-    { type: 'nav', label: 'Watchlist', sub: 'Stage2 정렬 테이블',      action: () => { setBoard('watchlist' as Board); setCmdOpen(false); }, meta: 'Board' },
-    { type: 'nav', label: 'Macro',     sub: '섹터 로테이션 + 21개',    action: () => { setBoard('macro'     as Board); setCmdOpen(false); }, meta: 'Board' },
-    { type: 'nav', label: 'Sentiment', sub: '시장 심리 + 종목별 점수', action: () => { setBoard('sentiment' as Board); setCmdOpen(false); }, meta: 'Board' },
+    { type: 'nav', label: 'Overview',  sub: locale === 'en' ? 'Market at a glance'           : '시장 한눈에 보기',         action: () => { setBoard('overview'  as Board); setCmdOpen(false); }, meta: 'Board' },
+    { type: 'nav', label: 'Intraday',  sub: locale === 'en' ? 'Short-term signals + 5m chart' : '단기 신호 + 5m 차트',      action: () => { setBoard('intraday'  as Board); setCmdOpen(false); }, meta: 'Board' },
+    { type: 'nav', label: 'Daily',     sub: locale === 'en' ? 'Stage 2 + R:R'                : 'Stage 2 + R:R',           action: () => { setBoard('daily'     as Board); setCmdOpen(false); }, meta: 'Board' },
+    { type: 'nav', label: 'Watchlist', sub: locale === 'en' ? 'Stage2-sorted table'          : 'Stage2 정렬 테이블',       action: () => { setBoard('watchlist' as Board); setCmdOpen(false); }, meta: 'Board' },
+    { type: 'nav', label: 'Macro',     sub: locale === 'en' ? 'Macro dashboard'              : '매크로 대시보드',           action: () => { setBoard('macro'     as Board); setCmdOpen(false); }, meta: 'Board' },
+    { type: 'nav', label: 'Sentiment', sub: locale === 'en' ? 'Social sentiment'             : '소셜 심리',                action: () => { setBoard('sentiment' as Board); setCmdOpen(false); }, meta: 'Board' },
+    { type: 'nav', label: 'Deep Dive', sub: locale === 'en' ? 'Full analysis'               : '종합분석',                 action: () => { setBoard('deepdive'  as Board); setCmdOpen(false); }, meta: 'Board' },
   ];
 
   const glossaryItems: Item[] = GLOSSARY
     .filter(e =>
       !glossaryQ ||
-      e.term.toLowerCase().includes(glossaryQ) ||
-      e.body.toLowerCase().includes(glossaryQ)
+      t(e.term, locale).toLowerCase().includes(glossaryQ) ||
+      t(e.body, locale).toLowerCase().includes(glossaryQ)
     )
     .map(e => ({
       type: 'glossary' as const,
-      label: e.term,
-      sub: e.body.length > 80 ? e.body.slice(0, 80) + '…' : e.body,
+      label: t(e.term, locale),
+      sub: t(e.body, locale).slice(0, 80) + (t(e.body, locale).length > 80 ? '…' : ''),
       action: () => setCmdOpen(false),
-      meta: '용어',
+      meta: locale === 'en' ? 'Term' : '용어',
     }));
 
   const items = isGlossaryMode ? glossaryItems : (
@@ -67,7 +69,10 @@ export function CommandPalette() {
       <div className="cmd" onClick={e => e.stopPropagation()}>
         <input
           className="cmd__inp"
-          placeholder="종목, 보드 검색… (? 입력 시 용어 검색)"
+          placeholder={isGlossaryMode
+            ? (locale === 'en' ? '? Term search...' : '? 용어 검색...')
+            : (locale === 'en' ? 'Symbol · Board · Signal search' : '종목 · 보드 · 신호 검색')
+          }
           autoFocus
           value={q}
           onChange={e => { setQ(e.target.value); setSel(0); }}
@@ -80,7 +85,7 @@ export function CommandPalette() {
         />
         {isGlossaryMode && (
           <div style={{ padding: '4px 16px', fontSize: 10.5, color: 'var(--fg-subtle)', borderBottom: '1px solid var(--border)' }}>
-            용어 검색 모드 — {items.length}개 결과
+            {locale === 'en' ? `Glossary search mode — ${items.length} results` : `용어 검색 모드 — ${items.length}개 결과`}
           </div>
         )}
         <div className="cmd__list">
