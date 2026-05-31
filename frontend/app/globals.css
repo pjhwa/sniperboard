@@ -1047,9 +1047,23 @@ body {
      카드 내부의 다열 그리드가 모바일에서 너무 좁아지는 문제 해결 */
   .sym-sentiment-grid { grid-template-columns: 1fr !important; }
 
-  /* DeepDive 종목선택 바: overflow:hidden → 가로 스크롤로 전환 */
-  .mob-symbol-bar { overflow-x: auto !important; overflow-y: hidden !important; }
-  .mob-symbol-btns { border-right: none !important; }
+  /* DeepDive 종목선택 바: 세로 2단 레이아웃 (가격 → 버튼 순서) */
+  .mob-symbol-bar {
+    flex-direction: column !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+  }
+  .mob-symbol-price { order: 1; width: 100%; }
+  .mob-symbol-btns {
+    order: 2;
+    border-right: none !important;
+    border-top: 1px solid var(--border) !important;
+    overflow-x: auto;
+    width: 100%;
+  }
+  /* 모바일에서만 표시: 선택된 심볼 이름 라벨 */
+  .mob-show { display: block !important; }
+  .mob-hide { display: none !important; }
 
   /* DeepDive ROW4: inline display:grid;repeat(3) 오버라이드 */
   .mob-inner-stack {
@@ -1071,6 +1085,7 @@ body {
 @media (min-width: 768px) {
   /* 모바일 전용 요소 데스크톱에서 숨김 */
   .hide-desktop { display: none !important; }
+  .mob-show { display: none !important; }
   .bottom-tabs { display: none; }
 
   /* details.mob-collapse: open 속성으로 항상 렌더됨 — summary만 숨김 */

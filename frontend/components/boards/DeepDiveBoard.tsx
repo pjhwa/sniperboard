@@ -372,11 +372,15 @@ export function DeepDiveBoard() {
           ))}
         </div>
 
-        {/* 가격 + 스파크라인 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '8px 16px', flex: 1, minWidth: 0 }}>
+        {/* 가격 + KPI */}
+        <div className="mob-symbol-price" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '8px 16px', flex: 1, minWidth: 0 }}>
           {lastCandle ? (
             <>
               <div style={{ flexShrink: 0 }}>
+                {/* 모바일: 선택된 심볼 이름 */}
+                <div className="mob-show" style={{ fontSize: 10, fontWeight: 700, color: 'var(--em-500)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 2 }}>
+                  {symbol}
+                </div>
                 {/* PRE/POST/OVERNIGHT 상태에서는 공식 종가(regular_close) 사용 */}
                 {(() => {
                   const ms = prePostData?.market_state;
