@@ -9,10 +9,10 @@ services:
       - "5001:8000"
     environment:
       # 소셜 심리 데이터 소스 (market-sentiment-data GitHub 리포)
-      # 예: https://raw.githubusercontent.com/<user>/market-sentiment-data/main/latest.json
-      SENTIMENT_DATA_URL: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/latest.json"
-      # history/ 디렉토리 base URL (파일명 없이)
-      SENTIMENT_DATA_HISTORY_BASE: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/history"
+      # 예: https://raw.githubusercontent.com/<user>/market-sentiment-data/main/sentiment/latest.json
+      SENTIMENT_DATA_URL: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/sentiment/latest.json"
+      # sentiment/history/ 디렉토리 base URL (파일명 없이)
+      SENTIMENT_DATA_HISTORY_BASE: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/sentiment/history"
       # AI Brief + Earnings Intelligence
       BRIEF_DATA_URL: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/brief/latest.json"
       EARNINGS_DATA_URL: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/earnings/latest.json"
