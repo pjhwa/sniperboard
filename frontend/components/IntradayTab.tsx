@@ -151,7 +151,7 @@ export default function IntradayTab() {
                         </span>
                       </div>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-zinc-300 uppercase tracking-wider">
-                        {meta?.action}
+                        {meta?.action.ko}
                       </span>
                     </div>
                   );
@@ -184,10 +184,10 @@ export default function IntradayTab() {
                 <div className="flex items-center justify-between mb-2">
                   <span className={`text-sm font-bold tracking-tight ${meta.color}`}>{meta.label}</span>
                   <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${meta.bg} ${meta.color} tracking-wider uppercase`}>
-                    {meta.action}
+                    {meta.action.ko}
                   </span>
                 </div>
-                <p className="text-xs text-zinc-400 leading-relaxed font-medium">{meta.desc}</p>
+                <p className="text-xs text-zinc-400 leading-relaxed font-medium">{meta.desc.ko}</p>
               </div>
             ))}
           </div>

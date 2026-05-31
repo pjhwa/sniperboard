@@ -9,22 +9,45 @@ import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
 import { InfoPopover } from '@/components/ui/InfoPopover';
 import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
 import { G } from '@/app/glossary';
+import { t } from '@/app/i18n';
+import type { BiLang } from '@/app/i18n';
 
-const WATCHLIST_GUIDE: GuideSection[] = [
-  {
-    heading: '이 화면은',
-    body: '워치리스트 종목들의 Stage2 점수를 내림차순으로 보여주는 스크리닝 화면입니다. 가장 좋은 셋업의 종목을 빠르게 찾을 수 있습니다.',
-  },
-  {
-    heading: '핵심 지표 읽는 법',
-    body: 'Stage2 점수가 높을수록 기술적 조건이 좋은 종목입니다. Conviction 점수는 기술적(Stage2) + 소셜 심리 + 시장 Regime을 종합합니다. Checks 점 패턴으로 어떤 조건이 미달인지 한눈에 파악할 수 있습니다.',
-  },
-  {
-    heading: '지금 이렇게 쓰세요',
-    body: 'Stage2 ≥ 5인 종목 확인 → Conviction ≥ 60 추가 확인 → Entry 가격 근처에서 알람 설정 → DeepDive에서 세부 분석 후 진입 결정.',
-  },
-];
-
+const S: Record<string, BiLang> = {
+  guideTitle:     { en: 'Watchlist Guide', ko: 'Watchlist 가이드' },
+  guide1Heading:  { en: 'About this screen', ko: '이 화면은' },
+  guide1Body:     { en: 'A screening screen showing watchlist symbols sorted descending by Stage2 score. You can quickly find the best-setup symbols.', ko: '워치리스트 종목들의 Stage2 점수를 내림차순으로 보여주는 스크리닝 화면입니다. 가장 좋은 셋업의 종목을 빠르게 찾을 수 있습니다.' },
+  guide2Heading:  { en: 'How to read key indicators', ko: '핵심 지표 읽는 법' },
+  guide2Body:     { en: 'Higher Stage2 score means better technical conditions. Conviction score combines technical (Stage2) + social sentiment + market Regime. The check dot pattern lets you see at a glance which conditions are failing.', ko: 'Stage2 점수가 높을수록 기술적 조건이 좋은 종목입니다. Conviction 점수는 기술적(Stage2) + 소셜 심리 + 시장 Regime을 종합합니다. Checks 점 패턴으로 어떤 조건이 미달인지 한눈에 파악할 수 있습니다.' },
+  guide3Heading:  { en: 'How to use now', ko: '지금 이렇게 쓰세요' },
+  guide3Body:     { en: 'Check symbols with Stage2 ≥ 5 → Additional check Conviction ≥ 60 → Set alert near Entry price → Make entry decision after detailed analysis in DeepDive.', ko: 'Stage2 ≥ 5인 종목 확인 → Conviction ≥ 60 추가 확인 → Entry 가격 근처에서 알람 설정 → DeepDive에서 세부 분석 후 진입 결정.' },
+  loading:        { en: 'Loading...', ko: '로딩 중...' },
+  tableTitle:     { en: 'Watchlist · Stage 2 Sorted', ko: 'Watchlist · Stage 2 정렬' },
+  tableAction:    { en: '{n} symbols · Score descending', ko: '{n} 종목 · 점수 내림차순' },
+  col52wHigh:     { en: '52w High', ko: '52w 고점' },
+  colChecks:      { en: 'Checks', ko: 'Checks' },
+  colMonthly:     { en: 'Monthly', ko: '월봉' },
+  analyzeBtn:     { en: 'Analyze', ko: '분석' },
+  // monthly phase short labels
+  mpUptrend:      { en: '↑OK', ko: '↑확인' },
+  mpWeakening:    { en: '↓Weak', ko: '↓약화' },
+  mpNeutral:      { en: 'Neutral', ko: '중립' },
+  mpDowntrend:    { en: '↓Down', ko: '↓하락' },
+  mpUnknown:      { en: '—', ko: '—' },
+  // RS score card
+  rsTitle:        { en: 'RS Score', ko: 'RS Score' },
+  rsAction:       { en: 'Relative Strength vs SPY', ko: 'SPY 대비 상대강도' },
+  rsStrong:       { en: '≥70 Strong', ko: '≥70 강세' },
+  rsMid:          { en: '50-70 Normal', ko: '50~70 보통' },
+  rsWeak:         { en: '<50 Weak', ko: '<50 약세' },
+  // Stage 2 heatmap card
+  heatTitle:      { en: 'Stage 2 Check Heatmap', ko: 'Stage 2 체크 히트맵' },
+  heatAction:     { en: '7 conditions', ko: '7개 조건' },
+  heatSymCol:     { en: 'Symbol', ko: '심볼' },
+  heatTotalCol:   { en: 'Total', ko: '합계' },
+  // R:R card
+  rrTitle:        { en: 'Risk / Reward', ko: 'Risk / Reward' },
+  rrAction:       { en: 'Entry-based Comparison', ko: 'Entry 기준 비교' },
+};
 
 const STRUCT_COLOR: Record<string, string> = {
   UPTREND: 'bull', DOWNTREND: 'bear', DISTRIBUTION: 'warn', ACCUMULATION: 'info', NEUTRAL: 'neutral',
@@ -41,7 +64,7 @@ const CHECK_LABELS: [keyof ReturnType<typeof useWatchlist>['watchlist'][number][
 ];
 
 export function WatchlistBoard() {
-  const { symbol, setSymbol, setBoard } = useStore();
+  const { symbol, setSymbol, setBoard, locale } = useStore();
   const { watchlist, isLoading } = useWatchlist();
   const [guideOpen, setGuideOpen] = useState(false);
 
@@ -51,36 +74,60 @@ export function WatchlistBoard() {
     return () => document.removeEventListener('guide:open', handler);
   }, []);
 
-  // R:R 비교용 최대 편차 계산
+  // Max deviation for R:R comparison
   const maxRisk   = Math.max(...watchlist.map(w => w.entry - w.stop), 0.01);
   const maxReward = Math.max(...watchlist.map(w => w.target - w.entry), 0.01);
   const maxRange  = Math.max(maxRisk, maxReward);
 
+  const WATCHLIST_GUIDE = (): GuideSection[] => [
+    { heading: t(S.guide1Heading, locale), body: t(S.guide1Body, locale) },
+    { heading: t(S.guide2Heading, locale), body: t(S.guide2Body, locale) },
+    { heading: t(S.guide3Heading, locale), body: t(S.guide3Body, locale) },
+  ];
+
+  // Monthly phase short label lookup
+  const MP_SHORT: Record<string, BiLang> = {
+    CONFIRMED_UPTREND: S.mpUptrend,
+    WEAKENING:         S.mpWeakening,
+    NEUTRAL:           S.mpNeutral,
+    DOWNTREND:         S.mpDowntrend,
+    UNKNOWN:           S.mpUnknown,
+  };
+  const MP_COLOR: Record<string, string> = {
+    CONFIRMED_UPTREND: 'var(--bull)',
+    WEAKENING:         'var(--warn)',
+    NEUTRAL:           'var(--fg-muted)',
+    DOWNTREND:         'var(--bear)',
+    UNKNOWN:           'var(--fg-subtle)',
+  };
+
+  void STRUCT_COLOR; // suppress unused warning
+
   return (
     <div className="board-wrap">
-      <BoardGuidePanel title="Watchlist 가이드" sections={WATCHLIST_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+      <BoardGuidePanel title={t(S.guideTitle, locale)} sections={WATCHLIST_GUIDE()} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <div className="board fade-in" style={{ gridTemplateColumns: '1fr 1fr 1fr', alignContent: 'start' }}>
 
-      {/* 메인 테이블 — 3컬럼 전체 */}
+      {/* Main table — full 3 columns */}
       <div style={{ gridColumn: 'span 3' }}>
-        <Card title="Watchlist · Stage 2 정렬" action={`${watchlist.length} 종목 · 점수 내림차순`}>
+        <Card title={t(S.tableTitle, locale)} action={t(S.tableAction, locale).replace('{n}', String(watchlist.length))}>
           {isLoading ? (
-            <div className="subtle">로딩 중...</div>
+            <div className="subtle">{t(S.loading, locale)}</div>
           ) : (
             <table className="tbl">
               <thead>
                 <tr>
                   <th>Symbol</th>
                   <th>Price</th>
-                  <th><span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>Stage2 <InfoPopover term={G.stage2.term} body={G.stage2.body} /></span></th>
-                  <th><span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>RS <InfoPopover term={G.rs_score.term} body={G.rs_score.body} /></span></th>
-                  <th>52w 고점</th>
+                  <th><span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>Stage2 <InfoPopover term={t(G.stage2.term, locale)} body={t(G.stage2.body, locale)} /></span></th>
+                  <th><span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>RS <InfoPopover term={t(G.rs_score.term, locale)} body={t(G.rs_score.body, locale)} /></span></th>
+                  <th>{t(S.col52wHigh, locale)}</th>
                   <th>Entry</th>
                   <th>Stop</th>
                   <th>Target</th>
-                  <th>Checks</th>
-                  <th>월봉</th>
-                  <th><span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>Conviction <InfoPopover term={G.conviction.term} body={G.conviction.body} /></span></th>
+                  <th>{t(S.colChecks, locale)}</th>
+                  <th>{t(S.colMonthly, locale)}</th>
+                  <th><span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>Conviction <InfoPopover term={t(G.conviction.term, locale)} body={t(G.conviction.body, locale)} /></span></th>
                   <th></th>
                 </tr>
               </thead>
@@ -117,15 +164,9 @@ export function WatchlistBoard() {
                     <td>
                       {(() => {
                         const mp = w.monthly_phase ?? 'UNKNOWN';
-                        const cfg: Record<string, { short: string; color: string }> = {
-                          CONFIRMED_UPTREND: { short: '↑확인', color: 'var(--bull)' },
-                          WEAKENING:         { short: '↓약화', color: 'var(--warn)' },
-                          NEUTRAL:           { short: '중립',  color: 'var(--fg-muted)' },
-                          DOWNTREND:         { short: '↓하락', color: 'var(--bear)' },
-                          UNKNOWN:           { short: '—',     color: 'var(--fg-subtle)' },
-                        };
-                        const c = cfg[mp] ?? cfg.UNKNOWN;
-                        return <span style={{ fontSize: 11, fontWeight: 600, color: c.color }}>{c.short}</span>;
+                        const label = MP_SHORT[mp] ?? MP_SHORT.UNKNOWN;
+                        const color = MP_COLOR[mp] ?? MP_COLOR.UNKNOWN;
+                        return <span style={{ fontSize: 11, fontWeight: 600, color }}>{t(label, locale)}</span>;
                       })()}
                     </td>
                     <td>
@@ -137,7 +178,7 @@ export function WatchlistBoard() {
                         style={{ height: 24, padding: '0 8px', fontSize: 11 }}
                         onClick={(e) => { e.stopPropagation(); setSymbol(w.symbol); setBoard('deepdive'); }}
                       >
-                        분석 <ArrowRight />
+                        {t(S.analyzeBtn, locale)} <ArrowRight />
                       </button>
                     </td>
                   </tr>
@@ -148,9 +189,9 @@ export function WatchlistBoard() {
         </Card>
       </div>
 
-      {/* RS Score 순위 바 */}
-      <Card title="RS Score" action="SPY 대비 상대강도">
-        {watchlist.length === 0 ? <div className="subtle">로딩 중...</div> : (
+      {/* RS Score ranking bar */}
+      <Card title={t(S.rsTitle, locale)} action={t(S.rsAction, locale)}>
+        {watchlist.length === 0 ? <div className="subtle">{t(S.loading, locale)}</div> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {[...watchlist].sort((a, b) => b.rs_score - a.rs_score).map(w => {
               const color = w.rs_score >= 70 ? 'var(--bull)' : w.rs_score >= 50 ? 'var(--teal)' : 'var(--bear)';
@@ -165,26 +206,26 @@ export function WatchlistBoard() {
               );
             })}
             <div style={{ fontSize: 9.5, color: 'var(--fg-subtle)', marginTop: 6 }}>
-              <span style={{ color: 'var(--bull)' }}>●</span> ≥70 강세 &nbsp;
-              <span style={{ color: 'var(--teal)' }}>●</span> 50~70 보통 &nbsp;
-              <span style={{ color: 'var(--bear)' }}>●</span> &lt;50 약세
+              <span style={{ color: 'var(--bull)' }}>●</span> {t(S.rsStrong, locale)} &nbsp;
+              <span style={{ color: 'var(--teal)' }}>●</span> {t(S.rsMid, locale)} &nbsp;
+              <span style={{ color: 'var(--bear)' }}>●</span> {t(S.rsWeak, locale)}
             </div>
           </div>
         )}
       </Card>
 
-      {/* Stage 2 체크 히트맵 */}
-      <Card title="Stage 2 체크 히트맵" action="7개 조건">
-        {watchlist.length === 0 ? <div className="subtle">로딩 중...</div> : (
+      {/* Stage 2 check heatmap */}
+      <Card title={t(S.heatTitle, locale)} action={t(S.heatAction, locale)}>
+        {watchlist.length === 0 ? <div className="subtle">{t(S.loading, locale)}</div> : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', paddingBottom: 6, color: 'var(--fg-subtle)', fontWeight: 500, fontSize: 10 }}>심볼</th>
+                  <th style={{ textAlign: 'left', paddingBottom: 6, color: 'var(--fg-subtle)', fontWeight: 500, fontSize: 10 }}>{t(S.heatSymCol, locale)}</th>
                   {CHECK_LABELS.map(([, label]) => (
                     <th key={label} style={{ textAlign: 'center', paddingBottom: 6, color: 'var(--fg-subtle)', fontWeight: 500, fontSize: 10, width: 32 }}>{label}</th>
                   ))}
-                  <th style={{ textAlign: 'right', paddingBottom: 6, color: 'var(--fg-subtle)', fontWeight: 500, fontSize: 10 }}>합계</th>
+                  <th style={{ textAlign: 'right', paddingBottom: 6, color: 'var(--fg-subtle)', fontWeight: 500, fontSize: 10 }}>{t(S.heatTotalCol, locale)}</th>
                 </tr>
               </thead>
               <tbody>
@@ -215,9 +256,9 @@ export function WatchlistBoard() {
         )}
       </Card>
 
-      {/* R:R 비교 바 */}
-      <Card title="Risk / Reward" action="Entry 기준 비교">
-        {watchlist.length === 0 ? <div className="subtle">로딩 중...</div> : (
+      {/* R:R comparison bar */}
+      <Card title={t(S.rrTitle, locale)} action={t(S.rrAction, locale)}>
+        {watchlist.length === 0 ? <div className="subtle">{t(S.loading, locale)}</div> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {watchlist.map(w => {
               const risk   = w.entry - w.stop;
@@ -232,13 +273,13 @@ export function WatchlistBoard() {
                     <span style={{ color: 'var(--fg-subtle)', fontSize: 10 }}>R:R 1 : {ratio}</span>
                   </div>
                   <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                    {/* Risk 바 (오른쪽→왼쪽, 빨강) */}
+                    {/* Risk bar (right→left, red) */}
                     <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
                       <div style={{ width: `${riskW}%`, height: 7, borderRadius: '3px 0 0 3px', background: 'var(--bear)', opacity: 0.75 }} />
                     </div>
-                    {/* Entry 중심 */}
+                    {/* Entry center */}
                     <div style={{ width: 2, height: 14, background: 'var(--fg-muted)', borderRadius: 1, flexShrink: 0 }} />
-                    {/* Reward 바 (왼쪽→오른쪽, 초록) */}
+                    {/* Reward bar (left→right, green) */}
                     <div style={{ flex: 1 }}>
                       <div style={{ width: `${rewardW}%`, height: 7, borderRadius: '0 3px 3px 0', background: 'var(--bull)', opacity: 0.75 }} />
                     </div>

@@ -15,32 +15,43 @@ import { G } from '@/app/glossary';
 import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
 import { InfoPopover } from '@/components/ui/InfoPopover';
 import { HeatStrip } from '@/components/ui/HeatStrip';
+import { t } from '@/app/i18n';
+import type { BiLang } from '@/app/i18n';
 
-const DAILY_GUIDE: GuideSection[] = [
-  {
-    heading: '이 화면은',
-    body: '일봉 기준 셋업 품질과 중장기 추세를 분석하는 화면입니다. Stage2 체크리스트로 지금 이 종목이 매수 가능한 구조인지 판단합니다.',
-  },
-  {
-    heading: '핵심 지표 읽는 법',
-    body: 'Stage2 점수(0~7)가 핵심입니다. 6~7점이면 진입 검토, 4~5점은 관망, 3 이하면 회피. GC 상태는 중기 추세 단계를 나타내며, Breakout이면 적극 매수, Below Channel이면 관망입니다. R:R 패널에서 진입·손절·목표가를 확인합니다.',
-  },
-  {
-    heading: '지금 이렇게 쓰세요',
-    body: 'Stage2 ≥ 5 확인 → GC Breakout 또는 Above 확인 → 월봉 상승 확인 → R:R ≥ 1:2 확인 → 진입. 4가지 통과 시 강한 셋업입니다.',
-  },
-];
+const S: Record<string, BiLang> = {
+  guideTitle:    { en: 'Daily Guide', ko: 'Daily 가이드' },
+  guide1Heading: { en: 'About this screen', ko: '이 화면은' },
+  guide1Body:    { en: 'Analyzes setup quality and medium/long-term trends using daily candles. Use the Stage2 checklist to determine if this stock has a buyable structure now.', ko: '일봉 기준 셋업 품질과 중장기 추세를 분석하는 화면입니다. Stage2 체크리스트로 지금 이 종목이 매수 가능한 구조인지 판단합니다.' },
+  guide2Heading: { en: 'How to read key indicators', ko: '핵심 지표 읽는 법' },
+  guide2Body:    { en: 'Stage2 score (0-7) is key. 6-7 = consider entry, 4-5 = watch, ≤3 = avoid. GC status shows medium-term trend phase; Breakout = aggressive buy, Below Channel = watch. Check entry/stop/target in the R:R panel.', ko: 'Stage2 점수(0~7)가 핵심입니다. 6~7점이면 진입 검토, 4~5점은 관망, 3 이하면 회피. GC 상태는 중기 추세 단계를 나타내며, Breakout이면 적극 매수, Below Channel이면 관망입니다. R:R 패널에서 진입·손절·목표가를 확인합니다.' },
+  guide3Heading: { en: 'How to use now', ko: '지금 이렇게 쓰세요' },
+  guide3Body:    { en: 'Stage2 ≥ 5 → GC Breakout or Above → Monthly uptrend confirmed → R:R ≥ 1:2 → Enter. Strong setup when all 4 pass.', ko: 'Stage2 ≥ 5 확인 → GC Breakout 또는 Above 확인 → 월봉 상승 확인 → R:R ≥ 1:2 확인 → 진입. 4가지 통과 시 강한 셋업입니다.' },
+  loading:       { en: 'Loading...', ko: '로딩 중...' },
+  chartLoading:  { en: 'Loading chart + Conviction...', ko: '차트 + Conviction 로딩 중...' },
+  considerEntry: { en: 'Consider Entry', ko: '진입 고려' },
+  watch:         { en: 'Watch', ko: '관망' },
+  avoid:         { en: 'Avoid', ko: '회피' },
+  noPattern:     { en: 'No pattern', ko: '패턴 없음' },
+  heatmapTitle:  { en: '{n}-day Return Heatmap', ko: '{n}일 등락 히트맵' },
+  heatmapInfo:   { en: 'Left (past) → Right (recent). Good setups show smaller, lighter cells on the right — volatility contracting as pivot approaches. Larger, darker recent cells mean volatility is still elevated. Green = up day, Red = down day. Darkness = magnitude.', ko: '왼쪽(과거)→오른쪽(최근) 순서입니다. 좋은 셋업은 오른쪽으로 갈수록 셀이 작고 색이 연해집니다 — 변동성이 수축하며 피봇을 준비 중이라는 신호입니다. 반대로 최근 셀이 크고 진하면 아직 변동성이 살아있어 진입 시기가 이릅니다. 초록=상승일, 빨강=하락일. 색의 진하기=움직임의 크기.' },
+  upDays:        { en: '↑ Up', ko: '↑' },
+  downDays:      { en: '↓ Down', ko: '↓' },
+  winRate:       { en: 'Win Rate', ko: '승률' },
+  avgMove:       { en: 'Avg', ko: '평균' },
+  posLabel:      { en: 'Position', ko: 'Position' },
+  posUnit:       { en: 'sh', ko: '주' },
+};
 
 const STRUCT_COLOR: Record<string, string> = {
   UPTREND: 'bull', DOWNTREND: 'bear', DISTRIBUTION: 'warn', ACCUMULATION: 'info', NEUTRAL: 'neutral',
 };
 
-const MONTHLY_PHASE_META: Record<string, { label: string; color: string; bg: string }> = {
-  CONFIRMED_UPTREND: { label: '월봉 상승 확인', color: '#fff', bg: 'var(--bull)' },
-  WEAKENING:         { label: '월봉 추세 약화', color: '#000', bg: 'var(--warn)' },
-  NEUTRAL:           { label: '월봉 중립',      color: 'var(--fg)', bg: 'var(--border)' },
-  DOWNTREND:         { label: '월봉 하락',       color: '#fff', bg: 'var(--bear)' },
-  UNKNOWN:           { label: '월봉 데이터 부족', color: 'var(--fg-muted)', bg: 'var(--border-soft)' },
+const MONTHLY_PHASE_META: Record<string, { label: BiLang; color: string; bg: string }> = {
+  CONFIRMED_UPTREND: { label: { en: 'Monthly Uptrend Confirmed', ko: '월봉 상승 확인' }, color: '#fff', bg: 'var(--bull)' },
+  WEAKENING:         { label: { en: 'Monthly Trend Weakening',   ko: '월봉 추세 약화' }, color: '#000', bg: 'var(--warn)' },
+  NEUTRAL:           { label: { en: 'Monthly Neutral',           ko: '월봉 중립' },      color: 'var(--fg)', bg: 'var(--border)' },
+  DOWNTREND:         { label: { en: 'Monthly Downtrend',         ko: '월봉 하락' },      color: '#fff', bg: 'var(--bear)' },
+  UNKNOWN:           { label: { en: 'Monthly Data Insufficient', ko: '월봉 데이터 부족' }, color: 'var(--fg-muted)', bg: 'var(--border-soft)' },
 };
 
 export function DailyBoard() {
@@ -51,7 +62,7 @@ export function DailyBoard() {
     document.addEventListener('guide:open', handler);
     return () => document.removeEventListener('guide:open', handler);
   }, []);
-  const { symbol, rrAccount, rrRiskPct } = useStore();
+  const { symbol, rrAccount, rrRiskPct, locale } = useStore();
   const { dailyData, isLoading } = useDaily(symbol);
   const { earningsData } = useEarnings();
   const symbolEarning: UpcomingEarning | undefined = earningsData?.upcoming_earnings?.find(
@@ -60,8 +71,8 @@ export function DailyBoard() {
 
   const stage2 = dailyData?.stage2;
 
-  // 90일 VCP 히트맵 데이터
-  const heatCandles = (dailyData?.candles ?? []).slice(-91); // 91개로 90개 변화율 확보
+  // 90-day VCP heatmap data
+  const heatCandles = (dailyData?.candles ?? []).slice(-91);
   const heatPcts: number[] = [];
   const heatDates: string[] = [];
   const heatCloses: number[] = [];
@@ -96,9 +107,19 @@ export function DailyBoard() {
   const qty = stop > 0 && entry > stop ? Math.floor(riskAmt / (entry - stop)) : 0;
   const stopLossPct = entry > 0 ? ((entry - stop) / entry) * 100 : 0;
 
+  const DAILY_GUIDE = (): GuideSection[] => [
+    { heading: t(S.guide1Heading, locale), body: t(S.guide1Body, locale) },
+    { heading: t(S.guide2Heading, locale), body: t(S.guide2Body, locale) },
+    { heading: t(S.guide3Heading, locale), body: t(S.guide3Body, locale) },
+  ];
+
+  const sublabel = stage2
+    ? (stage2.score >= 6 ? t(S.considerEntry, locale) : stage2.score >= 4 ? t(S.watch, locale) : t(S.avoid, locale))
+    : '';
+
   return (
     <div className="board-wrap">
-      <BoardGuidePanel title="Daily 가이드" sections={DAILY_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+      <BoardGuidePanel title={t(S.guideTitle, locale)} sections={DAILY_GUIDE()} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <div
       className="board fade-in"
       style={{ gridTemplateColumns: '1fr 340px', gridTemplateRows: 'auto 1fr auto' }}
@@ -111,11 +132,10 @@ export function DailyBoard() {
           <ConvictionBadge score={dailyData?.conviction_score} size="md" />
           <small style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             1Y · Gaussian Channel
-            <InfoPopover term={G.gc_status.term} body={G.gc_status.body} />
+            <InfoPopover term={t(G.gc_status.term, locale)} body={t(G.gc_status.body, locale)} />
           </small>
         </div>
         <div className="card__bd" style={{ paddingTop: 0 }}>
-          {/* watching tier(22-30일, 추정치 미형성)는 배너 노출 안 함 — 노이즈 */}
           {symbolEarning && symbolEarning.relevance_tier !== 'watching' && (
             <div style={{
               background: symbolEarning.relevance_tier === 'imminent' ? 'var(--warn)' : 'var(--border)',
@@ -135,7 +155,7 @@ export function DailyBoard() {
           )}
           {isLoading ? (
             <div className="subtle" style={{ padding: 24 }}>
-              차트 + Conviction 로딩 중...
+              {t(S.chartLoading, locale)}
             </div>
           ) : dailyData ? (
             <DailyChart data={dailyData} />
@@ -144,7 +164,7 @@ export function DailyBoard() {
       </div>
 
       {/* Stage 2 score */}
-      <Card title="Minervini Stage 2" action="Checklist · 7 items" info={G.stage2}>
+      <Card title="Minervini Stage 2" action="Checklist · 7 items" info={{ term: t(G.stage2.term, locale), body: t(G.stage2.body, locale) }}>
         {stage2 ? (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
@@ -153,7 +173,7 @@ export function DailyBoard() {
                 max={7}
                 size={88}
                 label={`${stage2.score}/7`}
-                sublabel={stage2.score >= 6 ? '진입 고려' : stage2.score >= 4 ? '관망' : '회피'}
+                sublabel={sublabel}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>RS Score</div>
@@ -174,7 +194,7 @@ export function DailyBoard() {
               </div>
             </div>
 
-            {/* 월봉 추세 */}
+            {/* Monthly trend */}
             {(() => {
               const mp = stage2.monthly_phase ?? 'UNKNOWN';
               const meta = MONTHLY_PHASE_META[mp] ?? MONTHLY_PHASE_META.UNKNOWN;
@@ -189,7 +209,7 @@ export function DailyBoard() {
                   justifyContent: 'space-between',
                 }}>
                   <span style={{ fontSize: 11, fontWeight: 600, color: meta.color }}>
-                    {meta.label}
+                    {t(meta.label, locale)}
                   </span>
                   {stage2.monthly_ema10 != null && (
                     <span style={{ fontSize: 10.5, color: meta.color, opacity: 0.85 }} className="mono">
@@ -222,12 +242,12 @@ export function DailyBoard() {
             </div>
           </>
         ) : (
-          <div className="subtle">로딩 중...</div>
+          <div className="subtle">{t(S.loading, locale)}</div>
         )}
       </Card>
 
       {/* R:R + patterns */}
-      <Card title="R:R + Patterns" info={G.rr_ratio}>
+      <Card title="R:R + Patterns" info={{ term: t(G.rr_ratio.term, locale), body: t(G.rr_ratio.body, locale) }}>
         {stage2 ? (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
@@ -254,8 +274,8 @@ export function DailyBoard() {
               <span className="mono" style={{ color: 'var(--bear)' }}>-{stopLossPct.toFixed(2)}%</span>
             </div>
             <div style={{ fontSize: 11, color: 'var(--fg-muted)', display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
-              <span>Position ({rrRiskPct}% risk on ${(accountNum / 1000).toFixed(0)}K)</span>
-              <span className="mono" style={{ color: 'var(--em-500)', fontWeight: 600 }}>{qty > 0 ? `${qty} 주` : '—'}</span>
+              <span>{t(S.posLabel, locale)} ({rrRiskPct}% risk on ${(accountNum / 1000).toFixed(0)}K)</span>
+              <span className="mono" style={{ color: 'var(--em-500)', fontWeight: 600 }}>{qty > 0 ? `${qty} ${t(S.posUnit, locale)}` : '—'}</span>
             </div>
 
             <div className="divider" />
@@ -270,35 +290,35 @@ export function DailyBoard() {
               {stage2.rsi_divergence_bearish && <span className="badge warn">RSI Bear Div</span>}
               {stage2.rsi_divergence_bullish && <span className="badge bull">RSI Bull Div</span>}
               {!stage2.bear_flag && !stage2.rsi_divergence_bearish && !stage2.gc_breakout && (
-                <span className="badge neutral">패턴 없음</span>
+                <span className="badge neutral">{t(S.noPattern, locale)}</span>
               )}
             </div>
           </>
         ) : (
-          <div className="subtle">로딩 중...</div>
+          <div className="subtle">{t(S.loading, locale)}</div>
         )}
       </Card>
 
-      {/* 90일 VCP 히트맵 */}
+      {/* 90-day VCP heatmap */}
       {heatDays > 0 && (
         <div
           className="card"
           style={{ gridColumn: '1 / -1' }}
         >
           <div className="card__hd">
-            <h3>{heatDays}일 등락 히트맵</h3>
+            <h3>{t(S.heatmapTitle, locale).replace('{n}', String(heatDays))}</h3>
             <InfoPopover
-              term="90일 등락 히트맵"
-              body="왼쪽(과거)→오른쪽(최근) 순서입니다. 좋은 셋업은 오른쪽으로 갈수록 셀이 작고 색이 연해집니다 — 변동성이 수축하며 피봇을 준비 중이라는 신호입니다. 반대로 최근 셀이 크고 진하면 아직 변동성이 살아있어 진입 시기가 이릅니다. 초록=상승일, 빨강=하락일. 색의 진하기=움직임의 크기."
+              term={t(S.heatmapTitle, locale).replace('{n}', '90')}
+              body={t(S.heatmapInfo, locale)}
             />
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 16, fontSize: 11.5, color: 'var(--fg-muted)' }}>
               <span>
-                <span style={{ color: 'var(--bull)', fontWeight: 600 }}>↑{upDays}일</span>
+                <span style={{ color: 'var(--bull)', fontWeight: 600 }}>{t(S.upDays, locale)}{upDays}{locale === 'ko' ? '일' : 'd'}</span>
                 {' '}
-                <span style={{ color: 'var(--bear)', fontWeight: 600 }}>↓{downDays}일</span>
+                <span style={{ color: 'var(--bear)', fontWeight: 600 }}>{t(S.downDays, locale)}{downDays}{locale === 'ko' ? '일' : 'd'}</span>
               </span>
-              <span>승률 <span className="mono" style={{ color: 'var(--fg)' }}>{winRate}%</span></span>
-              <span>평균 <span className="mono" style={{ color: 'var(--bull)' }}>+{avgUp}%</span> / <span className="mono" style={{ color: 'var(--bear)' }}>{avgDown}%</span></span>
+              <span>{t(S.winRate, locale)} <span className="mono" style={{ color: 'var(--fg)' }}>{winRate}%</span></span>
+              <span>{t(S.avgMove, locale)} <span className="mono" style={{ color: 'var(--bull)' }}>+{avgUp}%</span> / <span className="mono" style={{ color: 'var(--bear)' }}>{avgDown}%</span></span>
             </div>
           </div>
           <div className="card__bd">

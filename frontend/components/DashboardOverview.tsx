@@ -68,8 +68,8 @@ function RegimeCard({ data }: { data: RegimeData | undefined }) {
             Risk Regime — 매크로 환경
           </div>
           <div className={`text-2xl font-black tracking-tight ${meta.color}`}>
-            {meta.labelKo}
-            <span className="text-sm font-semibold ml-2 opacity-60">{meta.label}</span>
+            {meta.label.ko}
+            <span className="text-sm font-semibold ml-2 opacity-60">{meta.label.en}</span>
           </div>
         </div>
         {data.total != null && (
@@ -81,7 +81,7 @@ function RegimeCard({ data }: { data: RegimeData | undefined }) {
       </div>
 
       {/* 설명 */}
-      <p className="text-xs leading-relaxed mb-5" style={{color:'var(--text-secondary)'}}>{meta.desc}</p>
+      <p className="text-xs leading-relaxed mb-5" style={{color:'var(--text-secondary)'}}>{meta.desc.ko}</p>
 
       {/* 5요소 바 */}
       <div className="space-y-2.5">
@@ -143,7 +143,7 @@ function DDCard({ sym, dd }: { sym: string; dd: DDDetail | undefined }) {
           Distribution Day · {sym}
         </div>
         <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${meta.bg} ${meta.color}`}>
-          {meta.label}
+          {meta.label.ko}
         </span>
       </div>
 
@@ -168,7 +168,7 @@ function DDCard({ sym, dd }: { sym: string; dd: DDDetail | undefined }) {
         })}
       </div>
 
-      <p className="text-[10px] mt-2 leading-relaxed" style={{color:'var(--text-secondary)'}}>{meta.desc}</p>
+      <p className="text-[10px] mt-2 leading-relaxed" style={{color:'var(--text-secondary)'}}>{meta.desc.ko}</p>
     </div>
   );
 }

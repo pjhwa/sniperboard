@@ -337,7 +337,7 @@ export default function DailyTab() {
                       {STAGE2_META[key]?.label}
                     </div>
                     <div className="text-[10px] text-zinc-500 leading-tight mt-1 font-medium">
-                      {STAGE2_META[key]?.desc}
+                      {STAGE2_META[key]?.desc.ko}
                     </div>
                   </div>
                   
