@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { Locale } from '@/app/i18n';
 
 export type Board = 'overview' | 'intraday' | 'daily' | 'watchlist' | 'macro' | 'sentiment' | 'deepdive';
 export type Theme = 'dark' | 'light';
@@ -11,6 +12,7 @@ interface StoreState {
   timeframe: string;
   board: Board;
   theme: Theme;
+  locale: Locale;
   cmdOpen: boolean;
   rrAccount: string;
   rrRiskPct: string;
@@ -18,6 +20,7 @@ interface StoreState {
   setTimeframe: (timeframe: string) => void;
   setBoard: (board: Board) => void;
   setTheme: (theme: Theme) => void;
+  setLocale: (locale: Locale) => void;
   setCmdOpen: (open: boolean) => void;
   setRrAccount: (val: string) => void;
   setRrRiskPct: (val: string) => void;
@@ -30,6 +33,7 @@ export const useStore = create<StoreState>()(
       timeframe: '5m',
       board: 'overview' as Board,
       theme: 'dark' as Theme,
+      locale: 'ko' as Locale,
       cmdOpen: false,
       rrAccount: '100000',
       rrRiskPct: '1',
@@ -37,6 +41,7 @@ export const useStore = create<StoreState>()(
       setTimeframe: (timeframe) => set({ timeframe }),
       setBoard: (board) => set({ board }),
       setTheme: (theme) => set({ theme }),
+      setLocale: (locale) => set({ locale }),
       setCmdOpen: (cmdOpen) => set({ cmdOpen }),
       setRrAccount: (rrAccount) => set({ rrAccount }),
       setRrRiskPct: (rrRiskPct) => set({ rrRiskPct }),
