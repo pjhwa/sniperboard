@@ -94,7 +94,7 @@ export function SentimentTrendChart({ symbol, locale = 'ko' }: Props) {
         lineWidth: 2,
         priceLineVisible: false,
         lastValueVisible: true,
-        title: 'Score',
+        title: '',
       });
 
       // Fix 2: ISO 8601 → Unix epoch (seconds)
