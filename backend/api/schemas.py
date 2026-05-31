@@ -164,13 +164,19 @@ class MacroGroupInsight(BaseModel):
     signal: str          # green / yellow / red
     direction: str       # improving / stable / deteriorating
     text: Optional[str] = None
+    text_en: Optional[str] = None
+    text_ko: Optional[str] = None
 
 class MacroOverallInsight(BaseModel):
     judgment: str        # RISK_ON / MIXED / RISK_OFF
     green_count: int
     red_count: int
     summary: Optional[str] = None
+    summary_en: Optional[str] = None
+    summary_ko: Optional[str] = None
     bullets: List[str] = []
+    bullets_en: List[str] = []
+    bullets_ko: List[str] = []
 
 class MacroAiMeta(BaseModel):
     generated_at: str
@@ -347,9 +353,13 @@ class UpcomingEarning(BaseModel):
     eps_estimate: Optional[float] = None
     revenue_estimate_b: Optional[float] = None
     historical_beat_rate: Optional[float] = None
-    ai_summary: str
+    ai_summary: Optional[str] = None
+    ai_summary_en: Optional[str] = None
+    ai_summary_ko: Optional[str] = None
     risk_level: str  # "high" | "med" | "low"
-    action_note: str
+    action_note: Optional[str] = None
+    action_note_en: Optional[str] = None
+    action_note_ko: Optional[str] = None
 
 class RecentResult(BaseModel):
     symbol: str
@@ -357,7 +367,9 @@ class RecentResult(BaseModel):
     eps_actual: float
     eps_estimate: float
     surprise_pct: float
-    ai_reaction: str
+    ai_reaction: Optional[str] = None
+    ai_reaction_en: Optional[str] = None
+    ai_reaction_ko: Optional[str] = None
 
 class EarningsData(BaseModel):
     generated_at: Optional[str] = None
