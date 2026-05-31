@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/Card';
 import { MacroItem, MACRO_SYMBOL_NAMES } from '@/app/types';
 import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
 import { G } from '@/app/glossary';
-import { t } from '@/app/i18n';
+import { t, tField } from '@/app/i18n';
 import type { BiLang } from '@/app/i18n';
 
 const S: Record<string, BiLang> = {
@@ -140,21 +140,24 @@ export function MacroBoard() {
                 {JUDGMENT_LABEL[insightData.overall.judgment] ?? insightData.overall.judgment}
               </span>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {insightData.overall.summary ? (
+                {(insightData.overall.summary_en || insightData.overall.summary) ? (
                   <span style={{ fontSize: '0.82rem', fontWeight: 500 }}>
-                    {insightData.overall.summary}
+                    {tField(insightData.overall.summary_en, insightData.overall.summary_ko, insightData.overall.summary, locale)}
                   </span>
                 ) : (
                   <span className="subtle" style={{ fontSize: '0.82rem' }}>
                     🟢 {insightData.overall.green_count} · 🔴 {insightData.overall.red_count}
                   </span>
                 )}
-                {insightData.overall.bullets.length > 0 && (
+                {(insightData.overall.bullets_en?.length || insightData.overall.bullets_ko?.length || insightData.overall.bullets.length) > 0 && (
                   <details className="mob-collapse" open>
                     <summary>{t(S.detailAnalysis, locale)}</summary>
                     <div className="mob-collapse-body">
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 0', fontSize: '0.72rem', color: 'var(--fg-muted)' }}>
-                        {insightData.overall.bullets.map((b, i) => (
+                        {(locale === 'ko'
+                          ? (insightData.overall.bullets_ko?.length ? insightData.overall.bullets_ko : insightData.overall.bullets)
+                          : (insightData.overall.bullets_en?.length ? insightData.overall.bullets_en : insightData.overall.bullets)
+                        ).map((b, i) => (
                           <span key={i} style={{ display: 'flex', alignItems: 'center' }}>
                             {i > 0 && <span style={{ margin: '0 6px', color: 'var(--fg-faint)' }}>·</span>}
                             {b}
@@ -261,7 +264,7 @@ export function MacroBoard() {
                   );
                 })}
               </div>
-              {groupInsight?.text && (
+              {(groupInsight?.text_en || groupInsight?.text) && (
                 <div style={{
                   marginTop: 8, paddingTop: 8,
                   borderTop: '1px solid var(--border)',
@@ -269,7 +272,7 @@ export function MacroBoard() {
                   alignItems: 'flex-end', gap: 8,
                 }}>
                   <span style={{ fontSize: '0.72rem', color: 'var(--fg-muted)' }}>
-                    {groupInsight.text}
+                    {tField(groupInsight.text_en, groupInsight.text_ko, groupInsight.text, locale)}
                   </span>
                   {insightData?.ai_meta && (
                     <span className="subtle" style={{ fontSize: '0.68rem', flexShrink: 0 }}>
