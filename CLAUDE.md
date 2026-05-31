@@ -53,7 +53,7 @@ SniperBoard consumes AI-generated data from a separate repository: **`https://gi
 | Earnings Intelligence | `earnings/latest.json` | `backend/services/earnings_service.py` |
 | Macro Insight | `macro/latest.json` | `backend/services/macro_insight_service.py` |
 
-- Data is collected by Mac mini cron jobs (4 collectors) and pushed to that repo as JSON.
+- Data is collected by server cron jobs (4 collectors) and pushed to that repo as JSON.
 - SniperBoard fetches via raw GitHub URL; token injected via `SENTIMENT_DATA_TOKEN` env var.
 - See `market-sentiment-data/PROJECT_CONTEXT.md` for collector architecture, schema, and data contract.
 - **Schema version**: 2.0 — all AI text fields use `_en`/`_ko` suffix pairs. Use `tField()` in frontend.
