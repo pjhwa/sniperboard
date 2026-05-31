@@ -3,6 +3,7 @@
 import React from 'react';
 import { useStore, Board } from '@/hooks/useStore';
 import { Crosshair, Activity, Candles, Eye, Globe, Heart, Bell, Layers } from '@/components/ui/Icons';
+import { t } from '@/app/i18n';
 
 const BOARDS: { id: Board; label: string; ko: string; Icon: () => React.ReactElement }[] = [
   { id: 'overview',  label: 'Overview',  ko: '시장',       Icon: Crosshair },
@@ -15,7 +16,7 @@ const BOARDS: { id: Board; label: string; ko: string; Icon: () => React.ReactEle
 ];
 
 export function Rail() {
-  const { board, setBoard } = useStore();
+  const { board, locale, setBoard } = useStore();
   return (
     <aside className="rail hide-mobile">
       <div className="rail__logo" title="SniperBoard">S</div>
@@ -26,13 +27,13 @@ export function Rail() {
           onClick={() => setBoard(id)}
         >
           <Icon />
-          <span className="rail__tt">{label} · {ko}</span>
+          <span className="rail__tt">{t({ en: label, ko }, locale)}</span>
         </button>
       ))}
       <div className="rail__spacer" />
       <button className="rail__item">
         <Bell />
-        <span className="rail__tt">알림</span>
+        <span className="rail__tt">{locale === 'en' ? 'Alerts' : '알림'}</span>
       </button>
     </aside>
   );

@@ -572,7 +572,7 @@ export function OverviewBoard() {
                     <div className="bar" style={{ flex: 1 }}>
                       <div className="bar__fill" style={{ width: `${s}%`, background: color }} />
                     </div>
-                    <ConvictionBadge score={w.conviction_score ?? undefined} label={w.conviction_label} size="sm" />
+                    <ConvictionBadge score={w.conviction_score ?? undefined} locale={locale} size="sm" />
                   </div>
                 );
               })}
@@ -634,7 +634,7 @@ export function OverviewBoard() {
               <div className="mono" style={{ fontSize: 11.5 }}>${w.price.toFixed(2)}</div>
             </div>
             <ScorePill score={w.score} />
-            <ConvictionBadge score={w.conviction_score ?? undefined} size="sm" />
+            <ConvictionBadge score={w.conviction_score ?? undefined} locale={locale} size="sm" />
           </div>
         ))}
         {watchlist.length === 0 && <div className="subtle">{t(S.loading, locale)}</div>}

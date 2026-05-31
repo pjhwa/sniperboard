@@ -512,7 +512,7 @@ export function DeepDiveBoard() {
           {/* 우측 배지 그룹 */}
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {stage2 && <ScorePill score={stage2.score} />}
-            <ConvictionBadge score={cv} label={dailyData?.conviction_label} size="md" />
+            <ConvictionBadge score={cv} locale={locale} size="md" />
             <div style={{ padding: '3px 9px', borderRadius: 20, background: mpColors.bg, fontSize: 11, fontWeight: 700, color: mpColors.color, whiteSpace: 'nowrap' }}>
               {mpLabel}
             </div>
@@ -558,7 +558,7 @@ export function DeepDiveBoard() {
           <h3>Minervini Stage 2</h3>
           <InfoPopover term={t(G.stage2.term, locale)} body={t(G.stage2.body, locale)} />
           {stage2 && <ScorePill score={stage2.score} />}
-          <ConvictionBadge score={cv} label={dailyData?.conviction_label} size="md" />
+          <ConvictionBadge score={cv} locale={locale} size="md" />
           <InfoPopover term={t(G.conviction.term, locale)} body={t(G.conviction.body, locale)} />
           <small>{stage2 ? (stage2.score >= 6 ? t(S.stage2Consider, locale) : stage2.score >= 4 ? t(S.stage2Watch, locale) : t(S.stage2Avoid, locale)) : '—'}</small>
         </div>
@@ -841,7 +841,7 @@ export function DeepDiveBoard() {
                 >
                   {showSentTrend ? t(S.trendHide, locale) : t(S.trendShow, locale)}
                 </button>
-                {showSentTrend && <SentimentTrendChart symbol={symbol} />}
+                {showSentTrend && <SentimentTrendChart symbol={symbol} locale={locale} />}
               </>
             ) : (
               <div style={{ color: 'var(--fg-muted)', fontSize: 12, padding: '12px 0' }}>

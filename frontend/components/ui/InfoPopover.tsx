@@ -75,7 +75,7 @@ export function InfoPopover({ term, body }: Props) {
       <button
         className="info-pop__trigger"
         onClick={toggle}
-        aria-label={`${term} 설명`}
+        aria-label={`${term} info`}
         aria-expanded={open}
       >
         ⓘ

@@ -53,7 +53,7 @@ def test_calculate_conviction_weighted_average_happy_path():
     assert 72 <= score <= 75, f"Expected ~73.6, got {score}"
 
     # 라벨은 v1 단순 버킷 (추후 정교화)
-    assert result["label"] in {"매우 강한 확신", "강한 확신 구간", "중립적 확신"}
+    assert result["label"] in {"Very High", "High", "Moderate"}
 
     comp = result["components"]
     assert comp["stage2"]["raw"] == 5.0
@@ -109,7 +109,7 @@ def test_conviction_for_watchlist_like_item():
         regime_total=72.0,
     )
     assert 65 <= result["score"] <= 80
-    assert result["label"] in {"강한 확신 구간", "중립적 확신", "매우 강한 확신"}
+    assert result["label"] in {"High", "Moderate", "Very High"}
 
 
 # --- Task 2: Regime-conditioned weight tests ---
@@ -163,7 +163,7 @@ def test_reliability_low_when_no_regime():
     """Regime 데이터가 없으면 reliability = low"""
     result = calculate_conviction(5, 60.0, None, None)
     assert result["reliability"] == "low"
-    assert any("Regime 데이터가 부족" in n for n in result["notes"])
+    assert any("Regime data unavailable" in n for n in result["notes"])
 
 
 def test_reliability_high_with_full_data():

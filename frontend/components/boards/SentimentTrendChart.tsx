@@ -5,8 +5,11 @@ import { createChart, ColorType, CrosshairMode, Time, LineStyle } from 'lightwei
 import { useSentimentHistory } from '@/hooks/useSentimentHistory';
 import { useDaily } from '@/hooks/useDaily';
 
+import type { Locale } from '@/app/i18n';
+
 interface Props {
   symbol: string;
+  locale?: Locale;
 }
 
 // compositeColor와 동일한 로직 — SentimentBoard와 색상 통일
@@ -18,7 +21,7 @@ function scoreColor(score: number): string {
   return '#ef4444';                    // red
 }
 
-export function SentimentTrendChart({ symbol }: Props) {
+export function SentimentTrendChart({ symbol, locale = 'ko' }: Props) {
   const [days, setDays] = useState<7 | 30>(7);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
@@ -185,22 +188,22 @@ export function SentimentTrendChart({ symbol }: Props) {
               cursor: 'pointer',
             }}
           >
-            {d}일
+            {d}{locale === 'en' ? 'd' : '일'}
           </button>
         ))}
       </div>
 
       {isLoading ? (
         <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-subtle)', fontSize: 11 }}>
-          차트 로딩 중...
+          {locale === 'en' ? 'Loading chart...' : '차트 로딩 중...'}
         </div>
       ) : (
         <div ref={chartContainerRef} style={{ width: '100%', height: 220 }} />
       )}
 
       <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 9, color: 'var(--fg-subtle)' }}>
-        <span>── 주가 (좌축)</span>
-        <span style={{ color: '#a78bfa' }}>── 심리점수 (우축 −2~+2)</span>
+        <span>{locale === 'en' ? '── Price (left)' : '── 주가 (좌축)'}</span>
+        <span style={{ color: '#a78bfa' }}>{locale === 'en' ? '── Sentiment (right −2~+2)' : '── 심리점수 (우축 −2~+2)'}</span>
         <span>▲ pre_open &nbsp; ● post_close</span>
       </div>
     </div>

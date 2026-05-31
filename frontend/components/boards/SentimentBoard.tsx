@@ -387,7 +387,7 @@ export function SentimentBoard() {
                   {it.bot_suspected === 'yes' && <span style={{ color: 'var(--warn)' }}>· {t(S.botSuspected, locale)}</span>}
                 </div>
                 {expandedSymbol === it.symbol && (
-                  <SentimentTrendChart symbol={it.symbol} />
+                  <SentimentTrendChart symbol={it.symbol} locale={locale} />
                 )}
               </div>
             );

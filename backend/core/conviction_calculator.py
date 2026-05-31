@@ -42,17 +42,17 @@ def _fill_regime(regime_total: Optional[float]) -> float:
 
 
 def _calculate_label(score: float) -> str:
-    """v1 단순 라벨 버킷 (추후 정교화 예정, risk-register.md '참고용' 명확히)."""
+    """v1 label buckets — frontend maps these to BiLang display strings."""
     if score >= 80.0:
-        return "매우 강한 확신"
+        return "Very High"
     elif score >= 65.0:
-        return "강한 확신 구간"
+        return "High"
     elif score >= 50.0:
-        return "중립적 확신"
+        return "Moderate"
     elif score >= 35.0:
-        return "약한 확신"
+        return "Low"
     else:
-        return "낮은 확신"
+        return "Very Low"
 
 
 def calculate_conviction(
@@ -116,9 +116,9 @@ def calculate_conviction(
     # 간단한 disclaimer / note
     notes = []
     if regime_total is None:
-        notes.append("Regime 데이터가 부족하여 신뢰도가 낮습니다.")
+        notes.append("Regime data unavailable — reliability is low.")
     if reliability == "low":
-        notes.append("참고용으로만 활용하시기 바랍니다.")
+        notes.append("Use for reference only.")
 
     return {
         "score": score,

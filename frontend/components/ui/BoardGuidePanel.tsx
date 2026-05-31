@@ -30,7 +30,7 @@ export function BoardGuidePanel({ title, sections, isOpen, onClose }: Props) {
       <div className="guide-panel">
         <div className="guide-panel__header">
           <span className="guide-panel__title">{title}</span>
-          <button className="guide-panel__close" onClick={onClose} aria-label="닫기">✕</button>
+          <button className="guide-panel__close" onClick={onClose} aria-label="Close">✕</button>
         </div>
         <div className="guide-panel__body">
           {sections.map((s, i) => (

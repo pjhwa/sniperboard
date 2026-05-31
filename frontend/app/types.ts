@@ -334,6 +334,15 @@ export const STAGE2_META: Record<keyof Stage2Checks, { label: string; desc: BiLa
 
 export const SYMBOLS = ['TSLA', 'AAPL', 'NVDA', 'META', 'AMZN', 'GOOGL', 'PLTR'];
 
+// Conviction score → BiLang label mapping (matches conviction_calculator.py thresholds)
+export const CONVICTION_LABEL_META: { min: number; label: BiLang }[] = [
+  { min: 80, label: { en: 'Very High', ko: '매우 강한 확신' } },
+  { min: 65, label: { en: 'High',      ko: '강한 확신 구간' } },
+  { min: 50, label: { en: 'Moderate',  ko: '중립적 확신'   } },
+  { min: 35, label: { en: 'Low',       ko: '약한 확신'     } },
+  { min: 0,  label: { en: 'Very Low',  ko: '낮은 확신'     } },
+];
+
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
 // --- Pre/Post Market Data ---

@@ -1,8 +1,11 @@
 'use client';
 
+import { t, type Locale } from '@/app/i18n';
+import { CONVICTION_LABEL_META } from '@/app/types';
+
 interface ConvictionBadgeProps {
   score: number | null | undefined;
-  label?: string | null;
+  locale?: Locale;
   size?: 'sm' | 'md';
 }
 
@@ -13,10 +16,12 @@ function convStyle(s: number): { color: string; bg: string } {
   return { color: 'var(--bear)', bg: 'var(--bear-soft)' };
 }
 
-export function ConvictionBadge({ score, label, size = 'md' }: ConvictionBadgeProps) {
+export function ConvictionBadge({ score, locale = 'ko', size = 'md' }: ConvictionBadgeProps) {
   if (score == null) return null;
   const { color, bg } = convStyle(score);
   const isSm = size === 'sm';
+  const labelBi = CONVICTION_LABEL_META.find(m => score >= m.min)?.label;
+  const displayLabel = labelBi ? t(labelBi, locale) : undefined;
   return (
     <div style={{
       display: 'inline-flex', alignItems: 'center', gap: isSm ? 4 : 5,
@@ -30,9 +35,9 @@ export function ConvictionBadge({ score, label, size = 'md' }: ConvictionBadgePr
       <span style={{ fontSize: isSm ? 11 : 13, fontWeight: 700, color, lineHeight: 1 }}>
         {Math.round(score)}
       </span>
-      {label && (
+      {displayLabel && (
         <span style={{ fontSize: isSm ? 9 : 10, color, opacity: 0.75, lineHeight: 1 }}>
-          {label}
+          {displayLabel}
         </span>
       )}
     </div>

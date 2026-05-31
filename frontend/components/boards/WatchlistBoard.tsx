@@ -170,7 +170,7 @@ export function WatchlistBoard() {
                       })()}
                     </td>
                     <td>
-                      <ConvictionBadge score={w.conviction_score ?? undefined} label={w.conviction_label} size="sm" />
+                      <ConvictionBadge score={w.conviction_score ?? undefined} locale={locale} size="sm" />
                     </td>
                     <td>
                       <button

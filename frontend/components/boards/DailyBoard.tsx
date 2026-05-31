@@ -129,7 +129,7 @@ export function DailyBoard() {
         <div className="card__hd">
           <h3>{symbol} · Daily</h3>
           {stage2 && <span className={'badge ' + structColor}>{stage2.market_structure}</span>}
-          <ConvictionBadge score={dailyData?.conviction_score} size="md" />
+          <ConvictionBadge score={dailyData?.conviction_score} locale={locale} size="md" />
           <small style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             1Y · Gaussian Channel
             <InfoPopover term={t(G.gc_status.term, locale)} body={t(G.gc_status.body, locale)} />
@@ -186,10 +186,10 @@ export function DailyBoard() {
                 >
                   {stage2.rs_score}
                 </div>
-                <div style={{ fontSize: 10.5, color: 'var(--fg-muted)' }}>vs SPY · 63일</div>
+                <div style={{ fontSize: 10.5, color: 'var(--fg-muted)' }}>{locale === 'en' ? 'vs SPY · 63d' : 'vs SPY · 63일'}</div>
                 <div style={{ marginTop: 6, fontSize: 10.5, color: 'var(--fg-muted)' }}>
-                  <div>52w 고점: <span className="mono">{stage2.pct_from_52w_high.toFixed(1)}%</span></div>
-                  <div>최근 조정: <span className="mono">{stage2.pullback_pct.toFixed(1)}%</span></div>
+                  <div>{locale === 'en' ? '52w High:' : '52w 고점:'} <span className="mono">{stage2.pct_from_52w_high.toFixed(1)}%</span></div>
+                  <div>{locale === 'en' ? 'Pullback:' : '최근 조정:'} <span className="mono">{stage2.pullback_pct.toFixed(1)}%</span></div>
                 </div>
               </div>
             </div>
@@ -226,7 +226,7 @@ export function DailyBoard() {
             {/* Phase 1: Conviction - integrated in Stage 2 card */}
             {dailyData?.conviction_score != null && (
               <div style={{ marginTop: 10 }}>
-                <ConvictionBadge score={dailyData.conviction_score} label={dailyData.conviction_label} size="md" />
+                <ConvictionBadge score={dailyData.conviction_score} locale={locale} size="md" />
               </div>
             )}
             <div>
