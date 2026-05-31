@@ -53,7 +53,7 @@ SniperBoard는 별도 저장소에서 AI 생성 데이터를 소비합니다: **
 | 어닝 인텔리전스 | `earnings/latest.json` | `backend/services/earnings_service.py` |
 | 매크로 인사이트 | `macro/latest.json` | `backend/services/macro_insight_service.py` |
 
-- Mac mini 크론 잡(수집기 4개)이 데이터를 수집해 해당 레포에 JSON으로 push.
+- 서버 크론 잡(수집기 4개)이 데이터를 수집해 해당 레포에 JSON으로 push.
 - SniperBoard는 raw GitHub URL로 fetch; 토큰은 `SENTIMENT_DATA_TOKEN` 환경변수로 주입.
 - 수집기 아키텍처·스키마·데이터 계약은 `market-sentiment-data/PROJECT_CONTEXT.md` 참조.
 - **스키마 버전**: 2.0 — 모든 AI 텍스트 필드는 `_en`/`_ko` 접미사 쌍 사용. 프론트엔드에서는 `tField()` 사용.
