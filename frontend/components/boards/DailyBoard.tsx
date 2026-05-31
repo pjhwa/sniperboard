@@ -40,6 +40,9 @@ const S: Record<string, BiLang> = {
   avgMove:       { en: 'Avg', ko: '평균' },
   posLabel:      { en: 'Position', ko: 'Position' },
   posUnit:       { en: 'sh', ko: '주' },
+  stage2Title:   { en: 'Minervini Stage 2', ko: 'Minervini Stage 2' },
+  stage2Action:  { en: 'Checklist · 7 items', ko: '체크리스트 · 7항목' },
+  rrTitle:       { en: 'R:R + Patterns', ko: 'R:R + 패턴' },
 };
 
 const STRUCT_COLOR: Record<string, string> = {
@@ -164,7 +167,7 @@ export function DailyBoard() {
       </div>
 
       {/* Stage 2 score */}
-      <Card title="Minervini Stage 2" action="Checklist · 7 items" info={{ term: t(G.stage2.term, locale), body: t(G.stage2.body, locale) }}>
+      <Card title={t(S.stage2Title, locale)} action={t(S.stage2Action, locale)} info={{ term: t(G.stage2.term, locale), body: t(G.stage2.body, locale) }}>
         {stage2 ? (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
@@ -247,7 +250,7 @@ export function DailyBoard() {
       </Card>
 
       {/* R:R + patterns */}
-      <Card title="R:R + Patterns" info={{ term: t(G.rr_ratio.term, locale), body: t(G.rr_ratio.body, locale) }}>
+      <Card title={t(S.rrTitle, locale)} info={{ term: t(G.rr_ratio.term, locale), body: t(G.rr_ratio.body, locale) }}>
         {stage2 ? (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>

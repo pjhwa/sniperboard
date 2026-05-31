@@ -32,7 +32,9 @@ const S: Record<string, BiLang> = {
   sigGuideOpen:  { en: 'Signal Guide', ko: '신호 가이드' },
   sigGuideClose: { en: 'Close Guide', ko: '신호 가이드 닫기' },
   sigGuideTitle: { en: 'Signal Guide — Meaning and Response Strategy for Each Signal', ko: '신호 가이드 — 각 신호의 의미와 대응 전략' },
-  sigGuideCount: { en: '6 signals', ko: '6가지 신호' },
+  sigGuideCount:    { en: '6 signals',            ko: '6가지 신호' },
+  activeSignals:    { en: 'Active Signals',        ko: '활성 신호' },
+  rsiIndicators:    { en: 'RSI(14) · Indicators',  ko: 'RSI(14) · 지표' },
 };
 
 const SIG_META: Record<string, { name: string; color: string; action: BiLang; desc: BiLang }> = {
@@ -131,7 +133,7 @@ export function IntradayBoard() {
       </div>
 
       {/* Active signals */}
-      <Card title="Active Signals" hint={activeSignals.length ? 'LIVE' : null}>
+      <Card title={t(S.activeSignals, locale)} hint={activeSignals.length ? 'LIVE' : null}>
         <div className="col">
           {activeSignals.length === 0 && (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--fg-subtle)', fontSize: 12 }}>
@@ -179,7 +181,7 @@ export function IntradayBoard() {
       </Card>
 
       {/* RSI + indicators */}
-      <Card title="RSI(14) · Indicators">
+      <Card title={t(S.rsiIndicators, locale)}>
         <div style={{ marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
             <span style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>RSI(14)</span>

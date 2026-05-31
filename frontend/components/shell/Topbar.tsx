@@ -27,8 +27,8 @@ export function Topbar() {
       <div className="topbar__title">
         <span style={{ fontWeight: 700, letterSpacing: '-0.02em' }}>SniperBoard</span>
         <span style={{ color: 'var(--fg-faint)' }}>/</span>
-        <span>{current.en}</span>
-        <small>· {current.ko}</small>
+        <span>{current[locale]}</span>
+        <small>· {current[locale === 'en' ? 'ko' : 'en']}</small>
       </div>
 
       <div className="topbar__search" onClick={() => setCmdOpen(true)}>

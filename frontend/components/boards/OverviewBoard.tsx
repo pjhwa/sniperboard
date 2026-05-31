@@ -53,6 +53,15 @@ const S = {
   regimeDesc_RISK_OFF:     { en: 'Risk-off phase. Avoid new buys.', ko: '리스크 오프 국면. 신규 매수를 자제하세요.' },
   regimeDesc_UNKNOWN:      { en: 'Insufficient data to judge.', ko: '데이터 부족으로 판단이 어렵습니다.' },
   aiBriefLoading:    { en: 'AI Brief loading...', ko: 'AI Brief 로딩 중...' },
+  riskRegimeTitle:   { en: 'Risk Regime',       ko: 'Risk Regime' },
+  mktBreadthTitle:   { en: 'Market Breadth',    ko: '시장 폭' },
+  vixTitle:          { en: 'Volatility · VIX',  ko: 'Volatility · VIX' },
+  creditTitle:       { en: 'Credit Stress',     ko: 'Credit 스트레스' },
+  regimeTrend:       { en: 'Trend',      ko: '추세' },
+  regimeBreadth:     { en: 'Breadth',    ko: '폭' },
+  regimeCredit:      { en: 'Credit',     ko: '신용' },
+  regimeVolatility:  { en: 'Volatility', ko: '변동성' },
+  regimeMomentum:    { en: 'Momentum',   ko: '모멘텀' },
   ddAction:          { en: "O'Neil · 25 trading days", ko: "O'Neil · 25거래일" },
   breadthAction:     { en: 'SPY vs RSP', ko: 'SPY vs RSP' },
   breadthMktCap:     { en: 'Mkt Cap', ko: '시가총액' },
@@ -241,11 +250,11 @@ export function OverviewBoard() {
                   )}
                 </div>
                 <div style={{ color: 'var(--fg-muted)', fontSize: 12 }}>
-                  Trend {(regimeData.components.trend ?? 0).toFixed(1)} ·
-                  Breadth {(regimeData.components.breadth ?? 0).toFixed(1)} ·
-                  Credit {(regimeData.components.credit ?? 0).toFixed(1)} ·
-                  Volatility {(regimeData.components.volatility ?? 0).toFixed(1)} ·
-                  Momentum {(regimeData.components.momentum ?? 0).toFixed(1)}
+                  {t(S.regimeTrend, locale)} {(regimeData.components.trend ?? 0).toFixed(1)} ·
+                  {t(S.regimeBreadth, locale)} {(regimeData.components.breadth ?? 0).toFixed(1)} ·
+                  {t(S.regimeCredit, locale)} {(regimeData.components.credit ?? 0).toFixed(1)} ·
+                  {t(S.regimeVolatility, locale)} {(regimeData.components.volatility ?? 0).toFixed(1)} ·
+                  {t(S.regimeMomentum, locale)} {(regimeData.components.momentum ?? 0).toFixed(1)}
                 </div>
               </>
             ) : (
@@ -357,7 +366,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Regime gauge */}
-      <Card title="Risk Regime" action={locale === 'ko' ? '5요소 종합' : '5-factor composite'} info={{ term: t(G.risk_regime.term, locale), body: t(G.risk_regime.body, locale) }} className="mob-order-1">
+      <Card title={t(S.riskRegimeTitle, locale)} action={locale === 'ko' ? '5요소 종합' : '5-factor composite'} info={{ term: t(G.risk_regime.term, locale), body: t(G.risk_regime.body, locale) }} className="mob-order-1">
         {regimeData ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <RadialGauge value={regimeData.total ?? 0} size={100} label={regimeData.total ?? '—'} sublabel="/ 100" />
@@ -366,11 +375,11 @@ export function OverviewBoard() {
                 {t(REGIME_META[regimeData.regime].label, locale)}
               </span>
               {([
-                ['Trend',      regimeData.components.trend,      regimeData.diagnostics?.spy_vs_ema200_pct,    'SPY/EMA200',  '%'],
-                ['Breadth',    regimeData.components.breadth,    regimeData.diagnostics?.rsp_minus_spy_60d,   'RSP-SPY 60d', '%'],
-                ['Credit',     regimeData.components.credit,     regimeData.diagnostics?.hyg_ief_ratio_chg_pct,'HYG/IEF 30d','%'],
-                ['Volatility', regimeData.components.volatility, regimeData.diagnostics?.vix_level,           'VIX',         ''],
-                ['Momentum',   regimeData.components.momentum,   regimeData.diagnostics?.spy_roc_20d,         'SPY RoC 20d', '%'],
+                [t(S.regimeTrend,      locale), regimeData.components.trend,      regimeData.diagnostics?.spy_vs_ema200_pct,    'SPY/EMA200',  '%'],
+                [t(S.regimeBreadth,   locale), regimeData.components.breadth,    regimeData.diagnostics?.rsp_minus_spy_60d,   'RSP-SPY 60d', '%'],
+                [t(S.regimeCredit,    locale), regimeData.components.credit,     regimeData.diagnostics?.hyg_ief_ratio_chg_pct,'HYG/IEF 30d','%'],
+                [t(S.regimeVolatility,locale), regimeData.components.volatility, regimeData.diagnostics?.vix_level,           'VIX',         ''],
+                [t(S.regimeMomentum,  locale), regimeData.components.momentum,   regimeData.diagnostics?.spy_roc_20d,         'SPY RoC 20d', '%'],
               ] as [string, number | null, number | null | undefined, string, string][]).map(([label, v, raw, rawLabel, unit]) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10.5 }}>
                   <div style={{ width: 64 }}>
@@ -435,7 +444,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Market Breadth */}
-      <Card title="Market Breadth" action={t(S.breadthAction, locale)} info={{ term: t(G.market_breadth_spy_rsp.term, locale), body: t(G.market_breadth_spy_rsp.body, locale) }} className="mob-order-2">
+      <Card title={t(S.mktBreadthTitle, locale)} action={t(S.breadthAction, locale)} info={{ term: t(G.market_breadth_spy_rsp.term, locale), body: t(G.market_breadth_spy_rsp.body, locale) }} className="mob-order-2">
         {([
           ['SPY',  spy,  t(S.breadthMktCap, locale)],
           ['RSP',  rsp,  t(S.breadthEqual, locale)],
@@ -467,7 +476,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* VIX Panel */}
-      <Card title="Volatility · VIX" action={backward ? t(S.vixBackward, locale) : t(S.vixNormal, locale)} info={{ term: t(G.volatility.term, locale), body: t(G.volatility.body, locale) }} className="mob-order-2">
+      <Card title={t(S.vixTitle, locale)} action={backward ? t(S.vixBackward, locale) : t(S.vixNormal, locale)} info={{ term: t(G.volatility.term, locale), body: t(G.volatility.body, locale) }} className="mob-order-2">
         {vix ? (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 8 }}>
@@ -497,7 +506,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Credit Stress */}
-      <Card title="Credit Stress" action={t(S.creditAction, locale)} info={{ term: t(G.credit.term, locale), body: t(G.credit.body, locale) }} className="mob-order-7">
+      <Card title={t(S.creditTitle, locale)} action={t(S.creditAction, locale)} info={{ term: t(G.credit.term, locale), body: t(G.credit.body, locale) }} className="mob-order-7">
         {([['HYG', hyg], ['JNK', jnk], ['LQD', lqd], ['IEF', ief]] as [string, MacroItem | undefined][]).map(([label, m]) => {
           if (!m) return null;
           const up = (m.change_pct_5d ?? 0) >= 0;
