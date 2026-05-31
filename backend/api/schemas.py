@@ -225,8 +225,14 @@ class FreshnessMeta(BaseModel):
 
 
 class TopNews(BaseModel):
-    headline: str
-    summary: str
+    # v2.0 bilingual fields
+    headline_en: Optional[str] = None
+    headline_ko: Optional[str] = None
+    summary_en: Optional[str] = None
+    summary_ko: Optional[str] = None
+    # v1.x backward compat (history files still use these)
+    headline: Optional[str] = None
+    summary: Optional[str] = None
     source: str
 
 
@@ -240,7 +246,9 @@ class SymbolSentiment(BaseModel):
     composite_score: Optional[float] = None
     trend_vs_yesterday: str
     mention_volume: str
-    key_reason: str
+    key_reason_en: Optional[str] = None
+    key_reason_ko: Optional[str] = None
+    key_reason: Optional[str] = None  # v1.x compat
     bot_suspected: str
     confidence: str
     source: str
@@ -255,7 +263,9 @@ class MarketSentiment(BaseModel):
     composite_score: Optional[float] = None
     trend_vs_yesterday: str
     extreme_flag: str
-    key_reason: str
+    key_reason_en: Optional[str] = None
+    key_reason_ko: Optional[str] = None
+    key_reason: Optional[str] = None  # v1.x compat
     confidence: str
     intraday_shift: Optional[str] = None
     top_news: Optional[TopNews] = None
@@ -284,18 +294,34 @@ class SentimentResponse(BaseModel):
 # --- AI Brief ---
 
 class MarketBrief(BaseModel):
-    summary: str
-    tone: str  # "bullish" | "cautious" | "bearish" | "neutral"
-    key_themes: List[str]
-    watch_points: str
+    # v2.0
+    summary_en: Optional[str] = None
+    summary_ko: Optional[str] = None
+    key_themes_en: Optional[List[str]] = None
+    key_themes_ko: Optional[List[str]] = None
+    watch_points_en: Optional[str] = None
+    watch_points_ko: Optional[str] = None
+    # v1.x compat
+    summary: Optional[str] = None
+    key_themes: Optional[List[str]] = None
+    watch_points: Optional[str] = None
+    tone: str
 
 class SymbolBrief(BaseModel):
     symbol: str
-    setup_quality: str  # "A+" | "A" | "B" | "C" | "D"
-    brief: str
-    key_risk: str
-    key_opportunity: str
-    action_bias: str  # "buy" | "hold" | "watch" | "avoid"
+    setup_quality: str
+    # v2.0
+    brief_en: Optional[str] = None
+    brief_ko: Optional[str] = None
+    key_risk_en: Optional[str] = None
+    key_risk_ko: Optional[str] = None
+    key_opportunity_en: Optional[str] = None
+    key_opportunity_ko: Optional[str] = None
+    # v1.x compat
+    brief: Optional[str] = None
+    key_risk: Optional[str] = None
+    key_opportunity: Optional[str] = None
+    action_bias: str
 
 class BriefData(BaseModel):
     generated_at: Optional[str] = None
