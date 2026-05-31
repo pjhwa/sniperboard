@@ -429,6 +429,8 @@ async def get_macro_insight_endpoint():
                 signal=sig["signal"],
                 direction=sig["direction"],
                 text=ai_groups.get(key, {}).get("text") if ai_groups else None,
+                text_en=ai_groups.get(key, {}).get("text_en") if ai_groups else None,
+                text_ko=ai_groups.get(key, {}).get("text_ko") if ai_groups else None,
             )
             for key, sig in signals["groups"].items()
         }
@@ -439,7 +441,11 @@ async def get_macro_insight_endpoint():
             green_count=overall_sig["green_count"],
             red_count=overall_sig["red_count"],
             summary=ai_overall.get("summary") if ai_overall else None,
+            summary_en=ai_overall.get("summary_en") if ai_overall else None,
+            summary_ko=ai_overall.get("summary_ko") if ai_overall else None,
             bullets=ai_overall.get("bullets", []) if ai_overall else [],
+            bullets_en=ai_overall.get("bullets_en", []) if ai_overall else [],
+            bullets_ko=ai_overall.get("bullets_ko", []) if ai_overall else [],
         )
 
         ai_meta_data = get_ai_meta(ai_raw) if ai_raw else None
