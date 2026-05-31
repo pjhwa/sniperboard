@@ -1053,7 +1053,7 @@ body {
     overflow-x: hidden !important;
     overflow-y: visible !important;
   }
-  .mob-symbol-price { order: 1; width: 100%; }
+  .mob-symbol-price { order: 1; width: 100%; overflow-x: auto; overflow-y: hidden; }
   .mob-symbol-btns {
     order: 2;
     border-right: none !important;
