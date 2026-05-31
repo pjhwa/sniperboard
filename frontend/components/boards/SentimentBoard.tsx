@@ -37,6 +37,7 @@ const S: Record<string, BiLang> = {
   noPrevData:    { en: 'No prior day data', ko: '전일 데이터 없음' },
   deltaUp:       { en: 'above yesterday', ko: '상승' },
   deltaDown:     { en: 'below yesterday', ko: '하락' },
+  deltaPrefix:   { en: '', ko: '어제보다 ' },
   symbolSentTitle: { en: 'Symbol Sentiment', ko: 'Symbol Sentiment' },
   symbolSentAction:{ en: 'Watchlist Sentiment', ko: '워치리스트 심리' },
   marketSentTitle: { en: 'Market Sentiment', ko: 'Market Sentiment' },
@@ -180,16 +181,9 @@ export function SentimentBoard() {
     const sign = delta > 0 ? '+' : '';
     const color = delta > 0 ? 'var(--bull)' : 'var(--bear)';
     const dirLabel = delta > 0 ? t(S.deltaUp, locale) : t(S.deltaDown, locale);
-    if (locale === 'ko') {
-      return (
-        <span style={{ fontSize: 10.5, color }}>
-          어제보다 {sign}{delta} {dirLabel}
-        </span>
-      );
-    }
     return (
       <span style={{ fontSize: 10.5, color }}>
-        {sign}{delta} {dirLabel}
+        {t(S.deltaPrefix, locale)}{sign}{delta} {dirLabel}
       </span>
     );
   }

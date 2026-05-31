@@ -5,7 +5,7 @@ export interface BiLang {
   ko: string
 }
 
-export const t = (obj: BiLang, locale: Locale): string => obj[locale]
+export const t = (obj: BiLang | undefined | null, locale: Locale): string => obj ? obj[locale] : ''
 
 // Helper for AI data fields that may be v2.0 (has _en/_ko) or v1.x (single field)
 export const tField = (
