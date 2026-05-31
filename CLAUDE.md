@@ -42,6 +42,20 @@ See `PROJECT_CONTEXT.md` Section 10 "Code Modification Reference Points" for det
 
 ---
 
+## Contamination Firewall (Sentiment Data)
+
+When working on any code that touches sentiment collection or the Grok prompt pipeline:
+
+> **Price direction must never be passed to Grok. Only magnitude, volume ratio, and key-level position are allowed.**
+
+- `price_context.py` in `market-sentiment-data` returns neutral cues only — mechanical `_assert_no_direction()` on every dict
+- `build_prompt()` in `collect_sentiment.py` asserts no direction words before every Grok call
+- `fetch_close_direction()` result flows **only** into divergence post-processing, never into the prompt
+
+Violating this rule makes sentiment data analytically worthless (it becomes an echo of price). This principle lives in `market-sentiment-data` but must be respected when modifying SniperBoard's `/api/sentiment` consumer or any code that feeds data back to the collector.
+
+---
+
 ## Related Repository: market-sentiment-data
 
 SniperBoard consumes AI-generated data from a separate repository: **`https://github.com/pjhwa/market-sentiment-data`**
