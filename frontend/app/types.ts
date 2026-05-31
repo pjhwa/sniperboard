@@ -155,6 +155,8 @@ export interface MacroGroupInsight {
   signal: 'green' | 'yellow' | 'red';
   direction: 'improving' | 'stable' | 'deteriorating';
   text: string | null;
+  text_en: string | null;
+  text_ko: string | null;
 }
 
 export interface MacroOverallInsight {
@@ -162,7 +164,11 @@ export interface MacroOverallInsight {
   green_count: number;
   red_count: number;
   summary: string | null;
+  summary_en: string | null;
+  summary_ko: string | null;
   bullets: string[];
+  bullets_en: string[];
+  bullets_ko: string[];
 }
 
 export interface MacroAiMeta {
@@ -551,9 +557,13 @@ export interface UpcomingEarning {
   eps_estimate?: number | null;
   revenue_estimate_b?: number | null;
   historical_beat_rate?: number | null;
-  ai_summary: string;
+  ai_summary: string | null;
+  ai_summary_en: string | null;
+  ai_summary_ko: string | null;
   risk_level: 'high' | 'med' | 'low';
-  action_note: string;
+  action_note: string | null;
+  action_note_en: string | null;
+  action_note_ko: string | null;
 }
 
 export interface RecentResult {
@@ -562,7 +572,9 @@ export interface RecentResult {
   eps_actual: number;
   eps_estimate: number;
   surprise_pct: number;
-  ai_reaction: string;
+  ai_reaction: string | null;
+  ai_reaction_en: string | null;
+  ai_reaction_ko: string | null;
 }
 
 export interface EarningsData {
