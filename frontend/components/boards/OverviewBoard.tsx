@@ -9,37 +9,84 @@ import { useWatchlist } from '@/hooks/useWatchlist';
 import { Card, ScorePill } from '@/components/ui/Card';
 import { RadialGauge } from '@/components/ui/RadialGauge';
 import { Sparkle } from '@/components/ui/Icons';
-import { MacroItem, RegimeDiagnostics, UpcomingEarning, EARNINGS_RISK_META, FreshnessMeta, SYMBOLS, SymbolBrief } from '@/app/types';
+import { MacroItem, RegimeDiagnostics, UpcomingEarning, EARNINGS_RISK_META, FreshnessMeta, SYMBOLS, SymbolBrief, REGIME_META } from '@/app/types';
 import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
 import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
 import { G } from '@/app/glossary';
 import { useBrief } from '@/hooks/useBrief';
 import { useEarnings } from '@/hooks/useEarnings';
+import { t, tField } from '@/app/i18n';
 
-const REGIME_LABELS: Record<string, [string, string]> = {
-  RISK_ON:      ['Risk-On',      '강세'],
-  CONSTRUCTIVE: ['Constructive', '우호적'],
-  MIXED:        ['Mixed',        '혼조'],
-  DEFENSIVE:    ['Defensive',    '방어적'],
-  RISK_OFF:     ['Risk-Off',     '약세'],
-  UNKNOWN:      ['Unknown',      '불명'],
+// Static bilingual strings
+const S = {
+  guideTitle:        { en: 'Overview Guide', ko: 'Overview 가이드' },
+  guide1Heading:     { en: 'This screen', ko: '이 화면은' },
+  guide1Body:        { en: 'A dashboard for grasping overall market conditions at a glance. Check "Is the market suitable for buying now?" before entering individual stocks.', ko: '시장 전체 환경을 한눈에 파악하는 대시보드입니다. 개별 종목 진입 전 "지금 시장이 매수에 적합한가?"를 먼저 확인하는 화면입니다.' },
+  guide2Heading:     { en: 'How to read key indicators', ko: '핵심 지표 읽는 법' },
+  guide2Body:        { en: 'Risk Regime score summarizes overall market health. Trend (SPY EMA200 position) and Breadth (RSP vs SPY) show market structure; Credit (HYG/IEF) and Volatility (VIX) indicate risk appetite. Distribution Days are accumulated institutional sell pressure — avoid new entries at 6+.', ko: 'Risk Regime 점수가 전체 건강도를 요약합니다. Trend(SPY EMA200 위치)와 Breadth(RSP vs SPY)가 시장 구조를, Credit(HYG/IEF)과 Volatility(VIX)가 리스크 선호도를 나타냅니다. Distribution Days는 기관 매도 압력의 누적치로, 6일 이상이면 신규 진입을 자제해야 합니다.' },
+  guide3Heading:     { en: 'Use it like this', ko: '지금 이렇게 쓰세요' },
+  guide3Body:        { en: 'Confirm Risk Regime ≥ 60 → VIX below 20 → Distribution Days ≤ 5 → RSP ≥ SPY in Breadth. If all 4 pass, consider stock entry. Reduce position size if any fails.', ko: 'Risk Regime ≥ 60 확인 → VIX 20 이하 확인 → Distribution Days 5 이하 확인 → Breadth에서 RSP ≥ SPY 확인. 4가지 통과하면 종목 진입 검토. 하나라도 불합격이면 포지션 크기를 줄이세요.' },
+  aiHeadline:        { en: "Today's Take — Market Snapshot", ko: '오늘의 한마디 — Market Snapshot' },
+  watchPoints:       { en: 'Watch: ', ko: '주시: ' },
+  aiDisclaimer:      { en: 'AI opinion — not a trading signal · ', ko: 'AI 의견 — 매매 신호 아님 · ' },
+  slotPreOpen:       { en: 'Pre-market', ko: '장 전' },
+  slotPostClose:     { en: 'After-hours', ko: '장 후' },
+  symbolAiLabel:     { en: 'Symbol AI Analysis', ko: '종목별 AI 분석' },
+  analyzing:         { en: 'Preparing analysis', ko: '분석 준비 중' },
+  biasBuy:           { en: 'Buy',   ko: '매수' },
+  biasHold:          { en: 'Hold',  ko: '보유' },
+  biasWatch:         { en: 'Watch', ko: '관망' },
+  biasAvoid:         { en: 'Avoid', ko: '회피' },
+  earningsTitle:     { en: 'Earnings Calendar', ko: 'Earnings Calendar' },
+  earningsAction:    { en: 'Within 30d', ko: '30일 이내' },
+  estimateNA:        { en: 'No estimate', ko: '추정치 미형성' },
+  tierImminent:      { en: 'Imminent', ko: '임박' },
+  tierApproaching:   { en: 'Approaching', ko: '진입권' },
+  tierWatching:      { en: 'Watching', ko: '관망' },
+  earningsLoading:   { en: 'Loading earnings...', ko: 'Earnings 로딩 중...' },
+  earningsNone:      { en: 'No earnings within 30d', ko: '30일 이내 어닝 없음' },
+  loading:           { en: 'Loading...', ko: '로딩 중...' },
+  regimeDesc_RISK_ON:      { en: 'Trend-following strategies are effective in this bullish environment.', ko: '추세 추종 전략이 유효한 강세 환경입니다.' },
+  regimeDesc_CONSTRUCTIVE: { en: 'A favorable environment for selective entries.', ko: '선별적 진입이 가능한 우호적 환경입니다.' },
+  regimeDesc_MIXED:        { en: 'Signals are mixed. Reduce position size.', ko: '신호가 혼재합니다. 포지션 사이즈를 축소하세요.' },
+  regimeDesc_DEFENSIVE:    { en: 'Bearish signals dominant. Increase cash.', ko: '약세 신호 우세. 현금 비중을 늘리세요.' },
+  regimeDesc_RISK_OFF:     { en: 'Risk-off phase. Avoid new buys.', ko: '리스크 오프 국면. 신규 매수를 자제하세요.' },
+  regimeDesc_UNKNOWN:      { en: 'Insufficient data to judge.', ko: '데이터 부족으로 판단이 어렵습니다.' },
+  aiBriefLoading:    { en: 'AI Brief loading...', ko: 'AI Brief 로딩 중...' },
+  ddAction:          { en: "O'Neil · 25 trading days", ko: "O'Neil · 25거래일" },
+  breadthAction:     { en: 'SPY vs RSP', ko: 'SPY vs RSP' },
+  breadthMktCap:     { en: 'Mkt Cap', ko: '시가총액' },
+  breadthEqual:      { en: 'Equal Wt', ko: '동일가중' },
+  narrowRally:       { en: '⚠ RSP < SPY — Mag7-led narrow rally', ko: '⚠ RSP < SPY — Mag7 주도형 협소 랠리' },
+  vixNormal:         { en: 'Normal', ko: '정상' },
+  vixBackward:       { en: '⚠ Backwardation', ko: '⚠ 백워데이션' },
+  creditAction:      { en: 'HYG / IEF 5D', ko: 'HYG / IEF 5D' },
+  entryRadarTitle:   { en: 'Entry Radar', ko: '진입 레이더' },
+  entryRadarAction:  { en: 'Closest to Entry', ko: 'Entry 근접순' },
+  breakout:          { en: 'Breakout', ko: '돌파' },
+  entryZone:         { en: '≤5% = Entry Zone', ko: '≤5% = 진입 가능 Zone' },
+  convictionTitle:   { en: 'Conviction Leaderboard', ko: 'Conviction 리더보드' },
+  convictionAction:  { en: 'By Conviction', ko: '확신도 순' },
+  sectorTitle:       { en: 'Sector Momentum', ko: 'Sector Momentum' },
+  sectorAction:      { en: '5D Return', ko: '5D 수익률' },
+  sectorSemi:        { en: 'Semis', ko: '반도체' },
+  sectorEnergy:      { en: 'Energy', ko: '에너지' },
+  sectorConsumer:    { en: 'Consumer', ko: '소비재' },
+  sectorHome:        { en: 'Homebuilders', ko: '홈빌더' },
+  sectorDefense:     { en: 'Defense', ko: '방산' },
+  watchlistTitle:    { en: 'Watchlist · Top 3', ko: 'Watchlist · Top 3' },
+  watchlistAction:   { en: 'Stage 2 sorted', ko: 'Stage 2 정렬' },
+  toneBullish:       { en: 'Bullish', ko: '강세' },
+  toneBearish:       { en: 'Bearish', ko: '약세' },
+  toneCautious:      { en: 'Cautious', ko: '주의' },
+  toneNeutral:       { en: 'Neutral', ko: '중립' },
 };
 
-const OVERVIEW_GUIDE: GuideSection[] = [
-  {
-    heading: '이 화면은',
-    body: '시장 전체 환경을 한눈에 파악하는 대시보드입니다. 개별 종목 진입 전 "지금 시장이 매수에 적합한가?"를 먼저 확인하는 화면입니다.',
-  },
-  {
-    heading: '핵심 지표 읽는 법',
-    body: 'Risk Regime 점수가 전체 건강도를 요약합니다. Trend(SPY EMA200 위치)와 Breadth(RSP vs SPY)가 시장 구조를, Credit(HYG/IEF)과 Volatility(VIX)가 리스크 선호도를 나타냅니다. Distribution Days는 기관 매도 압력의 누적치로, 6일 이상이면 신규 진입을 자제해야 합니다.',
-  },
-  {
-    heading: '지금 이렇게 쓰세요',
-    body: 'Risk Regime ≥ 60 확인 → VIX 20 이하 확인 → Distribution Days 5 이하 확인 → Breadth에서 RSP ≥ SPY 확인. 4가지 통과하면 종목 진입 검토. 하나라도 불합격이면 포지션 크기를 줄이세요.',
-  },
+const OVERVIEW_GUIDE = (locale: 'en' | 'ko'): GuideSection[] => [
+  { heading: t(S.guide1Heading, locale), body: t(S.guide1Body, locale) },
+  { heading: t(S.guide2Heading, locale), body: t(S.guide2Body, locale) },
+  { heading: t(S.guide3Heading, locale), body: t(S.guide3Body, locale) },
 ];
-
 
 // Minimal freshness badge helper (Phase 4) — uses existing CSS vars + .badge.neutral patterns. No new styles.
 function FreshnessBadge({ meta }: { meta?: FreshnessMeta | null }) {
@@ -69,7 +116,7 @@ function findMacro(macro: MacroItem[], sym: string) {
 }
 
 export function OverviewBoard() {
-  const { symbol } = useStore();
+  const { symbol, locale } = useStore();
   const { regimeData } = useRegime();
   const { ddData } = useDistributionDays();
   const { macroData } = useMacro();
@@ -101,11 +148,18 @@ export function OverviewBoard() {
   // 백워데이션: VIX9D(9일) > VIX(30일) — 단기 변동성이 장기보다 높아 역전된 상태
   const backward = vix && vix9d ? vix.price !== null && vix9d.price !== null && (vix9d.price ?? 0) > (vix.price ?? 0) : false;
 
+  const BIAS_LABELS: Record<string, { en: string; ko: string }> = {
+    buy:   S.biasBuy,
+    hold:  S.biasHold,
+    watch: S.biasWatch,
+    avoid: S.biasAvoid,
+  };
+
   return (
     <div className="board-wrap">
       <BoardGuidePanel
-        title="Overview 가이드"
-        sections={OVERVIEW_GUIDE}
+        title={t(S.guideTitle, locale)}
+        sections={OVERVIEW_GUIDE(locale)}
         isOpen={guideOpen}
         onClose={() => setGuideOpen(false)}
       />
@@ -121,8 +175,8 @@ export function OverviewBoard() {
         <div className="ai-card">
           <div className="ai-card__head">
             <div className="ico"><Sparkle /></div>
-            <h3>오늘의 한마디 — Market Snapshot</h3>
-            <small>{new Date().toLocaleDateString('ko-KR')}</small>
+            <h3>{t(S.aiHeadline, locale)}</h3>
+            <small>{new Date().toLocaleDateString(locale === 'ko' ? 'ko-KR' : 'en-US')}</small>
             <FreshnessBadge meta={briefMeta} />
           </div>
           <div className="ai-card__body">
@@ -134,36 +188,57 @@ export function OverviewBoard() {
                     briefData.market_brief.tone === 'bearish' ? 'bear' :
                     briefData.market_brief.tone === 'cautious' ? 'warn' : 'neutral'
                   }`}>{
-                    briefData.market_brief.tone === 'bullish' ? '강세' :
-                    briefData.market_brief.tone === 'bearish' ? '약세' :
-                    briefData.market_brief.tone === 'cautious' ? '주의' : '중립'
+                    briefData.market_brief.tone === 'bullish' ? t(S.toneBullish, locale) :
+                    briefData.market_brief.tone === 'bearish' ? t(S.toneBearish, locale) :
+                    briefData.market_brief.tone === 'cautious' ? t(S.toneCautious, locale) : t(S.toneNeutral, locale)
                   }</span>
-                  <span style={{ fontSize: 13 }}>{briefData.market_brief.summary}</span>
+                  <span style={{ fontSize: 13 }}>
+                    {tField(briefData.market_brief.summary_en, briefData.market_brief.summary_ko, briefData.market_brief.summary, locale)}
+                  </span>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
-                  {briefData.market_brief.key_themes.map((theme, i) => (
+                  {(locale === 'en'
+                    ? (briefData.market_brief.key_themes_en ?? briefData.market_brief.key_themes ?? [])
+                    : (briefData.market_brief.key_themes_ko ?? briefData.market_brief.key_themes ?? [])
+                  ).map((theme, i) => (
                     <span key={i} className="badge neutral" style={{ fontSize: 10.5 }}>{theme}</span>
                   ))}
                 </div>
                 <div style={{ color: 'var(--fg-muted)', fontSize: 11.5 }}>
-                  주시: {briefData.market_brief.watch_points}
+                  {t(S.watchPoints, locale)}{tField(briefData.market_brief.watch_points_en, briefData.market_brief.watch_points_ko, briefData.market_brief.watch_points, locale)}
                 </div>
                 <div style={{ color: 'var(--fg-subtle)', fontSize: 10, marginTop: 4 }}>
-                  AI 의견 — 매매 신호 아님 · {briefData.slot === 'pre_open' ? '장 전' : '장 후'} 기준
+                  {t(S.aiDisclaimer, locale)}{briefData.slot === 'pre_open' ? t(S.slotPreOpen, locale) : t(S.slotPostClose, locale)}
                 </div>
               </>
             ) : regimeData ? (
               <>
                 <div style={{ marginBottom: 6 }}>
-                  현재 Risk Regime은{' '}
-                  <strong>{REGIME_LABELS[regimeData.regime]?.[0] ?? regimeData.regime}</strong>
-                  {' '}({regimeData.total ?? '—'}점) —{' '}
-                  {regimeData.regime === 'RISK_ON' && '추세 추종 전략이 유효한 강세 환경입니다.'}
-                  {regimeData.regime === 'CONSTRUCTIVE' && '선별적 진입이 가능한 우호적 환경입니다.'}
-                  {regimeData.regime === 'MIXED' && '신호가 혼재합니다. 포지션 사이즈를 축소하세요.'}
-                  {regimeData.regime === 'DEFENSIVE' && '약세 신호 우세. 현금 비중을 늘리세요.'}
-                  {regimeData.regime === 'RISK_OFF' && '리스크 오프 국면. 신규 매수를 자제하세요.'}
-                  {regimeData.regime === 'UNKNOWN' && '데이터 부족으로 판단이 어렵습니다.'}
+                  {locale === 'ko' ? (
+                    <>
+                      현재 Risk Regime은{' '}
+                      <strong>{t(REGIME_META[regimeData.regime].label, locale)}</strong>
+                      {' '}({regimeData.total ?? '—'}점) —{' '}
+                      {regimeData.regime === 'RISK_ON' && t(S.regimeDesc_RISK_ON, locale)}
+                      {regimeData.regime === 'CONSTRUCTIVE' && t(S.regimeDesc_CONSTRUCTIVE, locale)}
+                      {regimeData.regime === 'MIXED' && t(S.regimeDesc_MIXED, locale)}
+                      {regimeData.regime === 'DEFENSIVE' && t(S.regimeDesc_DEFENSIVE, locale)}
+                      {regimeData.regime === 'RISK_OFF' && t(S.regimeDesc_RISK_OFF, locale)}
+                      {regimeData.regime === 'UNKNOWN' && t(S.regimeDesc_UNKNOWN, locale)}
+                    </>
+                  ) : (
+                    <>
+                      Current Risk Regime:{' '}
+                      <strong>{t(REGIME_META[regimeData.regime].label, locale)}</strong>
+                      {' '}({regimeData.total ?? '—'} pts) —{' '}
+                      {regimeData.regime === 'RISK_ON' && t(S.regimeDesc_RISK_ON, locale)}
+                      {regimeData.regime === 'CONSTRUCTIVE' && t(S.regimeDesc_CONSTRUCTIVE, locale)}
+                      {regimeData.regime === 'MIXED' && t(S.regimeDesc_MIXED, locale)}
+                      {regimeData.regime === 'DEFENSIVE' && t(S.regimeDesc_DEFENSIVE, locale)}
+                      {regimeData.regime === 'RISK_OFF' && t(S.regimeDesc_RISK_OFF, locale)}
+                      {regimeData.regime === 'UNKNOWN' && t(S.regimeDesc_UNKNOWN, locale)}
+                    </>
+                  )}
                 </div>
                 <div style={{ color: 'var(--fg-muted)', fontSize: 12 }}>
                   Trend {(regimeData.components.trend ?? 0).toFixed(1)} ·
@@ -174,19 +249,18 @@ export function OverviewBoard() {
                 </div>
               </>
             ) : (
-              <div style={{ color: 'var(--fg-muted)' }}>AI Brief 로딩 중...</div>
+              <div style={{ color: 'var(--fg-muted)' }}>{t(S.aiBriefLoading, locale)}</div>
             )}
 
             {/* Symbol Briefs — Action Bias 신호강도 미터 */}
             {briefData && (
               <div style={{ borderTop: '1px solid var(--border-soft)', marginTop: 10, paddingTop: 8 }}>
                 <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-                  종목별 AI 분석
+                  {t(S.symbolAiLabel, locale)}
                 </div>
                 {(() => {
                   const BIAS_LEVELS = ['avoid', 'watch', 'hold', 'buy'] as const;
                   const BIAS_COLORS = ['var(--bear)', 'var(--warn)', 'var(--teal)', 'var(--bull)'];
-                  const BIAS_LABELS: Record<string, string> = { buy: '매수', hold: '보유', watch: '관망', avoid: '회피' };
 
                   const briefMap = new Map((briefData.symbol_briefs ?? []).map(sb => [sb.symbol, sb]));
                   const items: (SymbolBrief | { symbol: string; pending: true })[] = SYMBOLS.map(sym =>
@@ -198,7 +272,7 @@ export function OverviewBoard() {
                       return (
                         <div key={item.symbol} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
                           <span style={{ fontWeight: 700, width: 42, fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>{item.symbol}</span>
-                          <span style={{ fontSize: 10, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>분석 준비 중</span>
+                          <span style={{ fontSize: 10, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>{t(S.analyzing, locale)}</span>
                         </div>
                       );
                     }
@@ -223,7 +297,7 @@ export function OverviewBoard() {
                           ))}
                         </div>
                         <span style={{ fontSize: 10, color: biasColor, fontWeight: 600, flexShrink: 0 }}>
-                          {BIAS_LABELS[sb.action_bias]}
+                          {t(BIAS_LABELS[sb.action_bias] ?? S.biasWatch, locale)}
                         </span>
                       </div>
                     );
@@ -246,21 +320,21 @@ export function OverviewBoard() {
       </div>
 
       {/* Earnings Calendar */}
-      <Card title="Earnings Calendar" action="30일 이내" className="mob-order-7">
+      <Card title={t(S.earningsTitle, locale)} action={t(S.earningsAction, locale)} className="mob-order-7">
         {earningsData?.upcoming_earnings && earningsData.upcoming_earnings.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {earningsData.upcoming_earnings.map((e: UpcomingEarning) => {
               const rm = EARNINGS_RISK_META[e.risk_level] ?? EARNINGS_RISK_META.med;
-              const tierLabel = e.relevance_tier === 'imminent' ? '임박' : e.relevance_tier === 'approaching' ? '진입권' : '관망';
+              const tierLabel = e.relevance_tier === 'imminent' ? t(S.tierImminent, locale) : e.relevance_tier === 'approaching' ? t(S.tierApproaching, locale) : t(S.tierWatching, locale);
               const tierColor = e.relevance_tier === 'imminent' ? 'var(--bear)' : e.relevance_tier === 'approaching' ? 'var(--warn)' : 'var(--fg-subtle)';
               return (
                 <div key={e.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
                   <span style={{ fontWeight: 600, width: 40, fontFamily: 'var(--mono)' }}>{e.symbol}</span>
                   <span style={{ color: 'var(--fg-muted)', flex: 1 }}>
-                    {e.earnings_date.slice(5)} · {e.days_until}일 후
+                    {e.earnings_date.slice(5)} · {e.days_until}{locale === 'ko' ? '일 후' : 'd'}
                   </span>
                   {e.eps_estimate == null && (
-                    <span style={{ fontSize: 9.5, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>추정치 미형성</span>
+                    <span style={{ fontSize: 9.5, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>{t(S.estimateNA, locale)}</span>
                   )}
                   <span style={{ fontSize: 9.5, color: tierColor, fontWeight: 600 }}>{tierLabel}</span>
                   <span className={`badge ${rm.color}`} style={{ fontSize: 10 }}>
@@ -272,7 +346,7 @@ export function OverviewBoard() {
           </div>
         ) : (
           <div style={{ color: 'var(--fg-muted)', fontSize: 12 }}>
-            {earningsData === null ? 'Earnings 로딩 중...' : '30일 이내 어닝 없음'}
+            {earningsData === null ? t(S.earningsLoading, locale) : t(S.earningsNone, locale)}
           </div>
         )}
         {earningsMeta && (
@@ -283,13 +357,13 @@ export function OverviewBoard() {
       </Card>
 
       {/* Regime gauge */}
-      <Card title="Risk Regime" action="5요소 종합" info={G.risk_regime} className="mob-order-1">
+      <Card title="Risk Regime" action={locale === 'ko' ? '5요소 종합' : '5-factor composite'} info={{ term: t(G.risk_regime.term, locale), body: t(G.risk_regime.body, locale) }} className="mob-order-1">
         {regimeData ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <RadialGauge value={regimeData.total ?? 0} size={100} label={regimeData.total ?? '—'} sublabel="/ 100" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, minWidth: 0 }}>
               <span className={'badge ' + (regimeData.regime === 'CONSTRUCTIVE' ? 'teal' : 'em')} style={{ alignSelf: 'flex-start' }}>
-                {REGIME_LABELS[regimeData.regime]?.[0]} · {REGIME_LABELS[regimeData.regime]?.[1]}
+                {t(REGIME_META[regimeData.regime].label, locale)}
               </span>
               {([
                 ['Trend',      regimeData.components.trend,      regimeData.diagnostics?.spy_vs_ema200_pct,    'SPY/EMA200',  '%'],
@@ -321,12 +395,12 @@ export function OverviewBoard() {
             </div>
           </div>
         ) : (
-          <div className="subtle">로딩 중...</div>
+          <div className="subtle">{t(S.loading, locale)}</div>
         )}
       </Card>
 
       {/* Distribution Days */}
-      <Card title="Distribution Days" action="O'Neil · 25거래일" info={G.distribution_days} className="mob-order-7">
+      <Card title="Distribution Days" action={t(S.ddAction, locale)} info={{ term: t(G.distribution_days.term, locale), body: t(G.distribution_days.body, locale) }} className="mob-order-7">
         {ddData ? (
           <>
             {(['spy', 'qqq'] as const).map(key => {
@@ -336,7 +410,7 @@ export function OverviewBoard() {
                 <div key={key} style={{ marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                     <span style={{ fontWeight: 600, fontSize: 12 }}>{key.toUpperCase()}</span>
-                    <span className={'badge ' + cls}>{d.count}일</span>
+                    <span className={'badge ' + cls}>{d.count}{locale === 'ko' ? '일' : 'd'}</span>
                     <small style={{ marginLeft: 'auto', color: 'var(--fg-subtle)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{d.level}</small>
                   </div>
                   <div style={{ display: 'flex', gap: 2 }}>
@@ -356,15 +430,15 @@ export function OverviewBoard() {
             </div>
           </>
         ) : (
-          <div className="subtle">로딩 중...</div>
+          <div className="subtle">{t(S.loading, locale)}</div>
         )}
       </Card>
 
       {/* Market Breadth */}
-      <Card title="Market Breadth" action="SPY vs RSP" info={G.market_breadth_spy_rsp} className="mob-order-2">
+      <Card title="Market Breadth" action={t(S.breadthAction, locale)} info={{ term: t(G.market_breadth_spy_rsp.term, locale), body: t(G.market_breadth_spy_rsp.body, locale) }} className="mob-order-2">
         {([
-          ['SPY',  spy,  '시가총액'],
-          ['RSP',  rsp,  '동일가중'],
+          ['SPY',  spy,  t(S.breadthMktCap, locale)],
+          ['RSP',  rsp,  t(S.breadthEqual, locale)],
           ['MAGS', mags, 'Mag 7'],
           ['IWM',  iwm,  'Small Cap'],
         ] as [string, MacroItem | undefined, string][]).map(([label, m, sub]) => {
@@ -387,19 +461,19 @@ export function OverviewBoard() {
         })}
         {rsp && spy && (rsp.change_pct_5d ?? 0) < (spy.change_pct_5d ?? 0) && (
           <div style={{ fontSize: 10.5, color: 'var(--warn)', marginTop: 8, padding: '4px 8px', background: 'var(--warn-soft)', borderRadius: 6 }}>
-            ⚠ RSP &lt; SPY — Mag7 주도형 협소 랠리
+            {t(S.narrowRally, locale)}
           </div>
         )}
       </Card>
 
       {/* VIX Panel */}
-      <Card title="Volatility · VIX" action={backward ? '⚠ 백워데이션' : '정상'} info={G.volatility} className="mob-order-2">
+      <Card title="Volatility · VIX" action={backward ? t(S.vixBackward, locale) : t(S.vixNormal, locale)} info={{ term: t(G.volatility.term, locale), body: t(G.volatility.body, locale) }} className="mob-order-2">
         {vix ? (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 8 }}>
               {([
                 ['^VIX', vix, 'VIX'],
-                ['^VIX9D', vix9d, '9일'],
+                ['^VIX9D', vix9d, '9d'],
               ] as [string, MacroItem | undefined, string][]).map(([, m, l]) => (
                 m ? (
                   <div key={l}>
@@ -419,11 +493,11 @@ export function OverviewBoard() {
               <span>0</span><span>14</span><span>20</span><span>30</span><span>40+</span>
             </div>
           </>
-        ) : <div className="subtle">로딩 중...</div>}
+        ) : <div className="subtle">{t(S.loading, locale)}</div>}
       </Card>
 
       {/* Credit Stress */}
-      <Card title="Credit Stress" action="HYG / IEF 5D" info={G.credit} className="mob-order-7">
+      <Card title="Credit Stress" action={t(S.creditAction, locale)} info={{ term: t(G.credit.term, locale), body: t(G.credit.body, locale) }} className="mob-order-7">
         {([['HYG', hyg], ['JNK', jnk], ['LQD', lqd], ['IEF', ief]] as [string, MacroItem | undefined][]).map(([label, m]) => {
           if (!m) return null;
           const up = (m.change_pct_5d ?? 0) >= 0;
@@ -440,10 +514,10 @@ export function OverviewBoard() {
         })}
       </Card>
 
-      {/* 진입 레이더 */}
-      <Card title="진입 레이더" action="Entry 근접순" className="mob-order-4">
+      {/* Entry Radar */}
+      <Card title={t(S.entryRadarTitle, locale)} action={t(S.entryRadarAction, locale)} className="mob-order-4">
         {watchlist.length === 0 ? (
-          <div className="subtle">로딩 중...</div>
+          <div className="subtle">{t(S.loading, locale)}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {[...watchlist]
@@ -468,23 +542,23 @@ export function OverviewBoard() {
                       color: broken ? 'var(--bull)' : inZone ? 'var(--em-500)' : w.entryDist > 15 ? 'var(--fg-subtle)' : 'var(--fg)',
                     }}>
                       {broken
-                        ? <span className="badge bull" style={{ fontSize: 10 }}>돌파</span>
+                        ? <span className="badge bull" style={{ fontSize: 10 }}>{t(S.breakout, locale)}</span>
                         : `+${w.entryDist.toFixed(1)}%`}
                     </span>
                   </div>
                 );
               })}
             <div style={{ fontSize: 9.5, color: 'var(--fg-subtle)', marginTop: 4, paddingTop: 4, borderTop: '1px solid var(--border-soft)' }}>
-              ≤5% = 진입 가능 Zone
+              {t(S.entryZone, locale)}
             </div>
           </div>
         )}
       </Card>
 
-      {/* Conviction 리더보드 */}
-      <Card title="Conviction 리더보드" action="확신도 순" info={G.conviction} className="mob-order-5">
+      {/* Conviction Leaderboard */}
+      <Card title={t(S.convictionTitle, locale)} action={t(S.convictionAction, locale)} info={{ term: t(G.conviction.term, locale), body: t(G.conviction.body, locale) }} className="mob-order-5">
         {watchlist.length === 0 ? (
-          <div className="subtle">로딩 중...</div>
+          <div className="subtle">{t(S.loading, locale)}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {[...watchlist]
@@ -507,17 +581,17 @@ export function OverviewBoard() {
       </Card>
 
       {/* Sector Momentum */}
-      <Card title="Sector Momentum" action="5D 수익률" info={G.sector_momentum} className="mob-order-3">
+      <Card title={t(S.sectorTitle, locale)} action={t(S.sectorAction, locale)} info={{ term: t(G.sector_momentum.term, locale), body: t(G.sector_momentum.body, locale) }} className="mob-order-3">
         {(() => {
-          const sectors: [string, string][] = [
-            ['SMH', '반도체'],
-            ['XLE', '에너지'],
-            ['XLY', '소비재'],
-            ['XHB', '홈빌더'],
-            ['ITA', '방산'],
+          const sectors: [string, { en: string; ko: string }][] = [
+            ['SMH', S.sectorSemi],
+            ['XLE', S.sectorEnergy],
+            ['XLY', S.sectorConsumer],
+            ['XHB', S.sectorHome],
+            ['ITA', S.sectorDefense],
           ];
-          const items = sectors.map(([sym, label]) => ({ sym, label, m: findMacro(macro, sym) })).filter(x => x.m);
-          if (items.length === 0) return <div className="subtle">로딩 중...</div>;
+          const items = sectors.map(([sym, labelObj]) => ({ sym, label: t(labelObj, locale), m: findMacro(macro, sym) })).filter(x => x.m);
+          if (items.length === 0) return <div className="subtle">{t(S.loading, locale)}</div>;
           const sorted = [...items].sort((a, b) => (b.m!.change_pct_5d ?? 0) - (a.m!.change_pct_5d ?? 0));
           const maxAbs = Math.max(...sorted.map(x => Math.abs(x.m!.change_pct_5d ?? 0)), 0.1);
           return (
@@ -549,7 +623,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Top watchlist preview */}
-      <Card title="Watchlist · Top 3" action="Stage 2 정렬" className="mob-order-8">
+      <Card title={t(S.watchlistTitle, locale)} action={t(S.watchlistAction, locale)} className="mob-order-8">
         {watchlist.slice(0, 3).map(w => (
           <div key={w.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-soft)' }}>
             <span className="sym-pill__badge" style={{ width: 22, height: 22 }}>{w.symbol[0]}</span>
@@ -563,7 +637,7 @@ export function OverviewBoard() {
             <ConvictionBadge score={w.conviction_score ?? undefined} size="sm" />
           </div>
         ))}
-        {watchlist.length === 0 && <div className="subtle">로딩 중...</div>}
+        {watchlist.length === 0 && <div className="subtle">{t(S.loading, locale)}</div>}
       </Card>
 
     </div>

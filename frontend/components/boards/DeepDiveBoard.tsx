@@ -16,16 +16,130 @@ import { Check, X, Sparkle } from '@/components/ui/Icons';
 import DailyChart from '@/components/charts/DailyChart';
 import {
   SYMBOLS, STAGE2_META, SIGNAL_META, SENTIMENT_META, TREND_META,
-  VOLUME_META, SETUP_QUALITY_META, EARNINGS_RISK_META,
+  VOLUME_META, SETUP_QUALITY_META, EARNINGS_RISK_META, REGIME_META,
   UpcomingEarning, RecentResult, SymbolBrief, TopNews,
 } from '@/app/types';
 import { SentimentTrendChart } from './SentimentTrendChart';
 import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
 import { InfoPopover } from '@/components/ui/InfoPopover';
 import { G } from '@/app/glossary';
+import { t, tField } from '@/app/i18n';
+
+// ─── Static bilingual strings ───────────────────────────────────────────────
+
+const S = {
+  guideTitle:        { en: 'DeepDive Guide', ko: 'DeepDive 가이드' },
+  guide1Heading:     { en: 'This screen', ko: '이 화면은' },
+  guide1Body:        { en: 'A comprehensive analysis screen for deep review of all analytical indicators for the selected stock on one screen. Use it as the final confirmation screen before making entry decisions.', ko: '선택한 종목의 모든 분석 지표를 한 화면에서 심층 검토하는 종합 분석 화면입니다. 진입 결정 전 최종 확인 화면으로 사용합니다.' },
+  guide2Heading:     { en: 'How to read key indicators', ko: '핵심 지표 읽는 법' },
+  guide2Body:        { en: 'Row1 badges (Stage2/Conviction/Monthly/Structure) summarize overall quality. Row2 4 KPIs (RS Score, 52W deviation, correction depth, EMA200 slope) are the Stage2 core. Row3 left Institutional Activity shows accumulation status; right R:R shows trade plan.', ko: 'Row1 배지(Stage2/Conviction/월봉/구조)가 전체 품질을 요약합니다. Row2 KPI 4개(RS Score, 52W 이격, 조정폭, EMA200 기울기)가 Stage2 조건의 핵심. Row3 좌측 세력참여도에서 기관 매집 여부를, 우측 R:R에서 트레이드 계획을 확인합니다.' },
+  guide3Heading:     { en: 'Use it like this', ko: '지금 이렇게 쓰세요' },
+  guide3Body:        { en: 'Confirm Row1 badges → Row2 KPIs (RS≥70, correction≤10%) → Row3 Institutional Activity (score≥60 = accumulation dominant) → Row3 R:R (1:2+) → Row4 AI Brief (confirm catalyst) → Row5 Regime ≥ 60 → Entry.', ko: 'Row1 배지 전체 확인 → Row2 KPI(RS≥70, 조정≤10%) → Row3 세력참여도(세력점수≥60이면 매집 우위) → Row3 R:R(1:2 이상) → Row4 AI Brief(촉매 확인) → Row5 Regime ≥ 60 확인 → 진입.' },
+  loading:           { en: 'Loading...', ko: '로딩 중...' },
+  noData:            { en: 'No data', ko: '데이터 없음' },
+  priceLoading:      { en: 'Loading price...', ko: '시세 로딩 중...' },
+  chartLoading:      { en: 'Loading chart...', ko: '차트 로딩 중...' },
+  stage2Consider:    { en: 'Consider Entry', ko: '진입 고려' },
+  stage2Watch:       { en: 'Watch', ko: '관망' },
+  stage2Avoid:       { en: 'Avoid', ko: '회피' },
+  monthlyUp:         { en: 'Monthly Uptrend', ko: '월봉 상승확인' },
+  monthlyWeak:       { en: 'Monthly Weakening', ko: '월봉 약화중' },
+  monthlyNeutral:    { en: 'Monthly Neutral', ko: '월봉 중립' },
+  monthlyDown:       { en: 'Monthly Downtrend', ko: '월봉 하락' },
+  monthlyUnknown:    { en: 'Monthly ?', ko: '월봉 ?' },
+  gcBreakout:        { en: 'GC Breakout', ko: 'GC 돌파' },
+  gcRetest:          { en: 'GC Retest', ko: 'GC 리테스트' },
+  gcAbove:           { en: 'Above Channel', ko: '채널 위' },
+  gcBelow:           { en: 'Below Channel', ko: '채널 아래' },
+  institutionalTitle:{ en: 'Institutional Activity', ko: '세력 참여도' },
+  instAction20d:     { en: '20d Volume Pattern', ko: '20일 거래량 패턴' },
+  instAccumulate:    { en: 'Concentrated Buy', ko: '집중 매수' },
+  instBuyBias:       { en: 'Buy Dominant', ko: '매수 우위' },
+  instMixed:         { en: 'Mixed', ko: '혼조' },
+  instDistribute:    { en: 'Distribution', ko: '분산 매도' },
+  instUpDown:        { en: 'Buy/Sell Vol', ko: '매수/매도량' },
+  instBuyBiasLabel:  { en: 'Buy dominant', ko: '매수 우위' },
+  instSellBiasLabel: { en: 'Sell dominant', ko: '매도 우위' },
+  instBalanced:      { en: 'Balanced', ko: '균형' },
+  instVolTrend:      { en: 'Volume Trend', ko: '거래량 추세' },
+  instVcpShrink:     { en: 'VCP Contraction', ko: 'VCP 수축' },
+  instActive:        { en: 'Active', ko: '활발' },
+  instNormal:        { en: 'Normal', ko: '보통' },
+  instFocusDays:     { en: 'Focus Days (10d)', ko: '집중일 (10일)' },
+  instAccDominant:   { en: 'Acc dominant', ko: '매집 우세' },
+  instDistDominant:  { en: 'Dist dominant', ko: '분산 우세' },
+  instNeutral:       { en: 'Neutral', ko: '중립' },
+  instScore:         { en: 'Institutional Score', ko: '세력 점수' },
+  inst10d:           { en: '10d Institutional Action', ko: '최근 10일 세력 행동' },
+  instAccLegend:     { en: 'Acc', ko: '매집' },
+  instDistLegend:    { en: 'Dist', ko: '분산' },
+  instNormalLegend:  { en: 'Normal (high vol basis)', ko: '보통 (큰거래량 기준)' },
+  instDataInsuff:    { en: 'Insufficient data (< 20d)', ko: '데이터 부족 (20일 미만)' },
+  rrTitle:           { en: 'Entry Plan · R:R', ko: '진입 계획 · R:R' },
+  rrBasis:           { en: 'Pivot × 1.005 basis', ko: '피벗 × 1.005 기준' },
+  positionLabel:     { en: 'Position', ko: '포지션' },
+  sharesUnit:        { en: 'sh', ko: '주' },
+  socialTitle:       { en: 'Social Sentiment', ko: '소셜 심리' },
+  sentDelta:         { en: 'vs prev day', ko: '전일' },
+  sentBotSuspect:    { en: '⚠ Bot suspected', ko: '⚠봇 의심' },
+  sentConfidence:    { en: 'Confidence', ko: '신뢰도' },
+  trendShow:         { en: '▼ Show Trend', ko: '▼ 심리 추이 보기' },
+  trendHide:         { en: '▲ Hide Trend', ko: '▲ 추이 숨기기' },
+  sentNoData:        { en: 'No sentiment data', ko: '심리 데이터 없음' },
+  aiAnalysis:        { en: 'AI Analysis', ko: 'AI 분석' },
+  opportunity:       { en: 'Opportunity', ko: '기회' },
+  risk:              { en: 'Risk', ko: '리스크' },
+  aiDisclaimer:      { en: 'AI opinion · not a trading signal', ko: 'AI 의견 · 매매 신호 아님' },
+  aiNoBrief:         { en: 'AI Brief unavailable', ko: 'AI Brief 없음' },
+  aiBriefLoading:    { en: 'AI Brief loading...', ko: 'AI Brief 로딩 중...' },
+  earningsTitle:     { en: 'Earnings', ko: '실적 발표' },
+  earningsDate:      { en: 'Date', ko: '발표일' },
+  dDay:              { en: 'D-Day', ko: 'D-Day' },
+  dDayUnit:          { en: 'd left', ko: '일 후' },
+  epsEstimate:       { en: 'EPS Est.', ko: 'EPS 추정' },
+  beatRate:          { en: 'Beat Rate', ko: '과거 Beat율' },
+  earningsNone:      { en: 'No earnings within 30d · Recent result:', ko: '30일 이내 예정 실적 없음 · 최근 결과:' },
+  surprise:          { en: 'Surprise', ko: '서프라이즈' },
+  epsActual:         { en: 'EPS Actual', ko: 'EPS 실제' },
+  epsEstShort:       { en: 'EPS Est.', ko: 'EPS 추정' },
+  earningsNoData:    { en: 'No earnings data', ko: '실적 데이터 없음' },
+  tierImminent:      { en: '⚡ Imminent', ko: '⚡ 임박' },
+  tierApproaching:   { en: 'Approaching', ko: '진입권' },
+  tierWatching:      { en: 'Watching', ko: '관망' },
+  recentResult:      { en: 'Recent Result', ko: '최근 결과' },
+  regimeTitle:       { en: 'Risk Regime', ko: 'Risk Regime' },
+  regimeTrendOk:     { en: 'Trend following effective', ko: '추세 추종 유효' },
+  regimeSelectOk:    { en: 'Selective entry possible', ko: '선별 진입 가능' },
+  regimeReduce:      { en: 'Reduce position size', ko: '포지션 축소 권장' },
+  regimeCash:        { en: 'Increase cash', ko: '현금 비중 확대' },
+  regimeAvoid:       { en: 'Avoid new buys', ko: '신규 매수 자제' },
+  regimeNoData:      { en: 'Insufficient data', ko: '데이터 부족' },
+  mktSentTitle:      { en: 'Market Sentiment', ko: '시장 전체 심리' },
+  mktSentVsPrev:     { en: 'vs yesterday', ko: '전일 대비' },
+  mktSentNoData:     { en: 'No sentiment data', ko: '심리 데이터 없음' },
+  topNews:           { en: 'Top News', ko: '주요 뉴스' },
+  newsSource:        { en: 'Source', ko: '출처' },
+  dayChange:         { en: '1D Change', ko: '1D 변화' },
+  intradayPos:       { en: 'Intraday Position', ko: '일중 위치' },
+  intradayTop:       { en: 'Holding top', ko: '상단 유지' },
+  intradayBot:       { en: 'Lower pressure', ko: '하단 압박' },
+  intradayMid:       { en: 'Middle', ko: '중간' },
+  ema21Dev:          { en: 'EMA21 Deviation', ko: 'EMA21 이격' },
+  ema21Overbought:   { en: 'Overheated', ko: '과열권' },
+  ema21Support:      { en: 'Near support', ko: '지지 접근' },
+  rs52wHigh:         { en: '52W High', ko: '52주 고점' },
+  rs52wSub:          { en: 'vs high', ko: '고점 대비' },
+  pullback:          { en: 'Recent Correction', ko: '최근 조정' },
+  pullbackSub:       { en: 'vs 20d high', ko: '20일 고점 대비' },
+  ema200Slope:       { en: 'EMA200 Slope', ko: 'EMA200 기울기' },
+  ema200Sub:         { en: '20d slope', ko: '20일 기울기' },
+  biasBuy:           { en: 'Buy',   ko: '매수' },
+  biasHold:          { en: 'Hold',  ko: '보유' },
+  biasWatch:         { en: 'Watch', ko: '관망' },
+  biasAvoid:         { en: 'Avoid', ko: '회피' },
+};
 
 // ─── 색상 헬퍼 ─────────────────────────────────────────────────────────────────
-// var(--emerald/orange/red) 은 globals.css 에 없음 → bull/orange-literal/bear 사용
 
 function csColor(s: number): string {
   if (s >= 1.5) return 'var(--bull)';
@@ -37,25 +151,33 @@ function csColor(s: number): string {
 
 // ─── 로컬 메타데이터 ────────────────────────────────────────────────────────────
 
-const MONTHLY_META: Record<string, { label: string; color: string; bg: string }> = {
-  CONFIRMED_UPTREND: { label: '월봉 상승확인', color: '#fff',            bg: 'var(--bull)' },
-  WEAKENING:         { label: '월봉 약화중',   color: '#000',            bg: 'var(--warn)' },
-  NEUTRAL:           { label: '월봉 중립',     color: 'var(--fg)',       bg: 'var(--border)' },
-  DOWNTREND:         { label: '월봉 하락',      color: '#fff',            bg: 'var(--bear)' },
-  UNKNOWN:           { label: '월봉 ?',        color: 'var(--fg-muted)', bg: 'var(--border-soft)' },
+const MONTHLY_META_KEYS: Record<string, keyof typeof S> = {
+  CONFIRMED_UPTREND: 'monthlyUp',
+  WEAKENING:         'monthlyWeak',
+  NEUTRAL:           'monthlyNeutral',
+  DOWNTREND:         'monthlyDown',
+  UNKNOWN:           'monthlyUnknown',
+};
+
+const MONTHLY_COLORS: Record<string, { color: string; bg: string }> = {
+  CONFIRMED_UPTREND: { color: '#fff',            bg: 'var(--bull)' },
+  WEAKENING:         { color: '#000',            bg: 'var(--warn)' },
+  NEUTRAL:           { color: 'var(--fg)',       bg: 'var(--border)' },
+  DOWNTREND:         { color: '#fff',            bg: 'var(--bear)' },
+  UNKNOWN:           { color: 'var(--fg-muted)', bg: 'var(--border-soft)' },
 };
 
 const STRUCT_CLS: Record<string, string> = {
   UPTREND: 'bull', DOWNTREND: 'bear', DISTRIBUTION: 'warn', ACCUMULATION: 'info', NEUTRAL: 'neutral',
 };
 
-const REGIME_KO: Record<string, [string, string]> = {
-  RISK_ON:      ['Risk-On',  'bull'],
-  CONSTRUCTIVE: ['우호적',   'teal'],
-  MIXED:        ['혼조',     'warn'],
-  DEFENSIVE:    ['방어적',   'warn'],
-  RISK_OFF:     ['Risk-Off', 'bear'],
-  UNKNOWN:      ['불명',     'neutral'],
+const REGIME_KO: Record<string, string> = {
+  RISK_ON:      'bull',
+  CONSTRUCTIVE: 'teal',
+  MIXED:        'warn',
+  DEFENSIVE:    'warn',
+  RISK_OFF:     'bear',
+  UNKNOWN:      'neutral',
 };
 
 // ─── 서브 컴포넌트 ──────────────────────────────────────────────────────────────
@@ -88,39 +210,32 @@ function ScoreBar({ score }: { score: number }) {
   );
 }
 
-function TopNewsBox({ news }: { news: TopNews | null | undefined }) {
+function TopNewsBox({ news, locale }: { news: TopNews | null | undefined; locale: 'en' | 'ko' }) {
   if (!news) return null;
+  const headline = tField(news.headline_en, news.headline_ko, news.headline, locale);
+  const summary  = tField(news.summary_en,  news.summary_ko,  news.summary,  locale);
   return (
     <div style={{ marginTop: 8, padding: '6px 10px', borderRadius: 6, background: 'var(--em-soft)', borderLeft: '2px solid var(--em-500)' }}>
-      <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--fg-subtle)', marginBottom: 2 }}>주요 뉴스</div>
-      <div style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.4, marginBottom: 2 }}>{news.headline}</div>
-      <div style={{ fontSize: 10.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 2 }}>{news.summary}</div>
-      <div style={{ fontSize: 9, color: 'var(--fg-subtle)' }}>출처: {news.source}</div>
+      <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--fg-subtle)', marginBottom: 2 }}>{t(S.topNews, locale)}</div>
+      <div style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.4, marginBottom: 2 }}>{headline}</div>
+      <div style={{ fontSize: 10.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 2 }}>{summary}</div>
+      <div style={{ fontSize: 9, color: 'var(--fg-subtle)' }}>{t(S.newsSource, locale)}: {news.source}</div>
     </div>
   );
 }
 
 // ─── 가이드 섹션 ────────────────────────────────────────────────────────────────
 
-const DEEPDIVE_GUIDE: GuideSection[] = [
-  {
-    heading: '이 화면은',
-    body: '선택한 종목의 모든 분석 지표를 한 화면에서 심층 검토하는 종합 분석 화면입니다. 진입 결정 전 최종 확인 화면으로 사용합니다.',
-  },
-  {
-    heading: '핵심 지표 읽는 법',
-    body: 'Row1 배지(Stage2/Conviction/월봉/구조)가 전체 품질을 요약합니다. Row2 KPI 4개(RS Score, 52W 이격, 조정폭, EMA200 기울기)가 Stage2 조건의 핵심. Row3 좌측 세력참여도에서 기관 매집 여부를, 우측 R:R에서 트레이드 계획을 확인합니다.',
-  },
-  {
-    heading: '지금 이렇게 쓰세요',
-    body: 'Row1 배지 전체 확인 → Row2 KPI(RS≥70, 조정≤10%) → Row3 세력참여도(세력점수≥60이면 매집 우위) → Row3 R:R(1:2 이상) → Row4 AI Brief(촉매 확인) → Row5 Regime ≥ 60 확인 → 진입.',
-  },
+const DEEPDIVE_GUIDE = (locale: 'en' | 'ko'): GuideSection[] => [
+  { heading: t(S.guide1Heading, locale), body: t(S.guide1Body, locale) },
+  { heading: t(S.guide2Heading, locale), body: t(S.guide2Body, locale) },
+  { heading: t(S.guide3Heading, locale), body: t(S.guide3Body, locale) },
 ];
 
 // ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
 export function DeepDiveBoard() {
-  const { symbol, setSymbol, timeframe, rrAccount, rrRiskPct } = useStore();
+  const { symbol, setSymbol, timeframe, rrAccount, rrRiskPct, locale } = useStore();
   const [showSentTrend, setShowSentTrend] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
 
@@ -175,13 +290,14 @@ export function DeepDiveBoard() {
 
   // ── 단축 변수
   const mp     = stage2?.monthly_phase ?? 'UNKNOWN';
-  const mpMeta = MONTHLY_META[mp] ?? MONTHLY_META.UNKNOWN;
+  const mpColors = MONTHLY_COLORS[mp] ?? MONTHLY_COLORS.UNKNOWN;
+  const mpLabel  = t(S[MONTHLY_META_KEYS[mp] ?? 'monthlyUnknown'], locale);
 
   const gcBadges:  [string, string][] = [];
-  if (stage2?.gc_breakout)           gcBadges.push(['GC 돌파',    'purple']);
-  else if (stage2?.gc_retest)        gcBadges.push(['GC 리테스트', 'purple']);
-  else if (stage2?.gc_above)         gcBadges.push(['채널 위',     'teal']);
-  else if (stage2?.gc_below)         gcBadges.push(['채널 아래',   'bear']);
+  if (stage2?.gc_breakout)           gcBadges.push([t(S.gcBreakout, locale), 'purple']);
+  else if (stage2?.gc_retest)        gcBadges.push([t(S.gcRetest, locale),   'purple']);
+  else if (stage2?.gc_above)         gcBadges.push([t(S.gcAbove, locale),    'teal']);
+  else if (stage2?.gc_below)         gcBadges.push([t(S.gcBelow, locale),    'bear']);
 
   const patBadges: [string, string][] = [];
   if (stage2?.bear_flag)             patBadges.push(['Bear Flag',   'bear']);
@@ -211,23 +327,19 @@ export function DeepDiveBoard() {
     return { r20, r10, vol20avg, volTrendRatio, accDays, distDays, udRatio, forceScore, maxVol };
   })();
 
+  const BIAS_LABELS: Record<string, { en: string; ko: string }> = {
+    buy:   S.biasBuy,
+    hold:  S.biasHold,
+    watch: S.biasWatch,
+    avoid: S.biasAvoid,
+  };
+
   // ───────────────────────────────────────────────────────────────────────────
   // RENDER
-  //
-  // 레이아웃: 3fr | 2fr 기준, alignItems: start
-  //
-  //  Row 1 (span 2): Zone 0 — 종목 선택 + 현재가 + 주요 배지
-  //  Row 2  3fr : Daily Chart
-  //         2fr : Stage 2 분석 카드
-  //  Row 3  3fr : Daily Heat 60d
-  //         2fr : R:R 진입 계획
-  //  Row 4 (span 2 → 내부 3×1fr): 소셜 심리 | AI Brief | 실적
-  //  Row 5  3fr : Risk Regime
-  //         2fr : 시장 전체 심리
   // ───────────────────────────────────────────────────────────────────────────
   return (
     <div className="board-wrap">
-      <BoardGuidePanel title="DeepDive 가이드" sections={DEEPDIVE_GUIDE} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+      <BoardGuidePanel title={t(S.guideTitle, locale)} sections={DEEPDIVE_GUIDE(locale)} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <div
       className="board fade-in"
       style={{ gridTemplateColumns: '3fr 2fr', alignItems: 'start', alignContent: 'start', gridAutoRows: 'max-content' }}
@@ -338,7 +450,7 @@ export function DeepDiveBoard() {
                 if (dc && dc.length >= 2) {
                   const chg = ((dc[dc.length - 1].close - dc[dc.length - 2].close) / dc[dc.length - 2].close) * 100;
                   tiles.push({
-                    label: '1D 변화',
+                    label: t(S.dayChange, locale),
                     value: `${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%`,
                     color: chg >= 0 ? 'var(--bull)' : 'var(--bear)',
                   });
@@ -352,10 +464,10 @@ export function DeepDiveBoard() {
                   if (range > 0 && lastCandle) {
                     const pos = ((lastCandle.close - dayLow) / range) * 100;
                     tiles.push({
-                      label: '일중 위치',
+                      label: t(S.intradayPos, locale),
                       value: `${pos.toFixed(0)}%`,
                       color: pos >= 70 ? 'var(--bull)' : pos <= 30 ? 'var(--bear)' : 'var(--fg)',
-                      sub: pos >= 70 ? '상단 유지' : pos <= 30 ? '하단 압박' : '중간',
+                      sub: pos >= 70 ? t(S.intradayTop, locale) : pos <= 30 ? t(S.intradayBot, locale) : t(S.intradayMid, locale),
                     });
                   }
                 }
@@ -364,29 +476,29 @@ export function DeepDiveBoard() {
                   const ema21 = indicators.ema21[lastIdx]!;
                   const pct = ((lastCandle.close - ema21) / ema21) * 100;
                   tiles.push({
-                    label: 'EMA21 이격',
+                    label: t(S.ema21Dev, locale),
                     value: `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`,
                     color: Math.abs(pct) >= 3 ? 'var(--warn)' : pct >= 0 ? 'var(--teal)' : 'var(--fg-muted)',
-                    sub: pct >= 3.2 ? '과열권' : pct <= -2 ? '지지 접근' : undefined,
+                    sub: pct >= 3.2 ? t(S.ema21Overbought, locale) : pct <= -2 ? t(S.ema21Support, locale) : undefined,
                   });
                 }
 
                 if (tiles.length === 0) return null;
                 return (
                   <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
-                    {tiles.map(t => (
-                      <div key={t.label} style={{
+                    {tiles.map(ti => (
+                      <div key={ti.label} style={{
                         padding: '5px 10px', borderRadius: 8,
                         background: 'var(--card-elev)', border: '1px solid var(--border-soft)',
                         minWidth: 68,
                       }}>
                         <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>
-                          {t.label}
+                          {ti.label}
                         </div>
-                        <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: t.color, lineHeight: 1.1 }}>
-                          {t.value}
+                        <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: ti.color, lineHeight: 1.1 }}>
+                          {ti.value}
                         </div>
-                        {t.sub && <div style={{ fontSize: 9, color: t.color, opacity: 0.8, marginTop: 1 }}>{t.sub}</div>}
+                        {ti.sub && <div style={{ fontSize: 9, color: ti.color, opacity: 0.8, marginTop: 1 }}>{ti.sub}</div>}
                       </div>
                     ))}
                   </div>
@@ -394,15 +506,15 @@ export function DeepDiveBoard() {
               })()}
             </>
           ) : (
-            <div className="subtle" style={{ fontSize: 12 }}>시세 로딩 중...</div>
+            <div className="subtle" style={{ fontSize: 12 }}>{t(S.priceLoading, locale)}</div>
           )}
 
           {/* 우측 배지 그룹 */}
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {stage2 && <ScorePill score={stage2.score} />}
             <ConvictionBadge score={cv} label={dailyData?.conviction_label} size="md" />
-            <div style={{ padding: '3px 9px', borderRadius: 20, background: mpMeta.bg, fontSize: 11, fontWeight: 700, color: mpMeta.color, whiteSpace: 'nowrap' }}>
-              {mpMeta.label}
+            <div style={{ padding: '3px 9px', borderRadius: 20, background: mpColors.bg, fontSize: 11, fontWeight: 700, color: mpColors.color, whiteSpace: 'nowrap' }}>
+              {mpLabel}
             </div>
             {stage2 && (
               <span className={`badge ${STRUCT_CLS[stage2.market_structure] ?? 'neutral'}`}>
@@ -430,7 +542,7 @@ export function DeepDiveBoard() {
           </div>
           <div className="card__bd" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
             {chartLoading
-              ? <div className="subtle" style={{ padding: '32px 16px' }}>차트 로딩 중...</div>
+              ? <div className="subtle" style={{ padding: '32px 16px' }}>{t(S.chartLoading, locale)}</div>
               : dailyData ? <div className="mob-chart-limit"><DailyChart data={dailyData} /></div> : null
             }
           </div>
@@ -444,11 +556,11 @@ export function DeepDiveBoard() {
       <div className="card">
         <div className="card__hd">
           <h3>Minervini Stage 2</h3>
-          <InfoPopover term={G.stage2.term} body={G.stage2.body} />
+          <InfoPopover term={t(G.stage2.term, locale)} body={t(G.stage2.body, locale)} />
           {stage2 && <ScorePill score={stage2.score} />}
           <ConvictionBadge score={cv} label={dailyData?.conviction_label} size="md" />
-          <InfoPopover term={G.conviction.term} body={G.conviction.body} />
-          <small>{stage2 ? (stage2.score >= 6 ? '진입 고려' : stage2.score >= 4 ? '관망' : '회피') : '—'}</small>
+          <InfoPopover term={t(G.conviction.term, locale)} body={t(G.conviction.body, locale)} />
+          <small>{stage2 ? (stage2.score >= 6 ? t(S.stage2Consider, locale) : stage2.score >= 4 ? t(S.stage2Watch, locale) : t(S.stage2Avoid, locale)) : '—'}</small>
         </div>
         <div className="card__bd">
           {stage2 ? (
@@ -466,10 +578,10 @@ export function DeepDiveBoard() {
               </div>
 
               {/* 월봉 배너 */}
-              <div style={{ padding: '5px 10px', borderRadius: 6, background: mpMeta.bg, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: mpMeta.color }}>{mpMeta.label}</span>
+              <div style={{ padding: '5px 10px', borderRadius: 6, background: mpColors.bg, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: mpColors.color }}>{mpLabel}</span>
                 {stage2.monthly_ema10 != null && (
-                  <span className="mono" style={{ fontSize: 10.5, color: mpMeta.color, opacity: 0.9 }}>
+                  <span className="mono" style={{ fontSize: 10.5, color: mpColors.color, opacity: 0.9 }}>
                     EMA10 ${stage2.monthly_ema10.toFixed(2)}
                     {stage2.pct_from_monthly_ema10 != null && (
                       <> · {stage2.pct_from_monthly_ema10 > 0 ? '+' : ''}{stage2.pct_from_monthly_ema10.toFixed(1)}%</>
@@ -481,14 +593,14 @@ export function DeepDiveBoard() {
               {/* KPI 4개 — 2×2 그리드 */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {([
-                  ['RS Score', `${stage2.rs_score}`, stage2.rs_score >= 70 ? 'var(--bull)' : stage2.rs_score >= 50 ? 'var(--teal)' : 'var(--bear)', 'vs SPY 63일', G.rs_score],
-                  ['52주 고점', `${stage2.pct_from_52w_high.toFixed(1)}%`, stage2.pct_from_52w_high >= -25 ? 'var(--bull)' : 'var(--bear)', '고점 대비', null],
-                  ['최근 조정', `${stage2.pullback_pct.toFixed(1)}%`, stage2.pullback_pct <= 15 ? 'var(--bull)' : 'var(--bear)', '20일 고점 대비', null],
-                  ['EMA200 기울기', `${stage2.ema200_slope >= 0 ? '+' : ''}${stage2.ema200_slope.toFixed(3)}`, stage2.ema200_slope >= 0 ? 'var(--bull)' : 'var(--bear)', '20일 기울기', null],
-                ] as [string, string, string, string, { term: string; body: string } | null][]).map(([label, val, color, sub, info]) => (
+                  ['RS Score', `${stage2.rs_score}`, stage2.rs_score >= 70 ? 'var(--bull)' : stage2.rs_score >= 50 ? 'var(--teal)' : 'var(--bear)', 'vs SPY 63d', G.rs_score],
+                  [t(S.rs52wHigh, locale), `${stage2.pct_from_52w_high.toFixed(1)}%`, stage2.pct_from_52w_high >= -25 ? 'var(--bull)' : 'var(--bear)', t(S.rs52wSub, locale), null],
+                  [t(S.pullback, locale), `${stage2.pullback_pct.toFixed(1)}%`, stage2.pullback_pct <= 15 ? 'var(--bull)' : 'var(--bear)', t(S.pullbackSub, locale), null],
+                  [t(S.ema200Slope, locale), `${stage2.ema200_slope >= 0 ? '+' : ''}${stage2.ema200_slope.toFixed(3)}`, stage2.ema200_slope >= 0 ? 'var(--bull)' : 'var(--bear)', t(S.ema200Sub, locale), null],
+                ] as [string, string, string, string, typeof G.rs_score | null][]).map(([label, val, color, sub, info]) => (
                   <div key={label} style={{ padding: '7px 10px', borderRadius: 8, background: 'var(--card-elev)', border: '1px solid var(--border-soft)' }}>
                     <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 3 }}>
-                      {label}{info && <InfoPopover term={info.term} body={info.body} />}
+                      {label}{info && <InfoPopover term={t(info.term, locale)} body={t(info.body, locale)} />}
                     </div>
                     <div className="mono" style={{ fontSize: 16, fontWeight: 700, color, lineHeight: 1.1 }}>{val}</div>
                     <div style={{ fontSize: 9.5, color: 'var(--fg-muted)', marginTop: 2 }}>{sub}</div>
@@ -497,7 +609,7 @@ export function DeepDiveBoard() {
               </div>
             </>
           ) : (
-            <div className="subtle">{chartLoading ? '로딩 중...' : '데이터 없음'}</div>
+            <div className="subtle">{chartLoading ? t(S.loading, locale) : t(S.noData, locale)}</div>
           )}
         </div>
       </div>
@@ -509,15 +621,15 @@ export function DeepDiveBoard() {
       <div className="mob-order-5 mob-wrap">
       <div className="card">
         <div className="card__hd">
-          <h3>세력 참여도 · {symbol}</h3>
-          <InfoPopover term={G.institutional_activity.term} body={G.institutional_activity.body} />
+          <h3>{t(S.institutionalTitle, locale)} · {symbol}</h3>
+          <InfoPopover term={t(G.institutional_activity.term, locale)} body={t(G.institutional_activity.body, locale)} />
           {forceData && (() => {
             const { forceScore } = forceData;
             const cls = forceScore >= 70 ? 'bull' : forceScore >= 50 ? 'teal' : forceScore >= 30 ? 'warn' : 'bear';
-            const lbl = forceScore >= 70 ? '집중 매수' : forceScore >= 50 ? '매수 우위' : forceScore >= 30 ? '혼조' : '분산 매도';
+            const lbl = forceScore >= 70 ? t(S.instAccumulate, locale) : forceScore >= 50 ? t(S.instBuyBias, locale) : forceScore >= 30 ? t(S.instMixed, locale) : t(S.instDistribute, locale);
             return <span className={`badge ${cls}`}>{lbl}</span>;
           })()}
-          <small>20일 거래량 패턴</small>
+          <small>{t(S.instAction20d, locale)}</small>
         </div>
         <div className="card__bd">
           {forceData ? (() => {
@@ -541,32 +653,32 @@ export function DeepDiveBoard() {
                 {/* 섹션 2: 핵심 지표 3개 */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 10 }}>
                   <div style={{ padding: '6px 8px', borderRadius: 7, background: 'var(--card-elev)', border: '1px solid var(--border-soft)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>매수/매도량</div>
+                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{t(S.instUpDown, locale)}</div>
                     <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: udRatio >= 1.3 ? 'var(--bull)' : udRatio < 0.7 ? 'var(--bear)' : 'var(--fg)' }}>
                       {udRatio >= 9 ? '9+' : udRatio.toFixed(1)}×
                     </div>
                     <div style={{ fontSize: 9.5, color: 'var(--fg-muted)' }}>
-                      {udRatio >= 1.3 ? '매수 우위' : udRatio < 0.7 ? '매도 우위' : '균형'}
+                      {udRatio >= 1.3 ? t(S.instBuyBiasLabel, locale) : udRatio < 0.7 ? t(S.instSellBiasLabel, locale) : t(S.instBalanced, locale)}
                     </div>
                   </div>
                   <div style={{ padding: '6px 8px', borderRadius: 7, background: 'var(--card-elev)', border: '1px solid var(--border-soft)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>거래량 추세</div>
+                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{t(S.instVolTrend, locale)}</div>
                     <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: volTrendRatio < 0.8 ? 'var(--bull)' : volTrendRatio > 1.2 ? 'var(--warn)' : 'var(--fg)' }}>
                       {volTrendRatio < 0.8 ? '▽' : volTrendRatio > 1.2 ? '△' : '→'} {volTrendRatio.toFixed(2)}×
                     </div>
                     <div style={{ fontSize: 9.5, color: 'var(--fg-muted)' }}>
-                      {volTrendRatio < 0.8 ? 'VCP 수축' : volTrendRatio > 1.2 ? '활발' : '보통'}
+                      {volTrendRatio < 0.8 ? t(S.instVcpShrink, locale) : volTrendRatio > 1.2 ? t(S.instActive, locale) : t(S.instNormal, locale)}
                     </div>
                   </div>
                   <div style={{ padding: '6px 8px', borderRadius: 7, background: 'var(--card-elev)', border: '1px solid var(--border-soft)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>집중일 (10일)</div>
+                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{t(S.instFocusDays, locale)}</div>
                     <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.2 }}>
                       <span style={{ color: 'var(--bull)' }}>{accDays}acc</span>
                       <span style={{ color: 'var(--fg-muted)', fontWeight: 400 }}>/</span>
                       <span style={{ color: 'var(--bear)' }}>{distDays}dist</span>
                     </div>
                     <div style={{ fontSize: 9.5, color: accDays > distDays ? 'var(--bull)' : distDays > accDays ? 'var(--bear)' : 'var(--fg-muted)' }}>
-                      {accDays > distDays ? '매집 우세' : distDays > accDays ? '분산 우세' : '중립'}
+                      {accDays > distDays ? t(S.instAccDominant, locale) : distDays > accDays ? t(S.instDistDominant, locale) : t(S.instNeutral, locale)}
                     </div>
                   </div>
                 </div>
@@ -574,7 +686,7 @@ export function DeepDiveBoard() {
                 {/* 섹션 3: 세력 점수 바 */}
                 <div style={{ marginBottom: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                    <span style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>세력 점수</span>
+                    <span style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t(S.instScore, locale)}</span>
                     <span className="mono" style={{ fontSize: 13, fontWeight: 700, color: scoreColor }}>{forceScore} / 100</span>
                   </div>
                   <div className="bar">
@@ -584,7 +696,7 @@ export function DeepDiveBoard() {
 
                 {/* 섹션 4: 최근 10일 acc/dist 미니 그리드 */}
                 <div>
-                  <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>최근 10일 세력 행동</div>
+                  <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{t(S.inst10d, locale)}</div>
                   <div style={{ display: 'flex', gap: 3 }}>
                     {r10.map((c, i) => {
                       const isAcc  = c.volume > vol20avg && c.close >= c.open;
@@ -600,14 +712,14 @@ export function DeepDiveBoard() {
                     })}
                   </div>
                   <div style={{ display: 'flex', gap: 10, marginTop: 5, fontSize: 9.5, color: 'var(--fg-subtle)' }}>
-                    <span><span style={{ color: 'var(--bull)' }}>■</span> 매집</span>
-                    <span><span style={{ color: 'var(--bear)' }}>■</span> 분산</span>
-                    <span>□ 보통 (큰거래량 기준)</span>
+                    <span><span style={{ color: 'var(--bull)' }}>■</span> {t(S.instAccLegend, locale)}</span>
+                    <span><span style={{ color: 'var(--bear)' }}>■</span> {t(S.instDistLegend, locale)}</span>
+                    <span>□ {t(S.instNormalLegend, locale)}</span>
                   </div>
                 </div>
               </>
             );
-          })() : <div className="subtle">{chartLoading ? '로딩 중...' : '데이터 부족 (20일 미만)'}</div>}
+          })() : <div className="subtle">{chartLoading ? t(S.loading, locale) : t(S.instDataInsuff, locale)}</div>}
         </div>
       </div>
       </div>{/* end mob-order-5 */}
@@ -618,9 +730,9 @@ export function DeepDiveBoard() {
       <div className="mob-order-3 mob-wrap">
       <div className="card">
         <div className="card__hd">
-          <h3>진입 계획 · R:R</h3>
-          <InfoPopover term={G.rr_ratio.term} body={G.rr_ratio.body} />
-          <small>피벗 × 1.005 기준</small>
+          <h3>{t(S.rrTitle, locale)}</h3>
+          <InfoPopover term={t(G.rr_ratio.term, locale)} body={t(G.rr_ratio.body, locale)} />
+          <small>{t(S.rrBasis, locale)}</small>
         </div>
         <div className="card__bd">
           {stage2 ? (
@@ -656,9 +768,9 @@ export function DeepDiveBoard() {
               <div style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--em-soft)', border: '1px solid color-mix(in srgb, var(--em-500) 25%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div>
                   <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    포지션 ({rrRiskPct}% · ${(accountNum/1000).toFixed(0)}K)
+                    {t(S.positionLabel, locale)} ({rrRiskPct}% · ${(accountNum/1000).toFixed(0)}K)
                   </div>
-                  <div className="mono" style={{ fontSize: 20, fontWeight: 700, color: 'var(--em-500)', lineHeight: 1.1 }}>{qty > 0 ? `${qty} 주` : '—'}</div>
+                  <div className="mono" style={{ fontSize: 20, fontWeight: 700, color: 'var(--em-500)', lineHeight: 1.1 }}>{qty > 0 ? `${qty} ${t(S.sharesUnit, locale)}` : '—'}</div>
                 </div>
                 <div style={{ textAlign: 'right', fontSize: 10.5, color: 'var(--fg-muted)' }}>
                   <div>Max Loss <span style={{ color: 'var(--bear)', fontWeight: 600 }}>${(accountNum * riskPct / 100).toFixed(0)}</span></div>
@@ -675,21 +787,20 @@ export function DeepDiveBoard() {
                 </div>
               )}
             </>
-          ) : <div className="subtle">로딩 중...</div>}
+          ) : <div className="subtle">{t(S.loading, locale)}</div>}
         </div>
       </div>
       </div>{/* end mob-order-3 */}
 
       {/* ════════════════════════════════════════════════════════════════
           ROW 4 — 소셜 심리 | AI Brief | 실적 (span 2 → 내부 3등분)
-          alignItems: stretch 로 3카드 동일 높이
       ════════════════════════════════════════════════════════════════ */}
       <div className="mob-order-6 mob-inner-stack" style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, alignItems: 'stretch' }}>
 
         {/* 소셜 심리 (종목) */}
         <div className="card">
           <div className="card__hd">
-            <h3>소셜 심리 · {symbol}</h3>
+            <h3>{t(S.socialTitle, locale)} · {symbol}</h3>
             {symSent && (
               <span className="mono" style={{ marginLeft: 'auto', fontSize: 15, fontWeight: 700, color: csColor(symSent.composite_score ?? symSent.sentiment_score) }}>
                 {(symSent.composite_score ?? symSent.sentiment_score) > 0 ? '+' : ''}
@@ -702,39 +813,39 @@ export function DeepDiveBoard() {
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   <span className={`badge ${SENTIMENT_META[symSent.sentiment]?.color.replace('text-','').split('-')[0] ?? 'neutral'}`}>
-                    {SENTIMENT_META[symSent.sentiment]?.label}
+                    {t(SENTIMENT_META[symSent.sentiment]?.label, locale)}
                   </span>
                   {symSent.score_delta != null && (
                     <span style={{ fontSize: 11, color: symSent.score_delta > 0 ? 'var(--bull)' : symSent.score_delta < 0 ? 'var(--bear)' : 'var(--fg-subtle)' }}>
-                      {symSent.score_delta > 0 ? '↑' : symSent.score_delta < 0 ? '↓' : '→'} 전일 {symSent.score_delta > 0 ? '+' : ''}{symSent.score_delta}
+                      {symSent.score_delta > 0 ? '↑' : symSent.score_delta < 0 ? '↓' : '→'} {t(S.sentDelta, locale)} {symSent.score_delta > 0 ? '+' : ''}{symSent.score_delta}
                     </span>
                   )}
                 </div>
                 <ScoreBar score={symSent.composite_score ?? symSent.sentiment_score} />
 
                 <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.65, margin: '8px 0' }}>
-                  {symSent.key_reason}
+                  {tField(symSent.key_reason_en, symSent.key_reason_ko, symSent.key_reason, locale)}
                 </div>
-                <TopNewsBox news={symSent.top_news} />
+                <TopNewsBox news={symSent.top_news} locale={locale} />
 
                 <div style={{ marginTop: 8, display: 'flex', gap: 10, fontSize: 10.5, flexWrap: 'wrap' }}>
-                  <span>{TREND_META[symSent.trend_vs_yesterday]?.icon} {TREND_META[symSent.trend_vs_yesterday]?.label}</span>
-                  <span style={{ color: 'var(--fg-subtle)' }}>언급 {VOLUME_META[symSent.mention_volume]?.label}</span>
-                  {symSent.bot_suspected === 'yes' && <span style={{ color: 'var(--warn)' }}>⚠ 봇 의심</span>}
-                  <span style={{ color: 'var(--fg-subtle)' }}>신뢰도 <strong style={{ color: 'var(--em-500)' }}>{symSent.confidence.toUpperCase()}</strong></span>
+                  <span>{TREND_META[symSent.trend_vs_yesterday]?.icon} {t(TREND_META[symSent.trend_vs_yesterday]?.label, locale)}</span>
+                  <span style={{ color: 'var(--fg-subtle)' }}>{t(VOLUME_META[symSent.mention_volume]?.label, locale)}</span>
+                  {symSent.bot_suspected === 'yes' && <span style={{ color: 'var(--warn)' }}>{t(S.sentBotSuspect, locale)}</span>}
+                  <span style={{ color: 'var(--fg-subtle)' }}>{t(S.sentConfidence, locale)} <strong style={{ color: 'var(--em-500)' }}>{symSent.confidence.toUpperCase()}</strong></span>
                 </div>
 
                 <button
                   onClick={() => setShowSentTrend(v => !v)}
                   style={{ marginTop: 10, width: '100%', padding: '5px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--fg-muted)', fontSize: 11, cursor: 'pointer' }}
                 >
-                  {showSentTrend ? '▲ 추이 숨기기' : '▼ 심리 추이 보기'}
+                  {showSentTrend ? t(S.trendHide, locale) : t(S.trendShow, locale)}
                 </button>
                 {showSentTrend && <SentimentTrendChart symbol={symbol} />}
               </>
             ) : (
               <div style={{ color: 'var(--fg-muted)', fontSize: 12, padding: '12px 0' }}>
-                {sentimentData?.available === false ? `${symbol} 심리 데이터 없음` : '로딩 중...'}
+                {sentimentData?.available === false ? `${symbol} ${t(S.sentNoData, locale)}` : t(S.loading, locale)}
               </div>
             )}
           </div>
@@ -749,16 +860,15 @@ export function DeepDiveBoard() {
             <div style={{ width: 22, height: 22, borderRadius: 6, background: 'var(--em-500)', color: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
               <Sparkle />
             </div>
-            <h3>AI 분석 · {symbol}</h3>
+            <h3>{t(S.aiAnalysis, locale)} · {symbol}</h3>
             {symBrief && (() => {
               const sqm = SETUP_QUALITY_META[symBrief.setup_quality] ?? SETUP_QUALITY_META['B'];
               const BIAS_CLS: Record<string,string> = { buy:'bull', hold:'teal', watch:'warn', avoid:'bear' };
-              const BIAS_KO:  Record<string,string> = { buy:'매수', hold:'보유', watch:'관망', avoid:'회피' };
               return (
                 <>
                   <span className={`badge ${sqm.color}`}>{sqm.label}</span>
                   <span className={`badge ${BIAS_CLS[symBrief.action_bias] ?? 'neutral'}`}>
-                    {BIAS_KO[symBrief.action_bias] ?? symBrief.action_bias}
+                    {t(BIAS_LABELS[symBrief.action_bias] ?? S.biasWatch, locale)}
                   </span>
                 </>
               );
@@ -768,23 +878,23 @@ export function DeepDiveBoard() {
             {symBrief ? (
               <>
                 <div style={{ fontSize: 12, lineHeight: 1.7, color: 'var(--fg)', marginBottom: 12 }}>
-                  {symBrief.brief}
+                  {tField(symBrief.brief_en, symBrief.brief_ko, symBrief.brief, locale)}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ padding: '7px 10px', borderRadius: 6, background: 'var(--bull-soft)', borderLeft: '2px solid var(--bull)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--bull)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>기회</div>
-                    <div style={{ fontSize: 11, lineHeight: 1.5 }}>{symBrief.key_opportunity}</div>
+                    <div style={{ fontSize: 9, color: 'var(--bull)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.opportunity, locale)}</div>
+                    <div style={{ fontSize: 11, lineHeight: 1.5 }}>{tField(symBrief.key_opportunity_en, symBrief.key_opportunity_ko, symBrief.key_opportunity, locale)}</div>
                   </div>
                   <div style={{ padding: '7px 10px', borderRadius: 6, background: 'var(--bear-soft)', borderLeft: '2px solid var(--bear)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--bear)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>리스크</div>
-                    <div style={{ fontSize: 11, lineHeight: 1.5 }}>{symBrief.key_risk}</div>
+                    <div style={{ fontSize: 9, color: 'var(--bear)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.risk, locale)}</div>
+                    <div style={{ fontSize: 11, lineHeight: 1.5 }}>{tField(symBrief.key_risk_en, symBrief.key_risk_ko, symBrief.key_risk, locale)}</div>
                   </div>
                 </div>
-                <div style={{ marginTop: 8, fontSize: 9.5, color: 'var(--fg-subtle)' }}>AI 의견 · 매매 신호 아님</div>
+                <div style={{ marginTop: 8, fontSize: 9.5, color: 'var(--fg-subtle)' }}>{t(S.aiDisclaimer, locale)}</div>
               </>
             ) : (
               <div style={{ color: 'var(--fg-muted)', fontSize: 12, padding: '12px 0' }}>
-                {briefData ? `${symbol} AI Brief 없음` : 'AI Brief 로딩 중...'}
+                {briefData ? `${symbol} ${t(S.aiNoBrief, locale)}` : t(S.aiBriefLoading, locale)}
               </div>
             )}
           </div>
@@ -794,11 +904,11 @@ export function DeepDiveBoard() {
         {/* 실적 발표 — 없을 때 최근 결과로 채움 */}
         <div className="card">
           <div className="card__hd">
-            <h3>실적 발표</h3>
+            <h3>{t(S.earningsTitle, locale)}</h3>
             {symEarning && (() => {
               const rm = EARNINGS_RISK_META[symEarning.risk_level] ?? EARNINGS_RISK_META.med;
               const tierColor = symEarning.relevance_tier === 'imminent' ? 'var(--bear)' : symEarning.relevance_tier === 'approaching' ? 'var(--warn)' : 'var(--fg-subtle)';
-              const tierLabel = symEarning.relevance_tier === 'imminent' ? '⚡ 임박' : symEarning.relevance_tier === 'approaching' ? '진입권' : '관망';
+              const tierLabel = symEarning.relevance_tier === 'imminent' ? t(S.tierImminent, locale) : symEarning.relevance_tier === 'approaching' ? t(S.tierApproaching, locale) : t(S.tierWatching, locale);
               return (
                 <>
                   <span className={`badge ${rm.color}`}>{rm.dot} {symEarning.risk_level.toUpperCase()}</span>
@@ -807,7 +917,7 @@ export function DeepDiveBoard() {
               );
             })()}
             {!symEarning && symRecent && (
-              <span className="badge neutral" style={{ fontSize: 10 }}>최근 결과</span>
+              <span className="badge neutral" style={{ fontSize: 10 }}>{t(S.recentResult, locale)}</span>
             )}
           </div>
           <div className="card__bd">
@@ -815,22 +925,22 @@ export function DeepDiveBoard() {
               <>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                   <div style={{ padding: '7px 10px', borderRadius: 8, background: 'var(--card-elev)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>발표일</div>
+                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.earningsDate, locale)}</div>
                     <div className="mono" style={{ fontSize: 14, fontWeight: 700 }}>{symEarning.earnings_date.slice(5)}</div>
                   </div>
                   <div style={{ padding: '7px 10px', borderRadius: 8, background: symEarning.days_until <= 7 ? 'var(--bear-soft)' : 'var(--warn-soft)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>D-Day</div>
-                    <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: symEarning.days_until <= 7 ? 'var(--bear)' : 'var(--warn)' }}>{symEarning.days_until}일 후</div>
+                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.dDay, locale)}</div>
+                    <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: symEarning.days_until <= 7 ? 'var(--bear)' : 'var(--warn)' }}>{symEarning.days_until}{locale === 'ko' ? '일 후' : 'd'}</div>
                   </div>
                   {symEarning.eps_estimate != null && (
                     <div style={{ padding: '7px 10px', borderRadius: 8, background: 'var(--card-elev)' }}>
-                      <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>EPS 추정</div>
+                      <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.epsEstimate, locale)}</div>
                       <div className="mono" style={{ fontSize: 14, fontWeight: 700 }}>${symEarning.eps_estimate.toFixed(2)}</div>
                     </div>
                   )}
                   {symEarning.historical_beat_rate != null && (
                     <div style={{ padding: '7px 10px', borderRadius: 8, background: 'var(--card-elev)' }}>
-                      <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>과거 Beat율</div>
+                      <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.beatRate, locale)}</div>
                       <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: 'var(--teal)' }}>{(symEarning.historical_beat_rate * 100).toFixed(0)}%</div>
                     </div>
                   )}
@@ -843,23 +953,23 @@ export function DeepDiveBoard() {
             ) : symRecent ? (
               /* 예정 실적 없음 → 최근 실적 결과 표시 */
               <>
-                <div style={{ marginBottom: 8, fontSize: 10.5, color: 'var(--fg-subtle)' }}>30일 이내 예정 실적 없음 · 최근 결과:</div>
+                <div style={{ marginBottom: 8, fontSize: 10.5, color: 'var(--fg-subtle)' }}>{t(S.earningsNone, locale)}</div>
                 <div style={{ padding: '10px 12px', borderRadius: 8, background: 'var(--card-elev)', border: '1px solid var(--border-soft)', marginBottom: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
                     <span style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>{symRecent.report_date}</span>
                     <span className={`badge ${symRecent.surprise_pct >= 0 ? 'bull' : 'bear'}`} style={{ fontSize: 10 }}>
-                      {symRecent.surprise_pct >= 0 ? '+' : ''}{symRecent.surprise_pct.toFixed(1)}% 서프라이즈
+                      {symRecent.surprise_pct >= 0 ? '+' : ''}{symRecent.surprise_pct.toFixed(1)}% {t(S.surprise, locale)}
                     </span>
                   </div>
                   <div style={{ display: 'flex', gap: 16, fontSize: 11 }}>
                     <div>
-                      <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>EPS 실제</div>
+                      <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.epsActual, locale)}</div>
                       <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: symRecent.eps_actual >= symRecent.eps_estimate ? 'var(--bull)' : 'var(--bear)' }}>
                         ${symRecent.eps_actual.toFixed(2)}
                       </div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>EPS 추정</div>
+                      <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.epsEstShort, locale)}</div>
                       <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: 'var(--fg-muted)' }}>
                         ${symRecent.eps_estimate.toFixed(2)}
                       </div>
@@ -870,7 +980,7 @@ export function DeepDiveBoard() {
               </>
             ) : (
               <div style={{ color: 'var(--fg-muted)', fontSize: 12, padding: '12px 0' }}>
-                {earningsData ? '실적 데이터 없음' : '로딩 중...'}
+                {earningsData ? t(S.earningsNoData, locale) : t(S.loading, locale)}
               </div>
             )}
           </div>
@@ -884,11 +994,12 @@ export function DeepDiveBoard() {
       <div className="mob-order-7 mob-wrap">
       <div className="card">
         <div className="card__hd">
-          <h3>Risk Regime</h3>
-          {regimeData && (() => {
-            const [label, cls] = REGIME_KO[regimeData.regime] ?? ['불명', 'neutral'];
-            return <span className={`badge ${cls}`}>{label}</span>;
-          })()}
+          <h3>{t(S.regimeTitle, locale)}</h3>
+          {regimeData && (
+            <span className={`badge ${REGIME_KO[regimeData.regime] ?? 'neutral'}`}>
+              {t(REGIME_META[regimeData.regime].label, locale)}
+            </span>
+          )}
           <small>{regimeData?.total ?? '—'} / 100</small>
         </div>
         <div className="card__bd">
@@ -896,14 +1007,14 @@ export function DeepDiveBoard() {
             <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 16, alignItems: 'center' }}>
               {/* 게이지 */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                <RadialGauge value={regimeData.total ?? 0} size={80} label={regimeData.total ?? '—'} sublabel="점수" />
+                <RadialGauge value={regimeData.total ?? 0} size={80} label={regimeData.total ?? '—'} sublabel={locale === 'ko' ? '점수' : 'score'} />
                 <div style={{ fontSize: 10, color: 'var(--fg-muted)', lineHeight: 1.4, textAlign: 'center', maxWidth: 90 }}>
-                  {regimeData.regime === 'RISK_ON'      && '추세 추종 유효'}
-                  {regimeData.regime === 'CONSTRUCTIVE' && '선별 진입 가능'}
-                  {regimeData.regime === 'MIXED'        && '포지션 축소 권장'}
-                  {regimeData.regime === 'DEFENSIVE'    && '현금 비중 확대'}
-                  {regimeData.regime === 'RISK_OFF'     && '신규 매수 자제'}
-                  {regimeData.regime === 'UNKNOWN'      && '데이터 부족'}
+                  {regimeData.regime === 'RISK_ON'      && t(S.regimeTrendOk, locale)}
+                  {regimeData.regime === 'CONSTRUCTIVE' && t(S.regimeSelectOk, locale)}
+                  {regimeData.regime === 'MIXED'        && t(S.regimeReduce, locale)}
+                  {regimeData.regime === 'DEFENSIVE'    && t(S.regimeCash, locale)}
+                  {regimeData.regime === 'RISK_OFF'     && t(S.regimeAvoid, locale)}
+                  {regimeData.regime === 'UNKNOWN'      && t(S.regimeNoData, locale)}
                 </div>
               </div>
               {/* 5요소 바 */}
@@ -933,7 +1044,7 @@ export function DeepDiveBoard() {
                 ))}
               </div>
             </div>
-          ) : <div className="subtle">로딩 중...</div>}
+          ) : <div className="subtle">{t(S.loading, locale)}</div>}
         </div>
       </div>
 
@@ -945,10 +1056,10 @@ export function DeepDiveBoard() {
       <div className="mob-order-7 mob-wrap">
       <div className="card">
         <div className="card__hd">
-          <h3>시장 전체 심리</h3>
+          <h3>{t(S.mktSentTitle, locale)}</h3>
           {mktSent && (
             <span className={`badge ${SENTIMENT_META[mktSent.sentiment]?.color.replace('text-','').split('-')[0] ?? 'neutral'}`}>
-              {SENTIMENT_META[mktSent.sentiment]?.label}
+              {t(SENTIMENT_META[mktSent.sentiment]?.label, locale)}
             </span>
           )}
         </div>
@@ -963,16 +1074,16 @@ export function DeepDiveBoard() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <ScoreBar score={mktSent.composite_score ?? mktSent.sentiment_score} />
                   <div style={{ fontSize: 10.5, color: 'var(--fg-subtle)', marginTop: 4 }}>
-                    {TREND_META[mktSent.trend_vs_yesterday]?.icon} 전일 대비 {mktSent.trend_vs_yesterday}
+                    {TREND_META[mktSent.trend_vs_yesterday]?.icon} {t(S.mktSentVsPrev, locale)} {mktSent.trend_vs_yesterday}
                   </div>
                 </div>
               </div>
               <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.65, marginBottom: 8 }}>
-                {mktSent.key_reason}
+                {tField(mktSent.key_reason_en, mktSent.key_reason_ko, mktSent.key_reason, locale)}
               </div>
-              <TopNewsBox news={mktSent.top_news} />
+              <TopNewsBox news={mktSent.top_news} locale={locale} />
             </>
-          ) : <div className="subtle">심리 데이터 없음</div>}
+          ) : <div className="subtle">{t(S.mktSentNoData, locale)}</div>}
         </div>
       </div>
       </div>{/* end mob-order-7 ROW5 RIGHT */}
