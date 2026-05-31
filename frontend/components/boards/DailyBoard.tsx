@@ -15,7 +15,7 @@ import { G } from '@/app/glossary';
 import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
 import { InfoPopover } from '@/components/ui/InfoPopover';
 import { HeatStrip } from '@/components/ui/HeatStrip';
-import { t } from '@/app/i18n';
+import { t, tField } from '@/app/i18n';
 import type { BiLang } from '@/app/i18n';
 
 const S: Record<string, BiLang> = {
@@ -150,7 +150,7 @@ export function DailyBoard() {
               <span style={{ fontWeight: 700 }}>
                 {symbolEarning.relevance_tier === 'imminent' ? '⚡' : '📅'} EARNINGS IN {symbolEarning.days_until}D
               </span>
-              <span style={{ opacity: 0.8 }}>{symbolEarning.action_note}</span>
+              <span style={{ opacity: 0.8 }}>{tField(symbolEarning.action_note_en, symbolEarning.action_note_ko, symbolEarning.action_note, locale)}</span>
             </div>
           )}
           {isLoading ? (

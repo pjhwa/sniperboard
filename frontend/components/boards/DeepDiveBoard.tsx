@@ -945,9 +945,9 @@ export function DeepDiveBoard() {
                     </div>
                   )}
                 </div>
-                <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.65, marginBottom: 8 }}>{symEarning.ai_summary}</div>
+                <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.65, marginBottom: 8 }}>{tField(symEarning.ai_summary_en, symEarning.ai_summary_ko, symEarning.ai_summary, locale)}</div>
                 <div style={{ fontSize: 11, padding: '5px 10px', borderRadius: 6, background: 'var(--warn-soft)', color: 'var(--warn)', fontWeight: 500 }}>
-                  ⚡ {symEarning.action_note}
+                  ⚡ {tField(symEarning.action_note_en, symEarning.action_note_ko, symEarning.action_note, locale)}
                 </div>
               </>
             ) : symRecent ? (
@@ -976,7 +976,7 @@ export function DeepDiveBoard() {
                     </div>
                   </div>
                 </div>
-                <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.65 }}>{symRecent.ai_reaction}</div>
+                <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.65 }}>{tField(symRecent.ai_reaction_en, symRecent.ai_reaction_ko, symRecent.ai_reaction, locale)}</div>
               </>
             ) : (
               <div style={{ color: 'var(--fg-muted)', fontSize: 12, padding: '12px 0' }}>
