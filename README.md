@@ -111,11 +111,14 @@ Breakpoint: `max-width: 767px`
 cp .env.example .env
 ```
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `NEXT_PUBLIC_API_URL` | `http://localhost:5001` | Backend API URL called by the frontend |
+The frontend uses **relative API URLs** (`/api/*`) proxied by Next.js — no IP is baked into the client bundle. This means the app works correctly even when accessed via VPN or when the server IP changes.
 
-> **Note**: `NEXT_PUBLIC_API_URL` is **bundled at build time**. After changing it, rebuild with `docker compose up --build`.
+| Variable | Where set | Default | Description |
+|----------|-----------|---------|-------------|
+| `BACKEND_URL` | `docker-compose.yml` environment | `http://backend:8000` | Backend URL used by the Next.js server for API proxying. Runtime variable — no rebuild needed. |
+
+> **Docker Compose**: `BACKEND_URL` is automatically set to `http://backend:8000` (internal Docker network). No changes needed for typical deployments.
+> **Local dev (no Docker)**: Set `BACKEND_URL=http://localhost:8000` in your shell or `.env.local` before running `npm run dev`.
 
 ### 2. `docker-compose.yml` — Backend env vars
 
@@ -343,7 +346,7 @@ Each response includes `meta: {fetched_at, age_minutes, source}` — displayed a
 
 ## API Endpoints
 
-Base URL: `http://localhost:5001/api`
+Base URL: `http://localhost:4000/api` (via Next.js proxy) or `http://localhost:5001/api` (direct to backend)
 
 | Path | Description |
 |------|-------------|
@@ -401,7 +404,7 @@ uvicorn main:app --reload --port 8000
 # Frontend (port 3000)
 cd frontend
 npm install
-NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
+BACKEND_URL=http://localhost:8000 npm run dev
 ```
 
 ---

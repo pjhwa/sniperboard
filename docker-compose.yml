@@ -25,12 +25,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:5001}
     image: sniperboard-frontend:latest
     container_name: sniperboard-frontend
     ports:
       - "4000:3000"
+    environment:
+      BACKEND_URL: "http://backend:8000"
     depends_on:
       - backend
     restart: unless-stopped

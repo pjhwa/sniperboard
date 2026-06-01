@@ -375,7 +375,7 @@ export const CONVICTION_LABEL_META: { min: number; label: BiLang }[] = [
   { min: 0,  label: { en: 'Very Low',  ko: '낮은 확신'     } },
 ];
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+export const API_BASE = '';
 
 // --- Pre/Post Market Data ---
 

@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-05-31 i18n-fixes)
+# SniperBoard — Project Context (UPDATED 2026-06-01 api-proxy)
 
 ## 0. Purpose of This Document
 
@@ -50,8 +50,8 @@ sniperboard/
         └── (monthly_trend: new fields in signal_engine + schemas, no dedicated test yet)
 ├── frontend/
 │   ├── package.json              # Next.js 16.2.6, React 19.2.4, TanStack Query 5, Zustand 5, lightweight-charts 4.2.3, Tailwind v4
-│   ├── next.config.ts
-│   ├── Dockerfile                # Build arg: NEXT_PUBLIC_API_URL
+│   ├── next.config.ts            # API proxy rewrites: /api/* → BACKEND_URL/api/*
+│   ├── Dockerfile                # No build-time API URL arg (proxy handles routing)
 │   ├── app/
 │   │   ├── layout.tsx            # Root layout (theme init script, data-theme="dark", viewport-fit=cover for mobile safe-area)
 │   │   ├── page.tsx              # App shell: Rail+Topbar+MarketStrip+Board router + ⌘K handler
@@ -101,14 +101,14 @@ sniperboard/
 │       ├── usePrePost.ts         # GET /api/prepost (60-second polling). prePostData: { market_state, pre/post price+chg_pct, regular_close }
 │       ├── useEarnings.ts        # GET /api/earnings (60-min staleTime)
 │       └── useDistributionDays.ts # GET /api/distribution-days
-└── docker-compose.yml            # backend 8000→5001, frontend 3000→4000
+└── docker-compose.yml            # backend 8000→5001, frontend 3000→4000. Frontend env: BACKEND_URL=http://backend:8000
 ```
 
 ---
 
 ## 3. Backend API Endpoints (`backend/api/endpoints.py`)
 
-Base URL: `http://<host>:5001/api`
+Base URL: `http://<host>:4000/api` (via Next.js proxy) or `http://<host>:5001/api` (direct)
 
 | Path | Parameters | Returns |
 |------|-----------|---------|
@@ -238,7 +238,7 @@ OK(<4) / WARNING(4~5) / DANGER(≥6)
 
 ```typescript
 export const SYMBOLS = ['TSLA', 'AAPL', 'NVDA', 'META', 'AMZN', 'GOOGL', 'PLTR'];
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+export const API_BASE = '';  // Empty string — all /api/* calls are relative, proxied by Next.js to BACKEND_URL
 
 // All metadata constants now use BiLang for label/desc/action fields (2026-05-31):
 export const SIGNAL_META = { sniper, vcp, pullback, strong_trend, overbought, downtrend }; // label: string, action: BiLang, desc: BiLang
@@ -424,19 +424,21 @@ docker compose up --build -d
 cd backend && pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 
-# Frontend
+# Frontend (port 3000) — proxy rewrites /api/* to BACKEND_URL
 cd frontend && npm install
-NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
+BACKEND_URL=http://localhost:8000 npm run dev
 ```
 
 ### Full Environment Variable Reference
 
-#### `.env` (root) — Frontend build args
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `NEXT_PUBLIC_API_URL` | `http://localhost:5001` | Backend URL called by the frontend. **Bundled at build time** → must rebuild after changing. |
+#### Frontend — API Proxy (Next.js rewrites in `next.config.ts`)
+The frontend uses **relative URLs** (`/api/*`). Next.js proxies them to `BACKEND_URL` at the server level — no IP is ever baked into the client bundle.
 
-Copy `.env.example` → `.env` and edit. Referenced in `docker-compose.yml` as `${NEXT_PUBLIC_API_URL:-http://localhost:5001}`.
+| Variable | Where set | Default | Description |
+|----------|-----------|---------|-------------|
+| `BACKEND_URL` | `docker-compose.yml` environment / shell | `http://localhost:5001` | Backend URL used by the Next.js server to forward API calls. **Runtime** — no rebuild needed. |
+
+Docker Compose sets `BACKEND_URL=http://backend:8000` (internal Docker network) automatically. For local dev without Docker, set `BACKEND_URL=http://localhost:8000` in shell or `.env.local`.
 
 #### `docker-compose.yml` `environment` block — Backend runtime vars
 | Variable | Required | If Unset | Description |
@@ -485,7 +487,7 @@ Copy `.env.example` → `.env` and edit. Referenced in `docker-compose.yml` as `
 | Intraday range | yfinance limit: only last 5 days available |
 | Daily load time | First request ~30 seconds (2-year download + indicator calculation) |
 | CORS | Dev mode `allow_origins=["*"]` — change for production |
-| API_BASE rebuild | `NEXT_PUBLIC_API_URL` is bundled at build time — cannot change at runtime |
+| API proxy | Frontend uses relative `/api/*` — Next.js rewrites to `BACKEND_URL` at runtime. No rebuild needed when changing backend address. |
 | Macro data | Not refreshed after market close until next trading day |
 | yfinance MultiIndex / accuracy | **data_adapter.py is the SINGLE SOURCE OF TRUTH for ALL yf data access**: full delegation complete. Phase 2: adj_close preserved in daily frames + used selectively in Stage2 long-horizon metrics (split symbols accurate 52w/RS etc while short-term/GC/raw paths unchanged). |
 
@@ -544,7 +546,7 @@ Copy `.env.example` → `.env` and edit. Referenced in `docker-compose.yml` as `
 | Add field to Watchlist/Daily | `backend/api/schemas.py` (WatchlistItemSchema, DailyResponse) + `endpoints.py` |
 | Add watchlist symbol | `backend/api/endpoints.py: WATCHLIST_SYMS` + `frontend/app/types.ts: SYMBOLS` |
 | Add macro symbol | `backend/api/endpoints.py: MACRO_SYMBOLS` |
-| Change API base URL | `frontend/app/types.ts: API_BASE` + `docker-compose.yml: NEXT_PUBLIC_API_URL` |
+| Change backend URL | `docker-compose.yml: BACKEND_URL` env (frontend) or `BACKEND_URL` shell var for local dev |
 | Signal metadata (color/desc) | `frontend/app/types.ts: SIGNAL_META` (BiLang action/desc) |
 | UI language strings (static) | Per-component `const S: Record<string, BiLang>` at top of each board file |
 | UI language toggle | `frontend/components/shell/Topbar.tsx` (EN/KO buttons) + `frontend/hooks/useStore.ts` (locale state) |
