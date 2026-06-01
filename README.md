@@ -115,10 +115,10 @@ The frontend uses **relative API URLs** (`/api/*`) proxied by Next.js — no IP 
 
 | Variable | Where set | Default | Description |
 |----------|-----------|---------|-------------|
-| `BACKEND_URL` | `docker-compose.yml` environment | `http://backend:8000` | Backend URL used by the Next.js server for API proxying. Runtime variable — no rebuild needed. |
+| `BACKEND_URL` | `docker-compose.yml` build arg + environment | `http://localhost:5001` | Backend URL used by Next.js API proxy rewrites. Must be passed as a **build arg** (Next.js 16 evaluates `rewrites()` at build time). |
 
-> **Docker Compose**: `BACKEND_URL` is automatically set to `http://backend:8000` (internal Docker network). No changes needed for typical deployments.
-> **Local dev (no Docker)**: Set `BACKEND_URL=http://localhost:8000` in your shell or `.env.local` before running `npm run dev`.
+> **Docker Compose**: `BACKEND_URL=http://backend:8000` is automatically injected as both a build arg and runtime env — no manual configuration needed.
+> **Local dev (no Docker)**: Set `BACKEND_URL=http://localhost:8000` in your shell before running `npm run dev`.
 
 ### 2. `docker-compose.yml` — Backend env vars
 

@@ -51,7 +51,7 @@ sniperboard/
 ├── frontend/
 │   ├── package.json              # Next.js 16.2.6, React 19.2.4, TanStack Query 5, Zustand 5, lightweight-charts 4.2.3, Tailwind v4
 │   ├── next.config.ts            # API proxy rewrites: /api/* → BACKEND_URL/api/*
-│   ├── Dockerfile                # No build-time API URL arg (proxy handles routing)
+│   ├── Dockerfile                # Build arg: BACKEND_URL (Next.js bakes rewrites at build time)
 │   ├── app/
 │   │   ├── layout.tsx            # Root layout (theme init script, data-theme="dark", viewport-fit=cover for mobile safe-area)
 │   │   ├── page.tsx              # App shell: Rail+Topbar+MarketStrip+Board router + ⌘K handler
@@ -101,7 +101,7 @@ sniperboard/
 │       ├── usePrePost.ts         # GET /api/prepost (60-second polling). prePostData: { market_state, pre/post price+chg_pct, regular_close }
 │       ├── useEarnings.ts        # GET /api/earnings (60-min staleTime)
 │       └── useDistributionDays.ts # GET /api/distribution-days
-└── docker-compose.yml            # backend 8000→5001, frontend 3000→4000. Frontend env: BACKEND_URL=http://backend:8000
+└── docker-compose.yml            # backend 8000→5001, frontend 3000→4000. Frontend build arg+env: BACKEND_URL=http://backend:8000
 ```
 
 ---
@@ -436,9 +436,9 @@ The frontend uses **relative URLs** (`/api/*`). Next.js proxies them to `BACKEND
 
 | Variable | Where set | Default | Description |
 |----------|-----------|---------|-------------|
-| `BACKEND_URL` | `docker-compose.yml` environment / shell | `http://localhost:5001` | Backend URL used by the Next.js server to forward API calls. **Runtime** — no rebuild needed. |
+| `BACKEND_URL` | `docker-compose.yml` build arg + environment | `http://localhost:5001` | Backend URL used by Next.js rewrites. **Must be set at build time** (Next.js 16 bakes `rewrites()` at build) AND at runtime. |
 
-Docker Compose sets `BACKEND_URL=http://backend:8000` (internal Docker network) automatically. For local dev without Docker, set `BACKEND_URL=http://localhost:8000` in shell or `.env.local`.
+Docker Compose passes `BACKEND_URL=http://backend:8000` as both a build arg (for `rewrites()` evaluation) and a runtime env var. For local dev without Docker, set `BACKEND_URL=http://localhost:8000` in shell before running `npm run dev`.
 
 #### `docker-compose.yml` `environment` block — Backend runtime vars
 | Variable | Required | If Unset | Description |
@@ -487,7 +487,7 @@ Docker Compose sets `BACKEND_URL=http://backend:8000` (internal Docker network) 
 | Intraday range | yfinance limit: only last 5 days available |
 | Daily load time | First request ~30 seconds (2-year download + indicator calculation) |
 | CORS | Dev mode `allow_origins=["*"]` — change for production |
-| API proxy | Frontend uses relative `/api/*` — Next.js rewrites to `BACKEND_URL` at runtime. No rebuild needed when changing backend address. |
+| API proxy | Frontend uses relative `/api/*` — Next.js rewrites to `BACKEND_URL`. Next.js 16 bakes `rewrites()` at build time → `BACKEND_URL` must be set as a build arg (docker-compose handles this). |
 | Macro data | Not refreshed after market close until next trading day |
 | yfinance MultiIndex / accuracy | **data_adapter.py is the SINGLE SOURCE OF TRUTH for ALL yf data access**: full delegation complete. Phase 2: adj_close preserved in daily frames + used selectively in Stage2 long-horizon metrics (split symbols accurate 52w/RS etc while short-term/GC/raw paths unchanged). |
 
