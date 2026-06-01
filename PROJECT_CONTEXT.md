@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-06-01 api-proxy)
+# SniperBoard — Project Context (UPDATED 2026-06-01 overnight-fix)
 
 ## 0. Purpose of This Document
 
@@ -40,7 +40,7 @@ sniperboard/
 │   │   ├── data_service.py       # YFinanceDataService implementation + module-level helpers
 │   │   ├── brief_service.py      # GitHub raw fetch + 30-min in-memory cache (BRIEF_DATA_URL)
 │   │   ├── earnings_service.py   # GitHub raw fetch + 60-min in-memory cache (EARNINGS_DATA_URL)
-│   │   └── overnight_service.py  # Yahoo Finance WebSocket → Blue Ocean ATS overnight price stream. asyncio background loop + auto-reconnect. Protobuf base64 parsing (field2=price, field6=session(8=overnight), field12=chg_pct). Called via start_overnight_service() in FastAPI lifespan.
+│   │   └── overnight_service.py  # Yahoo Finance WebSocket → Blue Ocean ATS overnight price stream. Runs in a dedicated daemon thread (asyncio.run in thread) — NOT in uvicorn's event loop, to avoid handshake timeouts caused by blocking yfinance I/O. Protobuf base64 parsing (field1=symbol, field2=price/float32, field6=session_hours/varint:8=overnight, field12=chg_pct). start_overnight_service() called in FastAPI lifespan; spawns threading.Thread(daemon=True).
 │   │   └── macro_insight_service.py  # GitHub raw fetch + 30-min in-memory cache (MACRO_INSIGHT_URL). fetch_macro_insight() → Optional[dict]. get_ai_meta(raw) → {generated_at,age_minutes}. Returns None gracefully if URL not set.
 │   └── tests/
 │       ├── test_data_adapter.py (29 tests — adapter + signal_engine; Phase 5 full suite green)
@@ -121,7 +121,7 @@ Base URL: `http://<host>:4000/api` (via Next.js proxy) or `http://<host>:5001/ap
 | `GET /distribution-days` | — | SPY·QQQ DD count/level/dates |
 | `GET /sentiment` | — | Social sentiment JSON (GitHub raw 30-min cache) + `meta: {fetched_at, age_minutes, source}` |
 | `GET /sentiment/history` | `symbol` (required), `days` (1-30, default 7) | N-day pre_open/post_close sentiment point array. Supports `symbol="MARKET"`. 5-min TTL cache. |
-| `GET /prepost` | `symbol` | Pre/after-market price · change% · market_state (PRE/POST/REGULAR/CLOSED/OVERNIGHT). ticker.info first, PREPRE→OVERNIGHT conversion + overnight_service WebSocket cache. |
+| `GET /prepost` | `symbol` | Pre/after-market price · change% · market_state (PRE/POST/REGULAR/CLOSED/OVERNIGHT). ticker.info first, PREPRE or CLOSED→OVERNIGHT conversion when WebSocket cache populated. regular_close always uses regularMarketPrice (not regularMarketPreviousClose) for non-REGULAR states. |
 | `GET /brief` | — | AI Daily Brief JSON (GitHub raw 30-min cache) + `meta: {fetched_at, age_minutes, source}` |
 | `GET /earnings` | — | Earnings Intelligence JSON (GitHub raw 60-min cache) + `meta: {fetched_at, age_minutes, source}` |
 | `GET /macro/insight` | — | 6 group traffic lights (signal/direction) + AI interpretation text (text/text_en/text_ko) + overall judgment + summary/summary_en/summary_ko + bullets/bullets_en/bullets_ko + ai_meta (age_minutes). Rule-based real-time + GitHub-cached AI overlay. |

@@ -79,34 +79,44 @@ def _fetch_prepost_data(symbol: str) -> dict:
 
         market_state = info.get("marketState", "CLOSED")
 
-        # PREPRE = Yahoo Finance's label for the overnight session (8 PM–4 AM ET, Blue Ocean ATS)
-        if market_state == "PREPRE":
+        # PREPRE = Yahoo Finance's legacy label for overnight (8 PM–4 AM ET, Blue Ocean ATS).
+        # In practice Yahoo Finance often returns "CLOSED" during overnight — handle both.
+        if market_state in ("PREPRE", "CLOSED"):
             overnight = get_overnight_price(symbol)
             if overnight:
                 result["market_state"] = "OVERNIGHT"
-                result["overnight_price"] = overnight["price"]
-                result["overnight_change_pct"] = overnight["change_pct"]
-                # regular_close: regularMarketPrice during PREPRE = last regular session close
+                ovn_price = float(overnight["price"])
+                result["overnight_price"] = ovn_price
+                # regularMarketPrice during PREPRE/CLOSED = last regular session close
                 regular_close = info.get("regularMarketPrice")
                 result["regular_close"] = regular_close
+                # Recalculate change% vs last regular close (WebSocket field 12 uses a
+                # different reference — previous-previous close — so it's unreliable here)
+                if regular_close:
+                    result["overnight_change_pct"] = round(
+                        (ovn_price - float(regular_close)) / float(regular_close) * 100, 3
+                    )
+                else:
+                    result["overnight_change_pct"] = overnight["change_pct"]
                 regular_change_pct = info.get("regularMarketChangePercent")
                 if regular_change_pct is not None:
                     result["regular_change_pct"] = round(float(regular_change_pct), 3)
-            else:
+                return result
+            if market_state == "PREPRE":
                 # Overnight session but WebSocket cache not yet populated → treat as CLOSED
                 result["market_state"] = "CLOSED"
                 result["regular_close"] = info.get("regularMarketPrice")
-            return result
+                return result
 
         result["market_state"] = market_state if market_state in ("PRE", "POST", "REGULAR", "CLOSED") else "CLOSED"
 
-        # During PRE/POST, regularMarketPrice = last regular session close (yesterday).
-        # regularMarketPreviousClose = the session before that (two days ago) — wrong base.
-        # During REGULAR hours, regularMarketPrice = live price; use previousClose instead.
-        if market_state in ("PRE", "POST"):
-            regular_close = info.get("regularMarketPrice")
-        else:
+        # regularMarketPrice = last regular session close during PRE/POST/CLOSED.
+        # regularMarketPreviousClose = the session before that — wrong base for change%.
+        # During REGULAR hours only, regularMarketPrice = live price; use previousClose instead.
+        if market_state == "REGULAR":
             regular_close = info.get("regularMarketPreviousClose") or info.get("regularMarketPrice")
+        else:
+            regular_close = info.get("regularMarketPrice")
         result["regular_close"] = regular_close
 
         pre_price = info.get("preMarketPrice")

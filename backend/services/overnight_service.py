@@ -103,7 +103,17 @@ async def _run_websocket(symbols: List[str]) -> None:
 
 
 def start_overnight_service(symbols: List[str]) -> None:
-    """FastAPI lifespan에서 호출 — asyncio 백그라운드 태스크로 WebSocket 시작."""
-    loop = asyncio.get_event_loop()
-    loop.create_task(_run_websocket(symbols))
-    logger.info("overnight 서비스 시작됨")
+    """FastAPI lifespan에서 호출 — 전용 데몬 스레드에서 WebSocket 실행.
+
+    uvicorn 이벤트루프는 동기 yfinance 호출로 수 초씩 블로킹되므로,
+    asyncio.create_task()로 등록하면 WebSocket 핸드셰이크가 타임아웃된다.
+    별도 스레드에서 asyncio.run()으로 독립 이벤트루프를 생성해 실행한다.
+    """
+    import threading
+
+    def _thread_main():
+        asyncio.run(_run_websocket(symbols))
+
+    t = threading.Thread(target=_thread_main, daemon=True, name="overnight-ws")
+    t.start()
+    logger.info("overnight 서비스 시작됨 (전용 스레드)")

@@ -32,8 +32,8 @@ export function MarketStrip() {
 
   const candles = ohlcvData?.candles ?? [];
   const lastCandle = candles[candles.length - 1];
-  // PRE/POST 상태에서는 공식 종가(regular_close)를, 그 외엔 인트라데이 마지막 캔들 사용
-  const isPP = prePostData?.market_state === 'PRE' || prePostData?.market_state === 'POST';
+  // PRE/POST/OVERNIGHT 상태에서는 공식 종가(regular_close)를, 그 외엔 인트라데이 마지막 캔들 사용
+  const isPP = prePostData?.market_state === 'PRE' || prePostData?.market_state === 'POST' || prePostData?.market_state === 'OVERNIGHT';
   const displayPrice = isPP && prePostData?.regular_close != null
     ? prePostData.regular_close
     : lastCandle?.close ?? null;
