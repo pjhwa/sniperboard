@@ -40,6 +40,7 @@ const S: Record<string, { en: string; ko: string }> = {
   vix:          { en: 'VIX · Fear Gauge',                   ko: 'VIX · 공포지수' },
   rates:        { en: '10Y Yield',                          ko: '미국 10년 금리' },
   dollar:       { en: 'Dollar (DXY)',                       ko: '달러 (DXY)' },
+  btc:          { en: 'Bitcoin (BTC)',                      ko: '비트코인 (BTC)' },
 };
 const t = (o: { en: string; ko: string }, l: Locale) => o[l];
 
@@ -106,6 +107,7 @@ function buildShareText(
     bp?.vix_note_en ? `· VIX: ${ko ? bp.vix_note_ko : bp.vix_note_en}` : '',
     bp?.rates_note_en ? `· ${ko ? '금리' : 'Rates'}: ${ko ? bp.rates_note_ko : bp.rates_note_en}` : '',
     bp?.dollar_note_en ? `· ${ko ? '달러' : 'Dollar'}: ${ko ? bp.dollar_note_ko : bp.dollar_note_en}` : '',
+    (bp as any)?.btc_note_en ? `· ${ko ? '비트코인' : 'BTC'}: ${ko ? (bp as any).btc_note_ko : (bp as any).btc_note_en}` : '',
   ].filter(Boolean).join('\n');
 
   const saLines = [
@@ -634,15 +636,16 @@ export function MorningBriefingBoard() {
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
               {([
-                { key: 'vix',   en: bp.vix_note_en,   ko: bp.vix_note_ko,   color: 'var(--warn)' },
-                { key: 'rates', en: bp.rates_note_en, ko: bp.rates_note_ko, color: 'var(--info)' },
-                { key: 'dollar',en: bp.dollar_note_en,ko: bp.dollar_note_ko,color: 'var(--teal)' },
-              ] as const).filter(r => r.en || r.ko).map(row => (
+                { key: 'vix',   en: bp.vix_note_en,        ko: bp.vix_note_ko,        color: 'var(--warn)' },
+                { key: 'rates', en: bp.rates_note_en,      ko: bp.rates_note_ko,      color: 'var(--info)' },
+                { key: 'dollar',en: bp.dollar_note_en,     ko: bp.dollar_note_ko,     color: 'var(--teal)' },
+                { key: 'btc',   en: (bp as any).btc_note_en, ko: (bp as any).btc_note_ko, color: 'var(--bull)' },
+              ]).filter(r => r.en || r.ko).map(row => (
                 <div key={row.key} style={{ display: 'flex', gap: 10, padding: '7px 10px', borderRadius: 'var(--r-sm)', background: 'var(--bg-subtle)' }}>
                   <div style={{ width: 3, borderRadius: 2, background: row.color, flexShrink: 0 }} />
                   <div>
                     <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: row.color, marginBottom: 2 }}>
-                      {t(S[row.key as 'vix' | 'rates' | 'dollar'], locale)}
+                      {t(S[row.key as 'vix' | 'rates' | 'dollar' | 'btc'], locale)}
                     </div>
                     <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.6, color: 'var(--fg-muted)' }}>
                       {tField(row.en, row.ko, '', locale)}
