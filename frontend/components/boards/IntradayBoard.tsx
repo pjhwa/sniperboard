@@ -136,9 +136,9 @@ export function IntradayBoard() {
       <Card title={t(S.activeSignals, locale)} hint={activeSignals.length ? 'LIVE' : null}>
         <div className="col">
           {activeSignals.length === 0 && (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--fg-subtle)', fontSize: 12 }}>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--fg-subtle)', fontSize: 13 }}>
               {t(S.noSignal, locale)}<br />
-              <span style={{ fontSize: 10.5 }}>{t(S.noSignalSub, locale)}</span>
+              <span style={{ fontSize: 11.5 }}>{t(S.noSignalSub, locale)}</span>
             </div>
           )}
           {activeSignals.map(s => {
@@ -184,8 +184,8 @@ export function IntradayBoard() {
       <Card title={t(S.rsiIndicators, locale)}>
         <div style={{ marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
-            <span style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>RSI(14)</span>
-            <span className="mono" style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em' }}>{rsiVal.toFixed(1)}</span>
+            <span style={{ fontSize: 12, color: 'var(--fg-subtle)' }}>RSI(14)</span>
+            <span className="mono" style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em' }}>{rsiVal.toFixed(1)}</span>
           </div>
           <div className="rsi-gauge">
             <div className="marker" style={{ left: `${rsiVal}%` }} />
@@ -194,15 +194,15 @@ export function IntradayBoard() {
         </div>
         <div className="divider" />
         {lastCandle && indicators && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 11 }}>
-            <div><div className="subtle" style={{ fontSize: 10 }}>Price</div><div className="mono" style={{ fontSize: 14, fontWeight: 600 }}>${lastCandle.close.toFixed(2)}</div></div>
-            <div><div className="subtle" style={{ fontSize: 10 }}>Volume</div><div className="mono" style={{ fontSize: 14, fontWeight: 600 }}>{(lastCandle.volume / 1000).toFixed(0)}K</div></div>
-            <div><div className="subtle" style={{ fontSize: 10 }}>EMA21</div><div className="mono" style={{ fontSize: 12 }}>${(indicators.ema21[lastIdx] ?? 0).toFixed(2)}</div></div>
-            <div><div className="subtle" style={{ fontSize: 10 }}>EMA50</div><div className="mono" style={{ fontSize: 12 }}>${(indicators.ema50[lastIdx] ?? 0).toFixed(2)}</div></div>
-            <div><div className="subtle" style={{ fontSize: 10 }}>ATR(14)</div><div className="mono" style={{ fontSize: 12 }}>{atrVal.toFixed(2)}</div></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 12 }}>
+            <div><div className="subtle" style={{ fontSize: 11 }}>Price</div><div className="mono" style={{ fontSize: 15, fontWeight: 600 }}>${lastCandle.close.toFixed(2)}</div></div>
+            <div><div className="subtle" style={{ fontSize: 11 }}>Volume</div><div className="mono" style={{ fontSize: 15, fontWeight: 600 }}>{(lastCandle.volume / 1000).toFixed(0)}K</div></div>
+            <div><div className="subtle" style={{ fontSize: 11 }}>EMA21</div><div className="mono" style={{ fontSize: 13 }}>${(indicators.ema21[lastIdx] ?? 0).toFixed(2)}</div></div>
+            <div><div className="subtle" style={{ fontSize: 11 }}>EMA50</div><div className="mono" style={{ fontSize: 13 }}>${(indicators.ema50[lastIdx] ?? 0).toFixed(2)}</div></div>
+            <div><div className="subtle" style={{ fontSize: 11 }}>ATR(14)</div><div className="mono" style={{ fontSize: 13 }}>{atrVal.toFixed(2)}</div></div>
             <div>
-              <div className="subtle" style={{ fontSize: 10 }}>{t(S.ema21Dev, locale)}</div>
-              <div className="mono" style={{ fontSize: 12 }}>
+              <div className="subtle" style={{ fontSize: 11 }}>{t(S.ema21Dev, locale)}</div>
+              <div className="mono" style={{ fontSize: 13 }}>
                 {indicators.ema21[lastIdx] ? (((lastCandle.close - indicators.ema21[lastIdx]) / indicators.ema21[lastIdx]) * 100).toFixed(2) : '—'}%
               </div>
             </div>

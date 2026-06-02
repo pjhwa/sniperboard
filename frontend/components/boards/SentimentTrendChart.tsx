@@ -46,7 +46,7 @@ export function SentimentTrendChart({ symbol, locale = 'ko' }: Props) {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#71717a',
-        fontSize: 10,
+        fontSize: 11,
       },
       grid: {
         vertLines: { color: 'rgba(63,63,70,0.4)' },
@@ -177,7 +177,7 @@ export function SentimentTrendChart({ symbol, locale = 'ko' }: Props) {
             key={d}
             onClick={(e) => { e.stopPropagation(); setDays(d); }}
             style={{
-              fontSize: 10,
+              fontSize: 11,
               fontWeight: days === d ? 700 : 400,
               padding: '2px 8px',
               borderRadius: 4,
@@ -194,14 +194,14 @@ export function SentimentTrendChart({ symbol, locale = 'ko' }: Props) {
       </div>
 
       {isLoading ? (
-        <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-subtle)', fontSize: 11 }}>
+        <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-subtle)', fontSize: 12 }}>
           {locale === 'en' ? 'Loading chart...' : '차트 로딩 중...'}
         </div>
       ) : (
         <div ref={chartContainerRef} style={{ width: '100%', height: 220 }} />
       )}
 
-      <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 9, color: 'var(--fg-subtle)' }}>
+      <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 10, color: 'var(--fg-subtle)' }}>
         <span>{locale === 'en' ? '── Price (left)' : '── 주가 (좌축)'}</span>
         <span style={{ color: '#a78bfa' }}>{locale === 'en' ? '── Sentiment (right −2~+2)' : '── 심리점수 (우축 −2~+2)'}</span>
         <span>▲ pre_open &nbsp; ● post_close</span>

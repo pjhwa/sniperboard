@@ -144,7 +144,7 @@ export function DailyBoard() {
               background: symbolEarning.relevance_tier === 'imminent' ? 'var(--warn)' : 'var(--border)',
               color: symbolEarning.relevance_tier === 'imminent' ? '#000' : 'var(--fg)',
               padding: '4px 12px',
-              fontSize: 11.5,
+              fontSize: 12.5,
               display: 'flex',
               alignItems: 'center',
               gap: 8,
@@ -179,18 +179,18 @@ export function DailyBoard() {
                 sublabel={sublabel}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>RS Score</div>
+                <div style={{ fontSize: 11, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>RS Score</div>
                 <div
                   className="mono"
                   style={{
-                    fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em',
+                    fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em',
                     color: stage2.rs_score >= 70 ? 'var(--bull)' : stage2.rs_score >= 50 ? 'var(--teal)' : 'var(--bear)',
                   }}
                 >
                   {stage2.rs_score}
                 </div>
-                <div style={{ fontSize: 10.5, color: 'var(--fg-muted)' }}>{locale === 'en' ? 'vs SPY · 63d' : 'vs SPY · 63일'}</div>
-                <div style={{ marginTop: 6, fontSize: 10.5, color: 'var(--fg-muted)' }}>
+                <div style={{ fontSize: 11.5, color: 'var(--fg-muted)' }}>{locale === 'en' ? 'vs SPY · 63d' : 'vs SPY · 63일'}</div>
+                <div style={{ marginTop: 6, fontSize: 11.5, color: 'var(--fg-muted)' }}>
                   <div>{locale === 'en' ? '52w High:' : '52w 고점:'} <span className="mono">{stage2.pct_from_52w_high.toFixed(1)}%</span></div>
                   <div>{locale === 'en' ? 'Pullback:' : '최근 조정:'} <span className="mono">{stage2.pullback_pct.toFixed(1)}%</span></div>
                 </div>
@@ -211,11 +211,11 @@ export function DailyBoard() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: meta.color }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: meta.color }}>
                     {t(meta.label, locale)}
                   </span>
                   {stage2.monthly_ema10 != null && (
-                    <span style={{ fontSize: 10.5, color: meta.color, opacity: 0.85 }} className="mono">
+                    <span style={{ fontSize: 11.5, color: meta.color, opacity: 0.85 }} className="mono">
                       EMA10 ${stage2.monthly_ema10.toFixed(2)}
                       {stage2.pct_from_monthly_ema10 != null && (
                         <> · {stage2.pct_from_monthly_ema10 > 0 ? '+' : ''}{stage2.pct_from_monthly_ema10.toFixed(1)}%</>
@@ -255,35 +255,35 @@ export function DailyBoard() {
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
               <div style={{ padding: 8, borderRadius: 8, background: 'var(--info-soft)' }}>
-                <div style={{ fontSize: 9.5, color: 'var(--info)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Entry</div>
-                <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--info)' }}>${entry.toFixed(2)}</div>
+                <div style={{ fontSize: 10.5, color: 'var(--info)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Entry</div>
+                <div className="mono" style={{ fontSize: 15, fontWeight: 600, color: 'var(--info)' }}>${entry.toFixed(2)}</div>
               </div>
               <div style={{ padding: 8, borderRadius: 8, background: 'var(--bear-soft)' }}>
-                <div style={{ fontSize: 9.5, color: 'var(--bear)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Stop</div>
-                <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--bear)' }}>${stop.toFixed(2)}</div>
+                <div style={{ fontSize: 10.5, color: 'var(--bear)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Stop</div>
+                <div className="mono" style={{ fontSize: 15, fontWeight: 600, color: 'var(--bear)' }}>${stop.toFixed(2)}</div>
               </div>
               <div style={{ padding: 8, borderRadius: 8, background: 'var(--bull-soft)' }}>
-                <div style={{ fontSize: 9.5, color: 'var(--bull)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Target</div>
-                <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--bull)' }}>${target.toFixed(2)}</div>
+                <div style={{ fontSize: 10.5, color: 'var(--bull)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Target</div>
+                <div className="mono" style={{ fontSize: 15, fontWeight: 600, color: 'var(--bull)' }}>${target.toFixed(2)}</div>
               </div>
             </div>
 
-            <div style={{ fontSize: 11, color: 'var(--fg-muted)', display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
+            <div style={{ fontSize: 12, color: 'var(--fg-muted)', display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
               <span>R:R Ratio</span>
               <span className="mono" style={{ fontWeight: 600, color: 'var(--fg)' }}>1 : 3.00</span>
             </div>
-            <div style={{ fontSize: 11, color: 'var(--fg-muted)', display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
+            <div style={{ fontSize: 12, color: 'var(--fg-muted)', display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
               <span>Stop Loss %</span>
               <span className="mono" style={{ color: 'var(--bear)' }}>-{stopLossPct.toFixed(2)}%</span>
             </div>
-            <div style={{ fontSize: 11, color: 'var(--fg-muted)', display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
+            <div style={{ fontSize: 12, color: 'var(--fg-muted)', display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
               <span>{t(S.posLabel, locale)} ({rrRiskPct}% risk on ${(accountNum / 1000).toFixed(0)}K)</span>
               <span className="mono" style={{ color: 'var(--em-500)', fontWeight: 600 }}>{qty > 0 ? `${qty} ${t(S.posUnit, locale)}` : '—'}</span>
             </div>
 
             <div className="divider" />
 
-            <div style={{ fontSize: 11, color: 'var(--fg-subtle)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Patterns</div>
+            <div style={{ fontSize: 12, color: 'var(--fg-subtle)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Patterns</div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {stage2.gc_breakout && <span className="badge purple">GC Breakout</span>}
               {stage2.gc_retest && <span className="badge purple">GC Retest</span>}
@@ -314,7 +314,7 @@ export function DailyBoard() {
               term={t(S.heatmapTitle, locale).replace('{n}', '90')}
               body={t(S.heatmapInfo, locale)}
             />
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 16, fontSize: 11.5, color: 'var(--fg-muted)' }}>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 16, fontSize: 12.5, color: 'var(--fg-muted)' }}>
               <span>
                 <span style={{ color: 'var(--bull)', fontWeight: 600 }}>{t(S.upDays, locale)}{upDays}{locale === 'ko' ? '일' : 'd'}</span>
                 {' '}

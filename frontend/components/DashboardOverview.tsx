@@ -64,7 +64,7 @@ function RegimeCard({ data }: { data: RegimeData | undefined }) {
       {/* 헤더 */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{color:'var(--text-label)'}}>
+          <div className="text-[11px] font-bold uppercase tracking-widest mb-1" style={{color:'var(--text-label)'}}>
             Risk Regime — 매크로 환경
           </div>
           <div className={`text-2xl font-black tracking-tight ${meta.color}`}>
@@ -75,7 +75,7 @@ function RegimeCard({ data }: { data: RegimeData | undefined }) {
         {data.total != null && (
           <div className="text-right shrink-0">
             <div className={`text-4xl font-black tabular-nums ${meta.color}`}>{data.total.toFixed(0)}</div>
-            <div className="text-[10px] font-medium" style={{color:'var(--text-muted)'}}>/ 100점</div>
+            <div className="text-[11px] font-medium" style={{color:'var(--text-muted)'}}>/ 100점</div>
           </div>
         )}
       </div>
@@ -91,7 +91,7 @@ function RegimeCard({ data }: { data: RegimeData | undefined }) {
           const cc = COMPONENT_COLORS[key];
           return (
             <div key={key} className="flex items-center gap-2">
-              <div className="w-14 text-right text-[10px] font-semibold shrink-0" style={{color:'var(--text-label)'}}>
+              <div className="w-14 text-right text-[11px] font-semibold shrink-0" style={{color:'var(--text-label)'}}>
                 {COMPONENT_LABELS[key]}
               </div>
               <div className="flex-1 h-2 rounded-full overflow-hidden" style={{background:'rgba(20,30,60,0.8)'}}>
@@ -102,7 +102,7 @@ function RegimeCard({ data }: { data: RegimeData | undefined }) {
                   />
                 )}
               </div>
-              <div className="w-10 text-right text-[10px] tabular-nums font-medium shrink-0" style={{color:'var(--text-secondary)'}}>
+              <div className="w-10 text-right text-[11px] tabular-nums font-medium shrink-0" style={{color:'var(--text-secondary)'}}>
                 {val != null ? `${val.toFixed(0)}` : '—'}
               </div>
             </div>
@@ -110,7 +110,7 @@ function RegimeCard({ data }: { data: RegimeData | undefined }) {
         })}
       </div>
 
-      <p className="text-[10px] mt-4" style={{color:'var(--text-muted)'}}>
+      <p className="text-[11px] mt-4" style={{color:'var(--text-muted)'}}>
         ※ 후행 지표 — 시장 환경 진단이며 매매 신호가 아닙니다.
       </p>
     </div>
@@ -139,10 +139,10 @@ function DDCard({ sym, dd }: { sym: string; dd: DDDetail | undefined }) {
       }} />
 
       <div className="flex items-center justify-between mb-2">
-        <div className="text-[10px] font-bold uppercase tracking-widest" style={{color:'var(--text-label)'}}>
+        <div className="text-[11px] font-bold uppercase tracking-widest" style={{color:'var(--text-label)'}}>
           Distribution Day · {sym}
         </div>
-        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${meta.bg} ${meta.color}`}>
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${meta.bg} ${meta.color}`}>
           {meta.label.ko}
         </span>
       </div>
@@ -168,7 +168,7 @@ function DDCard({ sym, dd }: { sym: string; dd: DDDetail | undefined }) {
         })}
       </div>
 
-      <p className="text-[10px] mt-2 leading-relaxed" style={{color:'var(--text-secondary)'}}>{meta.desc.ko}</p>
+      <p className="text-[11px] mt-2 leading-relaxed" style={{color:'var(--text-secondary)'}}>{meta.desc.ko}</p>
     </div>
   );
 }
@@ -181,10 +181,10 @@ function IndexSnapshot({ item, label }: { item: MacroItem | undefined; label: st
 
   return (
     <div className="glass-card rounded-xl p-4 hover:scale-[1.02] transition-transform duration-200">
-      <div className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{color:'var(--text-label)'}}>{label}</div>
+      <div className="text-[11px] font-semibold uppercase tracking-wide mb-1" style={{color:'var(--text-label)'}}>{label}</div>
       <div className="text-xl font-black text-white tabular-nums leading-tight">{fmt(item.price)}</div>
       <div className="mt-1.5"><ChangeChip v={item.change_pct_1d} /></div>
-      <div className="text-[9px] mt-1 font-medium" style={{color:'var(--text-muted)'}}>
+      <div className="text-[10px] mt-1 font-medium" style={{color:'var(--text-muted)'}}>
         5D: {item.change_pct_5d != null ? `${item.change_pct_5d >= 0 ? '+' : ''}${item.change_pct_5d.toFixed(2)}%` : '—'}
       </div>
     </div>
@@ -221,31 +221,31 @@ function VIXPanel({ bySymbol }: { bySymbol: Record<string, MacroItem> }) {
     <div className="glass-card rounded-2xl p-5 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
 
-      <div className="text-[10px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2" style={{color:'var(--text-label)'}}>
+      <div className="text-[11px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2" style={{color:'var(--text-label)'}}>
         <span className="w-2 h-2 rounded-full bg-blue-500/60" />
         변동성 (VIX) 환경
       </div>
 
       <div className="flex flex-wrap gap-6 mb-4">
         <div>
-          <div className="text-[10px] font-medium mb-0.5" style={{color:'var(--text-muted)'}}>^VIX (공포지수)</div>
+          <div className="text-[11px] font-medium mb-0.5" style={{color:'var(--text-muted)'}}>^VIX (공포지수)</div>
           <div className={`text-3xl font-black tabular-nums ${lm.color}`}>{fmt(vixVal, 1)}</div>
-          <div className={`text-[10px] font-bold mt-1 ${lm.color}`}>{lm.label}</div>
+          <div className={`text-[11px] font-bold mt-1 ${lm.color}`}>{lm.label}</div>
         </div>
         {vix9dVal != null && (
           <div>
-            <div className="text-[10px] font-medium mb-0.5" style={{color:'var(--text-muted)'}}>^VIX9D (단기)</div>
+            <div className="text-[11px] font-medium mb-0.5" style={{color:'var(--text-muted)'}}>^VIX9D (단기)</div>
             <div className="text-3xl font-black tabular-nums text-white">{fmt(vix9dVal, 1)}</div>
-            <div className="text-[10px] mt-1 font-medium" style={{color:'var(--text-label)'}}>9일 내재변동성</div>
+            <div className="text-[11px] mt-1 font-medium" style={{color:'var(--text-label)'}}>9일 내재변동성</div>
           </div>
         )}
         {vvix?.price != null && (
           <div>
-            <div className="text-[10px] font-medium mb-0.5" style={{color:'var(--text-muted)'}}>^VVIX (꼬리위험)</div>
+            <div className="text-[11px] font-medium mb-0.5" style={{color:'var(--text-muted)'}}>^VVIX (꼬리위험)</div>
             <div className={`text-3xl font-black tabular-nums ${(vvix.price ?? 0) > 110 ? 'text-orange-400' : 'text-white'}`}>
               {fmt(vvix.price, 1)}
             </div>
-            <div className="text-[10px] mt-1 font-medium" style={{color:(vvix.price ?? 0) > 110 ? undefined : 'var(--text-label)'}}>
+            <div className="text-[11px] mt-1 font-medium" style={{color:(vvix.price ?? 0) > 110 ? undefined : 'var(--text-label)'}}>
               {(vvix.price ?? 0) > 110 ? '⚠ 꼬리위험 경고' : 'VIX의 변동성'}
             </div>
           </div>
@@ -288,12 +288,12 @@ function BreadthPanel({ bySymbol }: { bySymbol: Record<string, MacroItem> }) {
       <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-500/30 to-transparent" />
 
       <div className="flex items-center justify-between mb-4">
-        <div className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2" style={{color:'var(--text-label)'}}>
+        <div className="text-[11px] font-bold uppercase tracking-widest flex items-center gap-2" style={{color:'var(--text-label)'}}>
           <span className="w-2 h-2 rounded-full bg-teal-500/60" />
           시장 폭 (Breadth) — 랠리 건강도
         </div>
         {breadthWarning && (
-          <span className="px-2 py-0.5 rounded-full text-orange-300 text-[9px] font-bold" style={{background:'rgba(251,146,60,0.15)', border:'1px solid rgba(251,146,60,0.35)'}}>
+          <span className="px-2 py-0.5 rounded-full text-orange-300 text-[10px] font-bold" style={{background:'rgba(251,146,60,0.15)', border:'1px solid rgba(251,146,60,0.35)'}}>
             ⚠ 협소한 랠리
           </span>
         )}
@@ -313,7 +313,7 @@ function BreadthPanel({ bySymbol }: { bySymbol: Record<string, MacroItem> }) {
                 <div className={`text-xs font-bold ${isSpy ? 'text-white' : ''}`} style={!isSpy ? {color:'var(--text-primary)'} : {}}>
                   {label}
                 </div>
-                <div className="text-[9px]" style={{color:'var(--text-muted)'}}>{sub}</div>
+                <div className="text-[10px]" style={{color:'var(--text-muted)'}}>{sub}</div>
               </div>
               <div className="flex-1 flex items-center h-5">
                 {chg != null ? (
@@ -376,7 +376,7 @@ function CreditPanel({ bySymbol }: { bySymbol: Record<string, MacroItem> }) {
       <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
 
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <div className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2" style={{color:'var(--text-label)'}}>
+        <div className="text-[11px] font-bold uppercase tracking-widest flex items-center gap-2" style={{color:'var(--text-label)'}}>
           <span className="w-2 h-2 rounded-full bg-emerald-500/60" />
           신용 스트레스 — HYG / IEF 관계
         </div>
@@ -393,7 +393,7 @@ function CreditPanel({ bySymbol }: { bySymbol: Record<string, MacroItem> }) {
           { item: ief, label: 'IEF', sub: '중기국채', accent: true },
         ].map(({ item, label, sub, accent }) => (
           <div key={label} className={`rounded-xl p-3 ${accent ? '' : ''}`} style={{background:'rgba(12,20,45,0.7)', border:'1px solid rgba(35,55,95,0.5)'}}>
-            <div className="text-[10px] font-bold mb-0.5" style={{color:'var(--text-label)'}}>
+            <div className="text-[11px] font-bold mb-0.5" style={{color:'var(--text-label)'}}>
               {label} <span className="font-normal opacity-70">{sub}</span>
             </div>
             <div className="text-lg font-black text-white tabular-nums">{fmt(item?.price)}</div>
@@ -437,7 +437,7 @@ export default function DashboardOverview() {
         <span className="text-sm font-bold tracking-wide" style={{color:'var(--text-secondary)'}}>
           Market Overview
         </span>
-        <span className="text-[10px] font-medium uppercase tracking-widest" style={{color:'var(--text-muted)'}}>
+        <span className="text-[11px] font-medium uppercase tracking-widest" style={{color:'var(--text-muted)'}}>
           — 현재 시장 한눈에 보기
         </span>
       </div>
@@ -476,7 +476,7 @@ export default function DashboardOverview() {
       {/* 구분선 */}
       <div className="flex items-center gap-4 pt-1">
         <div className="flex-1 h-[1px]" style={{background:'linear-gradient(90deg, transparent, rgba(45,65,115,0.5), transparent)'}} />
-        <span className="text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{color:'var(--text-muted)'}}>
+        <span className="text-[11px] font-bold uppercase tracking-widest whitespace-nowrap" style={{color:'var(--text-muted)'}}>
           세부 분석 탭
         </span>
         <div className="flex-1 h-[1px]" style={{background:'linear-gradient(90deg, transparent, rgba(45,65,115,0.5), transparent)'}} />

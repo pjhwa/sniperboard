@@ -51,10 +51,10 @@ export default function DailyTab() {
         <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3 mb-4 flex-wrap gap-3">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-zinc-800" />
-            <span className="text-[10px] font-bold text-zinc-500 tracking-widest uppercase">Daily Trend Chart (1Year)</span>
+            <span className="text-[11px] font-bold text-zinc-500 tracking-widest uppercase">Daily Trend Chart (1Year)</span>
           </div>
           
-          <div className="flex items-center gap-4 text-[11px] text-zinc-400 flex-wrap">
+          <div className="flex items-center gap-4 text-[12px] text-zinc-400 flex-wrap">
             <span className="flex items-center gap-1.5">
               <span className="inline-block w-4 h-0.5 bg-emerald-400 rounded-full" />
               EMA 8
@@ -110,14 +110,14 @@ export default function DailyTab() {
                 s2.market_structure === 'ACCUMULATION' ? 'border-l-blue-500' :
                 'border-l-zinc-700'
               }`}>
-                <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+                <div className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
                   시장 구조 (Market Structure)
                 </div>
                 <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold mb-3 ${sm.bg} ${sm.color}`}>
                   {sm.label}
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">{sm.desc}</p>
+                <p className="text-[12px] text-zinc-400 leading-relaxed font-medium">{sm.desc}</p>
                 <div className="mt-3 grid grid-cols-2 gap-1.5">
                   {[
                     { key: 'higher_high', label: 'HH', color: 'emerald' },
@@ -127,7 +127,7 @@ export default function DailyTab() {
                   ].map(({ key, label, color }) => {
                     const active = s2[key as keyof typeof s2] as boolean;
                     return (
-                      <div key={key} className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-bold ${
+                      <div key={key} className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[11px] font-bold ${
                         active
                           ? color === 'emerald'
                             ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
@@ -150,7 +150,7 @@ export default function DailyTab() {
             s2.rsi_divergence_bullish ? 'border-l-cyan-500' :
             'border-l-zinc-700'
           }`}>
-            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+            <div className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
               RSI 다이버전스
             </div>
@@ -159,7 +159,7 @@ export default function DailyTab() {
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold mb-3 text-orange-400 bg-orange-500/10 border-orange-500/30 animate-pulse">
                   ⚠ 베어리시 다이버전스
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">
+                <p className="text-[12px] text-zinc-400 leading-relaxed font-medium">
                   가격이 고점을 높이는 동안 RSI는 고점을 낮추는 중 — 네거티브 다이버전스. 추세 약화 신호, 분할 익절·신규 매수 자제 권고.
                 </p>
               </>
@@ -168,7 +168,7 @@ export default function DailyTab() {
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold mb-3 text-cyan-400 bg-cyan-500/10 border-cyan-500/30">
                   ✦ 불리시 다이버전스
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">
+                <p className="text-[12px] text-zinc-400 leading-relaxed font-medium">
                   가격이 저점을 낮추는 동안 RSI는 저점을 높이는 중 — 포지티브 다이버전스. 잠재적 추세 전환 신호, 눌림목 진입 주목.
                 </p>
               </>
@@ -177,7 +177,7 @@ export default function DailyTab() {
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold mb-3 text-zinc-400 bg-zinc-800/60 border-zinc-700/40">
                   감지 없음
                 </div>
-                <p className="text-[11px] text-zinc-500 leading-relaxed font-medium">
+                <p className="text-[12px] text-zinc-500 leading-relaxed font-medium">
                   최근 40봉 내 유효한 RSI 다이버전스가 감지되지 않았습니다.
                 </p>
               </>
@@ -188,7 +188,7 @@ export default function DailyTab() {
           <div className={`glass-card rounded-xl p-4 border-l-[3px] relative overflow-hidden ${
             s2.bear_flag ? 'border-l-red-500' : 'border-l-zinc-700'
           }`}>
-            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+            <div className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
               베어 플래그 패턴
             </div>
@@ -197,7 +197,7 @@ export default function DailyTab() {
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold mb-3 text-red-400 bg-red-500/10 border-red-500/30 animate-pulse">
                   ⚠ 베어플래그 감지
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">
+                <p className="text-[12px] text-zinc-400 leading-relaxed font-medium">
                   급락(폴) 후 거래량 감소를 동반한 횡보 구간(플래그) 감지. 하락 재개 가능성 — 숏 진입 또는 롱 포지션 축소 고려.
                 </p>
               </>
@@ -206,7 +206,7 @@ export default function DailyTab() {
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold mb-3 text-zinc-400 bg-zinc-800/60 border-zinc-700/40">
                   패턴 없음
                 </div>
-                <p className="text-[11px] text-zinc-500 leading-relaxed font-medium">
+                <p className="text-[12px] text-zinc-500 leading-relaxed font-medium">
                   현재 베어플래그 조건(5% 이상 급락 + 거래량 감소 횡보) 미충족.
                 </p>
               </>
@@ -221,7 +221,7 @@ export default function DailyTab() {
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-zinc-850 to-transparent" />
           
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
+            <div className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
               가우시안 채널 분석 (Gaussian Channel)
             </div>
@@ -251,19 +251,19 @@ export default function DailyTab() {
           
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 border-b border-zinc-800/60 pb-4 mb-4">
             <div className="bg-zinc-900/40 p-2.5 rounded-xl border border-zinc-900">
-              <div className="text-[10px] font-bold text-zinc-500 mb-0.5">GC 상단</div>
+              <div className="text-[11px] font-bold text-zinc-500 mb-0.5">GC 상단</div>
               <div className="font-bold text-sm text-purple-300">${s2.gc_upper?.toFixed(2)}</div>
             </div>
             <div className="bg-zinc-900/40 p-2.5 rounded-xl border border-zinc-900">
-              <div className="text-[10px] font-bold text-zinc-500 mb-0.5">GC 중심</div>
+              <div className="text-[11px] font-bold text-zinc-500 mb-0.5">GC 중심</div>
               <div className="font-bold text-sm text-purple-400/60">${s2.gc_mid?.toFixed(2)}</div>
             </div>
             <div className="bg-zinc-900/40 p-2.5 rounded-xl border border-zinc-900">
-              <div className="text-[10px] font-bold text-zinc-500 mb-0.5">GC 하단</div>
+              <div className="text-[11px] font-bold text-zinc-500 mb-0.5">GC 하단</div>
               <div className="font-bold text-sm text-purple-300">${s2.gc_lower?.toFixed(2)}</div>
             </div>
             <div className="bg-zinc-900/40 p-2.5 rounded-xl border border-zinc-900">
-              <div className="text-[10px] font-bold text-zinc-500 mb-0.5">현재가 vs 상단 이격</div>
+              <div className="text-[11px] font-bold text-zinc-500 mb-0.5">현재가 vs 상단 이격</div>
               {(() => {
                 const latestClose = dailyData.candles[dailyData.candles.length - 1]?.close;
                 const gcUp = s2.gc_upper;
@@ -276,13 +276,13 @@ export default function DailyTab() {
               })()}
             </div>
             <div className="bg-zinc-900/40 p-2.5 rounded-xl border border-zinc-900">
-              <div className="text-[10px] font-bold text-zinc-500 mb-0.5">채널 상단 돌파</div>
+              <div className="text-[11px] font-bold text-zinc-500 mb-0.5">채널 상단 돌파</div>
               <div className={`font-bold text-sm ${s2.gc_above ? 'text-emerald-400' : 'text-zinc-600'}`}>
                 {s2.gc_above ? 'YES' : 'NO'}
               </div>
             </div>
             <div className="bg-zinc-900/40 p-2.5 rounded-xl border border-zinc-900">
-              <div className="text-[10px] font-bold text-zinc-500 mb-0.5">채널 리테스트</div>
+              <div className="text-[11px] font-bold text-zinc-500 mb-0.5">채널 리테스트</div>
               <div className={`font-bold text-sm ${s2.gc_retest ? 'text-amber-400' : 'text-zinc-600'}`}>
                 {s2.gc_retest ? 'YES' : 'NO'}
               </div>
@@ -304,12 +304,12 @@ export default function DailyTab() {
           
           <div className="flex items-center justify-between mb-4 border-b border-zinc-800/80 pb-3 flex-wrap gap-2">
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
+              <div className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
                 Stage 2 체크리스트 (Mark Minervini)
               </div>
               {s2?.breadth_narrow && (
-                <div className="px-2.5 py-1 rounded-md bg-orange-500/10 border border-orange-500/30 text-orange-400 text-[10px] font-bold tracking-wide">
+                <div className="px-2.5 py-1 rounded-md bg-orange-500/10 border border-orange-500/30 text-orange-400 text-[11px] font-bold tracking-wide">
                   ⚠ 협소한 랠리 — RSP 신고가 미달
                 </div>
               )}
@@ -336,18 +336,18 @@ export default function DailyTab() {
                     <div className="text-xs font-bold text-zinc-200 leading-tight">
                       {STAGE2_META[key]?.label}
                     </div>
-                    <div className="text-[10px] text-zinc-500 leading-tight mt-1 font-medium">
+                    <div className="text-[11px] text-zinc-500 leading-tight mt-1 font-medium">
                       {STAGE2_META[key]?.desc.ko}
                     </div>
                   </div>
                   
                   <div className="flex-none">
                     {passed ? (
-                      <span className="flex items-center gap-1 text-[10px] font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1 rounded-full tracking-wider">
+                      <span className="flex items-center gap-1 text-[11px] font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1 rounded-full tracking-wider">
                         PASS
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-[10px] font-extrabold text-zinc-500 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-full tracking-wider">
+                      <span className="flex items-center gap-1 text-[11px] font-extrabold text-zinc-500 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-full tracking-wider">
                         FAIL
                       </span>
                     )}
@@ -360,37 +360,37 @@ export default function DailyTab() {
           {s2 && (
             <div className="mt-4 pt-4 border-t border-zinc-800/80 grid grid-cols-3 gap-2.5 text-center">
               <div className="bg-zinc-900/35 border border-zinc-900/60 rounded-xl p-2">
-                <div className="text-[9px] font-bold text-zinc-500 uppercase">RS Score</div>
+                <div className="text-[10px] font-bold text-zinc-500 uppercase">RS Score</div>
                 <div className={`font-bold text-xs mt-0.5 ${s2.rs_score >= 60 ? 'text-emerald-400' : 'text-zinc-300'}`}>
                   {s2.rs_score}
                 </div>
               </div>
               <div className="bg-zinc-900/35 border border-zinc-900/60 rounded-xl p-2">
-                <div className="text-[9px] font-bold text-zinc-500 uppercase">52W 고점 이격</div>
+                <div className="text-[10px] font-bold text-zinc-500 uppercase">52W 고점 이격</div>
                 <div className="font-bold text-xs mt-0.5 text-zinc-300">
                   {s2.pct_from_52w_high.toFixed(1)}%
                 </div>
               </div>
               <div className="bg-zinc-900/35 border border-zinc-900/60 rounded-xl p-2">
-                <div className="text-[9px] font-bold text-zinc-500 uppercase">52W 저점 대비</div>
+                <div className="text-[10px] font-bold text-zinc-500 uppercase">52W 저점 대비</div>
                 <div className="font-bold text-xs mt-0.5 text-zinc-300">
                   +{s2.pct_from_52w_low.toFixed(1)}%
                 </div>
               </div>
               <div className="bg-zinc-900/35 border border-zinc-900/60 rounded-xl p-2">
-                <div className="text-[9px] font-bold text-zinc-500 uppercase">최근 조정폭</div>
+                <div className="text-[10px] font-bold text-zinc-500 uppercase">최근 조정폭</div>
                 <div className="font-bold text-xs mt-0.5 text-zinc-300">
                   {s2.pullback_pct.toFixed(1)}%
                 </div>
               </div>
               <div className="bg-zinc-900/35 border border-zinc-900/60 rounded-xl p-2">
-                <div className="text-[9px] font-bold text-zinc-500 uppercase">EMA200</div>
+                <div className="text-[10px] font-bold text-zinc-500 uppercase">EMA200</div>
                 <div className="font-bold text-xs mt-0.5 text-rose-400">
                   ${s2.latest_ema200.toFixed(2)}
                 </div>
               </div>
               <div className="bg-zinc-900/35 border border-zinc-900/60 rounded-xl p-2">
-                <div className="text-[9px] font-bold text-zinc-500 uppercase">ATR (14)</div>
+                <div className="text-[10px] font-bold text-zinc-500 uppercase">ATR (14)</div>
                 <div className="font-bold text-xs mt-0.5 text-zinc-300">
                   ${s2.latest_atr.toFixed(2)}
                 </div>

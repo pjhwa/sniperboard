@@ -145,10 +145,10 @@ export function WatchlistBoard() {
                     >
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span className="sym-pill__badge" style={{ width: 22, height: 22, fontSize: 10 }}>{w.symbol[0]}</span>
+                          <span className="sym-pill__badge" style={{ width: 22, height: 22, fontSize: 11 }}>{w.symbol[0]}</span>
                           <span style={{ fontWeight: 600 }}>{w.symbol}</span>
                           <span style={{
-                            fontSize: 8, fontWeight: 700, padding: '1px 3px', borderRadius: 2,
+                            fontSize: 9, fontWeight: 700, padding: '1px 3px', borderRadius: 2,
                             background: (w.tier ?? 1) === 1 ? 'rgba(56,189,248,0.15)' : 'rgba(167,139,250,0.15)',
                             color: (w.tier ?? 1) === 1 ? 'var(--sky, #38bdf8)' : 'var(--purple, #a78bfa)',
                           }}>T{w.tier ?? 1}</span>
@@ -175,7 +175,7 @@ export function WatchlistBoard() {
                           const mp = w.monthly_phase ?? 'UNKNOWN';
                           const label = MP_SHORT[mp] ?? MP_SHORT.UNKNOWN;
                           const color = MP_COLOR[mp] ?? MP_COLOR.UNKNOWN;
-                          return <span style={{ fontSize: 11, fontWeight: 600, color }}>{t(label, locale)}</span>;
+                          return <span style={{ fontSize: 12, fontWeight: 600, color }}>{t(label, locale)}</span>;
                         })()}
                       </td>
                       <td>
@@ -184,7 +184,7 @@ export function WatchlistBoard() {
                       <td>
                         <button
                           className="btn btn--ghost"
-                          style={{ height: 24, padding: '0 8px', fontSize: 11 }}
+                          style={{ height: 24, padding: '0 8px', fontSize: 12 }}
                           onClick={(e) => { e.stopPropagation(); setSymbol(w.symbol); setBoard('deepdive'); }}
                         >
                           {t(S.analyzeBtn, locale)} <ArrowRight />
@@ -195,7 +195,7 @@ export function WatchlistBoard() {
 
                   const tierLabel = (label: string, color: string) => (
                     <tr key={`tier-${label}`}>
-                      <td colSpan={12} style={{ padding: '6px 8px 2px', fontSize: 10, fontWeight: 700, color, letterSpacing: '0.5px', borderTop: '1px solid var(--border-soft)', background: 'rgba(0,0,0,0.03)' }}>
+                      <td colSpan={12} style={{ padding: '6px 8px 2px', fontSize: 11, fontWeight: 700, color, letterSpacing: '0.5px', borderTop: '1px solid var(--border-soft)', background: 'rgba(0,0,0,0.03)' }}>
                         {label}
                       </td>
                     </tr>
@@ -228,15 +228,15 @@ export function WatchlistBoard() {
               const color = w.rs_score >= 70 ? 'var(--bull)' : w.rs_score >= 50 ? 'var(--teal)' : 'var(--bear)';
               return (
                 <div key={w.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
-                  <span style={{ width: 44, fontWeight: 600, fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>{w.symbol}</span>
+                  <span style={{ width: 44, fontWeight: 600, fontFamily: 'var(--mono)', fontSize: 12, flexShrink: 0 }}>{w.symbol}</span>
                   <div className="bar" style={{ flex: 1 }}>
                     <div className="bar__fill" style={{ width: `${w.rs_score}%`, background: color }} />
                   </div>
-                  <span className="mono" style={{ width: 36, textAlign: 'right', fontSize: 11, color }}>{w.rs_score.toFixed(1)}</span>
+                  <span className="mono" style={{ width: 36, textAlign: 'right', fontSize: 12, color }}>{w.rs_score.toFixed(1)}</span>
                 </div>
               );
             })}
-            <div style={{ fontSize: 9.5, color: 'var(--fg-subtle)', marginTop: 6 }}>
+            <div style={{ fontSize: 10.5, color: 'var(--fg-subtle)', marginTop: 6 }}>
               <span style={{ color: 'var(--bull)' }}>●</span> {t(S.rsStrong, locale)} &nbsp;
               <span style={{ color: 'var(--teal)' }}>●</span> {t(S.rsMid, locale)} &nbsp;
               <span style={{ color: 'var(--bear)' }}>●</span> {t(S.rsWeak, locale)}
@@ -249,20 +249,20 @@ export function WatchlistBoard() {
       <Card title={t(S.heatTitle, locale)} action={t(S.heatAction, locale)}>
         {watchlist.length === 0 ? <div className="subtle">{t(S.loading, locale)}</div> : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', paddingBottom: 6, color: 'var(--fg-subtle)', fontWeight: 500, fontSize: 10 }}>{t(S.heatSymCol, locale)}</th>
+                  <th style={{ textAlign: 'left', paddingBottom: 6, color: 'var(--fg-subtle)', fontWeight: 500, fontSize: 11 }}>{t(S.heatSymCol, locale)}</th>
                   {CHECK_LABELS.map(([, label]) => (
-                    <th key={label} style={{ textAlign: 'center', paddingBottom: 6, color: 'var(--fg-subtle)', fontWeight: 500, fontSize: 10, width: 32 }}>{label}</th>
+                    <th key={label} style={{ textAlign: 'center', paddingBottom: 6, color: 'var(--fg-subtle)', fontWeight: 500, fontSize: 11, width: 32 }}>{label}</th>
                   ))}
-                  <th style={{ textAlign: 'right', paddingBottom: 6, color: 'var(--fg-subtle)', fontWeight: 500, fontSize: 10 }}>{t(S.heatTotalCol, locale)}</th>
+                  <th style={{ textAlign: 'right', paddingBottom: 6, color: 'var(--fg-subtle)', fontWeight: 500, fontSize: 11 }}>{t(S.heatTotalCol, locale)}</th>
                 </tr>
               </thead>
               <tbody>
                 {watchlist.map(w => (
                   <tr key={w.symbol}>
-                    <td style={{ padding: '4px 0', fontWeight: 600, fontFamily: 'var(--mono)', fontSize: 11 }}>{w.symbol}</td>
+                    <td style={{ padding: '4px 0', fontWeight: 600, fontFamily: 'var(--mono)', fontSize: 12 }}>{w.symbol}</td>
                     {CHECK_LABELS.map(([key]) => {
                       const ok = w.checks[key];
                       return (
@@ -299,9 +299,9 @@ export function WatchlistBoard() {
               const ratio = risk > 0 ? (reward / risk).toFixed(1) : '—';
               return (
                 <div key={w.symbol} style={{ padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
                     <span style={{ fontWeight: 600, fontFamily: 'var(--mono)' }}>{w.symbol}</span>
-                    <span style={{ color: 'var(--fg-subtle)', fontSize: 10 }}>R:R 1 : {ratio}</span>
+                    <span style={{ color: 'var(--fg-subtle)', fontSize: 11 }}>R:R 1 : {ratio}</span>
                   </div>
                   <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
                     {/* Risk bar (right→left, red) */}
@@ -315,9 +315,9 @@ export function WatchlistBoard() {
                       <div style={{ width: `${rewardW}%`, height: 7, borderRadius: '0 3px 3px 0', background: 'var(--bull)', opacity: 0.75 }} />
                     </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9.5, color: 'var(--fg-subtle)', marginTop: 2 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'var(--fg-subtle)', marginTop: 2 }}>
                     <span style={{ color: 'var(--bear)' }}>-${risk.toFixed(2)}</span>
-                    <span style={{ color: 'var(--fg-subtle)', fontSize: 9 }}>${w.entry.toFixed(2)}</span>
+                    <span style={{ color: 'var(--fg-subtle)', fontSize: 10 }}>${w.entry.toFixed(2)}</span>
                     <span style={{ color: 'var(--bull)' }}>+${reward.toFixed(2)}</span>
                   </div>
                 </div>

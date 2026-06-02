@@ -53,10 +53,10 @@ export default function IntradayTab() {
         <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3 mb-4 flex-wrap gap-3">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-zinc-800" />
-            <span className="text-[10px] font-bold text-zinc-500 tracking-widest uppercase">Intraday Trading Chart</span>
+            <span className="text-[11px] font-bold text-zinc-500 tracking-widest uppercase">Intraday Trading Chart</span>
           </div>
           
-          <div className="flex items-center gap-4 text-[11px] text-zinc-400 flex-wrap">
+          <div className="flex items-center gap-4 text-[12px] text-zinc-400 flex-wrap">
             <span className="flex items-center gap-1.5">
               <span className="inline-block w-4 h-0.5 bg-amber-400 rounded-full" />
               EMA 21
@@ -122,7 +122,7 @@ export default function IntradayTab() {
         
         {/* Active Signals Card */}
         <div className="glass-card rounded-2xl p-5 flex flex-col">
-          <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-1.5">
+          <div className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
             현재 활성 신호
           </div>
@@ -150,7 +150,7 @@ export default function IntradayTab() {
                           {meta?.label ?? sig}
                         </span>
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-zinc-300 uppercase tracking-wider">
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-white/10 text-zinc-300 uppercase tracking-wider">
                         {meta?.action.ko}
                       </span>
                     </div>
@@ -170,7 +170,7 @@ export default function IntradayTab() {
 
         {/* Signal Guide Card */}
         <div className="glass-card rounded-2xl p-5 md:col-span-2">
-          <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-1.5">
+          <div className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
             신호 가이드
           </div>
@@ -183,7 +183,7 @@ export default function IntradayTab() {
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className={`text-sm font-bold tracking-tight ${meta.color}`}>{meta.label}</span>
-                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${meta.bg} ${meta.color} tracking-wider uppercase`}>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${meta.bg} ${meta.color} tracking-wider uppercase`}>
                     {meta.action.ko}
                   </span>
                 </div>
@@ -200,7 +200,7 @@ export default function IntradayTab() {
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
           
           <div className="flex items-center justify-between mb-3.5">
-            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
+            <div className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
               RSI 게이지
             </div>
@@ -224,7 +224,7 @@ export default function IntradayTab() {
             />
           </div>
           
-          <div className="flex justify-between text-[10px] font-bold text-zinc-500 mt-2 px-1">
+          <div className="flex justify-between text-[11px] font-bold text-zinc-500 mt-2 px-1">
             <span>0 과매도</span>
             <span>30</span>
             <span>60</span>

@@ -155,16 +155,16 @@ export function SentimentBoard() {
         background: 'var(--em-soft)',
         borderLeft: '2px solid var(--em-500)',
       }}>
-        <div style={{ fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--fg-subtle)', marginBottom: 3 }}>
+        <div style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--fg-subtle)', marginBottom: 3 }}>
           {t(S.topNewsLabel, locale)}
         </div>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg)', lineHeight: 1.4, marginBottom: 3 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg)', lineHeight: 1.4, marginBottom: 3 }}>
           {headline}
         </div>
-        <div style={{ fontSize: 10.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 4 }}>
+        <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 4 }}>
           {summary}
         </div>
-        <div style={{ fontSize: 9.5, color: 'var(--fg-subtle)' }}>
+        <div style={{ fontSize: 10.5, color: 'var(--fg-subtle)' }}>
           {t(S.sourceLabel, locale)} {topNews.source}
         </div>
       </div>
@@ -173,16 +173,16 @@ export function SentimentBoard() {
 
   function DeltaLabel({ delta }: { delta: number | null }) {
     if (delta === null) return (
-      <span style={{ fontSize: 10.5, color: 'var(--fg-subtle)' }}>{t(S.noPrevData, locale)}</span>
+      <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>{t(S.noPrevData, locale)}</span>
     );
     if (Math.abs(delta) < 0.05) return (
-      <span style={{ fontSize: 10.5, color: 'var(--fg-subtle)' }}>{t(S.noChangeDelta, locale)}</span>
+      <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>{t(S.noChangeDelta, locale)}</span>
     );
     const sign = delta > 0 ? '+' : '';
     const color = delta > 0 ? 'var(--bull)' : 'var(--bear)';
     const dirLabel = delta > 0 ? t(S.deltaUp, locale) : t(S.deltaDown, locale);
     return (
-      <span style={{ fontSize: 10.5, color }}>
+      <span style={{ fontSize: 11.5, color }}>
         {t(S.deltaPrefix, locale)}{sign}{delta} {dirLabel}
       </span>
     );
@@ -202,7 +202,7 @@ export function SentimentBoard() {
     return (
       <div className="board fade-in" style={{ gridTemplateColumns: '1fr' }}>
         <div className="card" style={{ padding: 24 }}>
-          <div style={{ color: 'var(--fg-muted)', fontSize: 13 }}>
+          <div style={{ color: 'var(--fg-muted)', fontSize: 14 }}>
             {sentimentData?.error ?? t(S.noData, locale)}
           </div>
         </div>
@@ -243,29 +243,29 @@ export function SentimentBoard() {
                 <span className={'badge ' + (SENTIMENT_META[market.sentiment]?.color.replace('text-', '').split('-')[0] ?? 'neutral')}>
                   {t(SENTIMENT_META[market.sentiment]?.label, locale)}
                 </span>
-                <div style={{ marginTop: 8, fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+                <div style={{ marginTop: 8, fontSize: 12.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
                   {marketKeyReason}
                 </div>
                 <div className="hide-on-mobile">
                   <TopNewsBox topNews={market.top_news} />
                 </div>
-                <div style={{ marginTop: 10, display: 'flex', gap: 12, fontSize: 10.5 }}>
+                <div style={{ marginTop: 10, display: 'flex', gap: 12, fontSize: 11.5 }}>
                   <div>
-                    <div className="subtle" style={{ fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t(S.vsYesterday, locale)}</div>
-                    <div className="mono" style={{ fontWeight: 600, fontSize: 13 }}>
+                    <div className="subtle" style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t(S.vsYesterday, locale)}</div>
+                    <div className="mono" style={{ fontWeight: 600, fontSize: 14 }}>
                       {TREND_META[market.trend_vs_yesterday]?.icon} {t(TREND_META[market.trend_vs_yesterday]?.label, locale)}
                     </div>
                   </div>
                   <div>
-                    <div className="subtle" style={{ fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Confidence</div>
-                    <div className="mono" style={{ fontWeight: 600, fontSize: 13, color: 'var(--em-500)' }}>
+                    <div className="subtle" style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Confidence</div>
+                    <div className="mono" style={{ fontWeight: 600, fontSize: 14, color: 'var(--em-500)' }}>
                       {market.confidence.toUpperCase()}
                     </div>
                   </div>
                   {market.composite_score !== undefined && (
                     <div>
-                      <div className="subtle" style={{ fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t(S.compositeScore, locale)}</div>
-                      <div className="mono" style={{ fontWeight: 700, fontSize: 15, color: compositeColor(market.composite_score) }}>
+                      <div className="subtle" style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t(S.compositeScore, locale)}</div>
+                      <div className="mono" style={{ fontWeight: 700, fontSize: 17, color: compositeColor(market.composite_score) }}>
                         {market.composite_score > 0 ? '+' : ''}{market.composite_score}
                       </div>
                     </div>
@@ -275,13 +275,13 @@ export function SentimentBoard() {
             </div>
 
             <div className="divider" style={{ margin: '14px 0 8px' }} />
-            <div className="subtle" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{t(S.scaleLabel, locale)}</div>
+            <div className="subtle" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{t(S.scaleLabel, locale)}</div>
             <div style={{ display: 'flex', gap: 4 }}>
               {(Object.entries(SENTIMENT_META) as [string, typeof SENTIMENT_META[keyof typeof SENTIMENT_META]][]).map(([k, m]) => (
                 <div
                   key={k}
                   style={{
-                    flex: 1, textAlign: 'center', fontSize: 10, padding: '5px 2px', borderRadius: 6,
+                    flex: 1, textAlign: 'center', fontSize: 11, padding: '5px 2px', borderRadius: 6,
                     background: k === market.sentiment ? `var(--${m.color.replace('text-', '').replace('-400', '-soft').replace('-500', '-soft')})` : 'transparent',
                     color: k === market.sentiment ? `var(--${m.color.replace('text-', '').replace(/-\d+/, '')})` : 'var(--fg-subtle)',
                     border: k === market.sentiment ? '1px solid currentColor' : '1px solid transparent',
@@ -295,7 +295,7 @@ export function SentimentBoard() {
           </>
         ) : null}
         {sentimentData?.meta && (
-          <div style={{ marginTop: 8, fontSize: 9.5, color: (sentimentData.meta.age_minutes > 90 ? 'var(--warn)' : 'var(--fg-subtle)'), opacity: 0.7, fontFamily: 'var(--font-mono, monospace)' }}>
+          <div style={{ marginTop: 8, fontSize: 10.5, color: (sentimentData.meta.age_minutes > 90 ? 'var(--warn)' : 'var(--fg-subtle)'), opacity: 0.7, fontFamily: 'var(--font-mono, monospace)' }}>
             ⏱ {Math.round(sentimentData.meta.age_minutes)}m ago
           </div>
         )}
@@ -311,10 +311,10 @@ export function SentimentBoard() {
               padding: '4px 8px', borderRadius: 6,
               background: 'rgba(56,189,248,0.06)', borderLeft: '2px solid rgba(56,189,248,0.4)',
             }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(56,189,248,0.9)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(56,189,248,0.9)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 TIER 1 — {locale === 'ko' ? '핵심 대형주' : 'Core Holdings'}
               </span>
-              <span style={{ fontSize: 10, color: 'var(--em-500)' }}>{tier1Symbols.length}</span>
+              <span style={{ fontSize: 11, color: 'var(--em-500)' }}>{tier1Symbols.length}</span>
             </div>
             <div className="sym-sentiment-grid" style={{
               display: 'grid',
@@ -347,15 +347,15 @@ export function SentimentBoard() {
                   <span className="sym-pill__badge" style={{ width: 22, height: 22, flexShrink: 0 }}>{it.symbol[0]}</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 0, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <span style={{ fontWeight: 700, fontSize: 13 }}>{it.symbol}</span>
+                      <span style={{ fontWeight: 700, fontSize: 14 }}>{it.symbol}</span>
                       <span style={{
-                        fontSize: 8, fontWeight: 700, padding: '1px 3px', borderRadius: 2, flexShrink: 0,
+                        fontSize: 9, fontWeight: 700, padding: '1px 3px', borderRadius: 2, flexShrink: 0,
                         background: TIER1_SYMBOLS.includes(it.symbol) ? 'rgba(56,189,248,0.15)' : 'rgba(167,139,250,0.15)',
                         color: TIER1_SYMBOLS.includes(it.symbol) ? 'var(--sky, #38bdf8)' : 'var(--purple, #a78bfa)',
                       }}>T{TIER1_SYMBOLS.includes(it.symbol) ? '1' : '2'}</span>
                     </div>
                     {SYMBOL_NAMES[it.symbol] && (
-                      <span style={{ fontSize: 10, color: 'var(--fg-muted)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: 11, color: 'var(--fg-muted)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {SYMBOL_NAMES[it.symbol][locale as 'en' | 'ko']}
                       </span>
                     )}
@@ -364,13 +364,13 @@ export function SentimentBoard() {
                     const sq = briefBySymbol[it.symbol].setup_quality;
                     const sqMeta = SETUP_QUALITY_META[sq] ?? SETUP_QUALITY_META['B'];
                     return (
-                      <span className={`badge ${sqMeta.color}`} style={{ fontSize: 10, marginLeft: 2 }}>
+                      <span className={`badge ${sqMeta.color}`} style={{ fontSize: 11, marginLeft: 2 }}>
                         {sqMeta.label}
                       </span>
                     );
                   })()}
                   <span style={{
-                    marginLeft: 'auto', fontSize: 10, fontWeight: 600,
+                    marginLeft: 'auto', fontSize: 11, fontWeight: 600,
                     color: compositeColor(score),
                     background: 'var(--card)',
                     border: `1px solid ${compositeColor(score)}`,
@@ -384,18 +384,18 @@ export function SentimentBoard() {
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }}>
                   <span
                     className="mono"
-                    style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', color: compositeColor(score) }}
+                    style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', color: compositeColor(score) }}
                   >
                     {score > 0 ? '+' : ''}{score}
                   </span>
-                  <span style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>{t(S.maxScore, locale)}</span>
+                  <span style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>{t(S.maxScore, locale)}</span>
                 </div>
 
                 {/* Score bar */}
                 <ScoreBar score={score} />
 
                 {/* Scale labels */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--fg-subtle)', marginBottom: 6 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--fg-subtle)', marginBottom: 6 }}>
                   <span>{t(S.extremeFear, locale)}</span>
                   <span>{t(S.neutral, locale)}</span>
                   <span>{t(S.euphoric, locale)}</span>
@@ -407,13 +407,13 @@ export function SentimentBoard() {
                 </div>
 
                 {/* Reason */}
-                <div style={{ fontSize: 10.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 6 }}>
+                <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 6 }}>
                   {keyReason}
                 </div>
                 <TopNewsBox topNews={it.top_news} />
 
                 {/* Meta */}
-                <div style={{ display: 'flex', gap: 8, fontSize: 10, color: 'var(--fg-subtle)' }}>
+                <div style={{ display: 'flex', gap: 8, fontSize: 11, color: 'var(--fg-subtle)' }}>
                   {trend && <span>{trend.icon} {t(trend.label, locale)}</span>}
                   {vol && <span>· {t(vol.label, locale)}</span>}
                   {it.bot_suspected === 'yes' && <span style={{ color: 'var(--warn)' }}>· {t(S.botSuspected, locale)}</span>}
@@ -436,10 +436,10 @@ export function SentimentBoard() {
               padding: '4px 8px', borderRadius: 6,
               background: 'rgba(167,139,250,0.06)', borderLeft: '2px solid rgba(167,139,250,0.4)',
             }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(167,139,250,0.9)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(167,139,250,0.9)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 TIER 2 — {locale === 'ko' ? '모멘텀/테마주' : 'Momentum / Theme'}
               </span>
-              <span style={{ fontSize: 10, color: 'var(--em-500)' }}>{tier2Symbols.length}</span>
+              <span style={{ fontSize: 11, color: 'var(--em-500)' }}>{tier2Symbols.length}</span>
             </div>
             <div className="sym-sentiment-grid" style={{
               display: 'grid',
@@ -471,14 +471,14 @@ export function SentimentBoard() {
                       <span className="sym-pill__badge" style={{ width: 22, height: 22, flexShrink: 0 }}>{it.symbol[0]}</span>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 0, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                          <span style={{ fontWeight: 700, fontSize: 13 }}>{it.symbol}</span>
+                          <span style={{ fontWeight: 700, fontSize: 14 }}>{it.symbol}</span>
                           <span style={{
-                            fontSize: 8, fontWeight: 700, padding: '1px 3px', borderRadius: 2, flexShrink: 0,
+                            fontSize: 9, fontWeight: 700, padding: '1px 3px', borderRadius: 2, flexShrink: 0,
                             background: 'rgba(167,139,250,0.15)', color: 'var(--purple, #a78bfa)',
                           }}>T2</span>
                         </div>
                         {SYMBOL_NAMES[it.symbol] && (
-                          <span style={{ fontSize: 10, color: 'var(--fg-muted)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: 11, color: 'var(--fg-muted)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {SYMBOL_NAMES[it.symbol][locale as 'en' | 'ko']}
                           </span>
                         )}
@@ -486,31 +486,31 @@ export function SentimentBoard() {
                       {briefBySymbol[it.symbol] && (() => {
                         const sq = briefBySymbol[it.symbol].setup_quality;
                         const sqMeta = SETUP_QUALITY_META[sq] ?? SETUP_QUALITY_META['B'];
-                        return <span className={`badge ${sqMeta.color}`} style={{ fontSize: 10, marginLeft: 2 }}>{sqMeta.label}</span>;
+                        return <span className={`badge ${sqMeta.color}`} style={{ fontSize: 11, marginLeft: 2 }}>{sqMeta.label}</span>;
                       })()}
                       <span style={{
-                        marginLeft: 'auto', fontSize: 10, fontWeight: 600,
+                        marginLeft: 'auto', fontSize: 11, fontWeight: 600,
                         color: compositeColor(score),
                         border: `1px solid ${compositeColor(score)}`,
                         padding: '1px 6px', borderRadius: 4,
                       }}>{t(meta?.label, locale)}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }}>
-                      <span className="mono" style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', color: compositeColor(score) }}>
+                      <span className="mono" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', color: compositeColor(score) }}>
                         {score > 0 ? '+' : ''}{score}
                       </span>
-                      <span style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>{t(S.maxScore, locale)}</span>
+                      <span style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>{t(S.maxScore, locale)}</span>
                     </div>
                     <ScoreBar score={score} />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--fg-subtle)', marginBottom: 6 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--fg-subtle)', marginBottom: 6 }}>
                       <span>{t(S.extremeFear, locale)}</span>
                       <span>{t(S.neutral, locale)}</span>
                       <span>{t(S.euphoric, locale)}</span>
                     </div>
                     <div style={{ marginBottom: 6 }}><DeltaLabel delta={it.score_delta ?? null} /></div>
-                    <div style={{ fontSize: 10.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 6 }}>{keyReason}</div>
+                    <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 6 }}>{keyReason}</div>
                     <TopNewsBox topNews={it.top_news} />
-                    <div style={{ display: 'flex', gap: 8, fontSize: 10, color: 'var(--fg-subtle)' }}>
+                    <div style={{ display: 'flex', gap: 8, fontSize: 11, color: 'var(--fg-subtle)' }}>
                       {trend && <span>{trend.icon} {t(trend.label, locale)}</span>}
                       {vol && <span>· {t(vol.label, locale)}</span>}
                       {it.bot_suspected === 'yes' && <span style={{ color: 'var(--warn)' }}>· {t(S.botSuspected, locale)}</span>}
@@ -532,8 +532,8 @@ export function SentimentBoard() {
               return (
                 <div key={it.symbol} style={{ padding: 12, borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--card)' }}>
                   <span style={{ fontWeight: 700 }}>{it.symbol}</span>
-                  <span style={{ fontSize: 14, color: compositeColor(score), marginLeft: 8 }}>{score > 0 ? '+' : ''}{score}</span>
-                  <span style={{ fontSize: 10, color: 'var(--fg-subtle)', marginLeft: 4 }}>{t(meta?.label, locale)}</span>
+                  <span style={{ fontSize: 15, color: compositeColor(score), marginLeft: 8 }}>{score > 0 ? '+' : ''}{score}</span>
+                  <span style={{ fontSize: 11, color: 'var(--fg-subtle)', marginLeft: 4 }}>{t(meta?.label, locale)}</span>
                 </div>
               );
             })}
@@ -566,10 +566,10 @@ export function SentimentBoard() {
               {/* Data collection */}
               <div style={{ padding: 14, borderRadius: 'var(--r)', background: 'var(--bg-muted)', border: '1px solid var(--border-soft)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <span style={{ fontSize: 20 }}>📡</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg)' }}>{t(S.dataCollectTitle, locale)}</span>
+                  <span style={{ fontSize: 22 }}>📡</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg)' }}>{t(S.dataCollectTitle, locale)}</span>
                 </div>
-                <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+                <div style={{ fontSize: 12.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
                   {t(S.dataCollectBody, locale)}
                 </div>
               </div>
@@ -577,15 +577,15 @@ export function SentimentBoard() {
               {/* Score interpretation */}
               <div style={{ padding: 14, borderRadius: 'var(--r)', background: 'var(--bg-muted)', border: '1px solid var(--border-soft)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <span style={{ fontSize: 20 }}>📊</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg)' }}>{t(S.scoreInterpTitle, locale)}</span>
+                  <span style={{ fontSize: 22 }}>📊</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg)' }}>{t(S.scoreInterpTitle, locale)}</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 11 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 12 }}>
                   {SCORE_RANGES.map(row => (
                     <div key={row.range} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 6, background: row.bg }}>
-                      <span className="mono" style={{ fontSize: 10, color: row.color, fontWeight: 600, minWidth: 90 }}>{row.range}</span>
+                      <span className="mono" style={{ fontSize: 11, color: row.color, fontWeight: 600, minWidth: 90 }}>{row.range}</span>
                       <span style={{ fontWeight: 600, color: row.color, minWidth: 56 }}>{t(row.label, locale)}</span>
-                      <span style={{ color: 'var(--fg-subtle)', fontSize: 10 }}>{t(row.note, locale)}</span>
+                      <span style={{ color: 'var(--fg-subtle)', fontSize: 11 }}>{t(row.note, locale)}</span>
                     </div>
                   ))}
                 </div>
@@ -594,10 +594,10 @@ export function SentimentBoard() {
               {/* Contrarian strategy */}
               <div style={{ padding: 14, borderRadius: 'var(--r)', background: 'var(--bg-muted)', border: '1px solid var(--border-soft)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <span style={{ fontSize: 20 }}>🔄</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg)' }}>{t(S.contrarianTitle, locale)}</span>
+                  <span style={{ fontSize: 22 }}>🔄</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg)' }}>{t(S.contrarianTitle, locale)}</span>
                 </div>
-                <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+                <div style={{ fontSize: 12.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
                   {t(S.contrarianBody, locale)}
                 </div>
               </div>
@@ -605,10 +605,10 @@ export function SentimentBoard() {
               {/* Usage tips */}
               <div style={{ padding: 14, borderRadius: 'var(--r)', background: 'var(--bg-muted)', border: '1px solid var(--border-soft)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <span style={{ fontSize: 20 }}>✅</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg)' }}>{t(S.usageTitle, locale)}</span>
+                  <span style={{ fontSize: 22 }}>✅</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg)' }}>{t(S.usageTitle, locale)}</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11.5 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12.5 }}>
                   {USAGE_TIPS.map((tip, i) => (
                     <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                       <span style={{ color: 'var(--teal)', fontWeight: 700, flexShrink: 0 }}>→</span>
@@ -621,10 +621,10 @@ export function SentimentBoard() {
               {/* Caveats */}
               <div style={{ padding: 14, borderRadius: 'var(--r)', background: 'var(--warn-soft)', border: '1px solid color-mix(in srgb, var(--warn) 30%, transparent)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <span style={{ fontSize: 20 }}>⚠️</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg)' }}>{t(S.caveatsTitle, locale)}</span>
+                  <span style={{ fontSize: 22 }}>⚠️</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg)' }}>{t(S.caveatsTitle, locale)}</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11.5 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12.5 }}>
                   {CAVEATS.map((warn, i) => (
                     <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                       <span style={{ color: 'var(--warn)', fontWeight: 700, flexShrink: 0 }}>!</span>

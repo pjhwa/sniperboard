@@ -50,9 +50,9 @@ function MacroCard({ item }: { item: MacroItem }) {
       <div className="flex items-start justify-between">
         <div>
           <div className="font-bold text-sm text-white tracking-tight">{item.symbol}</div>
-          <div className="text-[10px] font-medium mt-0.5 leading-tight" style={{color:'var(--text-label)'}}>{item.name}</div>
+          <div className="text-[11px] font-medium mt-0.5 leading-tight" style={{color:'var(--text-label)'}}>{item.name}</div>
         </div>
-        <div className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${sm.bg} ${sm.color} tracking-wider whitespace-nowrap`}>
+        <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${sm.bg} ${sm.color} tracking-wider whitespace-nowrap`}>
           {sm.label}
         </div>
       </div>
@@ -64,10 +64,10 @@ function MacroCard({ item }: { item: MacroItem }) {
         <div className="flex items-end justify-between gap-2">
           <div className="text-xl font-black text-white tabular-nums">{priceStr}</div>
           <div className="flex flex-col items-end gap-1">
-            <div className="flex items-center gap-1 text-[10px] font-medium" style={{color:'var(--text-label)'}}>
+            <div className="flex items-center gap-1 text-[11px] font-medium" style={{color:'var(--text-label)'}}>
               <span>1D</span><ChangePill value={item.change_pct_1d} />
             </div>
-            <div className="flex items-center gap-1 text-[10px] font-medium" style={{color:'var(--text-label)'}}>
+            <div className="flex items-center gap-1 text-[11px] font-medium" style={{color:'var(--text-label)'}}>
               <span>5D</span><ChangePill value={item.change_pct_5d} />
             </div>
           </div>
@@ -77,14 +77,14 @@ function MacroCard({ item }: { item: MacroItem }) {
       {/* EMA status + RSI */}
       <div className="flex items-center justify-between pt-2 gap-2" style={{borderTop:'1px solid rgba(45,65,115,0.3)'}}>
         <div className="flex gap-1.5">
-          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${
+          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
             item.above_ema8
               ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25'
               : 'text-red-400 bg-red-500/10 border-red-500/25'
           }`}>
             EMA8 {item.above_ema8 ? '▲' : '▼'}
           </span>
-          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${
+          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
             item.above_ema21
               ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25'
               : 'text-red-400 bg-red-500/10 border-red-500/25'
@@ -93,7 +93,7 @@ function MacroCard({ item }: { item: MacroItem }) {
           </span>
         </div>
         {item.rsi14 != null && (
-          <span className={`text-[9px] font-bold tabular-nums ${
+          <span className={`text-[10px] font-bold tabular-nums ${
             item.rsi14 >= 70 ? 'text-orange-400' : item.rsi14 <= 30 ? 'text-blue-400' : 'text-zinc-400'
           }`}>
             RSI {item.rsi14.toFixed(0)}
@@ -151,7 +151,7 @@ export default function MacroTab() {
       {/* 섹터 로테이션 바 */}
       <div className="glass-card rounded-2xl p-5 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent" />
-        <div className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 mb-4" style={{color:'var(--text-label)'}}>
+        <div className="text-[11px] font-bold uppercase tracking-widest flex items-center gap-1.5 mb-4" style={{color:'var(--text-label)'}}>
           <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
           섹터 로테이션 — 1일 수익률 기준 (오늘 상/하위)
         </div>
@@ -173,7 +173,7 @@ export default function MacroTab() {
                 <div className="w-20 text-xs font-bold tabular-nums shrink-0">
                   <ChangePill value={item.change_pct_1d} />
                 </div>
-                <div className={`text-[9px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${
+                <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${
                   (STRUCTURE_META[item.market_structure] ?? STRUCTURE_META['NEUTRAL']).bg
                 } ${(STRUCTURE_META[item.market_structure] ?? STRUCTURE_META['NEUTRAL']).color}`}>
                   {(STRUCTURE_META[item.market_structure] ?? STRUCTURE_META['NEUTRAL']).label}
@@ -190,7 +190,7 @@ export default function MacroTab() {
         if (items.length === 0) return null;
         return (
           <div key={group.label} className="space-y-3">
-            <div className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5" style={{color:'var(--text-label)'}}>
+            <div className="text-[11px] font-bold uppercase tracking-widest flex items-center gap-1.5" style={{color:'var(--text-label)'}}>
               <span className="w-1 h-1 rounded-full bg-zinc-700" />
               {group.label}
             </div>
@@ -203,7 +203,7 @@ export default function MacroTab() {
         );
       })}
 
-      <p className="text-[11px] font-medium text-center pb-2" style={{color:'var(--text-muted)'}}>
+      <p className="text-[12px] font-medium text-center pb-2" style={{color:'var(--text-muted)'}}>
         매크로 탭은 오일·금리·달러·섹터 로테이션을 한눈에 파악하기 위한 컨텍스트 뷰입니다. EMA8/21 포지션과 시장 구조(HH/HL 등)를 통해 지수 추세를 확인하세요.
       </p>
     </div>

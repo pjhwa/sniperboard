@@ -106,7 +106,7 @@ function FreshnessBadge({ meta }: { meta?: FreshnessMeta | null }) {
   return (
     <span
       style={{
-        fontSize: '10px',
+        fontSize: '11px',
         color: stale ? 'var(--warn)' : 'var(--fg-subtle)',
         marginLeft: 6,
         opacity: 0.8,
@@ -203,7 +203,7 @@ export function OverviewBoard() {
                     briefData.market_brief.tone === 'bearish' ? t(S.toneBearish, locale) :
                     briefData.market_brief.tone === 'cautious' ? t(S.toneCautious, locale) : t(S.toneNeutral, locale)
                   }</span>
-                  <span style={{ fontSize: 13 }}>
+                  <span style={{ fontSize: 14 }}>
                     {tField(briefData.market_brief.summary_en, briefData.market_brief.summary_ko, briefData.market_brief.summary, locale)}
                   </span>
                 </div>
@@ -212,13 +212,13 @@ export function OverviewBoard() {
                     ? (briefData.market_brief.key_themes_en ?? briefData.market_brief.key_themes ?? [])
                     : (briefData.market_brief.key_themes_ko ?? briefData.market_brief.key_themes ?? [])
                   ).map((theme, i) => (
-                    <span key={i} className="badge neutral" style={{ fontSize: 10.5 }}>{theme}</span>
+                    <span key={i} className="badge neutral" style={{ fontSize: 11.5 }}>{theme}</span>
                   ))}
                 </div>
-                <div style={{ color: 'var(--fg-muted)', fontSize: 11.5 }}>
+                <div style={{ color: 'var(--fg-muted)', fontSize: 12.5 }}>
                   {t(S.watchPoints, locale)}{tField(briefData.market_brief.watch_points_en, briefData.market_brief.watch_points_ko, briefData.market_brief.watch_points, locale)}
                 </div>
-                <div style={{ color: 'var(--fg-subtle)', fontSize: 10, marginTop: 4 }}>
+                <div style={{ color: 'var(--fg-subtle)', fontSize: 11, marginTop: 4 }}>
                   {t(S.aiDisclaimer, locale)}{briefData.slot === 'pre_open' ? t(S.slotPreOpen, locale) : t(S.slotPostClose, locale)}
                 </div>
               </>
@@ -251,7 +251,7 @@ export function OverviewBoard() {
                     </>
                   )}
                 </div>
-                <div style={{ color: 'var(--fg-muted)', fontSize: 12 }}>
+                <div style={{ color: 'var(--fg-muted)', fontSize: 13 }}>
                   {t(S.regimeTrend, locale)} {(regimeData.components.trend ?? 0).toFixed(1)} ·
                   {t(S.regimeBreadth, locale)} {(regimeData.components.breadth ?? 0).toFixed(1)} ·
                   {t(S.regimeCredit, locale)} {(regimeData.components.credit ?? 0).toFixed(1)} ·
@@ -266,7 +266,7 @@ export function OverviewBoard() {
             {/* Symbol Briefs — Action Bias 신호강도 미터 */}
             {briefData && (
               <div style={{ borderTop: '1px solid var(--border-soft)', marginTop: 10, paddingTop: 8 }}>
-                <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                <div style={{ fontSize: 11, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
                   {t(S.symbolAiLabel, locale)}
                 </div>
                 {(() => {
@@ -284,8 +284,8 @@ export function OverviewBoard() {
                     if ('pending' in item) {
                       return (
                         <div key={item.symbol} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
-                          <span style={{ fontWeight: 700, width: 42, fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>{item.symbol}</span>
-                          <span style={{ fontSize: 10, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>{t(S.analyzing, locale)}</span>
+                          <span style={{ fontWeight: 700, width: 42, fontFamily: 'var(--mono)', fontSize: 12, flexShrink: 0 }}>{item.symbol}</span>
+                          <span style={{ fontSize: 11, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>{t(S.analyzing, locale)}</span>
                         </div>
                       );
                     }
@@ -298,8 +298,8 @@ export function OverviewBoard() {
                     const biasColor = BIAS_COLORS[biasIdx] ?? 'var(--fg-subtle)';
                     return (
                       <div key={sb.symbol} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
-                        <span style={{ fontWeight: 700, width: 42, fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>{sb.symbol}</span>
-                        <span style={{ fontWeight: 700, fontSize: 11, color: gradeColor, width: 18, flexShrink: 0 }}>{sb.setup_quality}</span>
+                        <span style={{ fontWeight: 700, width: 42, fontFamily: 'var(--mono)', fontSize: 12, flexShrink: 0 }}>{sb.symbol}</span>
+                        <span style={{ fontWeight: 700, fontSize: 12, color: gradeColor, width: 18, flexShrink: 0 }}>{sb.setup_quality}</span>
                         <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                           {BIAS_LEVELS.map((_, i) => (
                             <div key={i} style={{
@@ -309,7 +309,7 @@ export function OverviewBoard() {
                             }} />
                           ))}
                         </div>
-                        <span style={{ fontSize: 10, color: biasColor, fontWeight: 600, flexShrink: 0 }}>
+                        <span style={{ fontSize: 11, color: biasColor, fontWeight: 600, flexShrink: 0 }}>
                           {t(BIAS_LABELS[sb.action_bias] ?? S.biasWatch, locale)}
                         </span>
                       </div>
@@ -343,16 +343,16 @@ export function OverviewBoard() {
               const tierLabel = e.relevance_tier === 'imminent' ? t(S.tierImminent, locale) : e.relevance_tier === 'approaching' ? t(S.tierApproaching, locale) : t(S.tierWatching, locale);
               const tierColor = e.relevance_tier === 'imminent' ? 'var(--bear)' : e.relevance_tier === 'approaching' ? 'var(--warn)' : 'var(--fg-subtle)';
               return (
-                <div key={e.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+                <div key={e.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
                   <span style={{ fontWeight: 600, width: 40, fontFamily: 'var(--mono)' }}>{e.symbol}</span>
                   <span style={{ color: 'var(--fg-muted)', flex: 1 }}>
                     {e.earnings_date.slice(5)} · {e.days_until}{locale === 'ko' ? '일 후' : 'd'}
                   </span>
                   {e.eps_estimate == null && (
-                    <span style={{ fontSize: 9.5, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>{t(S.estimateNA, locale)}</span>
+                    <span style={{ fontSize: 10.5, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>{t(S.estimateNA, locale)}</span>
                   )}
-                  <span style={{ fontSize: 9.5, color: tierColor, fontWeight: 600 }}>{tierLabel}</span>
-                  <span className={`badge ${rm.color}`} style={{ fontSize: 10 }}>
+                  <span style={{ fontSize: 10.5, color: tierColor, fontWeight: 600 }}>{tierLabel}</span>
+                  <span className={`badge ${rm.color}`} style={{ fontSize: 11 }}>
                     {rm.dot} {e.risk_level.toUpperCase()}
                   </span>
                 </div>
@@ -360,7 +360,7 @@ export function OverviewBoard() {
             })}
           </div>
         ) : (
-          <div style={{ color: 'var(--fg-muted)', fontSize: 12 }}>
+          <div style={{ color: 'var(--fg-muted)', fontSize: 13 }}>
             {earningsData === null ? t(S.earningsLoading, locale) : t(S.earningsNone, locale)}
           </div>
         )}
@@ -387,11 +387,11 @@ export function OverviewBoard() {
                 [t(S.regimeVolatility,locale), regimeData.components.volatility, regimeData.diagnostics?.vix_level,           'VIX',         ''],
                 [t(S.regimeMomentum,  locale), regimeData.components.momentum,   regimeData.diagnostics?.spy_roc_20d,         'SPY RoC 20d', '%'],
               ] as [string, number | null, number | null | undefined, string, string][]).map(([label, v, raw, rawLabel, unit]) => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10.5 }}>
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5 }}>
                   <div style={{ width: 64 }}>
                     <div style={{ color: 'var(--fg-subtle)' }}>{label}</div>
                     {raw !== null && raw !== undefined && (
-                      <div style={{ fontSize: 9, color: (v ?? 0) === 0 ? 'var(--bear)' : 'var(--fg-subtle)', letterSpacing: '0.01em' }}>
+                      <div style={{ fontSize: 10, color: (v ?? 0) === 0 ? 'var(--bear)' : 'var(--fg-subtle)', letterSpacing: '0.01em' }}>
                         {rawLabel} {raw >= 0 ? '+' : ''}{raw.toFixed(1)}{unit}
                       </div>
                     )}
@@ -424,9 +424,9 @@ export function OverviewBoard() {
               return (
                 <div key={key} style={{ marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontWeight: 600, fontSize: 12 }}>{key.toUpperCase()}</span>
+                    <span style={{ fontWeight: 600, fontSize: 13 }}>{key.toUpperCase()}</span>
                     <span className={'badge ' + cls}>{d.count}{locale === 'ko' ? '일' : 'd'}</span>
-                    <small style={{ marginLeft: 'auto', color: 'var(--fg-subtle)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{d.level}</small>
+                    <small style={{ marginLeft: 'auto', color: 'var(--fg-subtle)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{d.level}</small>
                   </div>
                   <div style={{ display: 'flex', gap: 2 }}>
                     {Array.from({ length: 25 }).map((_, i) => (
@@ -440,7 +440,7 @@ export function OverviewBoard() {
                 </div>
               );
             })}
-            <div style={{ fontSize: 10.5, color: 'var(--fg-subtle)', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)', lineHeight: 1.5 }}>
               OK &lt;4 · WARNING 4~5 · DANGER 6+
             </div>
           </>
@@ -460,10 +460,10 @@ export function OverviewBoard() {
           if (!m) return null;
           const up = (m.change_pct_5d ?? 0) >= 0;
           return (
-            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 11.5 }}>
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 12.5 }}>
               <div style={{ width: 56 }}>
                 <div style={{ fontWeight: 600 }}>{label}</div>
-                <div style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>{sub}</div>
+                <div style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>{sub}</div>
               </div>
               <div className="bar grow" style={{ height: 6 }}>
                 <div className="bar__fill" style={{ width: Math.min(100, Math.abs(m.change_pct_5d ?? 0) * 30) + '%', background: up ? 'var(--bull)' : 'var(--bear)' }} />
@@ -475,7 +475,7 @@ export function OverviewBoard() {
           );
         })}
         {rsp && spy && (rsp.change_pct_5d ?? 0) < (spy.change_pct_5d ?? 0) && (
-          <div style={{ fontSize: 10.5, color: 'var(--warn)', marginTop: 8, padding: '4px 8px', background: 'var(--warn-soft)', borderRadius: 6 }}>
+          <div style={{ fontSize: 11.5, color: 'var(--warn)', marginTop: 8, padding: '4px 8px', background: 'var(--warn-soft)', borderRadius: 6 }}>
             {t(S.narrowRally, locale)}
           </div>
         )}
@@ -492,9 +492,9 @@ export function OverviewBoard() {
               ] as [string, MacroItem | undefined, string][]).map(([, m, l]) => (
                 m ? (
                   <div key={l}>
-                    <div style={{ fontSize: 9.5, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{l}</div>
-                    <div className="mono" style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.02em' }}>{(m.price ?? 0).toFixed(2)}</div>
-                    <div className={'mono ' + ((m.change_pct_1d ?? 0) >= 0 ? 'chg up' : 'chg down')} style={{ fontSize: 10.5 }}>
+                    <div style={{ fontSize: 10.5, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{l}</div>
+                    <div className="mono" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.02em' }}>{(m.price ?? 0).toFixed(2)}</div>
+                    <div className={'mono ' + ((m.change_pct_1d ?? 0) >= 0 ? 'chg up' : 'chg down')} style={{ fontSize: 11.5 }}>
                       {(m.change_pct_1d ?? 0) >= 0 ? '+' : ''}{(m.change_pct_1d ?? 0).toFixed(2)}%
                     </div>
                   </div>
@@ -517,9 +517,9 @@ export function OverviewBoard() {
           if (!m) return null;
           const up = (m.change_pct_5d ?? 0) >= 0;
           return (
-            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '5px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 11.5 }}>
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '5px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 12.5 }}>
               <span style={{ width: 36, fontWeight: 600 }}>{label}</span>
-              <span style={{ flex: 1, color: 'var(--fg-subtle)', fontSize: 10.5 }}>{m.name}</span>
+              <span style={{ flex: 1, color: 'var(--fg-subtle)', fontSize: 11.5 }}>{m.name}</span>
               <span className="mono" style={{ textAlign: 'right' }}>${(m.price ?? 0).toFixed(2)}</span>
               <span className={'mono ' + (up ? 'chg up' : 'chg down')} style={{ width: 56, textAlign: 'right' }}>
                 {up ? '+' : ''}{(m.change_pct_5d ?? 0).toFixed(2)}%
@@ -547,23 +547,23 @@ export function OverviewBoard() {
                     padding: '5px 8px', borderRadius: 6,
                     background: inZone ? 'var(--em-soft)' : 'transparent',
                   }}>
-                    <span style={{ fontWeight: 600, width: 46, fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>
+                    <span style={{ fontWeight: 600, width: 46, fontFamily: 'var(--mono)', fontSize: 12, flexShrink: 0 }}>
                       {w.symbol}
                     </span>
                     <ScorePill score={w.score} />
                     <span style={{ flex: 1 }} />
                     <span style={{
-                      fontSize: 11, fontWeight: 600,
+                      fontSize: 12, fontWeight: 600,
                       color: broken ? 'var(--bull)' : inZone ? 'var(--em-500)' : w.entryDist > 15 ? 'var(--fg-subtle)' : 'var(--fg)',
                     }}>
                       {broken
-                        ? <span className="badge bull" style={{ fontSize: 10 }}>{t(S.breakout, locale)}</span>
+                        ? <span className="badge bull" style={{ fontSize: 11 }}>{t(S.breakout, locale)}</span>
                         : `+${w.entryDist.toFixed(1)}%`}
                     </span>
                   </div>
                 );
               })}
-            <div style={{ fontSize: 9.5, color: 'var(--fg-subtle)', marginTop: 4, paddingTop: 4, borderTop: '1px solid var(--border-soft)' }}>
+            <div style={{ fontSize: 10.5, color: 'var(--fg-subtle)', marginTop: 4, paddingTop: 4, borderTop: '1px solid var(--border-soft)' }}>
               {t(S.entryZone, locale)}
             </div>
           </div>
@@ -583,7 +583,7 @@ export function OverviewBoard() {
                 const color = s >= 65 ? 'var(--bull)' : s >= 50 ? 'var(--teal)' : s >= 35 ? 'var(--warn)' : 'var(--bear)';
                 return (
                   <div key={w.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
-                    <span style={{ fontWeight: 600, width: 46, fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>{w.symbol}</span>
+                    <span style={{ fontWeight: 600, width: 46, fontFamily: 'var(--mono)', fontSize: 12, flexShrink: 0 }}>{w.symbol}</span>
                     <div className="bar" style={{ flex: 1 }}>
                       <div className="bar__fill" style={{ width: `${s}%`, background: color }} />
                     </div>
@@ -617,16 +617,16 @@ export function OverviewBoard() {
                 const barW = Math.min(100, (Math.abs(chg) / maxAbs) * 100);
                 const aboveEma = m!.above_ema21;
                 return (
-                  <div key={sym} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '5px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 11.5 }}>
-                    <div style={{ width: 34, fontWeight: 600, fontFamily: 'var(--mono)', fontSize: 11 }}>{sym}</div>
-                    <div style={{ width: 38, fontSize: 10, color: 'var(--fg-subtle)' }}>{label}</div>
+                  <div key={sym} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '5px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 12.5 }}>
+                    <div style={{ width: 34, fontWeight: 600, fontFamily: 'var(--mono)', fontSize: 12 }}>{sym}</div>
+                    <div style={{ width: 38, fontSize: 11, color: 'var(--fg-subtle)' }}>{label}</div>
                     <div className="bar" style={{ flex: 1, height: 5 }}>
                       <div className="bar__fill" style={{ width: barW + '%', background: up ? 'var(--bull)' : 'var(--bear)' }} />
                     </div>
-                    <span className={'mono ' + (up ? 'chg up' : 'chg down')} style={{ width: 50, textAlign: 'right', fontSize: 11 }}>
+                    <span className={'mono ' + (up ? 'chg up' : 'chg down')} style={{ width: 50, textAlign: 'right', fontSize: 12 }}>
                       {up ? '+' : ''}{chg.toFixed(2)}%
                     </span>
-                    <span style={{ fontSize: 9.5, color: aboveEma ? 'var(--bull)' : 'var(--bear)', width: 28, textAlign: 'right' }}>
+                    <span style={{ fontSize: 10.5, color: aboveEma ? 'var(--bull)' : 'var(--bear)', width: 28, textAlign: 'right' }}>
                       {aboveEma ? '↑EMA' : '↓EMA'}
                     </span>
                   </div>
@@ -643,10 +643,10 @@ export function OverviewBoard() {
           <div key={w.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-soft)' }}>
             <span className="sym-pill__badge" style={{ width: 22, height: 22 }}>{w.symbol[0]}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 600, fontSize: 12 }}>{w.symbol}</div>
+              <div style={{ fontWeight: 600, fontSize: 13 }}>{w.symbol}</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div className="mono" style={{ fontSize: 11.5 }}>${w.price.toFixed(2)}</div>
+              <div className="mono" style={{ fontSize: 12.5 }}>${w.price.toFixed(2)}</div>
             </div>
             <ScorePill score={w.score} />
             <ConvictionBadge score={w.conviction_score ?? undefined} locale={locale} size="sm" />

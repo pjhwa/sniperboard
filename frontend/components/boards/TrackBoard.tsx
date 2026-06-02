@@ -146,7 +146,7 @@ function EquityCurveSVG({ stats, locale }: { stats: SignalLogStats; locale: stri
           <line x1={PL} y1={tk.y} x2={W - PR} y2={tk.y}
                 stroke="var(--border)" strokeDasharray="4 3" strokeWidth="0.5" />
           <text x={PL - 4} y={tk.y + 4} textAnchor="end"
-                fontSize="9" fill="var(--em-500)">{tk.label}</text>
+                fontSize="10" fill="var(--em-500)">{tk.label}</text>
         </g>
       ))}
       {/* 기준선 (0R) */}
@@ -173,7 +173,7 @@ function EquityCurveSVG({ stats, locale }: { stats: SignalLogStats; locale: stri
       )}
       {live.length === 0 && (
         <text x={W / 2} y={H / 2} textAnchor="middle"
-              fontSize="11" fill="var(--em-500)">
+              fontSize="12" fill="var(--em-500)">
           {locale === 'ko' ? '아직 청산된 거래가 없습니다' : 'No closed trades yet'}
         </text>
       )}
@@ -181,12 +181,12 @@ function EquityCurveSVG({ stats, locale }: { stats: SignalLogStats; locale: stri
       {/* 범례 */}
       <g transform={`translate(${PL + 8},${PT + 6})`}>
         <line x1="0" y1="5" x2="20" y2="5" stroke={healthCol} strokeWidth="2" />
-        <text x="24" y="9" fontSize="9" fill="var(--fg)">
+        <text x="24" y="9" fontSize="10" fill="var(--fg)">
           {locale === 'ko' ? '라이브' : 'Live'}
         </text>
         <line x1="60" y1="5" x2="80" y2="5" stroke="var(--em-500)"
               strokeWidth="1.5" strokeDasharray="4 3" />
-        <text x="84" y="9" fontSize="9" fill="var(--em-500)">
+        <text x="84" y="9" fontSize="10" fill="var(--em-500)">
           {locale === 'ko' ? '백테스트 기준' : 'BT baseline'}
         </text>
       </g>
@@ -201,59 +201,54 @@ function PipelineCard({ item, locale }: { item: SignalLogEntry; locale: string }
   const rewardAmt = (item.target - item.entry).toFixed(2);
   const rr = item.entry > 0 ? ((item.target - item.entry) / (item.entry - item.stop)).toFixed(1) : '—';
 
+  const accentColor = isActive ? 'var(--teal)' : 'var(--info)';
+
   return (
     <div style={{
       background: 'var(--card)',
-      border: `1px solid ${isActive ? 'var(--teal)' : 'var(--info)'}`,
+      border: '1px solid var(--border)',
+      borderLeft: `3px solid ${accentColor}`,
       borderRadius: 8,
       padding: '12px 14px',
       display: 'flex',
       flexDirection: 'column',
-      gap: 6,
+      gap: 8,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{
-          fontWeight: 700, fontSize: 15,
-          color: isActive ? 'var(--teal)' : 'var(--info)',
-        }}>{item.symbol}</span>
-        <span style={{
-          fontSize: 11, padding: '2px 7px', borderRadius: 10,
-          background: isActive ? 'rgba(0,210,190,0.12)' : 'rgba(100,160,255,0.12)',
-          color: isActive ? 'var(--teal)' : 'var(--info)',
-          fontWeight: 600,
-        }}>
+        <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--fg)' }}>{item.symbol}</span>
+        <span className={`badge ${isActive ? 'teal' : 'info'}`} style={{ fontSize: 11 }}>
           {isActive
-            ? (locale === 'ko' ? '● 활성' : '● ACTIVE')
-            : (locale === 'ko' ? '○ 대기' : '○ PENDING')}
+            ? (locale === 'ko' ? '활성' : 'ACTIVE')
+            : (locale === 'ko' ? '대기' : 'PENDING')}
         </span>
-        <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--em-500)' }}>
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--fg-subtle)' }}>
           {item.signal_date} · {item.stage2_score}/7
         </span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, fontSize: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, fontSize: 13 }}>
         <div>
-          <span style={{ color: 'var(--em-500)', fontSize: 10 }}>
-            {locale === 'ko' ? '진입' : 'ENTRY'}
-          </span>
-          <div style={{ fontWeight: 600 }}>${item.entry.toFixed(2)}</div>
+          <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '0.05em', color: 'var(--fg-subtle)', marginBottom: 2 }}>
+            {locale === 'ko' ? '진입' : 'Entry'}
+          </div>
+          <div style={{ fontWeight: 600, fontFamily: 'var(--font-mono)' }}>${item.entry.toFixed(2)}</div>
         </div>
         <div>
-          <span style={{ color: 'var(--bear)', fontSize: 10 }}>
-            {locale === 'ko' ? '손절' : 'STOP'}
-          </span>
-          <div style={{ fontWeight: 600 }}>${item.stop.toFixed(2)}</div>
-          <div style={{ color: 'var(--em-500)', fontSize: 10 }}>-${riskAmt}</div>
+          <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '0.05em', color: 'var(--fg-subtle)', marginBottom: 2 }}>
+            {locale === 'ko' ? '손절' : 'Stop'}
+          </div>
+          <div style={{ fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--bear)' }}>${item.stop.toFixed(2)}</div>
+          <div style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>−${riskAmt}</div>
         </div>
         <div>
-          <span style={{ color: 'var(--bull)', fontSize: 10 }}>
-            {locale === 'ko' ? '목표' : 'TARGET'}
-          </span>
-          <div style={{ fontWeight: 600 }}>${item.target.toFixed(2)}</div>
-          <div style={{ color: 'var(--em-500)', fontSize: 10 }}>+${rewardAmt} · 1:{rr}R</div>
+          <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '0.05em', color: 'var(--fg-subtle)', marginBottom: 2 }}>
+            {locale === 'ko' ? '목표' : 'Target'}
+          </div>
+          <div style={{ fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--bull)' }}>${item.target.toFixed(2)}</div>
+          <div style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>+${rewardAmt} · 1:{rr}R</div>
         </div>
       </div>
       {isActive && item.entry_price && (
-        <div style={{ fontSize: 11, color: 'var(--em-500)', borderTop: '1px solid var(--border)', paddingTop: 4 }}>
+        <div style={{ fontSize: 12, color: 'var(--fg-muted)', borderTop: '1px solid var(--border-soft)', paddingTop: 6 }}>
           {locale === 'ko' ? '진입 완료' : 'Entered'}: ${item.entry_price.toFixed(2)}
           {item.entry_date ? ` · ${item.entry_date}` : ''}
         </div>
@@ -309,14 +304,14 @@ export function TrackBoard() {
         {/* ── 헤더 ──────────────────────────────────────────────────────── */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>{tl(S.title)}</h2>
-            <div style={{ fontSize: 12, color: 'var(--em-500)', marginTop: 2 }}>{tl(S.subtitle)}</div>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{tl(S.title)}</h2>
+            <div style={{ fontSize: 13, color: 'var(--em-500)', marginTop: 2 }}>{tl(S.subtitle)}</div>
           </div>
           <button
             className="btn"
             onClick={() => refresh()}
             disabled={refreshing}
-            style={{ fontSize: 12, padding: '6px 14px' }}
+            style={{ fontSize: 13, padding: '6px 14px' }}
           >
             {refreshing ? tl(S.refreshing) : tl(S.refresh)}
           </button>
@@ -326,10 +321,10 @@ export function TrackBoard() {
         <div style={{
           background: 'var(--card)', border: '1px solid var(--border)',
           borderRadius: 8, padding: '10px 14px',
-          fontSize: 11, color: 'var(--em-500)',
+          fontSize: 12, color: 'var(--em-500)',
           display: 'flex', alignItems: 'center', gap: 8,
         }}>
-          <span style={{ fontSize: 14 }}>🔍</span>
+          <span style={{ fontSize: 15 }}>🔍</span>
           <span>{tl(S.methodNote)}</span>
           {bsl && (
             <span style={{ marginLeft: 'auto', color: 'var(--em-500)', whiteSpace: 'nowrap' }}>
@@ -342,25 +337,27 @@ export function TrackBoard() {
         {!statsLoading && stats && (
           <div style={{
             background: 'var(--card)',
-            border: `2px solid ${hColor}`,
+            border: '1px solid var(--border)',
+            borderLeft: `3px solid ${hColor}`,
             borderRadius: 10,
             padding: '14px 18px',
             display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 16,
           }}>
             <div>
-              <div style={{ fontSize: 11, color: 'var(--em-500)', marginBottom: 2 }}>{tl(S.modelHealth)}</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: hColor }}>
-                ● {healthLabel}
+              <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--fg-subtle)', marginBottom: 4 }}>{tl(S.modelHealth)}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: hColor, flexShrink: 0, display: 'inline-block' }} />
+                <span style={{ fontSize: 18, fontWeight: 700, color: hColor }}>{healthLabel}</span>
               </div>
             </div>
             {stats.expectancy_r !== null && (
               <div>
-                <div style={{ fontSize: 11, color: 'var(--em-500)' }}>{tl(S.expectancy)}</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: hColor }}>
+                <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--fg-subtle)', marginBottom: 4 }}>{tl(S.expectancy)}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--fg)' }}>
                   {fmtR(stats.expectancy_r)}
                   {stats.health.expectancy_delta !== null && (
                     <span style={{
-                      fontSize: 12, marginLeft: 6,
+                      fontSize: 13, marginLeft: 6,
                       color: (stats.health.expectancy_delta ?? 0) >= 0 ? 'var(--bull)' : 'var(--bear)',
                     }}>
                       {fmtDelta(stats.health.expectancy_delta)}
@@ -371,12 +368,12 @@ export function TrackBoard() {
             )}
             {stats.win_rate !== null && (
               <div>
-                <div style={{ fontSize: 11, color: 'var(--em-500)' }}>{tl(S.winRate)}</div>
-                <div style={{ fontSize: 18, fontWeight: 700 }}>
+                <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--fg-subtle)', marginBottom: 4 }}>{tl(S.winRate)}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--fg)' }}>
                   {fmtPct(stats.win_rate)}
                   {stats.health.win_rate_delta !== null && (
                     <span style={{
-                      fontSize: 12, marginLeft: 6,
+                      fontSize: 13, marginLeft: 6,
                       color: (stats.health.win_rate_delta ?? 0) >= 0 ? 'var(--bull)' : 'var(--bear)',
                     }}>
                       {fmtDelta(stats.health.win_rate_delta, false)}
@@ -386,10 +383,10 @@ export function TrackBoard() {
               </div>
             )}
             <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-              <div style={{ fontSize: 11, color: 'var(--em-500)' }}>
+              <div style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
                 {tl(S.confidence)}: <strong style={{ color: 'var(--fg)' }}>{confidenceLabel}</strong>
               </div>
-              <div style={{ fontSize: 10, color: 'var(--em-500)', marginTop: 2 }}>{tl(S.tradesToGrow)}</div>
+              <div style={{ fontSize: 11, color: 'var(--fg-subtle)', marginTop: 2 }}>{tl(S.tradesToGrow)}</div>
             </div>
           </div>
         )}
@@ -399,21 +396,21 @@ export function TrackBoard() {
              className="mob-wrap">
           {/* 총 신호 */}
           <div className="card" style={{ padding: '14px 16px' }}>
-            <div style={{ fontSize: 11, color: 'var(--em-500)', marginBottom: 4 }}>{tl(S.totalTrades)}</div>
-            <div style={{ fontSize: 26, fontWeight: 800 }}>{stats?.n_total ?? '—'}</div>
-            <div style={{ fontSize: 11, color: 'var(--em-500)', marginTop: 4 }}>
+            <div style={{ fontSize: 12, color: 'var(--em-500)', marginBottom: 4 }}>{tl(S.totalTrades)}</div>
+            <div style={{ fontSize: 29, fontWeight: 800 }}>{stats?.n_total ?? '—'}</div>
+            <div style={{ fontSize: 12, color: 'var(--em-500)', marginTop: 4 }}>
               {stats?.n_closed ?? 0} {tl(S.closed)} · {stats?.n_active ?? 0} {tl(S.active)} · {stats?.n_pending ?? 0} {tl(S.pending)}
             </div>
           </div>
 
           {/* 승률 */}
           <div className="card" style={{ padding: '14px 16px' }}>
-            <div style={{ fontSize: 11, color: 'var(--em-500)', marginBottom: 4 }}>{tl(S.winRate)}</div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: stats?.win_rate ? (stats.win_rate >= 0.35 ? 'var(--bull)' : 'var(--bear)') : undefined }}>
+            <div style={{ fontSize: 12, color: 'var(--em-500)', marginBottom: 4 }}>{tl(S.winRate)}</div>
+            <div style={{ fontSize: 29, fontWeight: 800, color: stats?.win_rate ? (stats.win_rate >= 0.35 ? 'var(--bull)' : 'var(--bear)') : undefined }}>
               {fmtPct(stats?.win_rate)}
             </div>
             {bsl && (
-              <div style={{ fontSize: 11, color: 'var(--em-500)', marginTop: 4 }}>
+              <div style={{ fontSize: 12, color: 'var(--em-500)', marginTop: 4 }}>
                 {tl(S.vsBt)} {fmtPct(bsl.win_rate)}
               </div>
             )}
@@ -421,12 +418,12 @@ export function TrackBoard() {
 
           {/* 기대값 */}
           <div className="card" style={{ padding: '14px 16px' }}>
-            <div style={{ fontSize: 11, color: 'var(--em-500)', marginBottom: 4 }}>{tl(S.expectancy)}</div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: stats?.expectancy_r ? ((stats.expectancy_r ?? 0) >= 0 ? 'var(--bull)' : 'var(--bear)') : undefined }}>
+            <div style={{ fontSize: 12, color: 'var(--em-500)', marginBottom: 4 }}>{tl(S.expectancy)}</div>
+            <div style={{ fontSize: 29, fontWeight: 800, color: stats?.expectancy_r ? ((stats.expectancy_r ?? 0) >= 0 ? 'var(--bull)' : 'var(--bear)') : undefined }}>
               {fmtR(stats?.expectancy_r)}
             </div>
             {bsl && (
-              <div style={{ fontSize: 11, color: 'var(--em-500)', marginTop: 4 }}>
+              <div style={{ fontSize: 12, color: 'var(--em-500)', marginTop: 4 }}>
                 {tl(S.vsBt)} +{bsl.expectancy_r}R
               </div>
             )}
@@ -434,11 +431,11 @@ export function TrackBoard() {
 
           {/* 손익비 + MDD */}
           <div className="card" style={{ padding: '14px 16px' }}>
-            <div style={{ fontSize: 11, color: 'var(--em-500)', marginBottom: 4 }}>{tl(S.profitFactor)}</div>
-            <div style={{ fontSize: 26, fontWeight: 800 }}>
+            <div style={{ fontSize: 12, color: 'var(--em-500)', marginBottom: 4 }}>{tl(S.profitFactor)}</div>
+            <div style={{ fontSize: 29, fontWeight: 800 }}>
               {stats?.profit_factor?.toFixed(2) ?? '—'}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--em-500)', marginTop: 4 }}>
+            <div style={{ fontSize: 12, color: 'var(--em-500)', marginTop: 4 }}>
               {tl(S.mdd)}: {stats?.mdd != null ? `${stats.mdd.toFixed(1)}%` : '—'}
             </div>
           </div>
@@ -449,7 +446,7 @@ export function TrackBoard() {
           <div className="card__hd" style={{ marginBottom: 8 }}>
             <span className="card__title">{tl(S.equityCurve)}</span>
             {stats && (
-              <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--em-500)' }}>
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--em-500)' }}>
                 {stats.wins}W / {stats.losses}L / {stats.timeouts}T
                 {stats.avg_win_r != null && stats.avg_loss_r != null && (
                   <> · avg {fmtR(stats.avg_win_r)} / {fmtR(stats.avg_loss_r)}</>
@@ -460,7 +457,7 @@ export function TrackBoard() {
           {stats ? (
             <EquityCurveSVG stats={stats} locale={lc} />
           ) : (
-            <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--em-500)', fontSize: 12 }}>
+            <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--em-500)', fontSize: 13 }}>
               {statsLoading ? (lc === 'ko' ? '로딩 중…' : 'Loading…') : '—'}
             </div>
           )}
@@ -474,12 +471,12 @@ export function TrackBoard() {
           <div className="card">
             <div className="card__hd" style={{ marginBottom: 8 }}>
               <span className="card__title">{tl(S.pipeline)}</span>
-              <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--em-500)' }}>
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--em-500)' }}>
                 {pipeline.length} {lc === 'ko' ? '건' : 'signals'}
               </span>
             </div>
             {pipeline.length === 0 ? (
-              <div style={{ color: 'var(--em-500)', fontSize: 12, padding: '8px 0' }}>{tl(S.noPipeline)}</div>
+              <div style={{ color: 'var(--em-500)', fontSize: 13, padding: '8px 0' }}>{tl(S.noPipeline)}</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {pipeline.map(item => (
@@ -495,7 +492,7 @@ export function TrackBoard() {
               <span className="card__title">{tl(S.regimeBreak)}</span>
             </div>
             {!stats || Object.keys(stats.regime_breakdown).length === 0 ? (
-              <div style={{ color: 'var(--em-500)', fontSize: 12, padding: '8px 0' }}>{tl(S.noRegime)}</div>
+              <div style={{ color: 'var(--em-500)', fontSize: 13, padding: '8px 0' }}>{tl(S.noRegime)}</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {Object.entries(stats.regime_breakdown).map(([regime, data]) => {
@@ -503,11 +500,11 @@ export function TrackBoard() {
                   const col  = expR > 0 ? 'var(--bull)' : 'var(--bear)';
                   return (
                     <div key={regime}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                         <span style={{ fontWeight: 600 }}>{regime}</span>
                         <span style={{ color: col, fontWeight: 700 }}>{fmtR(data.expectancy_r)}</span>
                       </div>
-                      <div style={{ fontSize: 11, color: 'var(--em-500)' }}>
+                      <div style={{ fontSize: 12, color: 'var(--em-500)' }}>
                         {data.n}{tl(S.nTrades)} · {fmtPct(data.win_rate)}
                       </div>
                       {/* 막대 */}
@@ -537,7 +534,7 @@ export function TrackBoard() {
                   key={s}
                   onClick={() => setStatusFilter(s)}
                   style={{
-                    fontSize: 10, padding: '3px 9px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                    fontSize: 11, padding: '3px 9px', borderRadius: 10, border: 'none', cursor: 'pointer',
                     background: statusFilter === s ? statusColor(s === 'ALL' ? 'ACTIVE' : s) : 'var(--border)',
                     color: statusFilter === s ? 'var(--bg)' : 'var(--em-500)',
                     fontWeight: 600,
@@ -550,7 +547,7 @@ export function TrackBoard() {
           </div>
 
           {filteredEntries.length === 0 ? (
-            <div style={{ color: 'var(--em-500)', fontSize: 12, padding: '8px 0' }}>{tl(S.noHistory)}</div>
+            <div style={{ color: 'var(--em-500)', fontSize: 13, padding: '8px 0' }}>{tl(S.noHistory)}</div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table className="tbl" style={{ minWidth: 600 }}>
@@ -570,15 +567,15 @@ export function TrackBoard() {
                 <tbody>
                   {filteredEntries.slice(0, 100).map(entry => (
                     <tr key={entry.id} style={{
-                      background: entry.status === 'WIN' ? 'rgba(0,200,80,0.04)'
-                                : entry.status === 'LOSS' ? 'rgba(240,60,60,0.04)'
+                      background: entry.status === 'WIN' ? 'color-mix(in srgb, var(--bull) 5%, transparent)'
+                                : entry.status === 'LOSS' ? 'color-mix(in srgb, var(--bear) 5%, transparent)'
                                 : undefined
                     }}>
                       <td style={{ fontWeight: 700 }}>{entry.symbol}</td>
-                      <td style={{ color: 'var(--em-500)', fontSize: 11 }}>{entry.signal_date}</td>
+                      <td style={{ color: 'var(--em-500)', fontSize: 12 }}>{entry.signal_date}</td>
                       <td style={{ textAlign: 'center' }}>
                         <span style={{
-                          fontSize: 11, fontWeight: 700,
+                          fontSize: 12, fontWeight: 700,
                           color: entry.stage2_score >= 6 ? 'var(--bull)' : 'var(--fg)',
                         }}>
                           {entry.stage2_score}/7
@@ -589,7 +586,7 @@ export function TrackBoard() {
                       <td style={{ color: 'var(--bull)' }}>${entry.target.toFixed(2)}</td>
                       <td>
                         <span style={{
-                          fontSize: 11, fontWeight: 700,
+                          fontSize: 12, fontWeight: 700,
                           color: statusColor(entry.status),
                         }}>
                           {entry.status === 'WIN' ? '✓ WIN'
@@ -599,7 +596,7 @@ export function TrackBoard() {
                          : entry.status}
                         </span>
                         {entry.exit_date && (
-                          <div style={{ fontSize: 10, color: 'var(--em-500)' }}>{entry.exit_date}</div>
+                          <div style={{ fontSize: 11, color: 'var(--em-500)' }}>{entry.exit_date}</div>
                         )}
                       </td>
                       <td style={{
@@ -610,7 +607,7 @@ export function TrackBoard() {
                       }}>
                         {fmtR(entry.r_multiple)}
                       </td>
-                      <td style={{ fontSize: 10, color: 'var(--em-500)' }}>
+                      <td style={{ fontSize: 11, color: 'var(--em-500)' }}>
                         {entry.regime ?? '—'}
                       </td>
                     </tr>

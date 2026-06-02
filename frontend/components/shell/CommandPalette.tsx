@@ -84,7 +84,7 @@ export function CommandPalette() {
           }}
         />
         {isGlossaryMode && (
-          <div style={{ padding: '4px 16px', fontSize: 10.5, color: 'var(--fg-subtle)', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ padding: '4px 16px', fontSize: 11.5, color: 'var(--fg-subtle)', borderBottom: '1px solid var(--border)' }}>
             {locale === 'en' ? `Glossary search mode — ${items.length} results` : `용어 검색 모드 — ${items.length}개 결과`}
           </div>
         )}
@@ -97,11 +97,11 @@ export function CommandPalette() {
               onClick={item.action}
             >
               <div className="ico">
-                {item.type === 'symbol' ? <Bolt /> : item.type === 'glossary' ? <span style={{ fontSize: 12 }}>ⓘ</span> : <Layers />}
+                {item.type === 'symbol' ? <Bolt /> : item.type === 'glossary' ? <span style={{ fontSize: 13 }}>ⓘ</span> : <Layers />}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 500 }}>{item.label}</div>
-                <div style={{ fontSize: 11, color: 'var(--fg-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.sub}</div>
+                <div style={{ fontSize: 12, color: 'var(--fg-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.sub}</div>
               </div>
               <div className="meta">{item.meta}</div>
             </div>

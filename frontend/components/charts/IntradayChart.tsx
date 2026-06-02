@@ -173,7 +173,7 @@ export default function IntradayChart({ candles, signals, indicators }: Intraday
                 borderRadius: 1,
               }}
             />
-            <span style={{ color: '#9ca3af', fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.01em' }}>
+            <span style={{ color: '#9ca3af', fontSize: 12, fontFamily: 'monospace', letterSpacing: '0.01em' }}>
               {label}
             </span>
           </span>

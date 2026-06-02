@@ -129,8 +129,8 @@ function CIBar({
   return (
     <div style={{ marginBottom: '14px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', alignItems: 'baseline' }}>
-        <span style={{ fontSize: '12px', color: 'var(--mut)', fontWeight: 500 }}>{label}</span>
-        <span style={{ fontSize: '12px', color: medColor, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+        <span style={{ fontSize: '13px', color: 'var(--mut)', fontWeight: 500 }}>{label}</span>
+        <span style={{ fontSize: '13px', color: medColor, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
           {format(median)}
         </span>
       </div>
@@ -156,12 +156,12 @@ function CIBar({
         {/* p5 label */}
         <div style={{
           position: 'absolute', left: 0, top: '14px',
-          fontSize: '10px', color: 'var(--dim)', fontVariantNumeric: 'tabular-nums',
+          fontSize: '11px', color: 'var(--dim)', fontVariantNumeric: 'tabular-nums',
         }}>{format(p5)}</div>
         {/* p95 label */}
         <div style={{
           position: 'absolute', right: 0, top: '14px',
-          fontSize: '10px', color: 'var(--dim)', fontVariantNumeric: 'tabular-nums',
+          fontSize: '11px', color: 'var(--dim)', fontVariantNumeric: 'tabular-nums',
           transform: 'translateX(0)',
         }}>{format(p95)}</div>
       </div>
@@ -194,18 +194,18 @@ function MonteCarloSection({ mc, locale }: { mc: MonteCarloResult; locale: Local
         border: `1px solid ${isStrong ? 'rgba(52,211,153,0.2)' : 'rgba(251,191,36,0.2)'}`,
       }}>
         <div style={{ textAlign: 'center', minWidth: '80px' }}>
-          <div style={{ fontSize: '32px', fontWeight: 900, color: probColor, letterSpacing: '-1px', lineHeight: 1 }}>
+          <div style={{ fontSize: '35px', fontWeight: 900, color: probColor, letterSpacing: '-1px', lineHeight: 1 }}>
             {probPct}%
           </div>
-          <div style={{ fontSize: '10px', color: 'var(--mut)', marginTop: '3px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--mut)', marginTop: '3px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             {t(S.mcProbLabel, locale)}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: '12px', color: isStrong ? 'var(--emerald, #34d399)' : 'var(--warn, #fbbf24)', fontWeight: 600 }}>
+          <div style={{ fontSize: '13px', color: isStrong ? 'var(--emerald, #34d399)' : 'var(--warn, #fbbf24)', fontWeight: 600 }}>
             {isStrong ? t(S.mcInterpret, locale) : t(S.mcInterpretWarn, locale)}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--dim)', marginTop: '4px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--dim)', marginTop: '4px' }}>
             {t(S.mc90ci, locale)}: [{mc.expectancy_r.p5 >= 0 ? '+' : ''}{mc.expectancy_r.p5.toFixed(3)}R ~ {mc.expectancy_r.p5 >= 0 ? '+' : ''}{mc.expectancy_r.p95.toFixed(3)}R] · {t(S.mcMedian, locale)} {mc.expectancy_r.median >= 0 ? '+' : ''}{mc.expectancy_r.median.toFixed(3)}R
           </div>
         </div>
@@ -242,15 +242,15 @@ function MonteCarloSection({ mc, locale }: { mc: MonteCarloResult; locale: Local
 
       {/* ── 범례 ── */}
       <div style={{ display: 'flex', gap: '16px', marginTop: '4px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '10px', color: 'var(--dim)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--dim)' }}>
           <div style={{ width: '20px', height: '6px', background: 'rgba(52,211,153,0.2)', border: '1px solid rgba(52,211,153,0.4)', borderRadius: '1px' }} />
           IQR (p25~p75)
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '10px', color: 'var(--dim)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--dim)' }}>
           <div style={{ width: '2px', height: '10px', background: 'var(--emerald, #34d399)' }} />
           {t(S.mcMedian, locale)}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '10px', color: 'var(--dim)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--dim)' }}>
           양 끝 = p5 / p95 (90% 신뢰구간)
         </div>
       </div>
@@ -323,7 +323,7 @@ function EquityCurve({ curve }: { curve: { date: string; equity: number }[] }) {
         <circle cx={toX(curve.length - 1)} cy={toY(values[values.length - 1])} r="1.5"
           fill={isPositive ? 'var(--emerald, #34d399)' : 'var(--rose, #fb7185)'} />
       </svg>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--mut)', marginTop: '4px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--mut)', marginTop: '4px' }}>
         <span>{curve[0]?.date}</span>
         <span style={{ color: isPositive ? 'var(--emerald, #34d399)' : 'var(--rose, #fb7185)', fontWeight: 700 }}>
           {isPositive ? '+' : ''}{totalReturn}% total return
@@ -341,9 +341,9 @@ function KpiCell({ label, value, sub, color }: {
 }) {
   return (
     <div style={{ textAlign: 'center', padding: '12px 8px' }}>
-      <div style={{ fontSize: '11px', color: 'var(--mut)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>{label}</div>
-      <div style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.5px', color: color ?? 'var(--txt)' }}>{value}</div>
-      {sub && <div style={{ fontSize: '11px', color: 'var(--mut)', marginTop: '2px' }}>{sub}</div>}
+      <div style={{ fontSize: '12px', color: 'var(--mut)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>{label}</div>
+      <div style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', color: color ?? 'var(--txt)' }}>{value}</div>
+      {sub && <div style={{ fontSize: '12px', color: 'var(--mut)', marginTop: '2px' }}>{sub}</div>}
     </div>
   );
 }
@@ -360,12 +360,12 @@ function StatsRow({ label, stats, highlight }: { label: string; stats: BacktestS
       background: highlight ? 'rgba(56,189,248,0.06)' : 'transparent',
       borderRadius: '8px', gap: '4px',
     }}>
-      <span style={{ fontSize: '13px', fontWeight: highlight ? 700 : 400, color: 'var(--txt)' }}>{label}</span>
-      <span style={{ textAlign: 'right', fontSize: '13px', color: winColor, fontVariantNumeric: 'tabular-nums' }}>{(stats.win_rate * 100).toFixed(1)}%</span>
-      <span style={{ textAlign: 'right', fontSize: '13px', color: expColor, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{stats.expectancy_r > 0 ? '+' : ''}{stats.expectancy_r.toFixed(3)}R</span>
-      <span style={{ textAlign: 'right', fontSize: '13px', color: 'var(--mut)', fontVariantNumeric: 'tabular-nums' }}>{stats.profit_factor}</span>
-      <span style={{ textAlign: 'right', fontSize: '13px', color: 'var(--rose, #fb7185)', fontVariantNumeric: 'tabular-nums' }}>{stats.mdd.toFixed(1)}%</span>
-      <span style={{ textAlign: 'right', fontSize: '12px', color: 'var(--mut)', fontVariantNumeric: 'tabular-nums' }}>n={stats.n}</span>
+      <span style={{ fontSize: '14px', fontWeight: highlight ? 700 : 400, color: 'var(--txt)' }}>{label}</span>
+      <span style={{ textAlign: 'right', fontSize: '14px', color: winColor, fontVariantNumeric: 'tabular-nums' }}>{(stats.win_rate * 100).toFixed(1)}%</span>
+      <span style={{ textAlign: 'right', fontSize: '14px', color: expColor, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{stats.expectancy_r > 0 ? '+' : ''}{stats.expectancy_r.toFixed(3)}R</span>
+      <span style={{ textAlign: 'right', fontSize: '14px', color: 'var(--mut)', fontVariantNumeric: 'tabular-nums' }}>{stats.profit_factor}</span>
+      <span style={{ textAlign: 'right', fontSize: '14px', color: 'var(--rose, #fb7185)', fontVariantNumeric: 'tabular-nums' }}>{stats.mdd.toFixed(1)}%</span>
+      <span style={{ textAlign: 'right', fontSize: '13px', color: 'var(--mut)', fontVariantNumeric: 'tabular-nums' }}>n={stats.n}</span>
     </div>
   );
 }
@@ -377,9 +377,9 @@ function StatsHeader({ locale }: { locale: string }) {
       display: 'grid', gridTemplateColumns: '1fr repeat(5, 80px)',
       padding: '6px 12px', borderBottom: '1px solid var(--line)',
     }}>
-      <span style={{ fontSize: '11px', color: 'var(--dim)', textTransform: 'uppercase' }}>Period</span>
+      <span style={{ fontSize: '12px', color: 'var(--dim)', textTransform: 'uppercase' }}>Period</span>
       {['Win%', 'Exp(R)', 'PF', 'MDD', 'n'].map(h => (
-        <span key={h} style={{ textAlign: 'right', fontSize: '11px', color: 'var(--dim)', textTransform: 'uppercase' }}>{h}</span>
+        <span key={h} style={{ textAlign: 'right', fontSize: '12px', color: 'var(--dim)', textTransform: 'uppercase' }}>{h}</span>
       ))}
     </div>
   );
@@ -460,7 +460,7 @@ export function BacktestBoard() {
             onClick={runBacktest}
             disabled={isRunning}
             style={{
-              padding: '8px 20px', borderRadius: '8px', fontWeight: 700, fontSize: '14px',
+              padding: '8px 20px', borderRadius: '8px', fontWeight: 700, fontSize: '15px',
               background: isRunning ? 'var(--panel2)' : 'rgba(56,189,248,0.15)',
               border: '1px solid rgba(56,189,248,0.4)', color: 'var(--sky, #38bdf8)',
               cursor: isRunning ? 'not-allowed' : 'pointer', opacity: isRunning ? 0.7 : 1,
@@ -469,15 +469,15 @@ export function BacktestBoard() {
             {isRunning ? t(S.running, locale) : generatedAt ? t(S.rerun, locale) : t(S.runBtn, locale)}
           </button>
           {generatedAt && (
-            <span style={{ fontSize: '12px', color: 'var(--mut)' }}>
+            <span style={{ fontSize: '13px', color: 'var(--mut)' }}>
               {t(S.lastRun, locale)}: {generatedAt}
             </span>
           )}
           {runError && (
-            <span style={{ fontSize: '12px', color: 'var(--rose, #fb7185)' }}>{runError}</span>
+            <span style={{ fontSize: '13px', color: 'var(--rose, #fb7185)' }}>{runError}</span>
           )}
           {result?.config && (
-            <span style={{ fontSize: '12px', color: 'var(--dim)', marginLeft: 'auto' }}>
+            <span style={{ fontSize: '13px', color: 'var(--dim)', marginLeft: 'auto' }}>
               {result.config.symbols.join(' · ')} · Stage2 ≥ {result.config.stage2_threshold}
               {result.config.rs_threshold !== undefined && ` · RS≥${result.config.rs_threshold}`}
               {result.config.use_spy_filter && ' · SPY필터'}
@@ -505,13 +505,13 @@ export function BacktestBoard() {
               borderRadius: '12px',
             }}>
               <summary style={{
-                padding: '11px 16px', fontSize: '13px', fontWeight: 600,
+                padding: '11px 16px', fontSize: '14px', fontWeight: 600,
                 color: 'var(--sky, #38bdf8)', cursor: 'pointer', listStyle: 'none',
                 display: 'flex', alignItems: 'center', gap: '6px',
               }}>
                 📖 {t(S.whatTitle, locale)}
               </summary>
-              <div style={{ padding: '0 16px 14px', fontSize: '13px', color: 'var(--mut)', lineHeight: 1.7 }}>
+              <div style={{ padding: '0 16px 14px', fontSize: '14px', color: 'var(--mut)', lineHeight: 1.7 }}>
                 {t(S.whatBody, locale)}
               </div>
             </details>
@@ -521,12 +521,12 @@ export function BacktestBoard() {
               borderLeft: '3px solid var(--warn, #fbbf24)', background: 'rgba(251,191,36,0.07)',
               borderRadius: '0 12px 12px 0', padding: '12px 16px',
             }}>
-              <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--warn, #fbbf24)', marginBottom: '6px' }}>
+              <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--warn, #fbbf24)', marginBottom: '6px' }}>
                 ⚠ {t(S.methodTitle, locale)}
               </div>
               <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
                 {[S.tier1Only, S.limitEntry, S.limitSlip, S.limitBias, S.limitPast].map((key, i) => (
-                  <li key={i} style={{ fontSize: '12px', color: 'var(--mut)' }}>{t(key, locale)}</li>
+                  <li key={i} style={{ fontSize: '13px', color: 'var(--mut)' }}>{t(key, locale)}</li>
                 ))}
               </ul>
             </div>
@@ -589,16 +589,16 @@ export function BacktestBoard() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '24px', padding: '4px 0 8px' }}>
                 <div style={{ textAlign: 'center', minWidth: '72px' }}>
-                  <div style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px', color: all.mdd > 40 ? 'var(--warn, #fbbf24)' : 'var(--mut)' }}>
+                  <div style={{ fontSize: '31px', fontWeight: 900, letterSpacing: '-0.5px', color: all.mdd > 40 ? 'var(--warn, #fbbf24)' : 'var(--mut)' }}>
                     {all.mdd.toFixed(1)}%
                   </div>
-                  <div style={{ fontSize: '10px', color: 'var(--dim)', marginTop: '2px', textTransform: 'uppercase' }}>{t(S.mdd, locale)}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--dim)', marginTop: '2px', textTransform: 'uppercase' }}>{t(S.mdd, locale)}</div>
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ height: '8px', borderRadius: '4px', background: 'var(--panel2)', overflow: 'hidden', marginBottom: '8px' }}>
                     <div style={{ height: '100%', width: `${Math.min(all.mdd, 100)}%`, borderRadius: '4px', background: all.mdd > 50 ? 'var(--rose, #fb7185)' : all.mdd > 30 ? 'var(--warn, #fbbf24)' : 'var(--emerald, #34d399)' }} />
                   </div>
-                  <div style={{ fontSize: '12px', color: 'var(--mut)', lineHeight: 1.6 }}>
+                  <div style={{ fontSize: '13px', color: 'var(--mut)', lineHeight: 1.6 }}>
                     {locale === 'ko'
                       ? `$10,000 기준 최저 $${(10000 * (1 - all.mdd / 100)).toFixed(0)}까지 감소 가능. 최대 연속 손실 ${all.max_consecutive_loss}회.`
                       : `$10,000 → min ~$${(10000 * (1 - all.mdd / 100)).toFixed(0)} worst case. Max ${all.max_consecutive_loss} consecutive losses.`}
@@ -621,7 +621,7 @@ export function BacktestBoard() {
                     {oosVerdict && (
                       <div style={{
                         marginTop: '10px', padding: '8px 12px', borderRadius: '8px',
-                        background: 'rgba(255,255,255,0.03)', fontSize: '12px',
+                        background: 'rgba(255,255,255,0.03)', fontSize: '13px',
                         color: oosVerdictColor, fontWeight: 600,
                       }}>
                         → {oosVerdict}
@@ -636,13 +636,13 @@ export function BacktestBoard() {
                 action={t(S.scoreAction, locale)}
                 info={{ term: 'Stage2 Score', body: t(S.infoScore, locale) }}
               >
-                {scoreRows.length === 0 && <div style={{ color: 'var(--mut)', fontSize: '13px' }}>데이터 없음</div>}
+                {scoreRows.length === 0 && <div style={{ color: 'var(--mut)', fontSize: '14px' }}>데이터 없음</div>}
                 {scoreRows.map(([score, s]) => {
                   const barW = Math.max(4, s.win_rate * 100);
                   const expColor = s.expectancy_r > 0 ? 'var(--emerald, #34d399)' : 'var(--rose, #fb7185)';
                   return (
                     <div key={score} style={{ marginBottom: '10px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '3px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '3px' }}>
                         <span style={{ color: 'var(--txt)', fontWeight: 600 }}>{score}/7점 <span style={{ color: 'var(--mut)', fontWeight: 400 }}>n={s.n}</span></span>
                         <span style={{ color: expColor, fontWeight: 700 }}>
                           {s.expectancy_r > 0 ? '+' : ''}{s.expectancy_r.toFixed(3)}R · {(s.win_rate * 100).toFixed(0)}%
@@ -677,13 +677,13 @@ export function BacktestBoard() {
               action={t(S.symAction, locale)}
               info={{ term: t(S.symTitle, locale), body: t(S.infoSym, locale) }}
             >
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--line)' }}>
                     {['Symbol', t(S.colWin, locale), t(S.colExp, locale), t(S.colPF, locale), t(S.colMDD, locale), t(S.colN, locale)].map((h, i) => (
                       <th key={i} style={{
                         padding: '8px 10px', textAlign: i === 0 ? 'left' : 'right',
-                        fontSize: '11px', color: 'var(--dim)', textTransform: 'uppercase',
+                        fontSize: '12px', color: 'var(--dim)', textTransform: 'uppercase',
                         fontWeight: 700, background: 'var(--panel2)',
                       }}>{h}</th>
                     ))}
@@ -710,7 +710,7 @@ export function BacktestBoard() {
                   {symRows.filter(r => r.all.expectancy_r < 0).map(r => (
                     <tr key={`note-${r.symbol}`}>
                       <td colSpan={6} style={{
-                        padding: '6px 10px 10px 16px', fontSize: '11px',
+                        padding: '6px 10px 10px 16px', fontSize: '12px',
                         background: 'rgba(251,113,133,0.04)',
                         borderLeft: '3px solid var(--rose, #fb7185)',
                       }}>

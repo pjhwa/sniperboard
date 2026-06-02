@@ -47,19 +47,19 @@ export function MarketStrip() {
     <div className="strip hide-mobile">
       {(lastCandle || displayPrice != null) && (
         <div className="strip__cell" style={{ background: 'var(--bg-muted)', minWidth: 220 }}>
-          <span className="sym-pill__badge" style={{ width: 28, height: 28, fontSize: 12 }}>
+          <span className="sym-pill__badge" style={{ width: 28, height: 28, fontSize: 13 }}>
             {symbol.slice(0, 1)}
           </span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontWeight: 600, fontSize: 13 }}>{symbol}</span>
+              <span style={{ fontWeight: 600, fontSize: 14 }}>{symbol}</span>
               {chg !== null && (
-                <span className={'badge ' + (chg >= 0 ? 'bull' : 'bear')} style={{ fontSize: 10 }}>
+                <span className={'badge ' + (chg >= 0 ? 'bull' : 'bear')} style={{ fontSize: 11 }}>
                   {chg >= 0 ? '+' : ''}{chg.toFixed(2)}%
                 </span>
               )}
             </div>
-            <div className="mono" style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.02em' }}>
+            <div className="mono" style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.02em' }}>
               ${(displayPrice ?? lastCandle!.close).toFixed(2)}
             </div>
             {prePostData && (() => {
@@ -81,14 +81,14 @@ export function MarketStrip() {
               const up = (chgPct ?? 0) >= 0;
               return (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1, opacity: dimmed ? 0.45 : 1 }}>
-                  <span style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <span style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {label}
                   </span>
-                  <span className="mono" style={{ fontSize: 11, fontWeight: 600 }}>
+                  <span className="mono" style={{ fontSize: 12, fontWeight: 600 }}>
                     ${price.toFixed(2)}
                   </span>
                   {chgPct != null && (
-                    <span style={{ fontSize: 10, color: up ? 'var(--bull)' : 'var(--bear)' }}>
+                    <span style={{ fontSize: 11, color: up ? 'var(--bull)' : 'var(--bear)' }}>
                       {up ? '+' : ''}{chgPct.toFixed(2)}%
                     </span>
                   )}

@@ -30,7 +30,7 @@ export default function StatCard({ label, value, sub, valueClass = "text-white t
 
   return (
     <div className={`glass-card glass-card-hover rounded-2xl p-4.5 transition-all duration-300 ${borderAccent} ${glowEffect}`}>
-      <div className="text-[10px] font-bold text-zinc-500 mb-1.5 uppercase tracking-widest">{label}</div>
+      <div className="text-[11px] font-bold text-zinc-500 mb-1.5 uppercase tracking-widest">{label}</div>
       <div className={`font-bold tabular-nums tracking-tight ${valueClass}`}>{value}</div>
       {sub && (
         <div className="text-xs text-zinc-400 font-medium mt-1 flex items-center gap-1">

@@ -254,7 +254,7 @@ export default function DailyChart({ data }: DailyChartProps) {
                 ...(dash ? { backgroundImage: `repeating-linear-gradient(to right, ${color} 0 4px, transparent 4px 7px)`, backgroundColor: 'transparent' } : {}),
               }}
             />
-            <span style={{ color: '#9ca3af', fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.01em' }}>
+            <span style={{ color: '#9ca3af', fontSize: 12, fontFamily: 'monospace', letterSpacing: '0.01em' }}>
               {label}
             </span>
           </span>

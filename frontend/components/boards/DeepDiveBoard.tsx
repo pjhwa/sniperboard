@@ -216,10 +216,10 @@ function TopNewsBox({ news, locale }: { news: TopNews | null | undefined; locale
   const summary  = tField(news.summary_en,  news.summary_ko,  news.summary,  locale);
   return (
     <div style={{ marginTop: 8, padding: '6px 10px', borderRadius: 6, background: 'var(--em-soft)', borderLeft: '2px solid var(--em-500)' }}>
-      <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--fg-subtle)', marginBottom: 2 }}>{t(S.topNews, locale)}</div>
-      <div style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.4, marginBottom: 2 }}>{headline}</div>
-      <div style={{ fontSize: 10.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 2 }}>{summary}</div>
-      <div style={{ fontSize: 9, color: 'var(--fg-subtle)' }}>{t(S.newsSource, locale)}: {news.source}</div>
+      <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--fg-subtle)', marginBottom: 2 }}>{t(S.topNews, locale)}</div>
+      <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.4, marginBottom: 2 }}>{headline}</div>
+      <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 2 }}>{summary}</div>
+      <div style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>{t(S.newsSource, locale)}: {news.source}</div>
     </div>
   );
 }
@@ -358,14 +358,14 @@ export function DeepDiveBoard() {
         <div className="mob-symbol-btns" style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 12px', borderRight: '1px solid var(--border)', flexShrink: 0 }}>
           {/* TIER 1 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--sky, #38bdf8)', letterSpacing: '0.3px', minWidth: 16 }}>T1</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--sky, #38bdf8)', letterSpacing: '0.3px', minWidth: 16 }}>T1</span>
             {TIER1_SYMBOLS.map(s => (
               <button
                 key={s}
                 onClick={() => { setSymbol(s); setShowSentTrend(false); }}
                 style={{
                   padding: '3px 8px', borderRadius: 5,
-                  fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                  fontSize: 12, fontWeight: 700, cursor: 'pointer',
                   background: symbol === s ? 'var(--em-500)' : 'transparent',
                   border: symbol === s ? '1px solid transparent' : '1px solid var(--border-soft)',
                   color: symbol === s ? '#fff' : 'var(--fg-muted)',
@@ -376,14 +376,14 @@ export function DeepDiveBoard() {
           </div>
           {/* TIER 2 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--purple, #a78bfa)', letterSpacing: '0.3px', minWidth: 16 }}>T2</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--purple, #a78bfa)', letterSpacing: '0.3px', minWidth: 16 }}>T2</span>
             {TIER2_SYMBOLS.map(s => (
               <button
                 key={s}
                 onClick={() => { setSymbol(s); setShowSentTrend(false); }}
                 style={{
                   padding: '3px 8px', borderRadius: 5,
-                  fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                  fontSize: 12, fontWeight: 700, cursor: 'pointer',
                   background: symbol === s ? 'var(--purple, #a78bfa)' : 'transparent',
                   border: symbol === s ? '1px solid transparent' : '1px solid var(--border-soft)',
                   color: symbol === s ? '#fff' : 'var(--fg-muted)',
@@ -400,7 +400,7 @@ export function DeepDiveBoard() {
             <>
               <div style={{ flexShrink: 0 }}>
                 {/* 모바일: 선택된 심볼 이름 */}
-                <div className="mob-show" style={{ fontSize: 10, fontWeight: 700, color: 'var(--em-500)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 2 }}>
+                <div className="mob-show" style={{ fontSize: 11, fontWeight: 700, color: 'var(--em-500)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 2 }}>
                   {symbol}
                 </div>
                 {/* PRE/POST/OVERNIGHT 상태에서는 공식 종가(regular_close) 사용 */}
@@ -409,7 +409,7 @@ export function DeepDiveBoard() {
                   const isPP = ms === 'PRE' || ms === 'POST' || ms === 'OVERNIGHT';
                   const px = isPP && prePostData?.regular_close != null ? prePostData.regular_close : lastCandle.close;
                   return (
-                    <div className="mono" style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1 }}>
+                    <div className="mono" style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1 }}>
                       ${px.toFixed(2)}
                     </div>
                   );
@@ -418,7 +418,7 @@ export function DeepDiveBoard() {
                 {indicators && lastIdx >= 0 && (() => {
                   const rsi = indicators.rsi[lastIdx] ?? 0;
                   return (
-                    <div style={{ fontSize: 10.5, color: 'var(--fg-subtle)', marginTop: 2, whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)', marginTop: 2, whiteSpace: 'nowrap' }}>
                       RSI{' '}
                       <span className="mono" style={{ color: rsi >= 70 ? 'var(--warn)' : rsi <= 35 ? 'var(--bear)' : 'var(--fg)' }}>
                         {rsi.toFixed(0)}
@@ -450,17 +450,17 @@ export function DeepDiveBoard() {
                   return (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
                       <span style={{
-                        fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
+                        fontSize: 10, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
                         padding: '1px 5px', borderRadius: 4,
                         background: bgColor, color: fgColor,
                       }}>
                         {label}
                       </span>
-                      <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>
+                      <span className="mono" style={{ fontSize: 14, fontWeight: 600 }}>
                         ${price.toFixed(2)}
                       </span>
                       {chgPct != null && (
-                        <span style={{ fontSize: 11, color: up ? 'var(--bull)' : 'var(--bear)' }}>
+                        <span style={{ fontSize: 12, color: up ? 'var(--bull)' : 'var(--bear)' }}>
                           {up ? '+' : ''}{chgPct.toFixed(2)}%
                         </span>
                       )}
@@ -518,13 +518,13 @@ export function DeepDiveBoard() {
                         background: 'var(--card-elev)', border: '1px solid var(--border-soft)',
                         minWidth: 68,
                       }}>
-                        <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>
+                        <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>
                           {ti.label}
                         </div>
-                        <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: ti.color, lineHeight: 1.1 }}>
+                        <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: ti.color, lineHeight: 1.1 }}>
                           {ti.value}
                         </div>
-                        {ti.sub && <div style={{ fontSize: 9, color: ti.color, opacity: 0.8, marginTop: 1 }}>{ti.sub}</div>}
+                        {ti.sub && <div style={{ fontSize: 10, color: ti.color, opacity: 0.8, marginTop: 1 }}>{ti.sub}</div>}
                       </div>
                     ))}
                   </div>
@@ -532,14 +532,14 @@ export function DeepDiveBoard() {
               })()}
             </>
           ) : (
-            <div className="subtle" style={{ fontSize: 12 }}>{t(S.priceLoading, locale)}</div>
+            <div className="subtle" style={{ fontSize: 13 }}>{t(S.priceLoading, locale)}</div>
           )}
 
           {/* 우측 배지 그룹 */}
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {stage2 && <ScorePill score={stage2.score} />}
             <ConvictionBadge score={cv} locale={locale} size="md" />
-            <div style={{ padding: '3px 9px', borderRadius: 20, background: mpColors.bg, fontSize: 11, fontWeight: 700, color: mpColors.color, whiteSpace: 'nowrap' }}>
+            <div style={{ padding: '3px 9px', borderRadius: 20, background: mpColors.bg, fontSize: 12, fontWeight: 700, color: mpColors.color, whiteSpace: 'nowrap' }}>
               {mpLabel}
             </div>
             {stage2 && (
@@ -612,7 +612,7 @@ export function DeepDiveBoard() {
                 {(Object.keys(STAGE2_META) as (keyof typeof STAGE2_META)[]).map(k => (
                   <div key={k} className={`s2-row ${stage2.checks[k] ? 'pass' : 'fail'}`}>
                     <div className="check">{stage2.checks[k] ? <Check /> : <X />}</div>
-                    <div className="s2-label" style={{ fontSize: 10.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div className="s2-label" style={{ fontSize: 11.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {STAGE2_META[k].label}
                     </div>
                   </div>
@@ -621,9 +621,9 @@ export function DeepDiveBoard() {
 
               {/* 월봉 배너 */}
               <div style={{ padding: '5px 10px', borderRadius: 6, background: mpColors.bg, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: mpColors.color }}>{mpLabel}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: mpColors.color }}>{mpLabel}</span>
                 {stage2.monthly_ema10 != null && (
-                  <span className="mono" style={{ fontSize: 10.5, color: mpColors.color, opacity: 0.9 }}>
+                  <span className="mono" style={{ fontSize: 11.5, color: mpColors.color, opacity: 0.9 }}>
                     EMA10 ${stage2.monthly_ema10.toFixed(2)}
                     {stage2.pct_from_monthly_ema10 != null && (
                       <> · {stage2.pct_from_monthly_ema10 > 0 ? '+' : ''}{stage2.pct_from_monthly_ema10.toFixed(1)}%</>
@@ -641,11 +641,11 @@ export function DeepDiveBoard() {
                   [t(S.ema200Slope, locale), `${stage2.ema200_slope >= 0 ? '+' : ''}${stage2.ema200_slope.toFixed(3)}`, stage2.ema200_slope >= 0 ? 'var(--bull)' : 'var(--bear)', t(S.ema200Sub, locale), null],
                 ] as [string, string, string, string, typeof G.rs_score | null][]).map(([label, val, color, sub, info]) => (
                   <div key={label} style={{ padding: '7px 10px', borderRadius: 8, background: 'var(--card-elev)', border: '1px solid var(--border-soft)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 3 }}>
+                    <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 3 }}>
                       {label}{info && <InfoPopover term={t(info.term, locale)} body={t(info.body, locale)} />}
                     </div>
-                    <div className="mono" style={{ fontSize: 16, fontWeight: 700, color, lineHeight: 1.1 }}>{val}</div>
-                    <div style={{ fontSize: 9.5, color: 'var(--fg-muted)', marginTop: 2 }}>{sub}</div>
+                    <div className="mono" style={{ fontSize: 18, fontWeight: 700, color, lineHeight: 1.1 }}>{val}</div>
+                    <div style={{ fontSize: 10.5, color: 'var(--fg-muted)', marginTop: 2 }}>{sub}</div>
                   </div>
                 ))}
               </div>
@@ -695,31 +695,31 @@ export function DeepDiveBoard() {
                 {/* 섹션 2: 핵심 지표 3개 */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 10 }}>
                   <div style={{ padding: '6px 8px', borderRadius: 7, background: 'var(--card-elev)', border: '1px solid var(--border-soft)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{t(S.instUpDown, locale)}</div>
-                    <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: udRatio >= 1.3 ? 'var(--bull)' : udRatio < 0.7 ? 'var(--bear)' : 'var(--fg)' }}>
+                    <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{t(S.instUpDown, locale)}</div>
+                    <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: udRatio >= 1.3 ? 'var(--bull)' : udRatio < 0.7 ? 'var(--bear)' : 'var(--fg)' }}>
                       {udRatio >= 9 ? '9+' : udRatio.toFixed(1)}×
                     </div>
-                    <div style={{ fontSize: 9.5, color: 'var(--fg-muted)' }}>
+                    <div style={{ fontSize: 10.5, color: 'var(--fg-muted)' }}>
                       {udRatio >= 1.3 ? t(S.instBuyBiasLabel, locale) : udRatio < 0.7 ? t(S.instSellBiasLabel, locale) : t(S.instBalanced, locale)}
                     </div>
                   </div>
                   <div style={{ padding: '6px 8px', borderRadius: 7, background: 'var(--card-elev)', border: '1px solid var(--border-soft)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{t(S.instVolTrend, locale)}</div>
-                    <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: volTrendRatio < 0.8 ? 'var(--bull)' : volTrendRatio > 1.2 ? 'var(--warn)' : 'var(--fg)' }}>
+                    <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{t(S.instVolTrend, locale)}</div>
+                    <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: volTrendRatio < 0.8 ? 'var(--bull)' : volTrendRatio > 1.2 ? 'var(--warn)' : 'var(--fg)' }}>
                       {volTrendRatio < 0.8 ? '▽' : volTrendRatio > 1.2 ? '△' : '→'} {volTrendRatio.toFixed(2)}×
                     </div>
-                    <div style={{ fontSize: 9.5, color: 'var(--fg-muted)' }}>
+                    <div style={{ fontSize: 10.5, color: 'var(--fg-muted)' }}>
                       {volTrendRatio < 0.8 ? t(S.instVcpShrink, locale) : volTrendRatio > 1.2 ? t(S.instActive, locale) : t(S.instNormal, locale)}
                     </div>
                   </div>
                   <div style={{ padding: '6px 8px', borderRadius: 7, background: 'var(--card-elev)', border: '1px solid var(--border-soft)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{t(S.instFocusDays, locale)}</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.2 }}>
+                    <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{t(S.instFocusDays, locale)}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.2 }}>
                       <span style={{ color: 'var(--bull)' }}>{accDays}acc</span>
                       <span style={{ color: 'var(--fg-muted)', fontWeight: 400 }}>/</span>
                       <span style={{ color: 'var(--bear)' }}>{distDays}dist</span>
                     </div>
-                    <div style={{ fontSize: 9.5, color: accDays > distDays ? 'var(--bull)' : distDays > accDays ? 'var(--bear)' : 'var(--fg-muted)' }}>
+                    <div style={{ fontSize: 10.5, color: accDays > distDays ? 'var(--bull)' : distDays > accDays ? 'var(--bear)' : 'var(--fg-muted)' }}>
                       {accDays > distDays ? t(S.instAccDominant, locale) : distDays > accDays ? t(S.instDistDominant, locale) : t(S.instNeutral, locale)}
                     </div>
                   </div>
@@ -728,8 +728,8 @@ export function DeepDiveBoard() {
                 {/* 섹션 3: 세력 점수 바 */}
                 <div style={{ marginBottom: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                    <span style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t(S.instScore, locale)}</span>
-                    <span className="mono" style={{ fontSize: 13, fontWeight: 700, color: scoreColor }}>{forceScore} / 100</span>
+                    <span style={{ fontSize: 11, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t(S.instScore, locale)}</span>
+                    <span className="mono" style={{ fontSize: 14, fontWeight: 700, color: scoreColor }}>{forceScore} / 100</span>
                   </div>
                   <div className="bar">
                     <div className="bar__fill" style={{ width: `${forceScore}%`, background: scoreColor }} />
@@ -738,7 +738,7 @@ export function DeepDiveBoard() {
 
                 {/* 섹션 4: 최근 10일 acc/dist 미니 그리드 */}
                 <div>
-                  <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{t(S.inst10d, locale)}</div>
+                  <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{t(S.inst10d, locale)}</div>
                   <div style={{ display: 'flex', gap: 3 }}>
                     {r10.map((c, i) => {
                       const isAcc  = c.volume > vol20avg && c.close >= c.open;
@@ -753,7 +753,7 @@ export function DeepDiveBoard() {
                       );
                     })}
                   </div>
-                  <div style={{ display: 'flex', gap: 10, marginTop: 5, fontSize: 9.5, color: 'var(--fg-subtle)' }}>
+                  <div style={{ display: 'flex', gap: 10, marginTop: 5, fontSize: 10.5, color: 'var(--fg-subtle)' }}>
                     <span><span style={{ color: 'var(--bull)' }}>■</span> {t(S.instAccLegend, locale)}</span>
                     <span><span style={{ color: 'var(--bear)' }}>■</span> {t(S.instDistLegend, locale)}</span>
                     <span>□ {t(S.instNormalLegend, locale)}</span>
@@ -787,8 +787,8 @@ export function DeepDiveBoard() {
                   ['Target', target.toFixed(2), 'var(--bull)', 'var(--bull-soft)'],
                 ] as [string,string,string,string][]).map(([l,v,c,bg]) => (
                   <div key={l} style={{ padding: '8px 10px', borderRadius: 8, background: bg, textAlign: 'center' }}>
-                    <div style={{ fontSize: 9, color: c, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>{l}</div>
-                    <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: c }}>${v}</div>
+                    <div style={{ fontSize: 10, color: c, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>{l}</div>
+                    <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: c }}>${v}</div>
                   </div>
                 ))}
               </div>
@@ -799,7 +799,7 @@ export function DeepDiveBoard() {
                   <div style={{ flex: 1, background: 'var(--bear)', opacity: 0.7, borderRadius: '6px 0 0 6px' }} />
                   <div style={{ flex: 3, background: 'var(--bull)', opacity: 0.7, borderRadius: '0 6px 6px 0' }} />
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9.5, color: 'var(--fg-subtle)', marginTop: 3 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'var(--fg-subtle)', marginTop: 3 }}>
                   <span style={{ color: 'var(--bear)' }}>-{stopLossPct.toFixed(2)}%</span>
                   <span style={{ fontWeight: 600 }}>1 : 3 R:R</span>
                   <span style={{ color: 'var(--bull)' }}>+{(stopLossPct * 3).toFixed(2)}%</span>
@@ -809,12 +809,12 @@ export function DeepDiveBoard() {
               {/* 포지션 크기 */}
               <div style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--em-soft)', border: '1px solid color-mix(in srgb, var(--em-500) 25%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div>
-                  <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {t(S.positionLabel, locale)} ({rrRiskPct}% · ${(accountNum/1000).toFixed(0)}K)
                   </div>
-                  <div className="mono" style={{ fontSize: 20, fontWeight: 700, color: 'var(--em-500)', lineHeight: 1.1 }}>{qty > 0 ? `${qty} ${t(S.sharesUnit, locale)}` : '—'}</div>
+                  <div className="mono" style={{ fontSize: 22, fontWeight: 700, color: 'var(--em-500)', lineHeight: 1.1 }}>{qty > 0 ? `${qty} ${t(S.sharesUnit, locale)}` : '—'}</div>
                 </div>
-                <div style={{ textAlign: 'right', fontSize: 10.5, color: 'var(--fg-muted)' }}>
+                <div style={{ textAlign: 'right', fontSize: 11.5, color: 'var(--fg-muted)' }}>
                   <div>Max Loss <span style={{ color: 'var(--bear)', fontWeight: 600 }}>${(accountNum * riskPct / 100).toFixed(0)}</span></div>
                   <div>ATR <span className="mono">{stage2.latest_atr.toFixed(2)}</span></div>
                 </div>
@@ -824,7 +824,7 @@ export function DeepDiveBoard() {
               {(gcBadges.length > 0 || patBadges.length > 0) && (
                 <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                   {[...gcBadges, ...patBadges].map(([l, c]) => (
-                    <span key={l} className={`badge ${c}`} style={{ fontSize: 10.5 }}>{l}</span>
+                    <span key={l} className={`badge ${c}`} style={{ fontSize: 11.5 }}>{l}</span>
                   ))}
                 </div>
               )}
@@ -844,7 +844,7 @@ export function DeepDiveBoard() {
           <div className="card__hd">
             <h3>{t(S.socialTitle, locale)} · {symbol}</h3>
             {symSent && (
-              <span className="mono" style={{ marginLeft: 'auto', fontSize: 15, fontWeight: 700, color: csColor(symSent.composite_score ?? symSent.sentiment_score) }}>
+              <span className="mono" style={{ marginLeft: 'auto', fontSize: 17, fontWeight: 700, color: csColor(symSent.composite_score ?? symSent.sentiment_score) }}>
                 {(symSent.composite_score ?? symSent.sentiment_score) > 0 ? '+' : ''}
                 {symSent.composite_score ?? symSent.sentiment_score}
               </span>
@@ -858,19 +858,19 @@ export function DeepDiveBoard() {
                     {t(SENTIMENT_META[symSent.sentiment]?.label, locale)}
                   </span>
                   {symSent.score_delta != null && (
-                    <span style={{ fontSize: 11, color: symSent.score_delta > 0 ? 'var(--bull)' : symSent.score_delta < 0 ? 'var(--bear)' : 'var(--fg-subtle)' }}>
+                    <span style={{ fontSize: 12, color: symSent.score_delta > 0 ? 'var(--bull)' : symSent.score_delta < 0 ? 'var(--bear)' : 'var(--fg-subtle)' }}>
                       {symSent.score_delta > 0 ? '↑' : symSent.score_delta < 0 ? '↓' : '→'} {t(S.sentDelta, locale)} {symSent.score_delta > 0 ? '+' : ''}{symSent.score_delta}
                     </span>
                   )}
                 </div>
                 <ScoreBar score={symSent.composite_score ?? symSent.sentiment_score} />
 
-                <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.65, margin: '8px 0' }}>
+                <div style={{ fontSize: 12.5, color: 'var(--fg-muted)', lineHeight: 1.65, margin: '8px 0' }}>
                   {tField(symSent.key_reason_en, symSent.key_reason_ko, symSent.key_reason, locale)}
                 </div>
                 <TopNewsBox news={symSent.top_news} locale={locale} />
 
-                <div style={{ marginTop: 8, display: 'flex', gap: 10, fontSize: 10.5, flexWrap: 'wrap' }}>
+                <div style={{ marginTop: 8, display: 'flex', gap: 10, fontSize: 11.5, flexWrap: 'wrap' }}>
                   <span>{TREND_META[symSent.trend_vs_yesterday]?.icon} {t(TREND_META[symSent.trend_vs_yesterday]?.label, locale)}</span>
                   <span style={{ color: 'var(--fg-subtle)' }}>{t(VOLUME_META[symSent.mention_volume]?.label, locale)}</span>
                   {symSent.bot_suspected === 'yes' && <span style={{ color: 'var(--warn)' }}>{t(S.sentBotSuspect, locale)}</span>}
@@ -879,14 +879,14 @@ export function DeepDiveBoard() {
 
                 <button
                   onClick={() => setShowSentTrend(v => !v)}
-                  style={{ marginTop: 10, width: '100%', padding: '5px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--fg-muted)', fontSize: 11, cursor: 'pointer' }}
+                  style={{ marginTop: 10, width: '100%', padding: '5px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--fg-muted)', fontSize: 12, cursor: 'pointer' }}
                 >
                   {showSentTrend ? t(S.trendHide, locale) : t(S.trendShow, locale)}
                 </button>
                 {showSentTrend && <SentimentTrendChart symbol={symbol} locale={locale} />}
               </>
             ) : (
-              <div style={{ color: 'var(--fg-muted)', fontSize: 12, padding: '12px 0' }}>
+              <div style={{ color: 'var(--fg-muted)', fontSize: 13, padding: '12px 0' }}>
                 {sentimentData?.available === false ? `${symbol} ${t(S.sentNoData, locale)}` : t(S.loading, locale)}
               </div>
             )}
@@ -894,10 +894,10 @@ export function DeepDiveBoard() {
         </div>
 
         {/* AI Brief (종목) */}
-        <details className="mob-collapse card" open style={{ background: 'linear-gradient(135deg, var(--card-elev) 0%, var(--bg-muted) 100%)', position: 'relative', overflow: 'hidden' }}>
+        <details className="mob-collapse card" open style={{ position: 'relative', overflow: 'hidden' }}>
           <summary>AI Brief</summary>
           <div className="mob-collapse-body">
-          <div style={{ position: 'absolute', top: '-40%', right: '-10%', width: 160, height: 160, background: 'radial-gradient(circle, color-mix(in srgb, var(--em-500) 18%, transparent), transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: '-40%', right: '-10%', width: 160, height: 160, background: 'radial-gradient(circle, color-mix(in srgb, var(--em-500) 10%, transparent), transparent 70%)', pointerEvents: 'none' }} />
           <div className="card__hd" style={{ position: 'relative' }}>
             <div style={{ width: 22, height: 22, borderRadius: 6, background: 'var(--em-500)', color: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
               <Sparkle />
@@ -919,23 +919,23 @@ export function DeepDiveBoard() {
           <div className="card__bd" style={{ position: 'relative' }}>
             {symBrief ? (
               <>
-                <div style={{ fontSize: 12, lineHeight: 1.7, color: 'var(--fg)', marginBottom: 12 }}>
+                <div style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--fg)', marginBottom: 12 }}>
                   {tField(symBrief.brief_en, symBrief.brief_ko, symBrief.brief, locale)}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ padding: '7px 10px', borderRadius: 6, background: 'var(--bull-soft)', borderLeft: '2px solid var(--bull)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--bull)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.opportunity, locale)}</div>
-                    <div style={{ fontSize: 11, lineHeight: 1.5 }}>{tField(symBrief.key_opportunity_en, symBrief.key_opportunity_ko, symBrief.key_opportunity, locale)}</div>
+                    <div style={{ fontSize: 10, color: 'var(--bull)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.opportunity, locale)}</div>
+                    <div style={{ fontSize: 12, lineHeight: 1.5 }}>{tField(symBrief.key_opportunity_en, symBrief.key_opportunity_ko, symBrief.key_opportunity, locale)}</div>
                   </div>
                   <div style={{ padding: '7px 10px', borderRadius: 6, background: 'var(--bear-soft)', borderLeft: '2px solid var(--bear)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--bear)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.risk, locale)}</div>
-                    <div style={{ fontSize: 11, lineHeight: 1.5 }}>{tField(symBrief.key_risk_en, symBrief.key_risk_ko, symBrief.key_risk, locale)}</div>
+                    <div style={{ fontSize: 10, color: 'var(--bear)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.risk, locale)}</div>
+                    <div style={{ fontSize: 12, lineHeight: 1.5 }}>{tField(symBrief.key_risk_en, symBrief.key_risk_ko, symBrief.key_risk, locale)}</div>
                   </div>
                 </div>
-                <div style={{ marginTop: 8, fontSize: 9.5, color: 'var(--fg-subtle)' }}>{t(S.aiDisclaimer, locale)}</div>
+                <div style={{ marginTop: 8, fontSize: 10.5, color: 'var(--fg-subtle)' }}>{t(S.aiDisclaimer, locale)}</div>
               </>
             ) : (
-              <div style={{ color: 'var(--fg-muted)', fontSize: 12, padding: '12px 0' }}>
+              <div style={{ color: 'var(--fg-muted)', fontSize: 13, padding: '12px 0' }}>
                 {briefData ? `${symbol} ${t(S.aiNoBrief, locale)}` : t(S.aiBriefLoading, locale)}
               </div>
             )}
@@ -954,12 +954,12 @@ export function DeepDiveBoard() {
               return (
                 <>
                   <span className={`badge ${rm.color}`}>{rm.dot} {symEarning.risk_level.toUpperCase()}</span>
-                  <span style={{ fontSize: 10, color: tierColor, fontWeight: 600 }}>{tierLabel}</span>
+                  <span style={{ fontSize: 11, color: tierColor, fontWeight: 600 }}>{tierLabel}</span>
                 </>
               );
             })()}
             {!symEarning && symRecent && (
-              <span className="badge neutral" style={{ fontSize: 10 }}>{t(S.recentResult, locale)}</span>
+              <span className="badge neutral" style={{ fontSize: 11 }}>{t(S.recentResult, locale)}</span>
             )}
           </div>
           <div className="card__bd">
@@ -967,61 +967,61 @@ export function DeepDiveBoard() {
               <>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                   <div style={{ padding: '7px 10px', borderRadius: 8, background: 'var(--card-elev)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.earningsDate, locale)}</div>
-                    <div className="mono" style={{ fontSize: 14, fontWeight: 700 }}>{symEarning.earnings_date.slice(5)}</div>
+                    <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.earningsDate, locale)}</div>
+                    <div className="mono" style={{ fontSize: 15, fontWeight: 700 }}>{symEarning.earnings_date.slice(5)}</div>
                   </div>
                   <div style={{ padding: '7px 10px', borderRadius: 8, background: symEarning.days_until <= 7 ? 'var(--bear-soft)' : 'var(--warn-soft)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.dDay, locale)}</div>
-                    <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: symEarning.days_until <= 7 ? 'var(--bear)' : 'var(--warn)' }}>{symEarning.days_until}{locale === 'ko' ? '일 후' : 'd'}</div>
+                    <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.dDay, locale)}</div>
+                    <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: symEarning.days_until <= 7 ? 'var(--bear)' : 'var(--warn)' }}>{symEarning.days_until}{locale === 'ko' ? '일 후' : 'd'}</div>
                   </div>
                   {symEarning.eps_estimate != null && (
                     <div style={{ padding: '7px 10px', borderRadius: 8, background: 'var(--card-elev)' }}>
-                      <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.epsEstimate, locale)}</div>
-                      <div className="mono" style={{ fontSize: 14, fontWeight: 700 }}>${symEarning.eps_estimate.toFixed(2)}</div>
+                      <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.epsEstimate, locale)}</div>
+                      <div className="mono" style={{ fontSize: 15, fontWeight: 700 }}>${symEarning.eps_estimate.toFixed(2)}</div>
                     </div>
                   )}
                   {symEarning.historical_beat_rate != null && (
                     <div style={{ padding: '7px 10px', borderRadius: 8, background: 'var(--card-elev)' }}>
-                      <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.beatRate, locale)}</div>
-                      <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: 'var(--teal)' }}>{(symEarning.historical_beat_rate * 100).toFixed(0)}%</div>
+                      <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.beatRate, locale)}</div>
+                      <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: 'var(--teal)' }}>{(symEarning.historical_beat_rate * 100).toFixed(0)}%</div>
                     </div>
                   )}
                 </div>
-                <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.65, marginBottom: 8 }}>{tField(symEarning.ai_summary_en, symEarning.ai_summary_ko, symEarning.ai_summary, locale)}</div>
-                <div style={{ fontSize: 11, padding: '5px 10px', borderRadius: 6, background: 'var(--warn-soft)', color: 'var(--warn)', fontWeight: 500 }}>
+                <div style={{ fontSize: 12.5, color: 'var(--fg-muted)', lineHeight: 1.65, marginBottom: 8 }}>{tField(symEarning.ai_summary_en, symEarning.ai_summary_ko, symEarning.ai_summary, locale)}</div>
+                <div style={{ fontSize: 12, padding: '5px 10px', borderRadius: 6, background: 'var(--warn-soft)', color: 'var(--warn)', fontWeight: 500 }}>
                   ⚡ {tField(symEarning.action_note_en, symEarning.action_note_ko, symEarning.action_note, locale)}
                 </div>
               </>
             ) : symRecent ? (
               /* 예정 실적 없음 → 최근 실적 결과 표시 */
               <>
-                <div style={{ marginBottom: 8, fontSize: 10.5, color: 'var(--fg-subtle)' }}>{t(S.earningsNone, locale)}</div>
+                <div style={{ marginBottom: 8, fontSize: 11.5, color: 'var(--fg-subtle)' }}>{t(S.earningsNone, locale)}</div>
                 <div style={{ padding: '10px 12px', borderRadius: 8, background: 'var(--card-elev)', border: '1px solid var(--border-soft)', marginBottom: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
-                    <span style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>{symRecent.report_date}</span>
-                    <span className={`badge ${symRecent.surprise_pct >= 0 ? 'bull' : 'bear'}`} style={{ fontSize: 10 }}>
+                    <span style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>{symRecent.report_date}</span>
+                    <span className={`badge ${symRecent.surprise_pct >= 0 ? 'bull' : 'bear'}`} style={{ fontSize: 11 }}>
                       {symRecent.surprise_pct >= 0 ? '+' : ''}{symRecent.surprise_pct.toFixed(1)}% {t(S.surprise, locale)}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', gap: 16, fontSize: 11 }}>
+                  <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
                     <div>
-                      <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.epsActual, locale)}</div>
-                      <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: symRecent.eps_actual >= symRecent.eps_estimate ? 'var(--bull)' : 'var(--bear)' }}>
+                      <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.epsActual, locale)}</div>
+                      <div className="mono" style={{ fontSize: 17, fontWeight: 700, color: symRecent.eps_actual >= symRecent.eps_estimate ? 'var(--bull)' : 'var(--bear)' }}>
                         ${symRecent.eps_actual.toFixed(2)}
                       </div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 9, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.epsEstShort, locale)}</div>
-                      <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: 'var(--fg-muted)' }}>
+                      <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.epsEstShort, locale)}</div>
+                      <div className="mono" style={{ fontSize: 17, fontWeight: 700, color: 'var(--fg-muted)' }}>
                         ${symRecent.eps_estimate.toFixed(2)}
                       </div>
                     </div>
                   </div>
                 </div>
-                <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.65 }}>{tField(symRecent.ai_reaction_en, symRecent.ai_reaction_ko, symRecent.ai_reaction, locale)}</div>
+                <div style={{ fontSize: 12.5, color: 'var(--fg-muted)', lineHeight: 1.65 }}>{tField(symRecent.ai_reaction_en, symRecent.ai_reaction_ko, symRecent.ai_reaction, locale)}</div>
               </>
             ) : (
-              <div style={{ color: 'var(--fg-muted)', fontSize: 12, padding: '12px 0' }}>
+              <div style={{ color: 'var(--fg-muted)', fontSize: 13, padding: '12px 0' }}>
                 {earningsData ? t(S.earningsNoData, locale) : t(S.loading, locale)}
               </div>
             )}
@@ -1050,7 +1050,7 @@ export function DeepDiveBoard() {
               {/* 게이지 */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                 <RadialGauge value={regimeData.total ?? 0} size={80} label={regimeData.total ?? '—'} sublabel={locale === 'ko' ? '점수' : 'score'} />
-                <div style={{ fontSize: 10, color: 'var(--fg-muted)', lineHeight: 1.4, textAlign: 'center', maxWidth: 90 }}>
+                <div style={{ fontSize: 11, color: 'var(--fg-muted)', lineHeight: 1.4, textAlign: 'center', maxWidth: 90 }}>
                   {regimeData.regime === 'RISK_ON'      && t(S.regimeTrendOk, locale)}
                   {regimeData.regime === 'CONSTRUCTIVE' && t(S.regimeSelectOk, locale)}
                   {regimeData.regime === 'MIXED'        && t(S.regimeReduce, locale)}
@@ -1068,10 +1068,10 @@ export function DeepDiveBoard() {
                   ['Volatility', regimeData.components.volatility, regimeData.diagnostics?.vix_level,           'VIX'],
                   ['Momentum',   regimeData.components.momentum,   regimeData.diagnostics?.spy_roc_20d,         'RoC20d'],
                 ] as [string, number|null, number|null|undefined, string][]).map(([label, v, raw, rawLabel]) => (
-                  <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10.5 }}>
+                  <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5 }}>
                     <div style={{ width: 56, flexShrink: 0 }}>
                       <div style={{ color: 'var(--fg-muted)' }}>{label}</div>
-                      {raw != null && <div style={{ fontSize: 9, color: 'var(--fg-subtle)' }}>{rawLabel} {raw >= 0 ? '+' : ''}{raw.toFixed(1)}</div>}
+                      {raw != null && <div style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>{rawLabel} {raw >= 0 ? '+' : ''}{raw.toFixed(1)}</div>}
                     </div>
                     <div className="bar" style={{ flex: 1 }}>
                       <div className="bar__fill" style={{
@@ -1079,7 +1079,7 @@ export function DeepDiveBoard() {
                         background: (v ?? 0) === 0 ? 'var(--bear)' : (v ?? 0) < 8 ? 'var(--warn)' : 'var(--em-500)',
                       }} />
                     </div>
-                    <span className="mono" style={{ width: 26, textAlign: 'right', fontSize: 10, color: (v ?? 0) === 0 ? 'var(--bear)' : 'inherit' }}>
+                    <span className="mono" style={{ width: 26, textAlign: 'right', fontSize: 11, color: (v ?? 0) === 0 ? 'var(--bear)' : 'inherit' }}>
                       {(v ?? 0).toFixed(1)}
                     </span>
                   </div>
@@ -1109,18 +1109,18 @@ export function DeepDiveBoard() {
           {mktSent ? (
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
-                <div className="mono" style={{ fontSize: 32, fontWeight: 700, color: csColor(mktSent.composite_score ?? mktSent.sentiment_score), lineHeight: 1, flexShrink: 0 }}>
+                <div className="mono" style={{ fontSize: 35, fontWeight: 700, color: csColor(mktSent.composite_score ?? mktSent.sentiment_score), lineHeight: 1, flexShrink: 0 }}>
                   {(mktSent.composite_score ?? mktSent.sentiment_score) > 0 ? '+' : ''}
                   {mktSent.composite_score ?? mktSent.sentiment_score}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <ScoreBar score={mktSent.composite_score ?? mktSent.sentiment_score} />
-                  <div style={{ fontSize: 10.5, color: 'var(--fg-subtle)', marginTop: 4 }}>
+                  <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)', marginTop: 4 }}>
                     {TREND_META[mktSent.trend_vs_yesterday]?.icon} {t(S.mktSentVsPrev, locale)} {mktSent.trend_vs_yesterday}
                   </div>
                 </div>
               </div>
-              <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.65, marginBottom: 8 }}>
+              <div style={{ fontSize: 12.5, color: 'var(--fg-muted)', lineHeight: 1.65, marginBottom: 8 }}>
                 {tField(mktSent.key_reason_en, mktSent.key_reason_ko, mktSent.key_reason, locale)}
               </div>
               <TopNewsBox news={mktSent.top_news} locale={locale} />
