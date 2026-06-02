@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '@/hooks/useStore';
-import { useMorningBriefing, MorningWatchlistItem, MorningSpotlight } from '@/hooks/useMorningBriefing';
+import { useMorningBriefing, MorningWatchlistItem, MorningSpotlight, GlobalIssue, GlobalContext } from '@/hooks/useMorningBriefing';
 import { Card } from '@/components/ui/Card';
 import { Sparkle } from '@/components/ui/Icons';
 import { tField } from '@/app/i18n';
@@ -41,6 +41,14 @@ const S: Record<string, { en: string; ko: string }> = {
   rates:        { en: '10Y Yield',                          ko: '미국 10년 금리' },
   dollar:       { en: 'Dollar (DXY)',                       ko: '달러 (DXY)' },
   btc:          { en: 'Bitcoin (BTC)',                      ko: '비트코인 (BTC)' },
+  globalTitle:    { en: '🌐 Global Macro & Geopolitical Context', ko: '🌐 글로벌 매크로 · 지정학 리스크' },
+  breaking:       { en: 'BREAKING',    ko: '속보' },
+  ongoing:        { en: 'ONGOING',     ko: '지속 리스크' },
+  developing:     { en: 'DEVELOPING',  ko: '진행중' },
+  unverified:     { en: 'UNVERIFIED',  ko: '미확인' },
+  sourceLabel:    { en: 'Source',      ko: '출처' },
+  usImpact:       { en: 'US Stock Impact', ko: '미국 주식 영향' },
+  noUpdate:       { en: 'No significant update in 48h', ko: '48시간 내 주요 변동 없음' },
 };
 const t = (o: { en: string; ko: string }, l: Locale) => o[l];
 
@@ -76,6 +84,40 @@ function sentimentLabel(mood: string | undefined, locale: Locale) {
 }
 function trafficColor(l: string) {
   return l === 'green' ? 'var(--bull)' : l === 'red' ? 'var(--bear)' : 'var(--warn)';
+}
+
+function categoryColor(cat?: string): string {
+  switch (cat) {
+    case 'trade_tariff':  return 'var(--warn)';
+    case 'geopolitical':  return 'var(--bear)';
+    case 'central_bank':  return 'var(--info)';
+    case 'ai_regulation': return 'var(--purple)';
+    default:              return 'var(--fg-subtle)';
+  }
+}
+
+function categoryLabel(cat?: string, locale?: Locale): string {
+  const M: Record<string, { en: string; ko: string }> = {
+    trade_tariff:  { en: 'Trade / Tariff', ko: '무역 · 관세' },
+    geopolitical:  { en: 'Geopolitical',   ko: '지정학' },
+    central_bank:  { en: 'Central Bank',   ko: '중앙은행' },
+    ai_regulation: { en: 'AI / Regulation',ko: 'AI · 규제' },
+  };
+  const entry = M[cat ?? ''];
+  return entry ? t(entry, locale ?? 'en') : (cat ?? '');
+}
+
+function impactCls(dir?: string): string {
+  if (dir === 'positive') return 'bull';
+  if (dir === 'negative') return 'bear';
+  if (dir === 'watch')    return 'warn';
+  return 'neutral';
+}
+
+function confidenceCls(conf?: string): string {
+  if (conf === 'developing') return 'warn';
+  if (conf === 'unverified') return 'bear';
+  return 'neutral';
 }
 
 // ── 공유 텍스트 생성 ──────────────────────────────────────────────────────────
@@ -296,6 +338,73 @@ function Tier2Row({ item, locale }: { item: MorningWatchlistItem; locale: Locale
         </div>
       )}
     </div>
+  );
+}
+
+// ── 서브컴포넌트: 글로벌 컨텍스트 카드 ───────────────────────────────────────
+function GlobalIssueCard({ issue, locale }: { issue: GlobalIssue; locale: Locale }) {
+  const title   = tField(issue.title_en,           issue.title_ko,           '', locale);
+  const summary = tField(issue.summary_en,          issue.summary_ko,         '', locale);
+  const impact  = tField(issue.us_stock_impact_en,  issue.us_stock_impact_ko, '', locale);
+  const catColor = categoryColor(issue.category);
+
+  return (
+    <div className="card" style={{ borderTop: `2px solid ${catColor}` }}>
+      <div className="card__hd" style={{ flexWrap: 'wrap', gap: 5 }}>
+        <span className="badge neutral" style={{ fontSize: 10, borderColor: catColor, color: catColor }}>
+          {categoryLabel(issue.category, locale)}
+        </span>
+        <span className={`badge ${issue.tier === 'breaking' ? 'bull' : 'neutral'}`} style={{ fontSize: 10 }}>
+          {issue.tier === 'breaking' ? t(S.breaking, locale) : t(S.ongoing, locale)}
+        </span>
+        {issue.confidence && issue.confidence !== 'confirmed' && (
+          <span className={`badge ${confidenceCls(issue.confidence)}`} style={{ fontSize: 10 }}>
+            {issue.confidence === 'developing' ? t(S.developing, locale) : t(S.unverified, locale)}
+          </span>
+        )}
+        <span className={`badge ${impactCls(issue.impact_direction)}`} style={{ fontSize: 10, marginLeft: 'auto' }}>
+          {issue.impact_direction === 'positive' ? '▲'
+            : issue.impact_direction === 'negative' ? '▼'
+            : issue.impact_direction === 'watch'    ? '⚠' : '—'} {issue.impact_direction}
+        </span>
+      </div>
+
+      <div className="card__bd" style={{ paddingTop: 6 }}>
+        <p style={{ margin: '0 0 8px', fontSize: 13.5, fontWeight: 700, lineHeight: 1.4 }}>{title}</p>
+        <p style={{ margin: '0 0 10px', fontSize: 12.5, lineHeight: 1.7, color: 'var(--fg-muted)' }}>{summary}</p>
+        {impact && (
+          <div style={{ padding: '6px 10px', borderRadius: 'var(--r-sm)', background: 'var(--bg-subtle)', fontSize: 12 }}>
+            <span style={{ fontWeight: 700, color: catColor, marginRight: 6 }}>{t(S.usImpact, locale)}:</span>
+            <span style={{ color: 'var(--fg)' }}>{impact}</span>
+          </div>
+        )}
+        {issue.source_hint && (
+          <div style={{ marginTop: 6, fontSize: 10, color: 'var(--fg-faint)', fontFamily: 'var(--font-mono)' }}>
+            {t(S.sourceLabel, locale)}: {issue.source_hint}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GlobalContextSection({ ctx, locale }: { ctx: GlobalContext; locale: Locale }) {
+  if (!ctx.issues || ctx.issues.length === 0) return null;
+
+  return (
+    <>
+      <SectionDivider label={t(S.globalTitle, locale)} color="var(--em-500)" />
+      <div style={{ gridColumn: 'span 4', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+        {ctx.issues.map(issue => (
+          <GlobalIssueCard key={issue.rank} issue={issue} locale={locale} />
+        ))}
+      </div>
+      {ctx.ongoing_no_update && ctx.ongoing_no_update.length > 0 && (
+        <div style={{ gridColumn: 'span 4', fontSize: 11, color: 'var(--fg-faint)', paddingTop: 2 }}>
+          {t(S.noUpdate, locale)}: {ctx.ongoing_no_update.join(', ')}
+        </div>
+      )}
+    </>
   );
 }
 
@@ -696,6 +805,11 @@ export function MorningBriefingBoard() {
           </div>
         )}
       </Card>
+
+      {/* ── 글로벌 컨텍스트 ── */}
+      {d.global_context && !d.global_context.fallback && (
+        <GlobalContextSection ctx={d.global_context} locale={locale} />
+      )}
 
       {/* ── Spotlight ── */}
       {d.spotlight.length > 0 && (
