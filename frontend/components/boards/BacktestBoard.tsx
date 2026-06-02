@@ -155,7 +155,7 @@ function CIBar({
   return (
     <div style={{ marginBottom: '14px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', alignItems: 'baseline' }}>
-        <span style={{ fontSize: '13px', color: 'var(--mut)', fontWeight: 500 }}>{label}</span>
+        <span style={{ fontSize: '13px', color: 'var(--fg-muted)', fontWeight: 500 }}>{label}</span>
         <span style={{ fontSize: '13px', color: medColor, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
           {format(median)}
         </span>
@@ -182,12 +182,12 @@ function CIBar({
         {/* p5 label */}
         <div style={{
           position: 'absolute', left: 0, top: '14px',
-          fontSize: '11px', color: 'var(--dim)', fontVariantNumeric: 'tabular-nums',
+          fontSize: '11px', color: 'var(--fg-subtle)', fontVariantNumeric: 'tabular-nums',
         }}>{format(p5)}</div>
         {/* p95 label */}
         <div style={{
           position: 'absolute', right: 0, top: '14px',
-          fontSize: '11px', color: 'var(--dim)', fontVariantNumeric: 'tabular-nums',
+          fontSize: '11px', color: 'var(--fg-subtle)', fontVariantNumeric: 'tabular-nums',
           transform: 'translateX(0)',
         }}>{format(p95)}</div>
       </div>
@@ -223,7 +223,7 @@ function MonteCarloSection({ mc, locale }: { mc: MonteCarloResult; locale: Local
           <div style={{ fontSize: '35px', fontWeight: 900, color: probColor, letterSpacing: '-1px', lineHeight: 1 }}>
             {probPct}%
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--mut)', marginTop: '3px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--fg-muted)', marginTop: '3px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             {t(S.mcProbLabel, locale)}
           </div>
         </div>
@@ -231,7 +231,7 @@ function MonteCarloSection({ mc, locale }: { mc: MonteCarloResult; locale: Local
           <div style={{ fontSize: '13px', color: isStrong ? 'var(--emerald, #34d399)' : 'var(--warn, #fbbf24)', fontWeight: 600 }}>
             {isStrong ? t(S.mcInterpret, locale) : t(S.mcInterpretWarn, locale)}
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--dim)', marginTop: '4px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--fg-subtle)', marginTop: '4px' }}>
             {t(S.mc90ci, locale)}: [{mc.expectancy_r.p5 >= 0 ? '+' : ''}{mc.expectancy_r.p5.toFixed(3)}R ~ {mc.expectancy_r.p5 >= 0 ? '+' : ''}{mc.expectancy_r.p95.toFixed(3)}R] · {t(S.mcMedian, locale)} {mc.expectancy_r.median >= 0 ? '+' : ''}{mc.expectancy_r.median.toFixed(3)}R
           </div>
         </div>
@@ -268,15 +268,15 @@ function MonteCarloSection({ mc, locale }: { mc: MonteCarloResult; locale: Local
 
       {/* ── 범례 ── */}
       <div style={{ display: 'flex', gap: '16px', marginTop: '4px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--dim)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--fg-subtle)' }}>
           <div style={{ width: '20px', height: '6px', background: 'rgba(52,211,153,0.2)', border: '1px solid rgba(52,211,153,0.4)', borderRadius: '1px' }} />
           IQR (p25~p75)
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--dim)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--fg-subtle)' }}>
           <div style={{ width: '2px', height: '10px', background: 'var(--emerald, #34d399)' }} />
           {t(S.mcMedian, locale)}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--dim)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--fg-subtle)' }}>
           양 끝 = p5 / p95 (90% 신뢰구간)
         </div>
       </div>
@@ -341,15 +341,15 @@ function SweepHeatmap({ entries, locale }: { entries: SweepEntry[]; locale: Loca
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: `100px repeat(${rsValues.length}, 1fr)`, gap: '6px', alignItems: 'center' }}>
             {/* 헤더행 */}
-            <div style={{ fontSize: '11px', color: 'var(--dim)', textAlign: 'center' }} />
+            <div style={{ fontSize: '11px', color: 'var(--fg-subtle)', textAlign: 'center' }} />
             {rsValues.map(rs => (
-              <div key={rs} style={{ fontSize: '12px', color: 'var(--dim)', textAlign: 'center', fontWeight: 600 }}>
+              <div key={rs} style={{ fontSize: '12px', color: 'var(--fg-subtle)', textAlign: 'center', fontWeight: 600 }}>
                 {t(S.rs, locale)}{rs}
               </div>
             ))}
             {/* 데이터행 */}
             {thresholds.flatMap(th => [
-              <div key={`label-${spy}-${th}`} style={{ fontSize: '12px', color: 'var(--dim)', fontWeight: 600, textAlign: 'right', paddingRight: '8px' }}>
+              <div key={`label-${spy}-${th}`} style={{ fontSize: '12px', color: 'var(--fg-subtle)', fontWeight: 600, textAlign: 'right', paddingRight: '8px' }}>
                 {t(S.stg, locale)} ≥{th}
               </div>,
               ...rsValues.map(rs => {
@@ -377,12 +377,12 @@ function SweepHeatmap({ entries, locale }: { entries: SweepEntry[]; locale: Loca
                         <div style={{ fontSize: '15px', fontWeight: 800, color: expToTextColor(oos.expectancy_r), fontVariantNumeric: 'tabular-nums' }}>
                           {oos.expectancy_r > 0 ? '+' : ''}{oos.expectancy_r.toFixed(3)}R
                         </div>
-                        <div style={{ fontSize: '11px', color: 'var(--dim)', marginTop: '3px' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--fg-subtle)', marginTop: '3px' }}>
                           {(oos.win_rate * 100).toFixed(0)}% · n={oos.n}
                         </div>
                       </>
                     ) : (
-                      <div style={{ color: 'var(--dim)', fontSize: '12px' }}>—</div>
+                      <div style={{ color: 'var(--fg-subtle)', fontSize: '12px' }}>—</div>
                     )}
                   </div>
                 );
@@ -400,7 +400,7 @@ function SweepHeatmap({ entries, locale }: { entries: SweepEntry[]; locale: Loca
           { color: 'rgba(100,116,139,0.4)', label: '±0.05R' },
           { color: 'rgba(239,68,68,0.6)', label: '<-0.2R' },
         ].map(({ color, label }) => (
-          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--dim)' }}>
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--fg-subtle)' }}>
             <div style={{ width: '14px', height: '14px', background: color, borderRadius: '3px' }} />
             {label}
           </div>
@@ -428,7 +428,7 @@ function SweepRanking({ entries, locale }: { entries: SweepEntry[]; locale: Loca
         return (
           <div key={entry.label} style={{
             background: isRecommended ? 'rgba(56,189,248,0.06)' : 'rgba(255,255,255,0.02)',
-            border: `1px solid ${isRecommended ? 'rgba(56,189,248,0.3)' : 'var(--line)'}`,
+            border: `1px solid ${isRecommended ? 'rgba(56,189,248,0.3)' : 'var(--border)'}`,
             borderRadius: '10px',
             padding: '10px 14px',
           }}>
@@ -438,7 +438,7 @@ function SweepRanking({ entries, locale }: { entries: SweepEntry[]; locale: Loca
                   width: '20px', height: '20px', borderRadius: '6px',
                   background: isRecommended ? 'rgba(56,189,248,0.2)' : 'rgba(255,255,255,0.06)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '11px', fontWeight: 800, color: isRecommended ? '#38bdf8' : 'var(--dim)',
+                  fontSize: '11px', fontWeight: 800, color: isRecommended ? '#38bdf8' : 'var(--fg-subtle)',
                 }}>
                   {i + 1}
                 </span>
@@ -455,14 +455,14 @@ function SweepRanking({ entries, locale }: { entries: SweepEntry[]; locale: Loca
                   )}
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--dim)' }}>
+              <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--fg-subtle)' }}>
                 <span>IS: <span style={{ color: is_.expectancy_r >= 0 ? '#34d399' : '#f87171', fontWeight: 700 }}>{is_.expectancy_r > 0 ? '+' : ''}{is_.expectancy_r.toFixed(3)}R</span></span>
                 <span>OOS: <span style={{ color: barColor, fontWeight: 800, fontSize: '13px' }}>{exp > 0 ? '+' : ''}{exp.toFixed(3)}R</span></span>
-                <span style={{ color: 'var(--dim)' }}>{(oos.win_rate * 100).toFixed(0)}% · n={oos.n}</span>
+                <span style={{ color: 'var(--fg-subtle)' }}>{(oos.win_rate * 100).toFixed(0)}% · n={oos.n}</span>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ flex: 1, height: '6px', background: 'var(--panel2)', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ flex: 1, height: '6px', background: 'var(--card-elev)', borderRadius: '3px', overflow: 'hidden' }}>
                 <div style={{
                   height: '100%', width: `${barW}%`,
                   background: barColor, borderRadius: '3px',
@@ -470,7 +470,7 @@ function SweepRanking({ entries, locale }: { entries: SweepEntry[]; locale: Loca
                   transition: 'width 0.5s ease',
                 }} />
               </div>
-              <span style={{ fontSize: '11px', color: 'var(--dim)', minWidth: '50px', textAlign: 'right' }}>
+              <span style={{ fontSize: '11px', color: 'var(--fg-subtle)', minWidth: '50px', textAlign: 'right' }}>
                 PF {oos.profit_factor.toFixed(2)}
               </span>
             </div>
@@ -553,7 +553,7 @@ function SweepEquityCurves({ entries }: { entries: SweepEntry[] }) {
           return (
             <div key={entry.label} style={{
               display: 'flex', alignItems: 'center', gap: '5px',
-              fontSize: '11px', color: isRec ? '#38bdf8' : 'var(--dim)',
+              fontSize: '11px', color: isRec ? '#38bdf8' : 'var(--fg-subtle)',
               fontWeight: isRec ? 700 : 400,
             }}>
               <div style={{
@@ -585,7 +585,7 @@ function AmznAnalysis({ locale }: { locale: Locale }) {
       <div style={{ fontWeight: 700, fontSize: '14px', color: '#f87171', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
         ⚠ {t(S.amznTitle, locale)}
       </div>
-      <div style={{ fontSize: '13px', color: 'var(--mut)', marginBottom: '12px', lineHeight: 1.6 }}>
+      <div style={{ fontSize: '13px', color: 'var(--fg-muted)', marginBottom: '12px', lineHeight: 1.6 }}>
         {locale === 'ko'
           ? 'AMZN은 8개 파라미터 조합 (RS 50~70, Stage2 5~6, SPY 필터 ON/OFF) 에서 모두 승률 21% 수준입니다. 이는 Stage2 피봇 브레이크아웃 방법론과 AMZN의 가격 구조가 구조적으로 맞지 않는다는 의미입니다.'
           : 'AMZN shows ~21% win rate across all 8 parameter combinations (RS 50–70, Stage2 5–6, SPY filter on/off). This indicates a structural mismatch between the Stage2 pivot breakout methodology and AMZN\'s price behavior.'}
@@ -598,15 +598,15 @@ function AmznAnalysis({ locale }: { locale: Locale }) {
           { label: locale === 'ko' ? '대안 ②' : 'Option ②', value: locale === 'ko' ? '레인지 전략' : 'Range strategy', color: '#94a3b8' },
         ].map(({ label, value, color }) => (
           <div key={label} style={{
-            background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)',
+            background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)',
             borderRadius: '8px', padding: '10px 12px',
           }}>
-            <div style={{ fontSize: '11px', color: 'var(--dim)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
+            <div style={{ fontSize: '11px', color: 'var(--fg-subtle)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
             <div style={{ fontSize: '14px', fontWeight: 700, color }}>{value}</div>
           </div>
         ))}
       </div>
-      <div style={{ fontSize: '12px', color: 'var(--dim)', lineHeight: 1.6 }}>
+      <div style={{ fontSize: '12px', color: 'var(--fg-subtle)', lineHeight: 1.6 }}>
         {locale === 'ko'
           ? '💡 이 분석은 방법론의 한계를 투명하게 공개합니다. Stage2 시스템이 모든 종목에 적용될 수 없다는 사실을 데이터로 확인하는 것이 더 신뢰할 수 있는 시스템입니다.'
           : '💡 This analysis openly discloses the limitations of the methodology. Confirming with data that the Stage2 system cannot be applied to every stock makes it a more trustworthy system.'}
@@ -637,11 +637,11 @@ function SweepDashboard({ locale }: { locale: Locale }) {
           <div style={{ fontSize: '16px', fontWeight: 800, color: '#38bdf8', marginBottom: '2px' }}>
             ⚗ {t(S.sweepTitle, locale)}
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--dim)' }}>{t(S.sweepSub, locale)}</div>
+          <div style={{ fontSize: '12px', color: 'var(--fg-subtle)' }}>{t(S.sweepSub, locale)}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           {generatedAt && (
-            <span style={{ fontSize: '12px', color: 'var(--dim)' }}>
+            <span style={{ fontSize: '12px', color: 'var(--fg-subtle)' }}>
               {t(S.sweepLastRun, locale)}: {generatedAt}
             </span>
           )}
@@ -653,7 +653,7 @@ function SweepDashboard({ locale }: { locale: Locale }) {
               disabled={isRunning}
               style={{
                 padding: '6px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12px',
-                background: isRunning ? 'var(--panel2)' : 'rgba(56,189,248,0.1)',
+                background: isRunning ? 'var(--card-elev)' : 'rgba(56,189,248,0.1)',
                 border: '1px solid rgba(56,189,248,0.3)', color: '#38bdf8',
                 cursor: isRunning ? 'not-allowed' : 'pointer', opacity: isRunning ? 0.7 : 1,
               }}
@@ -664,7 +664,7 @@ function SweepDashboard({ locale }: { locale: Locale }) {
         </div>
       </div>
 
-      {isLoading && <div style={{ color: 'var(--mut)', padding: '20px', textAlign: 'center', fontSize: '14px' }}>로딩 중...</div>}
+      {isLoading && <div style={{ color: 'var(--fg-muted)', padding: '20px', textAlign: 'center', fontSize: '14px' }}>로딩 중...</div>}
 
       {/* 미실행 상태: 눈에 띄는 중앙 실행 버튼 */}
       {!isLoading && !result && (
@@ -672,7 +672,7 @@ function SweepDashboard({ locale }: { locale: Locale }) {
           border: '1px dashed rgba(56,189,248,0.3)', borderRadius: '12px',
           padding: '32px 20px', textAlign: 'center',
         }}>
-          <div style={{ fontSize: '13px', color: 'var(--dim)', marginBottom: '16px' }}>
+          <div style={{ fontSize: '13px', color: 'var(--fg-subtle)', marginBottom: '16px' }}>
             {t(S.sweepNoCache, locale)}
           </div>
           <button
@@ -680,7 +680,7 @@ function SweepDashboard({ locale }: { locale: Locale }) {
             disabled={isRunning}
             style={{
               padding: '12px 32px', borderRadius: '10px', fontWeight: 700, fontSize: '15px',
-              background: isRunning ? 'var(--panel2)' : 'rgba(56,189,248,0.15)',
+              background: isRunning ? 'var(--card-elev)' : 'rgba(56,189,248,0.15)',
               border: '1px solid rgba(56,189,248,0.5)', color: '#38bdf8',
               cursor: isRunning ? 'not-allowed' : 'pointer', opacity: isRunning ? 0.7 : 1,
               display: 'inline-flex', alignItems: 'center', gap: '8px',
@@ -732,7 +732,7 @@ function SweepDashboard({ locale }: { locale: Locale }) {
 // ── Equity Curve SVG Chart ────────────────────────────────────────────────────
 
 function EquityCurve({ curve }: { curve: { date: string; equity: number }[] }) {
-  if (!curve || curve.length < 2) return <div style={{ color: 'var(--mut)', padding: '20px 0', textAlign: 'center' }}>데이터 없음</div>;
+  if (!curve || curve.length < 2) return <div style={{ color: 'var(--fg-muted)', padding: '20px 0', textAlign: 'center' }}>데이터 없음</div>;
 
   const W = 100, H = 56; // viewBox units
   const values = curve.map(p => p.equity);
@@ -794,7 +794,7 @@ function EquityCurve({ curve }: { curve: { date: string; equity: number }[] }) {
         <circle cx={toX(curve.length - 1)} cy={toY(values[values.length - 1])} r="1.5"
           fill={isPositive ? 'var(--emerald, #34d399)' : 'var(--rose, #fb7185)'} />
       </svg>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--mut)', marginTop: '4px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--fg-muted)', marginTop: '4px' }}>
         <span>{curve[0]?.date}</span>
         <span style={{ color: isPositive ? 'var(--emerald, #34d399)' : 'var(--rose, #fb7185)', fontWeight: 700 }}>
           {isPositive ? '+' : ''}{totalReturn}% total return
@@ -812,9 +812,9 @@ function KpiCell({ label, value, sub, color }: {
 }) {
   return (
     <div style={{ textAlign: 'center', padding: '12px 8px' }}>
-      <div style={{ fontSize: '12px', color: 'var(--mut)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>{label}</div>
+      <div style={{ fontSize: '12px', color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>{label}</div>
       <div style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', color: color ?? 'var(--txt)' }}>{value}</div>
-      {sub && <div style={{ fontSize: '12px', color: 'var(--mut)', marginTop: '2px' }}>{sub}</div>}
+      {sub && <div style={{ fontSize: '12px', color: 'var(--fg-muted)', marginTop: '2px' }}>{sub}</div>}
     </div>
   );
 }
@@ -834,9 +834,9 @@ function StatsRow({ label, stats, highlight }: { label: string; stats: BacktestS
       <span style={{ fontSize: '14px', fontWeight: highlight ? 700 : 400, color: 'var(--txt)' }}>{label}</span>
       <span style={{ textAlign: 'right', fontSize: '14px', color: winColor, fontVariantNumeric: 'tabular-nums' }}>{(stats.win_rate * 100).toFixed(1)}%</span>
       <span style={{ textAlign: 'right', fontSize: '14px', color: expColor, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{stats.expectancy_r > 0 ? '+' : ''}{stats.expectancy_r.toFixed(3)}R</span>
-      <span style={{ textAlign: 'right', fontSize: '14px', color: 'var(--mut)', fontVariantNumeric: 'tabular-nums' }}>{stats.profit_factor}</span>
+      <span style={{ textAlign: 'right', fontSize: '14px', color: 'var(--fg-muted)', fontVariantNumeric: 'tabular-nums' }}>{stats.profit_factor}</span>
       <span style={{ textAlign: 'right', fontSize: '14px', color: 'var(--rose, #fb7185)', fontVariantNumeric: 'tabular-nums' }}>{stats.mdd.toFixed(1)}%</span>
-      <span style={{ textAlign: 'right', fontSize: '13px', color: 'var(--mut)', fontVariantNumeric: 'tabular-nums' }}>n={stats.n}</span>
+      <span style={{ textAlign: 'right', fontSize: '13px', color: 'var(--fg-muted)', fontVariantNumeric: 'tabular-nums' }}>n={stats.n}</span>
     </div>
   );
 }
@@ -846,11 +846,11 @@ function StatsHeader({ locale }: { locale: string }) {
   return (
     <div style={{
       display: 'grid', gridTemplateColumns: '1fr repeat(5, 80px)',
-      padding: '6px 12px', borderBottom: '1px solid var(--line)',
+      padding: '6px 12px', borderBottom: '1px solid var(--border)',
     }}>
-      <span style={{ fontSize: '12px', color: 'var(--dim)', textTransform: 'uppercase' }}>Period</span>
+      <span style={{ fontSize: '12px', color: 'var(--fg-subtle)', textTransform: 'uppercase' }}>Period</span>
       {['Win%', 'Exp(R)', 'PF', 'MDD', 'n'].map(h => (
-        <span key={h} style={{ textAlign: 'right', fontSize: '12px', color: 'var(--dim)', textTransform: 'uppercase' }}>{h}</span>
+        <span key={h} style={{ textAlign: 'right', fontSize: '12px', color: 'var(--fg-subtle)', textTransform: 'uppercase' }}>{h}</span>
       ))}
     </div>
   );
@@ -889,7 +889,7 @@ export function BacktestBoard() {
     : oosVsIs > 0 ? t(S.oosBetter, locale)
     : Math.abs(oosVsIs) < 0.15 ? t(S.oosSimilar, locale)
     : t(S.oosWorse, locale);
-  const oosVerdictColor = oosVsIs === null ? 'var(--mut)'
+  const oosVerdictColor = oosVsIs === null ? 'var(--fg-muted)'
     : oosVsIs > 0 ? 'var(--emerald, #34d399)'
     : Math.abs(oosVsIs) < 0.15 ? 'var(--sky, #38bdf8)'
     : 'var(--warn, #fbbf24)';
@@ -934,7 +934,7 @@ export function BacktestBoard() {
             disabled={isRunning}
             style={{
               padding: '8px 20px', borderRadius: '8px', fontWeight: 700, fontSize: '15px',
-              background: isRunning ? 'var(--panel2)' : 'rgba(56,189,248,0.15)',
+              background: isRunning ? 'var(--card-elev)' : 'rgba(56,189,248,0.15)',
               border: '1px solid rgba(56,189,248,0.4)', color: 'var(--sky, #38bdf8)',
               cursor: isRunning ? 'not-allowed' : 'pointer', opacity: isRunning ? 0.7 : 1,
             }}
@@ -942,7 +942,7 @@ export function BacktestBoard() {
             {isRunning ? t(S.running, locale) : generatedAt ? t(S.rerun, locale) : t(S.runBtn, locale)}
           </button>
           {generatedAt && (
-            <span style={{ fontSize: '13px', color: 'var(--mut)' }}>
+            <span style={{ fontSize: '13px', color: 'var(--fg-muted)' }}>
               {t(S.lastRun, locale)}: {generatedAt}
             </span>
           )}
@@ -950,7 +950,7 @@ export function BacktestBoard() {
             <span style={{ fontSize: '13px', color: 'var(--rose, #fb7185)' }}>{runError}</span>
           )}
           {result?.config && (
-            <span style={{ fontSize: '13px', color: 'var(--dim)', marginLeft: 'auto' }}>
+            <span style={{ fontSize: '13px', color: 'var(--fg-subtle)', marginLeft: 'auto' }}>
               {result.config.symbols.join(' · ')} · Stage2 ≥ {result.config.stage2_threshold}
               {result.config.rs_threshold !== undefined && ` · RS≥${result.config.rs_threshold}`}
               {result.config.use_spy_filter && ' · SPY필터'}
@@ -960,11 +960,11 @@ export function BacktestBoard() {
         </div>
 
         {/* ── 로딩 / 캐시 없음 ── */}
-        {isLoading && <div style={{ color: 'var(--mut)', padding: '40px', textAlign: 'center' }}>{t(S.loading, locale)}</div>}
+        {isLoading && <div style={{ color: 'var(--fg-muted)', padding: '40px', textAlign: 'center' }}>{t(S.loading, locale)}</div>}
         {!isLoading && !result && (
           <div style={{
-            background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: '16px',
-            padding: '40px', textAlign: 'center', color: 'var(--mut)',
+            background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '16px',
+            padding: '40px', textAlign: 'center', color: 'var(--fg-muted)',
           }}>
             {t(S.noCache, locale)}
           </div>
@@ -984,7 +984,7 @@ export function BacktestBoard() {
               }}>
                 📖 {t(S.whatTitle, locale)}
               </summary>
-              <div style={{ padding: '0 16px 14px', fontSize: '14px', color: 'var(--mut)', lineHeight: 1.7 }}>
+              <div style={{ padding: '0 16px 14px', fontSize: '14px', color: 'var(--fg-muted)', lineHeight: 1.7 }}>
                 {t(S.whatBody, locale)}
               </div>
             </details>
@@ -999,7 +999,7 @@ export function BacktestBoard() {
               </div>
               <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
                 {[S.tier1Only, S.limitEntry, S.limitSlip, S.limitBias, S.limitPast].map((key, i) => (
-                  <li key={i} style={{ fontSize: '13px', color: 'var(--mut)' }}>{t(key, locale)}</li>
+                  <li key={i} style={{ fontSize: '13px', color: 'var(--fg-muted)' }}>{t(key, locale)}</li>
                 ))}
               </ul>
             </div>
@@ -1062,16 +1062,16 @@ export function BacktestBoard() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '24px', padding: '4px 0 8px' }}>
                 <div style={{ textAlign: 'center', minWidth: '72px' }}>
-                  <div style={{ fontSize: '31px', fontWeight: 900, letterSpacing: '-0.5px', color: all.mdd > 40 ? 'var(--warn, #fbbf24)' : 'var(--mut)' }}>
+                  <div style={{ fontSize: '31px', fontWeight: 900, letterSpacing: '-0.5px', color: all.mdd > 40 ? 'var(--warn, #fbbf24)' : 'var(--fg-muted)' }}>
                     {all.mdd.toFixed(1)}%
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--dim)', marginTop: '2px', textTransform: 'uppercase' }}>{t(S.mdd, locale)}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--fg-subtle)', marginTop: '2px', textTransform: 'uppercase' }}>{t(S.mdd, locale)}</div>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ height: '8px', borderRadius: '4px', background: 'var(--panel2)', overflow: 'hidden', marginBottom: '8px' }}>
+                  <div style={{ height: '8px', borderRadius: '4px', background: 'var(--card-elev)', overflow: 'hidden', marginBottom: '8px' }}>
                     <div style={{ height: '100%', width: `${Math.min(all.mdd, 100)}%`, borderRadius: '4px', background: all.mdd > 50 ? 'var(--rose, #fb7185)' : all.mdd > 30 ? 'var(--warn, #fbbf24)' : 'var(--emerald, #34d399)' }} />
                   </div>
-                  <div style={{ fontSize: '13px', color: 'var(--mut)', lineHeight: 1.6 }}>
+                  <div style={{ fontSize: '13px', color: 'var(--fg-muted)', lineHeight: 1.6 }}>
                     {locale === 'ko'
                       ? `$10,000 기준 최저 $${(10000 * (1 - all.mdd / 100)).toFixed(0)}까지 감소 가능. 최대 연속 손실 ${all.max_consecutive_loss}회.`
                       : `$10,000 → min ~$${(10000 * (1 - all.mdd / 100)).toFixed(0)} worst case. Max ${all.max_consecutive_loss} consecutive losses.`}
@@ -1109,19 +1109,19 @@ export function BacktestBoard() {
                 action={t(S.scoreAction, locale)}
                 info={{ term: 'Stage2 Score', body: t(S.infoScore, locale) }}
               >
-                {scoreRows.length === 0 && <div style={{ color: 'var(--mut)', fontSize: '14px' }}>데이터 없음</div>}
+                {scoreRows.length === 0 && <div style={{ color: 'var(--fg-muted)', fontSize: '14px' }}>데이터 없음</div>}
                 {scoreRows.map(([score, s]) => {
                   const barW = Math.max(4, s.win_rate * 100);
                   const expColor = s.expectancy_r > 0 ? 'var(--emerald, #34d399)' : 'var(--rose, #fb7185)';
                   return (
                     <div key={score} style={{ marginBottom: '10px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '3px' }}>
-                        <span style={{ color: 'var(--txt)', fontWeight: 600 }}>{score}/7점 <span style={{ color: 'var(--mut)', fontWeight: 400 }}>n={s.n}</span></span>
+                        <span style={{ color: 'var(--txt)', fontWeight: 600 }}>{score}/7점 <span style={{ color: 'var(--fg-muted)', fontWeight: 400 }}>n={s.n}</span></span>
                         <span style={{ color: expColor, fontWeight: 700 }}>
                           {s.expectancy_r > 0 ? '+' : ''}{s.expectancy_r.toFixed(3)}R · {(s.win_rate * 100).toFixed(0)}%
                         </span>
                       </div>
-                      <div style={{ height: '6px', borderRadius: '3px', background: 'var(--panel2)', overflow: 'hidden' }}>
+                      <div style={{ height: '6px', borderRadius: '3px', background: 'var(--card-elev)', overflow: 'hidden' }}>
                         <div style={{ height: '100%', width: `${barW}%`, borderRadius: '3px', background: expColor, transition: 'width 0.4s' }} />
                       </div>
                     </div>
@@ -1152,12 +1152,12 @@ export function BacktestBoard() {
             >
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--line)' }}>
+                  <tr style={{ borderBottom: '1px solid var(--border)' }}>
                     {['Symbol', t(S.colWin, locale), t(S.colExp, locale), t(S.colPF, locale), t(S.colMDD, locale), t(S.colN, locale)].map((h, i) => (
                       <th key={i} style={{
                         padding: '8px 10px', textAlign: i === 0 ? 'left' : 'right',
-                        fontSize: '12px', color: 'var(--dim)', textTransform: 'uppercase',
-                        fontWeight: 700, background: 'var(--panel2)',
+                        fontSize: '12px', color: 'var(--fg-subtle)', textTransform: 'uppercase',
+                        fontWeight: 700, background: 'var(--card-elev)',
                       }}>{h}</th>
                     ))}
                   </tr>
@@ -1168,15 +1168,15 @@ export function BacktestBoard() {
                     const expColor = s.expectancy_r > 0 ? 'var(--emerald, #34d399)' : 'var(--rose, #fb7185)';
                     const winColor = s.win_rate >= 0.25 ? 'inherit' : 'var(--rose, #fb7185)';
                     return (
-                      <tr key={r.symbol} style={{ borderBottom: '1px solid var(--line)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
+                      <tr key={r.symbol} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
                         <td style={{ padding: '10px 10px', fontWeight: 700, color: 'var(--sky, #38bdf8)' }}>{r.symbol}</td>
                         <td style={{ padding: '10px 10px', textAlign: 'right', color: winColor, fontVariantNumeric: 'tabular-nums' }}>{(s.win_rate * 100).toFixed(1)}%</td>
                         <td style={{ padding: '10px 10px', textAlign: 'right', color: expColor, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
                           {s.expectancy_r > 0 ? '+' : ''}{s.expectancy_r.toFixed(3)}R
                         </td>
-                        <td style={{ padding: '10px 10px', textAlign: 'right', color: s.profit_factor >= 1.5 ? 'var(--emerald, #34d399)' : 'var(--mut)', fontVariantNumeric: 'tabular-nums' }}>{s.profit_factor}</td>
-                        <td style={{ padding: '10px 10px', textAlign: 'right', color: s.mdd > 30 ? 'var(--warn, #fbbf24)' : 'var(--mut)', fontVariantNumeric: 'tabular-nums' }}>{s.mdd.toFixed(1)}%</td>
-                        <td style={{ padding: '10px 10px', textAlign: 'right', color: 'var(--mut)', fontVariantNumeric: 'tabular-nums' }}>{s.n}</td>
+                        <td style={{ padding: '10px 10px', textAlign: 'right', color: s.profit_factor >= 1.5 ? 'var(--emerald, #34d399)' : 'var(--fg-muted)', fontVariantNumeric: 'tabular-nums' }}>{s.profit_factor}</td>
+                        <td style={{ padding: '10px 10px', textAlign: 'right', color: s.mdd > 30 ? 'var(--warn, #fbbf24)' : 'var(--fg-muted)', fontVariantNumeric: 'tabular-nums' }}>{s.mdd.toFixed(1)}%</td>
+                        <td style={{ padding: '10px 10px', textAlign: 'right', color: 'var(--fg-muted)', fontVariantNumeric: 'tabular-nums' }}>{s.n}</td>
                       </tr>
                     );
                   })}
@@ -1189,13 +1189,13 @@ export function BacktestBoard() {
                       }}>
                         <strong style={{ color: 'var(--rose, #fb7185)' }}>⚠ {r.symbol}</strong>
                         {r.symbol === 'AMZN' ? (
-                          <span style={{ color: 'var(--mut)', marginLeft: 6 }}>
+                          <span style={{ color: 'var(--fg-muted)', marginLeft: 6 }}>
                             {locale === 'ko'
                               ? '모든 파라미터 조합(RS 50~80, SPY필터 ON/OFF, threshold 5~7)에서 승률 21% — Stage2 피봇 브레이크아웃 모델과 구조적 불일치. AMZN의 박스권/횡보 가격 특성이 원인. 대안: ① 백테스트 대상에서 제외 ② 별도 레인지-바운드 전략 적용'
                               : 'Win rate 21% across ALL parameter combinations (RS 50–80, SPY filter on/off, threshold 5–7) — structural mismatch with Stage2 pivot breakout model. AMZN\'s range-bound price behavior is the cause. Options: ① Exclude from backtest targets ② Apply a separate range-bound strategy'}
                           </span>
                         ) : (
-                          <span style={{ color: 'var(--mut)', marginLeft: 6 }}>
+                          <span style={{ color: 'var(--fg-muted)', marginLeft: 6 }}>
                             {locale === 'ko'
                               ? 'Stage2 신호가 이 종목의 가격 구조와 맞지 않을 수 있습니다.'
                               : "Stage2 signal may not suit this stock's price structure."}

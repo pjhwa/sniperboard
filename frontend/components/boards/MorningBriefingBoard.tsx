@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Sparkle } from '@/components/ui/Icons';
 import { tField } from '@/app/i18n';
 import type { Locale } from '@/app/i18n';
+import { GLOSSARY } from '@/app/glossary';
 
 // ── 정적 문자열 ──────────────────────────────────────────────────────────────
 const S: Record<string, { en: string; ko: string }> = {
@@ -29,6 +30,9 @@ const S: Record<string, { en: string; ko: string }> = {
   tier2Sec:     { en: 'TIER 2 — Momentum / Theme',          ko: 'TIER 2 — 모멘텀/테마주' },
   analysis:     { en: 'Analysis',                           ko: '분석' },
   sentLabel:    { en: 'Social Mood',                        ko: '소셜 심리' },
+  glossaryTitle:{ en: 'Investment Terms Glossary',          ko: '투자 용어 쉽게 이해하기' },
+  glossaryHint: { en: 'Key terms used in this briefing explained in plain language',
+                  ko: '이 브리핑에 등장하는 용어를 쉽게 풀어서 설명합니다' },
   snsTitle:     { en: 'Share Full Briefing Text',           ko: '전체 브리핑 복사 · 공유' },
   snsCopy:      { en: 'Copy Text',                          ko: '텍스트 복사' },
   snsCopied:    { en: '✓ Copied!',                          ko: '✓ 복사됨!' },
@@ -290,6 +294,126 @@ function Tier2Row({ item, locale }: { item: MorningWatchlistItem; locale: Locale
         </div>
       )}
     </div>
+  );
+}
+
+// ── 용어 설명 데이터 (GLOSSARY에서 브리핑 관련 항목 필터) ─────────────────────
+const BRIEFING_TERM_KEYS = [
+  'risk_regime',
+  'distribution_days',
+  'volatility',
+  'stage2',
+  'rs_score',
+  'monthly_phase',
+  'gc_status',
+  'conviction',
+  'rr_ratio',
+  'breadth',
+  'signal_vcp',
+];
+
+// 브리핑에서 자주 쓰이는 추가 용어 (GLOSSARY에 없는 것)
+const EXTRA_TERMS = [
+  {
+    key: 'confirmed_uptrend',
+    term: { en: 'Confirmed Uptrend', ko: '확인된 상승 추세 (Confirmed Uptrend)' },
+    body: {
+      en: 'When the monthly chart is above its 10-month moving average AND the average is rising. This means the "big picture" trend is up — short-term signals are more reliable in this state.',
+      ko: '월봉(매달 주가 차트)이 10개월 이동평균선 위에 있고, 그 평균선이 올라가고 있는 상태입니다. "큰 그림"에서 상승 흐름이 확인된 것으로, 이 상태의 종목은 단기 매수 신호가 훨씬 더 믿을 만합니다.',
+    },
+  },
+  {
+    key: 'social_sentiment',
+    term: { en: 'Social Sentiment Score (−2 ~ +2)', ko: '소셜 심리 점수 (−2 ~ +2)' },
+    body: {
+      en: 'AI-analyzed score of what retail investors are saying on Reddit, X(Twitter), and news. +2 = euphoric (buy caution), −2 = extreme fear (contrarian buy opportunity). It is a supplementary signal — always cross-check with technical analysis.',
+      ko: 'Reddit, X(트위터), 뉴스에서 개인 투자자들이 무슨 말을 하는지 AI가 분석한 점수입니다. +2에 가까울수록 과열(주의), −2에 가까울수록 극도 공포(역발상 매수 기회). 단독 지표가 아니라 기술적 분석과 함께 보는 보조 지표입니다.',
+    },
+  },
+  {
+    key: 'ema',
+    term: { en: 'Moving Average (EMA)', ko: '이동평균선 (EMA · 지수이동평균)' },
+    body: {
+      en: 'A line that tracks the average price over a set period, giving more weight to recent prices. EMA21 = 21-day average, EMA200 = 200-day (long-term trend indicator). Price above all EMAs = technically strong setup.',
+      ko: '최근 주가 평균을 선으로 이은 것으로, 최근 주가에 더 많은 가중치를 둡니다. EMA21 = 21일 평균, EMA200 = 200일 평균(장기 추세 지표). 주가가 모든 이평선 위에 있으면 기술적으로 강한 상태입니다.',
+    },
+  },
+];
+
+// ── 서브컴포넌트: 용어 설명 ───────────────────────────────────────────────────
+function GlossarySection({ locale }: { locale: Locale }) {
+  const [openKey, setOpenKey] = useState<string | null>(null);
+
+  const terms = [
+    ...GLOSSARY.filter(e => BRIEFING_TERM_KEYS.includes(e.key)),
+    ...EXTRA_TERMS,
+  ].sort((a, b) => {
+    const ai = BRIEFING_TERM_KEYS.indexOf(a.key);
+    const bi = BRIEFING_TERM_KEYS.indexOf(b.key);
+    if (ai >= 0 && bi >= 0) return ai - bi;
+    if (ai >= 0) return -1;
+    if (bi >= 0) return 1;
+    return 0;
+  });
+
+  return (
+    <details style={{ gridColumn: 'span 4' }}>
+      <summary style={{
+        cursor: 'pointer', userSelect: 'none',
+        listStyle: 'none', display: 'flex', alignItems: 'center', gap: 8,
+        padding: '10px 14px',
+        background: 'var(--card)', border: '1px solid var(--border)',
+        borderRadius: 'var(--r-md)', fontSize: 13, fontWeight: 600,
+      }}>
+        <span style={{ fontSize: 16 }}>📖</span>
+        <span>{t(S.glossaryTitle, locale)}</span>
+        <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--fg-subtle)', fontWeight: 400 }}>
+          {t(S.glossaryHint, locale)}
+        </span>
+      </summary>
+
+      <div style={{ marginTop: 6, padding: '14px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 8 }}>
+          {terms.map(entry => {
+            const isOpen = openKey === entry.key;
+            const termStr = t(entry.term, locale);
+            const bodyStr = t(entry.body, locale);
+            return (
+              <button
+                key={entry.key}
+                onClick={() => setOpenKey(isOpen ? null : entry.key)}
+                style={{
+                  background: isOpen ? 'var(--em-soft)' : 'var(--bg-subtle)',
+                  border: `1px solid ${isOpen ? 'color-mix(in srgb, var(--em-500) 30%, transparent)' : 'var(--border)'}`,
+                  borderRadius: 'var(--r-md)', padding: '10px 12px',
+                  textAlign: 'left', cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', gap: 6,
+                  transition: 'background 0.15s',
+                }}
+              >
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  fontSize: 12, fontWeight: 700, color: isOpen ? 'var(--em-600)' : 'var(--fg)',
+                }}>
+                  <span style={{ fontSize: 11, color: isOpen ? 'var(--em-500)' : 'var(--fg-faint)' }}>
+                    {isOpen ? '▼' : '▶'}
+                  </span>
+                  {termStr}
+                </div>
+                {isOpen && (
+                  <p style={{
+                    margin: 0, fontSize: 12.5, lineHeight: 1.7,
+                    color: 'var(--fg)', whiteSpace: 'pre-line',
+                  }}>
+                    {bodyStr}
+                  </p>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </details>
   );
 }
 
@@ -575,6 +699,9 @@ export function MorningBriefingBoard() {
           {tier2.map(item => <Tier2Row key={item.symbol} item={item} locale={locale} />)}
         </div>
       </div>
+
+      {/* ── 용어 설명 ── */}
+      <GlossarySection locale={locale} />
 
       {/* ── SNS 공유 ── */}
       <ShareSection text={shareText} locale={locale} />

@@ -305,7 +305,7 @@ export function TrackBoard() {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <div>
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{tl(S.title)}</h2>
-            <div style={{ fontSize: 13, color: 'var(--em-500)', marginTop: 2 }}>{tl(S.subtitle)}</div>
+            <div style={{ fontSize: 13, color: 'var(--fg-muted)', marginTop: 2 }}>{tl(S.subtitle)}</div>
           </div>
           <button
             className="btn"
@@ -319,15 +319,15 @@ export function TrackBoard() {
 
         {/* ── 방법론 배너 ───────────────────────────────────────────────── */}
         <div style={{
-          background: 'var(--card)', border: '1px solid var(--border)',
-          borderRadius: 8, padding: '10px 14px',
-          fontSize: 12, color: 'var(--em-500)',
+          background: 'var(--em-soft)', border: '1px solid color-mix(in srgb, var(--em-500) 20%, transparent)',
+          borderRadius: 'var(--r-md)', padding: '10px 14px',
+          fontSize: 12, color: 'var(--em-600)',
           display: 'flex', alignItems: 'center', gap: 8,
         }}>
           <span style={{ fontSize: 15 }}>🔍</span>
           <span>{tl(S.methodNote)}</span>
           {bsl && (
-            <span style={{ marginLeft: 'auto', color: 'var(--em-500)', whiteSpace: 'nowrap' }}>
+            <span style={{ marginLeft: 'auto', color: 'var(--em-600)', whiteSpace: 'nowrap' }}>
               {lc === 'ko' ? '백테스트 기준' : 'BT baseline'}: +{bsl.expectancy_r}R · {(bsl.win_rate * 100).toFixed(1)}% · {bsl.n}{lc === 'ko' ? '건' : ' trades'}
             </span>
           )}
@@ -396,68 +396,58 @@ export function TrackBoard() {
              className="mob-wrap">
           {/* 총 신호 */}
           <div className="card" style={{ padding: '14px 16px' }}>
-            <div style={{ fontSize: 12, color: 'var(--em-500)', marginBottom: 4 }}>{tl(S.totalTrades)}</div>
-            <div style={{ fontSize: 29, fontWeight: 800 }}>{stats?.n_total ?? '—'}</div>
-            <div style={{ fontSize: 12, color: 'var(--em-500)', marginTop: 4 }}>
+            <div className="kpi__label">{tl(S.totalTrades)}</div>
+            <div className="kpi__val" style={{ fontSize: 28 }}>{stats?.n_total ?? '—'}</div>
+            <div className="kpi__sub">
               {stats?.n_closed ?? 0} {tl(S.closed)} · {stats?.n_active ?? 0} {tl(S.active)} · {stats?.n_pending ?? 0} {tl(S.pending)}
             </div>
           </div>
 
           {/* 승률 */}
           <div className="card" style={{ padding: '14px 16px' }}>
-            <div style={{ fontSize: 12, color: 'var(--em-500)', marginBottom: 4 }}>{tl(S.winRate)}</div>
-            <div style={{ fontSize: 29, fontWeight: 800, color: stats?.win_rate ? (stats.win_rate >= 0.35 ? 'var(--bull)' : 'var(--bear)') : undefined }}>
+            <div className="kpi__label">{tl(S.winRate)}</div>
+            <div className="kpi__val" style={{ fontSize: 28, color: stats?.win_rate ? (stats.win_rate >= 0.35 ? 'var(--bull)' : 'var(--bear)') : undefined }}>
               {fmtPct(stats?.win_rate)}
             </div>
-            {bsl && (
-              <div style={{ fontSize: 12, color: 'var(--em-500)', marginTop: 4 }}>
-                {tl(S.vsBt)} {fmtPct(bsl.win_rate)}
-              </div>
-            )}
+            {bsl && <div className="kpi__sub">{tl(S.vsBt)} {fmtPct(bsl.win_rate)}</div>}
           </div>
 
           {/* 기대값 */}
           <div className="card" style={{ padding: '14px 16px' }}>
-            <div style={{ fontSize: 12, color: 'var(--em-500)', marginBottom: 4 }}>{tl(S.expectancy)}</div>
-            <div style={{ fontSize: 29, fontWeight: 800, color: stats?.expectancy_r ? ((stats.expectancy_r ?? 0) >= 0 ? 'var(--bull)' : 'var(--bear)') : undefined }}>
+            <div className="kpi__label">{tl(S.expectancy)}</div>
+            <div className="kpi__val" style={{ fontSize: 28, color: stats?.expectancy_r ? ((stats.expectancy_r ?? 0) >= 0 ? 'var(--bull)' : 'var(--bear)') : undefined }}>
               {fmtR(stats?.expectancy_r)}
             </div>
-            {bsl && (
-              <div style={{ fontSize: 12, color: 'var(--em-500)', marginTop: 4 }}>
-                {tl(S.vsBt)} +{bsl.expectancy_r}R
-              </div>
-            )}
+            {bsl && <div className="kpi__sub">{tl(S.vsBt)} +{bsl.expectancy_r}R</div>}
           </div>
 
           {/* 손익비 + MDD */}
           <div className="card" style={{ padding: '14px 16px' }}>
-            <div style={{ fontSize: 12, color: 'var(--em-500)', marginBottom: 4 }}>{tl(S.profitFactor)}</div>
-            <div style={{ fontSize: 29, fontWeight: 800 }}>
+            <div className="kpi__label">{tl(S.profitFactor)}</div>
+            <div className="kpi__val" style={{ fontSize: 28 }}>
               {stats?.profit_factor?.toFixed(2) ?? '—'}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--em-500)', marginTop: 4 }}>
-              {tl(S.mdd)}: {stats?.mdd != null ? `${stats.mdd.toFixed(1)}%` : '—'}
-            </div>
+            <div className="kpi__sub">{tl(S.mdd)}: {stats?.mdd != null ? `${stats.mdd.toFixed(1)}%` : '—'}</div>
           </div>
         </div>
 
         {/* ── 자산곡선 ──────────────────────────────────────────────────── */}
         <div className="card">
           <div className="card__hd" style={{ marginBottom: 8 }}>
-            <span className="card__title">{tl(S.equityCurve)}</span>
+            <h3>{tl(S.equityCurve)}</h3>
             {stats && (
-              <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--em-500)' }}>
+              <small>
                 {stats.wins}W / {stats.losses}L / {stats.timeouts}T
                 {stats.avg_win_r != null && stats.avg_loss_r != null && (
                   <> · avg {fmtR(stats.avg_win_r)} / {fmtR(stats.avg_loss_r)}</>
                 )}
-              </span>
+              </small>
             )}
           </div>
           {stats ? (
             <EquityCurveSVG stats={stats} locale={lc} />
           ) : (
-            <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--em-500)', fontSize: 13 }}>
+            <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-muted)', fontSize: 13 }}>
               {statsLoading ? (lc === 'ko' ? '로딩 중…' : 'Loading…') : '—'}
             </div>
           )}
@@ -470,13 +460,11 @@ export function TrackBoard() {
           {/* 파이프라인 */}
           <div className="card">
             <div className="card__hd" style={{ marginBottom: 8 }}>
-              <span className="card__title">{tl(S.pipeline)}</span>
-              <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--em-500)' }}>
-                {pipeline.length} {lc === 'ko' ? '건' : 'signals'}
-              </span>
+              <h3>{tl(S.pipeline)}</h3>
+              <small>{pipeline.length} {lc === 'ko' ? '건' : 'signals'}</small>
             </div>
             {pipeline.length === 0 ? (
-              <div style={{ color: 'var(--em-500)', fontSize: 13, padding: '8px 0' }}>{tl(S.noPipeline)}</div>
+              <div style={{ color: 'var(--fg-muted)', fontSize: 13, padding: '8px 0' }}>{tl(S.noPipeline)}</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {pipeline.map(item => (
@@ -489,10 +477,10 @@ export function TrackBoard() {
           {/* 레짐별 성과 */}
           <div className="card">
             <div className="card__hd" style={{ marginBottom: 8 }}>
-              <span className="card__title">{tl(S.regimeBreak)}</span>
+              <h3>{tl(S.regimeBreak)}</h3>
             </div>
             {!stats || Object.keys(stats.regime_breakdown).length === 0 ? (
-              <div style={{ color: 'var(--em-500)', fontSize: 13, padding: '8px 0' }}>{tl(S.noRegime)}</div>
+              <div style={{ color: 'var(--fg-muted)', fontSize: 13, padding: '8px 0' }}>{tl(S.noRegime)}</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {Object.entries(stats.regime_breakdown).map(([regime, data]) => {
@@ -504,7 +492,7 @@ export function TrackBoard() {
                         <span style={{ fontWeight: 600 }}>{regime}</span>
                         <span style={{ color: col, fontWeight: 700 }}>{fmtR(data.expectancy_r)}</span>
                       </div>
-                      <div style={{ fontSize: 12, color: 'var(--em-500)' }}>
+                      <div style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
                         {data.n}{tl(S.nTrades)} · {fmtPct(data.win_rate)}
                       </div>
                       {/* 막대 */}
@@ -526,7 +514,7 @@ export function TrackBoard() {
         {/* ── 신호 이력 테이블 ──────────────────────────────────────────── */}
         <div className="card">
           <div className="card__hd" style={{ marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
-            <span className="card__title">{tl(S.history)}</span>
+            <h3>{tl(S.history)}</h3>
             {/* 상태 필터 */}
             <div style={{ display: 'flex', gap: 4, marginLeft: 'auto', flexWrap: 'wrap' }}>
               {(['ALL', 'WIN', 'LOSS', 'TIMEOUT', 'CANCELLED'] as const).map(s => (
@@ -536,7 +524,7 @@ export function TrackBoard() {
                   style={{
                     fontSize: 11, padding: '3px 9px', borderRadius: 10, border: 'none', cursor: 'pointer',
                     background: statusFilter === s ? statusColor(s === 'ALL' ? 'ACTIVE' : s) : 'var(--border)',
-                    color: statusFilter === s ? 'var(--bg)' : 'var(--em-500)',
+                    color: statusFilter === s ? 'var(--bg)' : 'var(--fg-muted)',
                     fontWeight: 600,
                   }}
                 >
@@ -547,7 +535,7 @@ export function TrackBoard() {
           </div>
 
           {filteredEntries.length === 0 ? (
-            <div style={{ color: 'var(--em-500)', fontSize: 13, padding: '8px 0' }}>{tl(S.noHistory)}</div>
+            <div style={{ color: 'var(--fg-muted)', fontSize: 13, padding: '8px 0' }}>{tl(S.noHistory)}</div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table className="tbl" style={{ minWidth: 600 }}>
@@ -572,7 +560,7 @@ export function TrackBoard() {
                                 : undefined
                     }}>
                       <td style={{ fontWeight: 700 }}>{entry.symbol}</td>
-                      <td style={{ color: 'var(--em-500)', fontSize: 12 }}>{entry.signal_date}</td>
+                      <td style={{ color: 'var(--fg-subtle)', fontSize: 12 }}>{entry.signal_date}</td>
                       <td style={{ textAlign: 'center' }}>
                         <span style={{
                           fontSize: 12, fontWeight: 700,
@@ -596,7 +584,7 @@ export function TrackBoard() {
                          : entry.status}
                         </span>
                         {entry.exit_date && (
-                          <div style={{ fontSize: 11, color: 'var(--em-500)' }}>{entry.exit_date}</div>
+                          <div style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>{entry.exit_date}</div>
                         )}
                       </td>
                       <td style={{
