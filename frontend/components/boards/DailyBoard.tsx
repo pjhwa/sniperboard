@@ -250,7 +250,7 @@ export function DailyBoard() {
       </Card>
 
       {/* R:R + patterns */}
-      <Card title={t(S.rrTitle, locale)} info={{ term: t(G.rr_ratio.term, locale), body: t(G.rr_ratio.body, locale) }}>
+      <Card title={t(S.rrTitle, locale)} info={{ term: t(G.rr_ratio.term, locale), body: t(G.rr_ratio.body, locale) }} style={{ minHeight: 0 }}>
         {stage2 ? (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>

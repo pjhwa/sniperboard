@@ -388,7 +388,7 @@ body {
   color: var(--fg-subtle);
   white-space: nowrap; flex-shrink: 0;
 }
-.card__bd { padding: 8px 14px 14px; flex: 1; min-height: 0; }
+.card__bd { padding: 8px 14px 14px; flex: 1; min-height: 0; overflow-y: auto; }
 .card__bd--flush { padding: 0; }
 
 .card-flag {
@@ -1041,7 +1041,7 @@ body {
   /* ── 카드 body 높이 보정 ──────────────────────────────────────────
      flex: 1 + min-height: 0 조합이 모바일 flex 컨테이너에서 높이 0으로
      붕괴하는 문제 방지. none으로 자연 높이 사용. */
-  .card__bd { flex: none; }
+  .card__bd { flex: none; overflow-y: visible; }
 
   /* ── 모든 내부 그리드/flex → 1열 강제 ───────────────────────────
      카드 내부의 다열 그리드가 모바일에서 너무 좁아지는 문제 해결 */
