@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useMorningBriefing, MorningWatchlistItem, MorningSpotlight } from '@/hooks/useMorningBriefing';
 import { Card } from '@/components/ui/Card';
@@ -402,7 +402,7 @@ function GlossarySection({ locale }: { locale: Locale }) {
 }
 
 // ── 서브컴포넌트: SNS 공유 ────────────────────────────────────────────────────
-function ShareSection({ text, locale }: { text: string; locale: Locale }) {
+function ShareSection({ text, locale, forceOpen = false }: { text: string; locale: Locale; forceOpen?: boolean }) {
   const [copied, setCopied] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
@@ -438,6 +438,42 @@ function ShareSection({ text, locale }: { text: string; locale: Locale }) {
     }
   };
 
+  const inner = (
+    <div style={{ padding: '12px 14px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <span style={{ fontSize: 16 }}>📤</span>
+        <span style={{ fontSize: 13, fontWeight: 600 }}>{t(S.snsTitle, locale)}</span>
+        <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--fg-subtle)' }}>
+          {t(S.snsHint, locale)}
+        </span>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <button
+          onClick={copy}
+          className={`badge ${copied ? 'bull' : 'neutral'}`}
+          style={{ cursor: 'pointer', border: 'none', padding: '5px 16px', fontSize: 12, fontWeight: 600 }}
+        >
+          {copied ? t(S.snsCopied, locale) : t(S.snsCopy, locale)}
+        </button>
+      </div>
+      <textarea
+        ref={taRef}
+        readOnly value={text}
+        style={{
+          width: '100%', height: 340,
+          background: 'var(--bg-muted)', border: '1px solid var(--border)',
+          borderRadius: 'var(--r-sm)', padding: '10px 12px',
+          fontFamily: 'var(--font-mono)', fontSize: 12, lineHeight: 1.7,
+          color: 'var(--fg)', resize: 'vertical', outline: 'none',
+        }}
+      />
+    </div>
+  );
+
+  if (forceOpen) {
+    return <div style={{ width: '100%' }}>{inner}</div>;
+  }
+
   return (
     <details style={{ gridColumn: 'span 4' }}>
       <summary style={{
@@ -453,28 +489,7 @@ function ShareSection({ text, locale }: { text: string; locale: Locale }) {
           {t(S.snsHint, locale)}
         </span>
       </summary>
-      <div style={{ marginTop: 6, padding: '12px 14px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)' }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-          <button
-            onClick={copy}
-            className={`badge ${copied ? 'bull' : 'neutral'}`}
-            style={{ cursor: 'pointer', border: 'none', padding: '5px 16px', fontSize: 12, fontWeight: 600 }}
-          >
-            {copied ? t(S.snsCopied, locale) : t(S.snsCopy, locale)}
-          </button>
-        </div>
-        <textarea
-          ref={taRef}
-          readOnly value={text}
-          style={{
-            width: '100%', height: 340,
-            background: 'var(--bg-muted)', border: '1px solid var(--border)',
-            borderRadius: 'var(--r-sm)', padding: '10px 12px',
-            fontFamily: 'var(--font-mono)', fontSize: 12, lineHeight: 1.7,
-            color: 'var(--fg)', resize: 'vertical', outline: 'none',
-          }}
-        />
-      </div>
+      <div style={{ marginTop: 6 }}>{inner}</div>
     </details>
   );
 }
@@ -483,6 +498,14 @@ function ShareSection({ text, locale }: { text: string; locale: Locale }) {
 export function MorningBriefingBoard() {
   const { locale } = useStore();
   const { briefingData, briefingMeta, available, isLoading, error } = useMorningBriefing();
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   if (isLoading) {
     return (
@@ -508,6 +531,27 @@ export function MorningBriefingBoard() {
   }
 
   const d = briefingData;
+
+  // ── 모바일: 공유 카드만 표시 ───────────────────────────────────────────────
+  if (isMobile) {
+    const shareText = buildShareText(d, locale);
+    const dateStr = d.generated_at
+      ? new Date(d.generated_at).toLocaleDateString(locale === 'ko' ? 'ko-KR' : 'en-US', {
+          timeZone: 'Asia/Seoul', month: 'short', day: 'numeric',
+        })
+      : '';
+    return (
+      <div className="board fade-in" style={{ alignContent: 'start' }}>
+        <div className="card" style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 16 }}>📰</span>
+          <span style={{ fontWeight: 700, fontSize: 13 }}>{t(S.headline, locale)}</span>
+          {dateStr && <span style={{ fontSize: 11, color: 'var(--fg-muted)' }}>{dateStr}</span>}
+          {briefingMeta && <AgeBadge minutes={briefingMeta.age_minutes} />}
+        </div>
+        <ShareSection text={shareText} locale={locale} forceOpen />
+      </div>
+    );
+  }
   const mood  = d.market_mood;
   const bp    = d.big_picture;
   const sa    = d.sector_analysis;
