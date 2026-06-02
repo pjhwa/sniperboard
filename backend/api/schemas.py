@@ -484,6 +484,91 @@ class SignalLogStats(BaseModel):
     backtest_baseline: BacktestBaseline
 
 
+# --- Morning Briefing (아침 브리핑) ---
+
+class MorningMood(BaseModel):
+    traffic_light: str           # green / yellow / red
+    label_en: Optional[str] = None
+    label_ko: Optional[str] = None
+    score: Optional[float] = None
+    explanation_en: Optional[str] = None
+    explanation_ko: Optional[str] = None
+
+class MorningBigPicture(BaseModel):
+    summary_en: Optional[str] = None
+    summary_ko: Optional[str] = None
+    vix_note_en: Optional[str] = None
+    vix_note_ko: Optional[str] = None
+    rates_note_en: Optional[str] = None
+    rates_note_ko: Optional[str] = None
+    dollar_note_en: Optional[str] = None
+    dollar_note_ko: Optional[str] = None
+
+class MorningSectorAnalysis(BaseModel):
+    leaders_en: Optional[str] = None
+    leaders_ko: Optional[str] = None
+    laggards_en: Optional[str] = None
+    laggards_ko: Optional[str] = None
+    rotation_signal_en: Optional[str] = None
+    rotation_signal_ko: Optional[str] = None
+
+class MorningSpotlight(BaseModel):
+    symbol: str
+    company: str
+    tier: int = 1
+    why_en: Optional[str] = None
+    why_ko: Optional[str] = None
+    watch_level_en: Optional[str] = None
+    watch_level_ko: Optional[str] = None
+
+class MorningWatchlistItem(BaseModel):
+    symbol: str
+    company: str
+    tier: int = 1
+    price: Optional[float] = None
+    stage2_score: Optional[int] = None
+    analysis_en: Optional[str] = None   # flowing narrative in English
+    analysis_ko: Optional[str] = None   # flowing narrative in Korean
+    sentiment_mood: Optional[str] = None  # optimistic/cautious/neutral/fearful/euphoric
+    sentiment_score: Optional[float] = None
+    action: str = "watch"               # buy / hold / watch / avoid
+    # v1 compat fields (kept Optional so old data still parses)
+    price_trend_en: Optional[str] = None
+    price_trend_ko: Optional[str] = None
+    condition_en: Optional[str] = None
+    condition_ko: Optional[str] = None
+    squeeze_potential: Optional[str] = None
+    squeeze_note_en: Optional[str] = None
+    squeeze_note_ko: Optional[str] = None
+    correction_risk: Optional[str] = None
+    correction_note_en: Optional[str] = None
+    correction_note_ko: Optional[str] = None
+
+class MorningBriefingData(BaseModel):
+    generated_at: Optional[str] = None
+    schema_version: Optional[str] = None
+    slot: Optional[str] = None
+    headline_en: Optional[str] = None
+    headline_ko: Optional[str] = None
+    executive_bullets_en: List[str] = []
+    executive_bullets_ko: List[str] = []
+    market_mood: Optional[MorningMood] = None
+    big_picture: Optional[MorningBigPicture] = None
+    sector_analysis: Optional[MorningSectorAnalysis] = None
+    spotlight: List[MorningSpotlight] = []
+    watchlist: List[MorningWatchlistItem] = []
+    today_checkpoints_en: List[str] = []
+    today_checkpoints_ko: List[str] = []
+    earnings_alert_en: Optional[str] = None
+    earnings_alert_ko: Optional[str] = None
+
+class MorningBriefingResponse(BaseModel):
+    available: bool
+    data: Optional[MorningBriefingData] = None
+    error: Optional[str] = None
+    meta: Optional[FreshnessMeta] = None
+
+
 class SignalLogResponse(BaseModel):
     entries: List[SignalLogEntry]
     total: int

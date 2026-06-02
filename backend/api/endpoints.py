@@ -15,11 +15,12 @@ from api.schemas import (
     MacroResponse, MacroInsightResponse, MacroOverallInsight, MacroGroupInsight, MacroAiMeta,
     RegimeResponse, DistributionDayResponse, SentimentResponse,
     BriefResponse, EarningsResponse, SentimentHistoryResponse, PrePostResponse,
-    SignalLogResponse, SignalLogStats,
+    SignalLogResponse, SignalLogStats, MorningBriefingResponse,
 )
 from services.sentiment_service import fetch_latest, enrich_with_delta, fetch_today_slots, fetch_sentiment_history
 from services.overnight_service import get_overnight_price
 from services.brief_service import fetch_brief
+from services.morning_briefing_service import fetch_morning_briefing
 from services.earnings_service import fetch_earnings
 from core.macro_rules import compute_macro_signals
 from services.macro_insight_service import fetch_macro_insight, get_ai_meta
@@ -665,6 +666,21 @@ async def get_brief_endpoint():
     except Exception as e:
         logger.error(f"Error in /brief endpoint: {e}", exc_info=True)
         return {"available": False, "error": "Brief 데이터 처리 중 오류 발생"}
+
+
+@router.get("/morning-briefing", response_model=MorningBriefingResponse)
+async def get_morning_briefing_endpoint():
+    """아침 브리핑 최신 스냅샷. 실패 시 available:false로 200 반환."""
+    try:
+        result = fetch_morning_briefing()
+        if not result.get("available"):
+            return {"available": False, "error": result.get("error", "데이터 없음")}
+        data = result["data"]
+        gen_at = data.get("generated_at") if isinstance(data, dict) else None
+        return {"available": True, "data": data, "meta": _freshness_meta(gen_at)}
+    except Exception as e:
+        logger.error(f"Error in /morning-briefing endpoint: {e}", exc_info=True)
+        return {"available": False, "error": "브리핑 데이터 처리 중 오류 발생"}
 
 
 @router.get("/earnings", response_model=EarningsResponse)

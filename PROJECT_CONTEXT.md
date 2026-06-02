@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-06-02 competitive-improvements)
+# SniperBoard — Project Context (UPDATED 2026-06-02 morning-briefing-board)
 
 ## 0. Purpose of This Document
 
@@ -43,6 +43,7 @@ sniperboard/
 │   │   ├── earnings_service.py   # GitHub raw fetch + 60-min in-memory cache (EARNINGS_DATA_URL)
 │   │   └── overnight_service.py  # Yahoo Finance WebSocket → Blue Ocean ATS overnight price stream. Runs in a dedicated daemon thread (asyncio.run in thread) — NOT in uvicorn's event loop, to avoid handshake timeouts caused by blocking yfinance I/O. Protobuf base64 parsing (field1=symbol, field2=price/float32, field6=session_hours/varint:8=overnight, field12=chg_pct). start_overnight_service() called in FastAPI lifespan; spawns threading.Thread(daemon=True).
 │   │   └── macro_insight_service.py  # GitHub raw fetch + 30-min in-memory cache (MACRO_INSIGHT_URL). fetch_macro_insight() → Optional[dict]. get_ai_meta(raw) → {generated_at,age_minutes}. Returns None gracefully if URL not set.
+│   │   └── morning_briefing_service.py  # GitHub raw fetch + 10-min in-memory cache (MORNING_BRIEFING_URL). fetch_morning_briefing() → {available, data}. 하루 1회 KST 07:30 생성.
 │   └── tests/
 │       ├── test_data_adapter.py (29 tests — adapter + signal_engine; Phase 5 full suite green)
 │       ├── test_signal_engine.py (incl. adjusted vs raw split symbol TDD)
@@ -88,7 +89,8 @@ sniperboard/
 │   │   │   └── BacktestBoard.tsx  # 백테스트 결과 화면 (2026-06-02). 방법론 배너(투명성) + KPI 4카드(총거래/승률/기대값/손익비) + IS vs OOS 비교 + Stage2 점수별 분해 + SVG 자산곡선 + 종목별 성과 테이블 + 실행 버튼. useBacktest() hook 사용. GET /api/backtest/result 조회, POST /api/backtest/run 실행.
 │   │   └── backtest_engine.py        # (unchanged)
 │   │   └── signal_tracker.py         # 실거래 신호 트래킹 (2026-06-02). SQLite persistence (backend/data/signal_log.db). init_db() → 앱 시작 시 호출. scan_and_log(watchlist_items, regime) → Stage2 >= 5 신호 자동 로깅 (UNIQUE on symbol+signal_date, OPEN 신호 중복 방지). update_outcomes() → PENDING/ACTIVE 신호를 최신 일봉으로 바 단위 시뮬레이션하여 WIN/LOSS/TIMEOUT/CANCELLED 갱신 (get_multi_daily period="6mo" 사용). compute_live_stats() → n_closed/win_rate/expectancy_r/profit_factor/mdd/equity_curve/regime_breakdown/pipeline + health{status/confidence/deltas} + backtest_baseline. BACKTEST_BASELINE = {expectancy_r:0.460, win_rate:0.386, profit_factor:1.917, n:145}. 헬스 판단: expectancy_r >= 0.7*baseline → ON_TRACK, >= 0.0 → WATCH, < 0 → UNDERPERFORMING, n < 10 → INSUFFICIENT_DATA.
-│   │   │   └── TrackBoard.tsx     # 실거래 트래킹 화면 (2026-06-02). 경쟁 차별화 핵심: 모든 신호 자동 기록 + 결과 추적 + 백테스트 기준값(+0.460R) 대조. 구성: 모델헬스 배너(ON_TRACK/WATCH/UNDERPERFORMING/INSUFFICIENT_DATA) + KPI 4카드(총신호/승률/기대값/손익비) + SVG 누적R 곡선(라이브+백테스트 기준선 비교) + 현재 파이프라인(PENDING/ACTIVE 신호) + 레짐별 성과 분해 + 신호 이력 테이블(상태 필터). useSignalLog/useSignalLogStats/useRefreshSignalLog hooks. GET /api/signal-log, /api/signal-log/stats, POST /api/signal-log/refresh.
+│   │   │   └── TrackBoard.tsx     # 실거래 트래킹 화면
+│   │   │   └── MorningBriefingBoard.tsx  # 아침 브리핑 화면 (2026-06-02). 카드형 레이아웃. 섹션: 헤드라인 배너 / 시장분위기(교통신호) + 핵심요약 / 큰그림(VIX·금리·달러) / 섹터분석 / 스포트라이트(2-4종목) / 전체감시종목(21개 expandable 행: 스퀴즈가능성+조정리스크+주가흐름+현재상태) / 오늘체크포인트 + 실적알림. useMorningBriefing() hook → GET /api/morning-briefing (10분 staleTime). (2026-06-02). 경쟁 차별화 핵심: 모든 신호 자동 기록 + 결과 추적 + 백테스트 기준값(+0.460R) 대조. 구성: 모델헬스 배너(ON_TRACK/WATCH/UNDERPERFORMING/INSUFFICIENT_DATA) + KPI 4카드(총신호/승률/기대값/손익비) + SVG 누적R 곡선(라이브+백테스트 기준선 비교) + 현재 파이프라인(PENDING/ACTIVE 신호) + 레짐별 성과 분해 + 신호 이력 테이블(상태 필터). useSignalLog/useSignalLogStats/useRefreshSignalLog hooks. GET /api/signal-log, /api/signal-log/stats, POST /api/signal-log/refresh.
 │   │   │   └── SentimentTrendChart.tsx # Sentiment trend chart: stock price line (left axis) + composite_score overlay (right axis), 7/30d toggle
 │   │   ├── charts/               # lightweight-charts components
 │   │   │   ├── IntradayChart.tsx
@@ -131,6 +133,7 @@ Base URL: `http://<host>:4000/api` (via Next.js proxy) or `http://<host>:5001/ap
 | `GET /brief` | — | AI Daily Brief JSON (GitHub raw 30-min cache) + `meta: {fetched_at, age_minutes, source}` |
 | `GET /earnings` | — | Earnings Intelligence JSON (GitHub raw 60-min cache) + `meta: {fetched_at, age_minutes, source}` |
 | `GET /macro/insight` | — | 6 group traffic lights (signal/direction) + AI interpretation text (text/text_en/text_ko) + overall judgment + summary/summary_en/summary_ko + bullets/bullets_en/bullets_ko + ai_meta (age_minutes). Rule-based real-time + GitHub-cached AI overlay. |
+| `GET /morning-briefing` | — | 아침 브리핑 JSON (GitHub raw 10분 캐시). briefing/latest.json. 필드: headline/executive_bullets/market_mood/big_picture/sector_analysis/spotlight/watchlist(21종목 스퀴즈·조정)/today_checkpoints/earnings_alert. |
 | `GET /backtest/result` | — | 캐시된 백테스트 결과 JSON. 없으면 404. 구조: generated_at/config(rs_threshold/use_spy_filter 포함)/methodology/aggregate(all/in_sample/out_of_sample)/breakdown_by_score/by_symbol. |
 | `POST /backtest/run` | `symbols[]` (optional), `threshold` (1-7, default 5), `rs_threshold` (0-100, default 70), `use_spy_filter` (bool, default true) | 백테스트 즉시 실행 + 캐시 저장 후 요약 반환. symbols 미지정 시 WATCHLIST_SYMS 전체. 수십 초 소요. |
 | `POST /backtest/sweep` | `symbols[]` (optional) | 8개 파라미터 조합 스윕 실행 + 비교 결과 반환. 수분 소요. |
@@ -465,6 +468,7 @@ Docker Compose passes `BACKEND_URL=http://backend:8000` as both a build arg (for
 | `BRIEF_DATA_URL` | Optional | AI Insight falls back to Regime text | AI Brief JSON GitHub raw URL |
 | `EARNINGS_DATA_URL` | Optional | Earnings Calendar card hidden | Earnings Intelligence JSON GitHub raw URL |
 | `MACRO_INSIGHT_URL` | Optional | Macro Insight card has no AI text | Macro Insight JSON GitHub raw URL (macro/latest.json) |
+| `MORNING_BRIEFING_URL` | Optional | Morning Briefing board shows "not yet available" | Morning Briefing JSON GitHub raw URL (briefing/latest.json) |
 | `SENTIMENT_DATA_TOKEN` | Optional | Not needed for public repos | GitHub PAT — set only when data repo is private |
 
 #### Cache TTL (backend in-memory)

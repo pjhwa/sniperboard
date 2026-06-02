@@ -119,6 +119,7 @@ export function Topbar() {
     sentiment: { en: 'Sentiment', ko: '심리' },
     backtest:  { en: 'Backtest',  ko: '백테스트' },
     track:     { en: 'Signal Tracker', ko: '신호 트래커' },
+    briefing:  { en: 'Morning Briefing', ko: '아침 브리핑' },
   };
 
   const current = BOARD_LABELS[board] ?? BOARD_LABELS.overview;
