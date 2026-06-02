@@ -354,6 +354,7 @@ MACRO_SYMBOLS = {
     "TLT":      "Long Bond ETF (TLT)",
     "CL=F":     "WTI Crude Oil",
     "GLD":      "Gold ETF (GLD)",
+    "BTC-USD":  "Bitcoin (BTC)",
     # Indices
     "SPY":      "S&P 500 (SPY)",
     "QQQ":      "Nasdaq 100 (QQQ)",

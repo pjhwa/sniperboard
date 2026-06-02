@@ -81,13 +81,25 @@ def test_rates_tlt_below_ema21_and_tnx_rsi_high_is_red():
 
 
 # --- 원자재 ---
-def test_commodities_both_5d_positive_is_green():
-    items = [_item("GLD", chg5d=1.0), _item("CL=F", chg5d=0.5)]
+def test_commodities_all_3_positive_is_green():
+    items = [_item("GLD", chg5d=1.0), _item("CL=F", chg5d=0.5), _item("BTC-USD", chg5d=2.0)]
     assert compute_commodities_signal(items)["signal"] == "green"
 
-def test_commodities_both_5d_negative_is_red():
-    items = [_item("GLD", chg5d=-1.0), _item("CL=F", chg5d=-0.5)]
+def test_commodities_2_of_3_positive_is_green():
+    items = [_item("GLD", chg5d=1.0), _item("CL=F", chg5d=-0.5), _item("BTC-USD", chg5d=2.0)]
+    assert compute_commodities_signal(items)["signal"] == "green"
+
+def test_commodities_1_of_3_positive_is_yellow():
+    items = [_item("GLD", chg5d=1.0), _item("CL=F", chg5d=-0.5), _item("BTC-USD", chg5d=-1.0)]
+    assert compute_commodities_signal(items)["signal"] == "yellow"
+
+def test_commodities_all_3_negative_is_red():
+    items = [_item("GLD", chg5d=-1.0), _item("CL=F", chg5d=-0.5), _item("BTC-USD", chg5d=-2.0)]
     assert compute_commodities_signal(items)["signal"] == "red"
+
+def test_commodities_btc_missing_falls_back_to_2_assets():
+    items = [_item("GLD", chg5d=1.0), _item("CL=F", chg5d=0.5)]
+    assert compute_commodities_signal(items)["signal"] == "green"
 
 
 # --- 섹터 ETF ---

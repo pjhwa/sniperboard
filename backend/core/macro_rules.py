@@ -66,8 +66,18 @@ def compute_rates_signal(items: list[dict]) -> dict:
 def compute_commodities_signal(items: list[dict]) -> dict:
     gld = _get(items, "GLD")
     cl = _get(items, "CL=F")
-    positives = sum(1 for m in [gld, cl] if m and (m.get("change_pct_5d") or 0) > 0)
-    signal = "green" if positives == 2 else "red" if positives == 0 else "yellow"
+    btc = _get(items, "BTC-USD")
+    assets = [m for m in [gld, cl, btc] if m is not None]
+    positives = sum(1 for m in assets if (m.get("change_pct_5d") or 0) > 0)
+    total = len(assets)
+    if total == 0:
+        signal = "yellow"
+    elif positives >= max(2, (total + 1) // 2):
+        signal = "green"
+    elif positives == 0:
+        signal = "red"
+    else:
+        signal = "yellow"
     return {"signal": signal, "direction": _direction(gld)}
 
 
