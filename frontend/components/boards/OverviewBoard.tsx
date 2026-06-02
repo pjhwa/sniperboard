@@ -143,7 +143,7 @@ export function OverviewBoard() {
   const lqd   = findMacro(macro, 'LQD');
   const ief   = findMacro(macro, 'IEF');
 
-  const { briefData, briefMeta } = useBrief();
+  const { briefData, briefMeta, isLoading: briefLoading } = useBrief();
   const { earningsData, earningsMeta } = useEarnings();
 
   const [guideOpen, setGuideOpen] = useState(false);
@@ -189,7 +189,9 @@ export function OverviewBoard() {
             <FreshnessBadge meta={briefMeta} />
           </div>
           <div className="ai-card__body">
-            {briefData?.market_brief ? (
+            {briefLoading ? (
+              <div style={{ color: 'var(--fg-muted)' }}>{t(S.aiBriefLoading, locale)}</div>
+            ) : briefData?.market_brief ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <span className={`badge ${
@@ -272,8 +274,8 @@ export function OverviewBoard() {
                   const BIAS_COLORS = ['var(--bear)', 'var(--warn)', 'var(--teal)', 'var(--bull)'];
 
                   const briefMap = new Map((briefData.symbol_briefs ?? []).map(sb => [sb.symbol, sb]));
-                  // Brief는 TIER1 심볼만 커버 (데이터 수집 범위)
-                  const briefSymbols = TIER1_SYMBOLS.filter(sym => briefMap.has(sym) || briefMap.size === 0);
+                  // TIER1 11종목 모두 표시 — brief 데이터 없는 종목은 "분석 준비 중" 상태
+                  const briefSymbols = TIER1_SYMBOLS;
                   const items: (SymbolBrief | { symbol: string; pending: true })[] = briefSymbols.map(sym =>
                     briefMap.get(sym) ?? { symbol: sym, pending: true as const }
                   );
@@ -532,7 +534,7 @@ export function OverviewBoard() {
         {watchlist.length === 0 ? (
           <div className="subtle">{t(S.loading, locale)}</div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: 340, overflowY: 'auto' }}>
             {[...watchlist]
               .map(w => ({ ...w, entryDist: w.entry > 0 ? (w.entry - w.price) / w.price * 100 : 999 }))
               .sort((a, b) => a.entryDist - b.entryDist)
@@ -573,7 +575,7 @@ export function OverviewBoard() {
         {watchlist.length === 0 ? (
           <div className="subtle">{t(S.loading, locale)}</div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 340, overflowY: 'auto' }}>
             {[...watchlist]
               .sort((a, b) => (b.conviction_score ?? 0) - (a.conviction_score ?? 0))
               .map(w => {
