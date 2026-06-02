@@ -132,57 +132,88 @@ export function WatchlistBoard() {
                 </tr>
               </thead>
               <tbody>
-                {watchlist.map(w => (
-                  <tr
-                    key={w.symbol}
-                    className={w.symbol === symbol ? 'selected' : ''}
-                    onClick={() => { setSymbol(w.symbol); setBoard('deepdive'); }}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span className="sym-pill__badge" style={{ width: 22, height: 22, fontSize: 10 }}>{w.symbol[0]}</span>
-                        <span style={{ fontWeight: 600 }}>{w.symbol}</span>
-                      </div>
-                    </td>
-                    <td className="num">${w.price.toFixed(2)}</td>
-                    <td><ScorePill score={w.score} /></td>
-                    <td className="num" style={{ color: w.rs_score >= 70 ? 'var(--bull)' : w.rs_score >= 50 ? 'var(--teal)' : 'var(--bear)' }}>
-                      {w.rs_score}
-                    </td>
-                    <td className="num">{w.pct_from_52w_high.toFixed(1)}%</td>
-                    <td className="num" style={{ color: 'var(--info)' }}>${w.entry.toFixed(2)}</td>
-                    <td className="num" style={{ color: 'var(--bear)' }}>${w.stop.toFixed(2)}</td>
-                    <td className="num" style={{ color: 'var(--bull)' }}>${w.target.toFixed(2)}</td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 2 }}>
-                        {Object.values(w.checks).map((c, i) => (
-                          <div key={i} style={{ width: 8, height: 8, borderRadius: 2, background: c ? 'var(--bull)' : 'var(--border)' }} />
-                        ))}
-                      </div>
-                    </td>
-                    <td>
-                      {(() => {
-                        const mp = w.monthly_phase ?? 'UNKNOWN';
-                        const label = MP_SHORT[mp] ?? MP_SHORT.UNKNOWN;
-                        const color = MP_COLOR[mp] ?? MP_COLOR.UNKNOWN;
-                        return <span style={{ fontSize: 11, fontWeight: 600, color }}>{t(label, locale)}</span>;
-                      })()}
-                    </td>
-                    <td>
-                      <ConvictionBadge score={w.conviction_score ?? undefined} locale={locale} size="sm" />
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn--ghost"
-                        style={{ height: 24, padding: '0 8px', fontSize: 11 }}
-                        onClick={(e) => { e.stopPropagation(); setSymbol(w.symbol); setBoard('deepdive'); }}
-                      >
-                        {t(S.analyzeBtn, locale)} <ArrowRight />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {(() => {
+                  const tier1 = watchlist.filter(w => (w.tier ?? 1) === 1);
+                  const tier2 = watchlist.filter(w => (w.tier ?? 1) === 2);
+
+                  const renderRow = (w: typeof watchlist[number]) => (
+                    <tr
+                      key={w.symbol}
+                      className={w.symbol === symbol ? 'selected' : ''}
+                      onClick={() => { setSymbol(w.symbol); setBoard('deepdive'); }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span className="sym-pill__badge" style={{ width: 22, height: 22, fontSize: 10 }}>{w.symbol[0]}</span>
+                          <span style={{ fontWeight: 600 }}>{w.symbol}</span>
+                          <span style={{
+                            fontSize: 8, fontWeight: 700, padding: '1px 3px', borderRadius: 2,
+                            background: (w.tier ?? 1) === 1 ? 'rgba(56,189,248,0.15)' : 'rgba(167,139,250,0.15)',
+                            color: (w.tier ?? 1) === 1 ? 'var(--sky, #38bdf8)' : 'var(--purple, #a78bfa)',
+                          }}>T{w.tier ?? 1}</span>
+                        </div>
+                      </td>
+                      <td className="num">${w.price.toFixed(2)}</td>
+                      <td><ScorePill score={w.score} /></td>
+                      <td className="num" style={{ color: w.rs_score >= 70 ? 'var(--bull)' : w.rs_score >= 50 ? 'var(--teal)' : 'var(--bear)' }}>
+                        {w.rs_score}
+                      </td>
+                      <td className="num">{w.pct_from_52w_high.toFixed(1)}%</td>
+                      <td className="num" style={{ color: 'var(--info)' }}>${w.entry.toFixed(2)}</td>
+                      <td className="num" style={{ color: 'var(--bear)' }}>${w.stop.toFixed(2)}</td>
+                      <td className="num" style={{ color: 'var(--bull)' }}>${w.target.toFixed(2)}</td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 2 }}>
+                          {Object.values(w.checks).map((c, i) => (
+                            <div key={i} style={{ width: 8, height: 8, borderRadius: 2, background: c ? 'var(--bull)' : 'var(--border)' }} />
+                          ))}
+                        </div>
+                      </td>
+                      <td>
+                        {(() => {
+                          const mp = w.monthly_phase ?? 'UNKNOWN';
+                          const label = MP_SHORT[mp] ?? MP_SHORT.UNKNOWN;
+                          const color = MP_COLOR[mp] ?? MP_COLOR.UNKNOWN;
+                          return <span style={{ fontSize: 11, fontWeight: 600, color }}>{t(label, locale)}</span>;
+                        })()}
+                      </td>
+                      <td>
+                        <ConvictionBadge score={w.conviction_score ?? undefined} locale={locale} size="sm" />
+                      </td>
+                      <td>
+                        <button
+                          className="btn btn--ghost"
+                          style={{ height: 24, padding: '0 8px', fontSize: 11 }}
+                          onClick={(e) => { e.stopPropagation(); setSymbol(w.symbol); setBoard('deepdive'); }}
+                        >
+                          {t(S.analyzeBtn, locale)} <ArrowRight />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+
+                  const tierLabel = (label: string, color: string) => (
+                    <tr key={`tier-${label}`}>
+                      <td colSpan={12} style={{ padding: '6px 8px 2px', fontSize: 10, fontWeight: 700, color, letterSpacing: '0.5px', borderTop: '1px solid var(--border-soft)', background: 'rgba(0,0,0,0.03)' }}>
+                        {label}
+                      </td>
+                    </tr>
+                  );
+
+                  return [
+                    tierLabel(
+                      locale === 'ko' ? '● TIER 1 — 빅테크/대형주 (개별 심층 분석, 백테스트 포함)' : '● TIER 1 — Large Cap (Deep Analysis, Backtested)',
+                      'var(--sky, #38bdf8)',
+                    ),
+                    ...tier1.map(renderRow),
+                    tier2.length > 0 && tierLabel(
+                      locale === 'ko' ? '● TIER 2 — 모멘텀/테마주 (배치 분석, 백테스트 제외)' : '● TIER 2 — Momentum/Theme (Batch Analysis, Not Backtested)',
+                      'var(--purple, #a78bfa)',
+                    ),
+                    ...tier2.map(renderRow),
+                  ].filter(Boolean);
+                })()}
               </tbody>
             </table>
           )}

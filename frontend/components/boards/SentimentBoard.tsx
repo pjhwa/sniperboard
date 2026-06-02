@@ -5,7 +5,7 @@ import { useStore } from '@/hooks/useStore';
 import { useSentiment } from '@/hooks/useSentiment';
 import { useBrief } from '@/hooks/useBrief';
 import { Card } from '@/components/ui/Card';
-import { SymbolBrief, SETUP_QUALITY_META, TopNews } from '@/app/types';
+import { SymbolBrief, SETUP_QUALITY_META, TopNews, TIER1_SYMBOLS, SYMBOL_NAMES } from '@/app/types';
 import { RadialGauge } from '@/components/ui/RadialGauge';
 import { SENTIMENT_META, TREND_META, VOLUME_META } from '@/app/types';
 import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
@@ -324,10 +324,24 @@ export function SentimentBoard() {
                   cursor: 'pointer',
                 }}
               >
-                {/* Header: symbol + quality badge */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span className="sym-pill__badge" style={{ width: 22, height: 22 }}>{it.symbol[0]}</span>
-                  <span style={{ fontWeight: 600, fontSize: 13 }}>{it.symbol}</span>
+                {/* Header: symbol + company name + tier badge + quality badge */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
+                  <span className="sym-pill__badge" style={{ width: 22, height: 22, flexShrink: 0 }}>{it.symbol[0]}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 0, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ fontWeight: 700, fontSize: 13 }}>{it.symbol}</span>
+                      <span style={{
+                        fontSize: 8, fontWeight: 700, padding: '1px 3px', borderRadius: 2, flexShrink: 0,
+                        background: TIER1_SYMBOLS.includes(it.symbol) ? 'rgba(56,189,248,0.15)' : 'rgba(167,139,250,0.15)',
+                        color: TIER1_SYMBOLS.includes(it.symbol) ? 'var(--sky, #38bdf8)' : 'var(--purple, #a78bfa)',
+                      }}>T{TIER1_SYMBOLS.includes(it.symbol) ? '1' : '2'}</span>
+                    </div>
+                    {SYMBOL_NAMES[it.symbol] && (
+                      <span style={{ fontSize: 10, color: 'var(--fg-muted)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {SYMBOL_NAMES[it.symbol][locale as 'en' | 'ko']}
+                      </span>
+                    )}
+                  </div>
                   {briefBySymbol[it.symbol] && (() => {
                     const sq = briefBySymbol[it.symbol].setup_quality;
                     const sqMeta = SETUP_QUALITY_META[sq] ?? SETUP_QUALITY_META['B'];

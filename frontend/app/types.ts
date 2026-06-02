@@ -101,6 +101,7 @@ export interface DailyData {
 
 export interface WatchlistItem {
   symbol: string;
+  tier?: 1 | 2;
   price: number;
   score: number;
   rs_score: number;
@@ -338,7 +339,42 @@ export const STAGE2_META: Record<keyof Stage2Checks, { label: string; desc: BiLa
   volume_contracting: { label: 'Volume Contracting',              desc: { en: '5-day avg < 20-day avg (confirming pullback)', ko: '5일 평균 < 20일 평균 (눌림 확인)' } },
 };
 
-export const SYMBOLS = ['TSLA', 'AAPL', 'NVDA', 'META', 'AMZN', 'GOOGL', 'PLTR'];
+// TIER1: 빅테크/대형주 — 개별 심층 분석, 백테스트 포함
+export const TIER1_SYMBOLS = ['TSM', 'NVDA', 'META', 'TSLA', 'PLTR', 'MU', 'CRWD', 'AMZN', 'MSFT', 'AAPL', 'GOOGL'];
+// TIER2: 모멘텀/테마주 — 배치 분석
+export const TIER2_SYMBOLS = ['RKLB', 'CEG', 'VST', 'ALAB', 'OKLO', 'APP', 'ANET', 'NVO', 'QBTS', 'SOFI'];
+export const ALL_SYMBOLS = [...TIER1_SYMBOLS, ...TIER2_SYMBOLS];
+// 심볼 → 티어 조회 맵
+export const SYMBOL_TIER: Record<string, 1 | 2> = {
+  ...Object.fromEntries(TIER1_SYMBOLS.map(s => [s, 1 as const])),
+  ...Object.fromEntries(TIER2_SYMBOLS.map(s => [s, 2 as const])),
+};
+// 회사명 (BiLang)
+export const SYMBOL_NAMES: Record<string, BiLang> = {
+  TSM:  { en: 'TSMC',                ko: 'TSMC' },
+  NVDA: { en: 'Nvidia',              ko: '엔비디아' },
+  META: { en: 'Meta Platforms',      ko: '메타 플랫폼스' },
+  TSLA: { en: 'Tesla',               ko: '테슬라' },
+  PLTR: { en: 'Palantir',            ko: '팔란티어' },
+  MU:   { en: 'Micron Technology',   ko: '마이크론' },
+  CRWD: { en: 'CrowdStrike',         ko: '크라우드스트라이크' },
+  AMZN: { en: 'Amazon',             ko: '아마존' },
+  MSFT: { en: 'Microsoft',           ko: '마이크로소프트' },
+  AAPL: { en: 'Apple',               ko: '애플' },
+  GOOGL:{ en: 'Alphabet / Google',   ko: '알파벳 / 구글' },
+  RKLB: { en: 'Rocket Lab',          ko: '로켓랩' },
+  CEG:  { en: 'Constellation Energy',ko: '컨스텔레이션 에너지' },
+  VST:  { en: 'Vistra Energy',       ko: '비스트라 에너지' },
+  ALAB: { en: 'Astera Labs',         ko: '아스테라 랩스' },
+  OKLO: { en: 'Oklo',               ko: '오클로' },
+  APP:  { en: 'AppLovin',            ko: '앱러빈' },
+  ANET: { en: 'Arista Networks',     ko: '아리스타 네트웍스' },
+  NVO:  { en: 'Novo Nordisk',        ko: '노보 노르디스크' },
+  QBTS: { en: 'D-Wave Quantum',      ko: '디웨이브 퀀텀' },
+  SOFI: { en: 'SoFi Technologies',   ko: '소파이' },
+};
+// 하위 호환 (기존 SYMBOLS 참조 코드 유지)
+export const SYMBOLS = ALL_SYMBOLS;
 
 // Macro symbol display names (BiLang) — covers all 21 MACRO_SYMBOLS from the backend
 export const MACRO_SYMBOL_NAMES: Record<string, BiLang> = {

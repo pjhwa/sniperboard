@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useStore, Board } from '@/hooks/useStore';
-import { SYMBOLS } from '@/app/types';
+import { ALL_SYMBOLS, SYMBOL_TIER, SYMBOL_NAMES } from '@/app/types';
 import { GLOSSARY } from '@/app/glossary';
 import { Bolt, Layers } from '@/components/ui/Icons';
 import { t } from '@/app/i18n';
@@ -28,12 +28,12 @@ export function CommandPalette() {
   const glossaryQ = isGlossaryMode ? q.slice(1).trim().toLowerCase() : '';
 
   const navItems: Item[] = [
-    ...SYMBOLS.map(s => ({
+    ...ALL_SYMBOLS.map(s => ({
       type: 'symbol' as const,
       label: s,
-      sub: s,
+      sub: SYMBOL_NAMES[s]?.[locale] ?? s,
       action: () => { setSymbol(s); setCmdOpen(false); },
-      meta: 'Symbol',
+      meta: `T${SYMBOL_TIER[s] ?? 1} Symbol`,
     })),
     { type: 'nav', label: 'Overview',  sub: locale === 'en' ? 'Market at a glance'           : '시장 한눈에 보기',         action: () => { setBoard('overview'  as Board); setCmdOpen(false); }, meta: 'Board' },
     { type: 'nav', label: 'Intraday',  sub: locale === 'en' ? 'Short-term signals + 5m chart' : '단기 신호 + 5m 차트',      action: () => { setBoard('intraday'  as Board); setCmdOpen(false); }, meta: 'Board' },

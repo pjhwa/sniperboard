@@ -15,7 +15,7 @@ import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
 import { Check, X, Sparkle } from '@/components/ui/Icons';
 import DailyChart from '@/components/charts/DailyChart';
 import {
-  SYMBOLS, STAGE2_META, SIGNAL_META, SENTIMENT_META, TREND_META,
+  TIER1_SYMBOLS, TIER2_SYMBOLS, STAGE2_META, SIGNAL_META, SENTIMENT_META, TREND_META,
   VOLUME_META, SETUP_QUALITY_META, EARNINGS_RISK_META, REGIME_META,
   UpcomingEarning, RecentResult, SymbolBrief, TopNews,
 } from '@/app/types';
@@ -354,22 +354,44 @@ export function DeepDiveBoard() {
         background: 'var(--card)', border: '1px solid var(--border)',
         borderRadius: 'var(--r-md)', overflow: 'hidden',
       }}>
-        {/* 종목 버튼 */}
-        <div className="mob-symbol-btns" style={{ display: 'flex', gap: 3, padding: '8px 12px', borderRight: '1px solid var(--border)', flexShrink: 0 }}>
-          {SYMBOLS.map(s => (
-            <button
-              key={s}
-              onClick={() => { setSymbol(s); setShowSentTrend(false); }}
-              style={{
-                padding: '4px 9px', borderRadius: 6,
-                fontSize: 11.5, fontWeight: 700, cursor: 'pointer',
-                background: symbol === s ? 'var(--em-500)' : 'transparent',
-                border: symbol === s ? '1px solid transparent' : '1px solid var(--border-soft)',
-                color: symbol === s ? '#fff' : 'var(--fg-muted)',
-                transition: 'all 0.1s',
-              }}
-            >{s}</button>
-          ))}
+        {/* 종목 버튼 (TIER1 + TIER2 그룹) */}
+        <div className="mob-symbol-btns" style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 12px', borderRight: '1px solid var(--border)', flexShrink: 0 }}>
+          {/* TIER 1 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--sky, #38bdf8)', letterSpacing: '0.3px', minWidth: 16 }}>T1</span>
+            {TIER1_SYMBOLS.map(s => (
+              <button
+                key={s}
+                onClick={() => { setSymbol(s); setShowSentTrend(false); }}
+                style={{
+                  padding: '3px 8px', borderRadius: 5,
+                  fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                  background: symbol === s ? 'var(--em-500)' : 'transparent',
+                  border: symbol === s ? '1px solid transparent' : '1px solid var(--border-soft)',
+                  color: symbol === s ? '#fff' : 'var(--fg-muted)',
+                  transition: 'all 0.1s',
+                }}
+              >{s}</button>
+            ))}
+          </div>
+          {/* TIER 2 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--purple, #a78bfa)', letterSpacing: '0.3px', minWidth: 16 }}>T2</span>
+            {TIER2_SYMBOLS.map(s => (
+              <button
+                key={s}
+                onClick={() => { setSymbol(s); setShowSentTrend(false); }}
+                style={{
+                  padding: '3px 8px', borderRadius: 5,
+                  fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                  background: symbol === s ? 'var(--purple, #a78bfa)' : 'transparent',
+                  border: symbol === s ? '1px solid transparent' : '1px solid var(--border-soft)',
+                  color: symbol === s ? '#fff' : 'var(--fg-muted)',
+                  transition: 'all 0.1s',
+                }}
+              >{s}</button>
+            ))}
+          </div>
         </div>
 
         {/* 가격 + KPI */}

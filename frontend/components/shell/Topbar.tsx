@@ -1,10 +1,109 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useRegime } from '@/hooks/useRegime';
 import { Search, Sun, Moon } from '@/components/ui/Icons';
-import { SYMBOLS, REGIME_META } from '@/app/types';
-import { t } from '@/app/i18n';
+import { TIER1_SYMBOLS, TIER2_SYMBOLS, SYMBOL_NAMES, REGIME_META } from '@/app/types';
+import { t, type Locale } from '@/app/i18n';
+
+// ── Symbol Picker Dropdown ────────────────────────────────────────────────────
+
+function SymbolPicker({ symbol, setSymbol, locale }: {
+  symbol: string; setSymbol: (s: string) => void; locale: Locale;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const pick = (s: string) => { setSymbol(s); setOpen(false); };
+
+  const tierBtn = (s: string) => (
+    <button
+      key={s}
+      onClick={() => pick(s)}
+      title={SYMBOL_NAMES[s]?.[locale] ?? s}
+      style={{
+        height: 26, padding: '0 8px', borderRadius: 'var(--r-xs)',
+        fontSize: 11, fontWeight: 600, cursor: 'pointer',
+        background: symbol === s ? 'var(--accent)' : 'var(--card-elev)',
+        border: symbol === s ? '1px solid var(--accent)' : '1px solid var(--border)',
+        color: symbol === s ? '#fff' : 'var(--fg)',
+      }}
+    >{s}</button>
+  );
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      {/* 트리거 버튼: 현재 심볼 + 티어 배지 */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          height: 28, padding: '0 10px', borderRadius: 'var(--r-sm)',
+          fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+          background: 'var(--card-elev)', border: '1px solid var(--border)', color: 'var(--fg)',
+        }}
+      >
+        {symbol}
+        <span style={{
+          fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 3,
+          background: TIER1_SYMBOLS.includes(symbol) ? 'rgba(56,189,248,0.2)' : 'rgba(167,139,250,0.2)',
+          color: TIER1_SYMBOLS.includes(symbol) ? 'var(--sky, #38bdf8)' : 'var(--purple, #a78bfa)',
+        }}>
+          T{TIER1_SYMBOLS.includes(symbol) ? '1' : '2'}
+        </span>
+        <span style={{ fontSize: 10, color: 'var(--fg-muted)', marginLeft: 1 }}>▾</span>
+      </button>
+
+      {/* 드롭다운 */}
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, marginTop: 4, zIndex: 200,
+          background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)',
+          padding: '10px 12px', minWidth: 320, boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+        }}>
+          {/* TIER 1 */}
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--sky, #38bdf8)', letterSpacing: '0.5px' }}>TIER 1</span>
+              <span style={{ fontSize: 10, color: 'var(--fg-muted)' }}>
+                {locale === 'ko' ? '빅테크/대형주 · 개별 심층 분석' : 'Large Cap · Deep Analysis'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {TIER1_SYMBOLS.map(tierBtn)}
+            </div>
+          </div>
+
+          <div style={{ height: 1, background: 'var(--border)', margin: '8px 0' }} />
+
+          {/* TIER 2 */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--purple, #a78bfa)', letterSpacing: '0.5px' }}>TIER 2</span>
+              <span style={{ fontSize: 10, color: 'var(--fg-muted)' }}>
+                {locale === 'ko' ? '모멘텀/테마주 · 배치 분석' : 'Momentum/Theme · Batch Analysis'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {TIER2_SYMBOLS.map(tierBtn)}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Topbar ────────────────────────────────────────────────────────────────────
 
 export function Topbar() {
   const { board, symbol, theme, locale, setSymbol, setCmdOpen, setTheme, setLocale } = useStore();
@@ -38,24 +137,9 @@ export function Topbar() {
       </div>
 
       <div className="topbar__right">
-        <div className="topbar__symbols" style={{ display: 'flex', gap: 4 }}>
-          {SYMBOLS.map(s => (
-            <button
-              key={s}
-              onClick={() => setSymbol(s)}
-              style={{
-                height: 28, padding: '0 10px',
-                borderRadius: 'var(--r-sm)',
-                fontSize: 11, fontWeight: 600,
-                background: symbol === s ? 'var(--card-elev)' : 'transparent',
-                border: symbol === s ? '1px solid var(--border)' : '1px solid transparent',
-                color: symbol === s ? 'var(--fg)' : 'var(--fg-muted)',
-                cursor: 'pointer',
-              }}
-            >
-              {s}
-            </button>
-          ))}
+        {/* 심볼 픽커 (21종목 드롭다운) */}
+        <div className="topbar__symbols">
+          <SymbolPicker symbol={symbol} setSymbol={setSymbol} locale={locale as Locale} />
         </div>
 
         <div className="topbar__sep" style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 4px' }} />
@@ -67,7 +151,7 @@ export function Topbar() {
             </div>
             <div>
               <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.2 }}>
-                {t(REGIME_META[regimeData.regime].label, locale)}
+                {t(REGIME_META[regimeData.regime].label, locale as Locale)}
               </div>
               <div style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>Risk Regime</div>
             </div>

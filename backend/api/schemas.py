@@ -87,6 +87,7 @@ class Stage2Schema(BaseModel):
 
 class WatchlistItemSchema(BaseModel):
     symbol: str
+    tier: int = 1
     price: float
     score: int
     rs_score: float

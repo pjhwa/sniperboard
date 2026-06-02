@@ -9,7 +9,7 @@ import { useWatchlist } from '@/hooks/useWatchlist';
 import { Card, ScorePill } from '@/components/ui/Card';
 import { RadialGauge } from '@/components/ui/RadialGauge';
 import { Sparkle } from '@/components/ui/Icons';
-import { MacroItem, RegimeDiagnostics, UpcomingEarning, EARNINGS_RISK_META, FreshnessMeta, SYMBOLS, SymbolBrief, REGIME_META } from '@/app/types';
+import { MacroItem, RegimeDiagnostics, UpcomingEarning, EARNINGS_RISK_META, FreshnessMeta, TIER1_SYMBOLS, SymbolBrief, REGIME_META } from '@/app/types';
 import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
 import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
 import { G } from '@/app/glossary';
@@ -272,7 +272,9 @@ export function OverviewBoard() {
                   const BIAS_COLORS = ['var(--bear)', 'var(--warn)', 'var(--teal)', 'var(--bull)'];
 
                   const briefMap = new Map((briefData.symbol_briefs ?? []).map(sb => [sb.symbol, sb]));
-                  const items: (SymbolBrief | { symbol: string; pending: true })[] = SYMBOLS.map(sym =>
+                  // Brief는 TIER1 심볼만 커버 (데이터 수집 범위)
+                  const briefSymbols = TIER1_SYMBOLS.filter(sym => briefMap.has(sym) || briefMap.size === 0);
+                  const items: (SymbolBrief | { symbol: string; pending: true })[] = briefSymbols.map(sym =>
                     briefMap.get(sym) ?? { symbol: sym, pending: true as const }
                   );
 

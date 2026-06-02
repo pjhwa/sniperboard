@@ -2,8 +2,8 @@ import pandas as pd
 import logging
 import yfinance as yf
 from datetime import datetime, timezone
-from typing import Optional
-from fastapi import APIRouter, HTTPException, Query
+from typing import Optional, List
+from fastapi import APIRouter, HTTPException, Query, BackgroundTasks
 from services.data_service import get_ohlcv
 from core.data_adapter import get_multi_daily
 from core.signal_engine import (
@@ -25,11 +25,17 @@ from services.macro_insight_service import fetch_macro_insight, get_ai_meta
 from core.distribution_day import count_distribution_days
 from core.regime_engine import compute_regime
 from core.conviction_calculator import calculate_conviction
+from core.backtest_engine import run_full_backtest, load_cached_result, run_parameter_sweep, STAGE2_THRESHOLD
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-WATCHLIST_SYMS = ["TSLA", "AAPL", "NVDA", "META", "AMZN", "GOOGL", "PLTR"]
+# TIER1: 빅테크/대형주 — 개별 심층 분석, 백테스트 대상
+TIER1_SYMS = ["TSM", "NVDA", "META", "TSLA", "PLTR", "MU", "CRWD", "AMZN", "MSFT", "AAPL", "GOOGL"]
+# TIER2: 모멘텀/테마주 — 배치 분석, 워치리스트 포함
+TIER2_SYMS = ["RKLB", "CEG", "VST", "ALAB", "OKLO", "APP", "ANET", "NVO", "QBTS", "SOFI"]
+WATCHLIST_SYMS = TIER1_SYMS + TIER2_SYMS  # 전체 21종목
+SYMBOL_TIER: dict = {s: 1 for s in TIER1_SYMS} | {s: 2 for s in TIER2_SYMS}
 
 
 def _freshness_meta(generated_at: Optional[str] = None) -> dict:
@@ -544,6 +550,7 @@ async def get_watchlist_endpoint():
 
                 result.append({
                     "symbol": sym,
+                    "tier": SYMBOL_TIER.get(sym, 1),
                     "price": round(float(df["close"].iloc[-1]), 2),
                     "score": stage2_score,
                     "rs_score": stage2.get("rs_score", 50.0),
@@ -664,6 +671,69 @@ async def get_earnings_endpoint():
     except Exception as e:
         logger.error(f"Error in /earnings endpoint: {e}", exc_info=True)
         return {"available": False, "error": "Earnings 데이터 처리 중 오류 발생"}
+
+
+@router.get("/backtest/result")
+async def get_backtest_result():
+    """캐시된 백테스트 결과 조회. 결과 없으면 404."""
+    result = load_cached_result()
+    if result is None:
+        raise HTTPException(
+            status_code=404,
+            detail="백테스트 결과가 없습니다. POST /api/backtest/run 으로 먼저 실행하세요."
+        )
+    return result
+
+
+@router.post("/backtest/run")
+async def run_backtest_endpoint(
+    background_tasks: BackgroundTasks,
+    symbols: Optional[List[str]] = None,
+    threshold: int = Query(STAGE2_THRESHOLD, ge=1, le=7, description="Stage2 최소 점수"),
+    rs_threshold: int = Query(70, ge=0, le=100, description="RS 강도 최소값 (기본 70)"),
+    use_spy_filter: bool = Query(True, description="SPY > EMA200 시장 필터 적용 여부"),
+):
+    """
+    백테스트 실행 후 결과 반환 및 캐시 저장.
+    symbols 미지정 시 TIER1 종목 대상 (TIER2는 데이터 특성상 제외).
+    주의: yfinance 다운로드 포함으로 수십 초 소요될 수 있습니다.
+    """
+    target_syms = symbols or TIER1_SYMS
+    try:
+        result = run_full_backtest(
+            target_syms,
+            threshold=threshold,
+            rs_threshold=rs_threshold,
+            use_spy_filter=use_spy_filter,
+        )
+        return {
+            "status": "ok",
+            "symbols": target_syms,
+            "total_trades": result["aggregate"]["all"].get("n", 0),
+            "generated_at": result["generated_at"],
+            "summary": result["aggregate"]["all"],
+        }
+    except Exception as e:
+        logger.error(f"Backtest run failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"백테스트 실행 중 오류: {str(e)}")
+
+
+@router.post("/backtest/sweep")
+async def run_backtest_sweep_endpoint(
+    symbols: Optional[List[str]] = None,
+):
+    """
+    8가지 파라미터 조합으로 백테스트 스윕 실행 후 비교 결과 반환.
+    symbols 미지정 시 TIER1 종목 대상.
+    주의: 수분 소요될 수 있습니다.
+    """
+    target_syms = symbols or TIER1_SYMS
+    try:
+        results = run_parameter_sweep(target_syms)
+        return {"status": "ok", "symbols": target_syms, "results": results}
+    except Exception as e:
+        logger.error(f"Backtest sweep failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"스윕 실행 중 오류: {str(e)}")
 
 
 @router.get("/distribution-days", response_model=DistributionDayResponse)
