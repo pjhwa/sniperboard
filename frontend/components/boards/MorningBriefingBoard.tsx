@@ -342,8 +342,6 @@ const EXTRA_TERMS = [
 
 // ── 서브컴포넌트: 용어 설명 ───────────────────────────────────────────────────
 function GlossarySection({ locale }: { locale: Locale }) {
-  const [openKey, setOpenKey] = useState<string | null>(null);
-
   const terms = [
     ...GLOSSARY.filter(e => BRIEFING_TERM_KEYS.includes(e.key)),
     ...EXTRA_TERMS,
@@ -373,44 +371,30 @@ function GlossarySection({ locale }: { locale: Locale }) {
       </summary>
 
       <div style={{ marginTop: 6, padding: '14px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 8 }}>
-          {terms.map(entry => {
-            const isOpen = openKey === entry.key;
-            const termStr = t(entry.term, locale);
-            const bodyStr = t(entry.body, locale);
-            return (
-              <button
-                key={entry.key}
-                onClick={() => setOpenKey(isOpen ? null : entry.key)}
-                style={{
-                  background: isOpen ? 'var(--em-soft)' : 'var(--bg-subtle)',
-                  border: `1px solid ${isOpen ? 'color-mix(in srgb, var(--em-500) 30%, transparent)' : 'var(--border)'}`,
-                  borderRadius: 'var(--r-md)', padding: '10px 12px',
-                  textAlign: 'left', cursor: 'pointer',
-                  display: 'flex', flexDirection: 'column', gap: 6,
-                  transition: 'background 0.15s',
-                }}
-              >
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  fontSize: 12, fontWeight: 700, color: isOpen ? 'var(--em-600)' : 'var(--fg)',
-                }}>
-                  <span style={{ fontSize: 11, color: isOpen ? 'var(--em-500)' : 'var(--fg-faint)' }}>
-                    {isOpen ? '▼' : '▶'}
-                  </span>
-                  {termStr}
-                </div>
-                {isOpen && (
-                  <p style={{
-                    margin: 0, fontSize: 12.5, lineHeight: 1.7,
-                    color: 'var(--fg)', whiteSpace: 'pre-line',
-                  }}>
-                    {bodyStr}
-                  </p>
-                )}
-              </button>
-            );
-          })}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
+          {terms.map(entry => (
+            <div
+              key={entry.key}
+              style={{
+                background: 'var(--bg-subtle)',
+                border: '1px solid var(--border)',
+                borderLeft: '3px solid var(--em-500)',
+                borderRadius: 'var(--r-md)',
+                padding: '10px 12px',
+                display: 'flex', flexDirection: 'column', gap: 6,
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--em-600)' }}>
+                {t(entry.term, locale)}
+              </div>
+              <p style={{
+                margin: 0, fontSize: 12.5, lineHeight: 1.7,
+                color: 'var(--fg-muted)', whiteSpace: 'pre-line',
+              }}>
+                {t(entry.body, locale)}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </details>
