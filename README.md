@@ -26,6 +26,40 @@ Plaid DS-based dark/light theme. ⌘K command palette for fast symbol/board swit
 
 ---
 
+## Why SniperBoard — Competitive Advantages
+
+Most signal dashboards show signals but never prove they work. SniperBoard is built on a different principle: **show everything, prove everything**.
+
+| Advantage | SniperBoard | Typical Competitors |
+|-----------|-------------|---------------------|
+| **Signal accountability** | Every Stage2 signal auto-logged. Every outcome tracked (WIN/LOSS/TIMEOUT). No cherry-picking. | Curated highlights only |
+| **Backtest → Live validation loop** | Historical backtest (+0.460R expectancy, 99.8% MC confidence) compared against real-time live performance on the **Signal Tracker** board | Backtest results (if any) never updated with live outcomes |
+| **Model Health indicator** | Real-time ON_TRACK / WATCH / UNDERPERFORMING status based on live trades vs. backtest baseline | Not provided |
+| **Regime-aware signal quality** | Live performance broken down by market regime (RISK_ON / MIXED / RISK_OFF) — shows *when* signals work | Not provided |
+| **Statistical confidence** | Monte Carlo bootstrap (10,000 simulations) proves edge is real, not luck (prob. of positive expectancy: 99.8%) | Not provided |
+| **Transparent methodology** | Every limitation disclosed: survivorship bias, slippage, IS/OOS split, no look-ahead — in the UI | Rarely disclosed |
+| **Conviction composite score** | Stage2 (40%) + Social Sentiment (30%) + Risk Regime (30%) = single actionable score per symbol | Single-factor only |
+| **Bilingual (EN/KO)** | Full UI, AI narratives, glossary (28 terms) all switch instantly | English-only |
+| **AI market narratives** | Grok/Hermes generates bilingual daily briefs, earnings intelligence, and macro interpretation from actual signal + sentiment data | Generic AI summaries |
+| **Automated journaling** | Signals auto-logged when watchlist refreshes — no manual entry | Manual input required |
+
+### Signal Tracker — The Key Differentiator
+
+The **Signal Tracker** board (`🎯` in the Rail) implements a perpetual hypothesis test:
+
+```
+Hypothesis: "Stage2 ≥ 5 signals produce +0.460R expectancy (RS≥70 + SPY filter)"
+
+Test: Every signal auto-logged → outcome resolved → live stats vs. baseline
+Result: Model Health = ON_TRACK / WATCH / UNDERPERFORMING
+```
+
+As trades accumulate (30+ = MEDIUM confidence, 80+ = HIGH confidence), the live equity curve is overlaid against the backtest baseline on the same chart. Regime breakdown shows which market conditions amplify or suppress signal edge.
+
+No other retail-facing tool for this methodology space offers this level of real-time accountability.
+
+---
+
 ## Quick Start
 
 ### Requirements
@@ -254,6 +288,41 @@ Symbol selector buttons | Current price · RSI · EMA21 + intraday sparkline | S
 
 ---
 
+### Backtest — Historical Signal Validation
+
+Simulates Stage2 signals from 2019 to present with strict anti-overfitting design.
+
+| Design Principle | Implementation |
+|-----------------|----------------|
+| **No look-ahead bias** | T-1 signal → T-day entry (never same-day fill). Verified by TDD test. |
+| **Survivorship bias disclosed** | Current watchlist only — disclosed in methodology banner |
+| **In-sample / Out-of-sample split** | IS: ~2023 (training) / OOS: 2024~ (real validation). OOS > IS = no overfitting |
+| **Monte Carlo** | 10,000 bootstrap resamples → probability of positive expectancy = 99.8% |
+| **Slippage** | 0.05% included. Commission 0% (US broker standard). |
+
+**Best configuration** (RS≥70 + SPY>EMA200 filter): 145 trades · Win rate 38.6% · Expectancy +0.460R · OOS +0.511R
+
+**AMZN structural note**: 21% win rate across all parameter combinations — Stage2 pivot breakout is incompatible with AMZN's range-bound price structure. Clearly flagged in the per-symbol table.
+
+---
+
+### Signal Tracker — Live vs. Backtest Validation
+
+The accountability board that makes SniperBoard unique among signal tools.
+
+| Section | Content |
+|---------|---------|
+| **Model Health banner** | ON_TRACK / WATCH / UNDERPERFORMING vs. +0.460R backtest baseline. Confidence: LOW (<30 trades) → MEDIUM → HIGH (80+). |
+| **KPI comparison** | Live win rate / expectancy / profit factor vs. backtest values. Delta highlighted. |
+| **Cumulative R curve** | Live equity curve overlaid on backtest baseline (grey dashed). Same chart, same R scale. |
+| **Current Pipeline** | PENDING signals (waiting for entry price) and ACTIVE trades (currently held). Entry/Stop/Target + R:R displayed. |
+| **Regime breakdown** | Expectancy grouped by RISK_ON / MIXED / RISK_OFF — shows when the model works. |
+| **Signal history table** | All logged signals with outcomes. Filter by WIN / LOSS / TIMEOUT / CANCELLED. |
+
+Auto-logging: every time `/watchlist` refreshes, Stage2 ≥ 5 signals are automatically recorded. No manual input.
+
+---
+
 ### Sentiment — Social Sentiment Analysis
 
 ![Sentiment](assets/images/screenshot-sentiment.png)
@@ -362,6 +431,12 @@ Base URL: `http://localhost:4000/api` (via Next.js proxy) or `http://localhost:5
 | `GET /sentiment/history?symbol=&days=` | N-day sentiment points array (days: 1~30, 5-min TTL) |
 | `GET /brief` | AI Daily Brief + `meta` |
 | `GET /earnings` | Earnings Intelligence + `meta` |
+| `GET /backtest/result` | Cached backtest results (config + aggregate + IS/OOS + Monte Carlo + per-symbol) |
+| `POST /backtest/run` | Run backtest (sync, ~1min). Params: `rs_threshold`, `use_spy_filter`, `threshold` |
+| `POST /backtest/sweep` | Run 8 parameter combinations and compare results |
+| `GET /signal-log` | Live signal log (auto-logged from watchlist). Params: `symbol`, `limit` |
+| `GET /signal-log/stats` | Live performance stats vs. backtest baseline. Includes model health + regime breakdown |
+| `POST /signal-log/refresh` | Resolve PENDING/ACTIVE signals against latest prices (background task) |
 
 Full response schemas: see `backend/api/schemas.py`
 

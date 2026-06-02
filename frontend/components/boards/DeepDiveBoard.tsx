@@ -543,13 +543,23 @@ export function DeepDiveBoard() {
               {mpLabel}
             </div>
             {stage2 && (
-              <span className={`badge ${STRUCT_CLS[stage2.market_structure] ?? 'neutral'}`}>
+              <span
+                className={`badge ${STRUCT_CLS[stage2.market_structure] ?? 'neutral'}`}
+                title={locale === 'ko' ? '일봉 시장 구조 (Daily)' : 'Daily market structure'}
+              >
                 {stage2.market_structure}
+                <span style={{ opacity: 0.5, fontSize: '0.78em', marginLeft: 3 }}>·D</span>
               </span>
             )}
             {activeSignals.slice(0, 2).map(sig => {
               const CLR: Record<string, string> = { sniper:'bull', vcp:'info', pullback:'warn', strong_trend:'teal', overbought:'warn', downtrend:'bear' };
-              return <span key={sig} className={`badge ${CLR[sig] ?? 'neutral'}`}>● {SIGNAL_META[sig]?.label}</span>;
+              return (
+                <span key={sig} className={`badge ${CLR[sig] ?? 'neutral'}`}
+                      title={locale === 'ko' ? `단기(${timeframe}) 시그널` : `Intraday (${timeframe}) signal`}>
+                  ● {SIGNAL_META[sig]?.label}
+                  <span style={{ opacity: 0.5, fontSize: '0.78em', marginLeft: 3 }}>·{timeframe}</span>
+                </span>
+              );
             })}
           </div>
         </div>
@@ -562,7 +572,13 @@ export function DeepDiveBoard() {
         <div className="card" style={{ minHeight: 440 }}>
           <div className="card__hd">
             <h3>{symbol} · Daily Chart</h3>
-            {stage2 && <span className={`badge ${STRUCT_CLS[stage2.market_structure] ?? 'neutral'}`}>{stage2.market_structure}</span>}
+            {stage2 && (
+              <span className={`badge ${STRUCT_CLS[stage2.market_structure] ?? 'neutral'}`}
+                    title={locale === 'ko' ? '일봉 시장 구조' : 'Daily market structure'}>
+                {stage2.market_structure}
+                <span style={{ opacity: 0.5, fontSize: '0.78em', marginLeft: 3 }}>·D</span>
+              </span>
+            )}
             {[...gcBadges, ...patBadges].map(([l, c]) => <span key={l} className={`badge ${c}`}>{l}</span>)}
             <small>1Y · GC · EMA8/21/50/200</small>
           </div>

@@ -316,9 +316,11 @@ export function OverviewBoard() {
 
                   const mid = Math.ceil(items.length / 2);
                   return (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
-                      <div>{items.slice(0, mid).map(renderItem)}</div>
-                      <div>{items.slice(mid).map(renderItem)}</div>
+                    <div style={{ maxHeight: 220, overflowY: 'auto', paddingRight: 4 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
+                        <div>{items.slice(0, mid).map(renderItem)}</div>
+                        <div>{items.slice(mid).map(renderItem)}</div>
+                      </div>
                     </div>
                   );
                 })()}

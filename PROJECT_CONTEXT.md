@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-06-02 backtest-board)
+# SniperBoard — Project Context (UPDATED 2026-06-02 competitive-improvements)
 
 ## 0. Purpose of This Document
 
@@ -64,7 +64,7 @@ sniperboard/
 │   ├── components/
 │   │   ├── shell/
 │   │   │   ├── Rail.tsx          # Left navigation rail (7 board icons + active indicator). deepdive=Layers icon in 2nd position. Mobile: hidden via hide-mobile class.
-│   │   │   ├── Topbar.tsx        # Top bar (title, search, symbol buttons, Regime mini, theme toggle, EN/KO locale toggle). Mobile: topbar__symbols/topbar__regime/topbar__sep/topbar__search hidden → logo+board name+theme toggle only (48px slim). EN/KO toggle added 2026-05-31.
+│   │   │   ├── Topbar.tsx        # Top bar (title, search, symbol buttons, Regime mini, theme toggle, EN/KO locale toggle). Mobile: topbar__symbols/topbar__regime/topbar__sep/topbar__search hidden → logo+board name+theme toggle only (48px slim). EN/KO toggle added 2026-05-31. BOARD_LABELS now includes all 9 boards (backtest/track added 2026-06-02) — fallback 'Overview' bug fixed.
 │   │   │   ├── BottomTabs.tsx    # Mobile-only bottom tab bar (4 tabs: Overview/Analysis/Macro/Sentiment). Shows only at max-width:767px. Connected to useStore board/setBoard. safe-area-inset-bottom applied. Bilingual labels (2026-05-31).
 │   │   │   ├── MarketStrip.tsx   # Slim market strip (selected symbol + SPY/QQQ/IWM/VIX/DXY/GLD/CL=F). PRE/POST price display (usePrePost). "? Guide" button on far right — dispatches 'guide:open' custom event on click. Mobile: hidden via hide-mobile class. Bilingual tooltips and guide button (2026-05-31).
 │   │   │   └── CommandPalette.tsx # ⌘K command palette (symbol/board search). Typing '?' switches to glossary search mode — filters GLOSSARY array, shows "Glossary search mode — N results" banner. Bilingual nav subs and glossary entries (2026-05-31).
@@ -79,13 +79,16 @@ sniperboard/
 │   │   │   └── HeatStrip.tsx     # CSS-based heatmap strip
 │   │   ├── boards/               # 7 board components. Common pattern: <div className="board-wrap"> wrapper → BoardGuidePanel is a direct child of board-wrap. Guide button lives in MarketStrip (moved there). Each board listens for 'guide:open' event via useEffect → setGuideOpen(true). GlossaryPanel fully removed. All boards converted to bilingual with t()/tField() (2026-05-31).
 │   │   │   ├── OverviewBoard.tsx # Market overview (11 cards): AI Insight + Earnings Calendar + Regime + DD + Breadth + VIX + Credit + Entry Radar + Conviction Leaderboard + Sector + Watchlist Top3. ⏱ freshness badges. 7 cards have info={G.*} props (resolved to locale-aware strings via t()). Mobile: mob-order-1~8 for Big→Detail reordering, AI Insight details.mob-collapse.
-│   │   │   ├── DeepDiveBoard.tsx # Full analysis (5-Row): Row1=symbol selector+price bar+badges(Stage2/Conviction/monthly/structure/signal)+PRE/POST price. Row2=DailyChart(3fr)|Stage2 checks+KPI4(2fr). Row3=Institutional Activity(3fr)|R:R Entry Plan(2fr). Row4(3×1fr)=Social Sentiment|AI Brief|Earnings. Row5=Regime(3fr)|Market-wide Sentiment(2fr). Institutional Activity: Up/Down Vol ratio+volume trend+concentrated days+institutional score 0-100+10-day acc/dist grid. InfoPopover directly embedded (Stage2/institutional/R:R/RS etc). Mobile: mob-wrap(display:contents desktop) + mob-order reordering, Row1 mob-symbol-bar horizontal scroll, chart mob-chart-limit 300px, ROW4 mob-inner-stack 1-col, AI Brief details.mob-collapse. tField() for all AI data fields. Earnings card uses tField(ai_reaction_en, ai_reaction_ko, ai_reaction, locale) for RecentResult and tField(ai_summary_en, ai_summary_ko, ai_summary, locale) + tField(action_note_en, action_note_ko, action_note, locale) for UpcomingEarning.
+│   │   │   ├── DeepDiveBoard.tsx # Full analysis (5-Row): Row1=symbol selector+price bar+badges(Stage2/Conviction/monthly/structure/signal)+PRE/POST price. Row2=DailyChart(3fr)|Stage2 checks+KPI4(2fr). Row3=Institutional Activity(3fr)|R:R Entry Plan(2fr). Row4(3×1fr)=Social Sentiment|AI Brief|Earnings. Row5=Regime(3fr)|Market-wide Sentiment(2fr). market_structure 배지에 '·D' 접미사 추가(일봉 구조 명시), 단기신호 배지에 '·{timeframe}' 접미사 추가 — UPTREND(D) vs downtrend(5m) 혼동 방지 (2026-06-02). tField() for all AI data fields.
 │   │   │   ├── IntradayBoard.tsx # Intraday: IntradayChart + active signals + RSI + action bar. SIG_META BiLang map for signal name InfoPopovers. Bilingual all labels.
 │   │   │   ├── DailyBoard.tsx    # Daily: DailyChart + Stage2 checklist + R:R panel. Stage2·R:R cards have info prop (t() applied to G.* entries). Earnings banner uses tField() for bilingual ai_summary/action_note fields (v2.0 _en/_ko pairs, v1.x fallback).
 │   │   │   ├── WatchlistBoard.tsx # Watchlist: Stage2-sorted table. Table headers (Stage2/RS/Conviction) have InfoPopovers (t() applied). Monthly phase bilingual.
 │   │   │   ├── MacroBoard.tsx    # Macro: overall RISK-ON/MIXED/RISK-OFF banner + sector rotation bar + 6 group cards. Each card: traffic light (🟢🟡🔴) · direction (↗↘) · AI interpretation text · freshness badge. useMacroInsight() combined. Graceful degrade when AI absent. Mobile: mob-order-1~3 (banner→groups→Sector), mob-macro-groups (display:contents desktop / flex-column mobile), bullets details.mob-collapse. Bilingual group labels and judgment text. Symbol names from MACRO_SYMBOL_NAMES BiLang map (not backend name field). AI text rendered via tField(text_en, text_ko, text, locale) for v2.0/v1.x compat; bullets via tField(bullets_en[i], bullets_ko[i], bullets[i], locale).
-│   │   │   └── SentimentBoard.tsx # Sentiment: market gauge + per-symbol cards (click expands SentimentTrendChart). TopNewsBox component uses tField() for bilingual headline/summary. Composite Score card has info prop. Bottom: "Social Sentiment Data" explainer card (5 sections: data collection method · score range viz · contrarian principle · usage · caveats). Mobile: sym-sentiment-grid 1-col, TopNews card outside details.mob-collapse, existing TopNewsBox hide-on-mobile.
+│   │   │   └── SentimentBoard.tsx # Sentiment: market gauge + per-symbol cards TIER1/TIER2 구분 (2026-06-02). TIER1(11종목) 섹션(하늘색 헤더) + TIER2(10종목) 섹션(보라 헤더) + 기타 섹션 순서. 각 섹션별 grid 렌더링. TopNewsBox tField() 이중언어. Composite Score card info prop. Bottom: "Social Sentiment Data" explainer card.
 │   │   │   └── BacktestBoard.tsx  # 백테스트 결과 화면 (2026-06-02). 방법론 배너(투명성) + KPI 4카드(총거래/승률/기대값/손익비) + IS vs OOS 비교 + Stage2 점수별 분해 + SVG 자산곡선 + 종목별 성과 테이블 + 실행 버튼. useBacktest() hook 사용. GET /api/backtest/result 조회, POST /api/backtest/run 실행.
+│   │   └── backtest_engine.py        # (unchanged)
+│   │   └── signal_tracker.py         # 실거래 신호 트래킹 (2026-06-02). SQLite persistence (backend/data/signal_log.db). init_db() → 앱 시작 시 호출. scan_and_log(watchlist_items, regime) → Stage2 >= 5 신호 자동 로깅 (UNIQUE on symbol+signal_date, OPEN 신호 중복 방지). update_outcomes() → PENDING/ACTIVE 신호를 최신 일봉으로 바 단위 시뮬레이션하여 WIN/LOSS/TIMEOUT/CANCELLED 갱신 (get_multi_daily period="6mo" 사용). compute_live_stats() → n_closed/win_rate/expectancy_r/profit_factor/mdd/equity_curve/regime_breakdown/pipeline + health{status/confidence/deltas} + backtest_baseline. BACKTEST_BASELINE = {expectancy_r:0.460, win_rate:0.386, profit_factor:1.917, n:145}. 헬스 판단: expectancy_r >= 0.7*baseline → ON_TRACK, >= 0.0 → WATCH, < 0 → UNDERPERFORMING, n < 10 → INSUFFICIENT_DATA.
+│   │   │   └── TrackBoard.tsx     # 실거래 트래킹 화면 (2026-06-02). 경쟁 차별화 핵심: 모든 신호 자동 기록 + 결과 추적 + 백테스트 기준값(+0.460R) 대조. 구성: 모델헬스 배너(ON_TRACK/WATCH/UNDERPERFORMING/INSUFFICIENT_DATA) + KPI 4카드(총신호/승률/기대값/손익비) + SVG 누적R 곡선(라이브+백테스트 기준선 비교) + 현재 파이프라인(PENDING/ACTIVE 신호) + 레짐별 성과 분해 + 신호 이력 테이블(상태 필터). useSignalLog/useSignalLogStats/useRefreshSignalLog hooks. GET /api/signal-log, /api/signal-log/stats, POST /api/signal-log/refresh.
 │   │   │   └── SentimentTrendChart.tsx # Sentiment trend chart: stock price line (left axis) + composite_score overlay (right axis), 7/30d toggle
 │   │   ├── charts/               # lightweight-charts components
 │   │   │   ├── IntradayChart.tsx
@@ -102,7 +105,8 @@ sniperboard/
 │       ├── useBrief.ts           # GET /api/brief (30-min staleTime)
 │       ├── usePrePost.ts         # GET /api/prepost (60-second polling). prePostData: { market_state, pre/post price+chg_pct, regular_close }
 │       ├── useEarnings.ts        # GET /api/earnings (60-min staleTime)
-│       └── useDistributionDays.ts # GET /api/distribution-days
+│       ├── useDistributionDays.ts # GET /api/distribution-days
+│       └── useSignalLog.ts       # GET /api/signal-log, /api/signal-log/stats, POST /api/signal-log/refresh. Exports: useSignalLog(symbol?), useSignalLogStats(), useRefreshSignalLog(). Types: SignalLogEntry, SignalLogStats, SignalStatus.
 └── docker-compose.yml            # backend 8000→5001, frontend 3000→4000. Frontend build arg+env: BACKEND_URL=http://backend:8000
 ```
 
@@ -130,6 +134,9 @@ Base URL: `http://<host>:4000/api` (via Next.js proxy) or `http://<host>:5001/ap
 | `GET /backtest/result` | — | 캐시된 백테스트 결과 JSON. 없으면 404. 구조: generated_at/config(rs_threshold/use_spy_filter 포함)/methodology/aggregate(all/in_sample/out_of_sample)/breakdown_by_score/by_symbol. |
 | `POST /backtest/run` | `symbols[]` (optional), `threshold` (1-7, default 5), `rs_threshold` (0-100, default 70), `use_spy_filter` (bool, default true) | 백테스트 즉시 실행 + 캐시 저장 후 요약 반환. symbols 미지정 시 WATCHLIST_SYMS 전체. 수십 초 소요. |
 | `POST /backtest/sweep` | `symbols[]` (optional) | 8개 파라미터 조합 스윕 실행 + 비교 결과 반환. 수분 소요. |
+| `GET /signal-log` | `symbol?`, `limit` (default 200) | 신호 로그 조회 (최신순). 상태 포함: PENDING/ACTIVE/WIN/LOSS/TIMEOUT/CANCELLED. |
+| `GET /signal-log/stats` | — | 라이브 성과 통계 + 백테스트 기준값(+0.460R) 비교. health.status: ON_TRACK/WATCH/UNDERPERFORMING/INSUFFICIENT_DATA. |
+| `POST /signal-log/refresh` | — | PENDING/ACTIVE 신호 결과를 최신 일봉으로 갱신 (백그라운드 실행). |
 
 ---
 

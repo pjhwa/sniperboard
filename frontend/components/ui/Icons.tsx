@@ -112,3 +112,11 @@ export const Flask = () => (
     <line x1="9" y1="3" x2="15" y2="3"/>
   </svg>
 );
+
+export const Target = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <circle cx="12" cy="12" r="6"/>
+    <circle cx="12" cy="12" r="2"/>
+  </svg>
+);

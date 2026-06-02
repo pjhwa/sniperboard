@@ -707,13 +707,30 @@ export function BacktestBoard() {
                       </tr>
                     );
                   })}
-                  {symRows.some(r => r.all.expectancy_r < 0) && (
-                    <tr>
-                      <td colSpan={6} style={{ padding: '8px 10px', fontSize: '11px', color: 'var(--dim)' }}>
-                        ⚠ {locale === 'ko' ? '기대값 음수 종목: Stage2 신호가 해당 종목의 가격 구조와 맞지 않을 수 있습니다.' : "Negative expectancy: Stage2 signal may not suit this stock's price structure."}
+                  {symRows.filter(r => r.all.expectancy_r < 0).map(r => (
+                    <tr key={`note-${r.symbol}`}>
+                      <td colSpan={6} style={{
+                        padding: '6px 10px 10px 16px', fontSize: '11px',
+                        background: 'rgba(251,113,133,0.04)',
+                        borderLeft: '3px solid var(--rose, #fb7185)',
+                      }}>
+                        <strong style={{ color: 'var(--rose, #fb7185)' }}>⚠ {r.symbol}</strong>
+                        {r.symbol === 'AMZN' ? (
+                          <span style={{ color: 'var(--mut)', marginLeft: 6 }}>
+                            {locale === 'ko'
+                              ? '모든 파라미터 조합(RS 50~80, SPY필터 ON/OFF, threshold 5~7)에서 승률 21% — Stage2 피봇 브레이크아웃 모델과 구조적 불일치. AMZN의 박스권/횡보 가격 특성이 원인. 대안: ① 백테스트 대상에서 제외 ② 별도 레인지-바운드 전략 적용'
+                              : 'Win rate 21% across ALL parameter combinations (RS 50–80, SPY filter on/off, threshold 5–7) — structural mismatch with Stage2 pivot breakout model. AMZN\'s range-bound price behavior is the cause. Options: ① Exclude from backtest targets ② Apply a separate range-bound strategy'}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--mut)', marginLeft: 6 }}>
+                            {locale === 'ko'
+                              ? 'Stage2 신호가 이 종목의 가격 구조와 맞지 않을 수 있습니다.'
+                              : "Stage2 signal may not suit this stock's price structure."}
+                          </span>
+                        )}
                       </td>
                     </tr>
-                  )}
+                  ))}
                 </tbody>
               </table>
             </Card>

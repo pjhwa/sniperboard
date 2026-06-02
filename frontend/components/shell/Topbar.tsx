@@ -117,6 +117,8 @@ export function Topbar() {
     watchlist: { en: 'Watchlist', ko: '워치리스트' },
     macro:     { en: 'Macro',     ko: '매크로' },
     sentiment: { en: 'Sentiment', ko: '심리' },
+    backtest:  { en: 'Backtest',  ko: '백테스트' },
+    track:     { en: 'Signal Tracker', ko: '신호 트래커' },
   };
 
   const current = BOARD_LABELS[board] ?? BOARD_LABELS.overview;

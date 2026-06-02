@@ -5,7 +5,7 @@ import { useStore } from '@/hooks/useStore';
 import { useSentiment } from '@/hooks/useSentiment';
 import { useBrief } from '@/hooks/useBrief';
 import { Card } from '@/components/ui/Card';
-import { SymbolBrief, SETUP_QUALITY_META, TopNews, TIER1_SYMBOLS, SYMBOL_NAMES } from '@/app/types';
+import { SymbolBrief, SETUP_QUALITY_META, TopNews, TIER1_SYMBOLS, TIER2_SYMBOLS, SYMBOL_NAMES } from '@/app/types';
 import { RadialGauge } from '@/components/ui/RadialGauge';
 import { SENTIMENT_META, TREND_META, VOLUME_META } from '@/app/types';
 import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
@@ -214,6 +214,11 @@ export function SentimentBoard() {
   const market = latest.market;
   const symbols = latest.symbols ?? [];
 
+  // TIER1/TIER2 구분
+  const tier1Symbols = symbols.filter(s => TIER1_SYMBOLS.includes(s.symbol));
+  const tier2Symbols = symbols.filter(s => TIER2_SYMBOLS.includes(s.symbol));
+  const otherSymbols = symbols.filter(s => !TIER1_SYMBOLS.includes(s.symbol) && !TIER2_SYMBOLS.includes(s.symbol));
+
   const marketKeyReason = market
     ? tField(market.key_reason_en, market.key_reason_ko, market.key_reason, locale)
     : '';
@@ -298,12 +303,25 @@ export function SentimentBoard() {
 
       {/* Per-symbol cards */}
       <Card title={t(S.symbolSentTitle, locale)} className="mob-order-2" action={t(S.symbolSentAction, locale)} style={{ overflow: 'visible' }}>
-        <div className="sym-sentiment-grid" style={{
-          display: 'grid',
-          gridTemplateColumns: expandedSymbol ? '1fr' : 'repeat(3, 1fr)',
-          gap: 10,
-        }}>
-          {symbols.map(it => {
+        {/* TIER 1 섹션 */}
+        {tier1Symbols.length > 0 && (
+          <div style={{ marginBottom: 14 }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
+              padding: '4px 8px', borderRadius: 6,
+              background: 'rgba(56,189,248,0.06)', borderLeft: '2px solid rgba(56,189,248,0.4)',
+            }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(56,189,248,0.9)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                TIER 1 — {locale === 'ko' ? '핵심 대형주' : 'Core Holdings'}
+              </span>
+              <span style={{ fontSize: 10, color: 'var(--em-500)' }}>{tier1Symbols.length}</span>
+            </div>
+            <div className="sym-sentiment-grid" style={{
+              display: 'grid',
+              gridTemplateColumns: expandedSymbol ? '1fr' : 'repeat(3, 1fr)',
+              gap: 10,
+            }}>
+              {tier1Symbols.map(it => {
             const score = it.composite_score ?? it.sentiment_score;
             const meta = SENTIMENT_META[it.sentiment];
             const trend = TREND_META[it.trend_vs_yesterday];
@@ -406,7 +424,122 @@ export function SentimentBoard() {
               </div>
             );
           })}
-        </div>
+            </div>
+          </div>
+        )}
+
+        {/* TIER 2 섹션 */}
+        {tier2Symbols.length > 0 && (
+          <div style={{ marginBottom: 14 }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
+              padding: '4px 8px', borderRadius: 6,
+              background: 'rgba(167,139,250,0.06)', borderLeft: '2px solid rgba(167,139,250,0.4)',
+            }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(167,139,250,0.9)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                TIER 2 — {locale === 'ko' ? '모멘텀/테마주' : 'Momentum / Theme'}
+              </span>
+              <span style={{ fontSize: 10, color: 'var(--em-500)' }}>{tier2Symbols.length}</span>
+            </div>
+            <div className="sym-sentiment-grid" style={{
+              display: 'grid',
+              gridTemplateColumns: expandedSymbol ? '1fr' : 'repeat(3, 1fr)',
+              gap: 10,
+            }}>
+              {tier2Symbols.map(it => {
+                const score = it.composite_score ?? it.sentiment_score;
+                const meta = SENTIMENT_META[it.sentiment];
+                const trend = TREND_META[it.trend_vs_yesterday];
+                const vol = VOLUME_META[it.mention_volume];
+                const keyReason = tField(it.key_reason_en, it.key_reason_ko, it.key_reason, locale);
+                return (
+                  <div
+                    key={it.symbol}
+                    onClick={() => {
+                      setSymbol(it.symbol);
+                      setExpandedSymbol(prev => prev === it.symbol ? null : it.symbol);
+                    }}
+                    style={{
+                      padding: 12,
+                      borderRadius: 'var(--r)',
+                      border: '1px solid var(--border)',
+                      background: it.symbol === symbol ? 'var(--em-soft)' : 'var(--card)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
+                      <span className="sym-pill__badge" style={{ width: 22, height: 22, flexShrink: 0 }}>{it.symbol[0]}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <span style={{ fontWeight: 700, fontSize: 13 }}>{it.symbol}</span>
+                          <span style={{
+                            fontSize: 8, fontWeight: 700, padding: '1px 3px', borderRadius: 2, flexShrink: 0,
+                            background: 'rgba(167,139,250,0.15)', color: 'var(--purple, #a78bfa)',
+                          }}>T2</span>
+                        </div>
+                        {SYMBOL_NAMES[it.symbol] && (
+                          <span style={{ fontSize: 10, color: 'var(--fg-muted)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {SYMBOL_NAMES[it.symbol][locale as 'en' | 'ko']}
+                          </span>
+                        )}
+                      </div>
+                      {briefBySymbol[it.symbol] && (() => {
+                        const sq = briefBySymbol[it.symbol].setup_quality;
+                        const sqMeta = SETUP_QUALITY_META[sq] ?? SETUP_QUALITY_META['B'];
+                        return <span className={`badge ${sqMeta.color}`} style={{ fontSize: 10, marginLeft: 2 }}>{sqMeta.label}</span>;
+                      })()}
+                      <span style={{
+                        marginLeft: 'auto', fontSize: 10, fontWeight: 600,
+                        color: compositeColor(score),
+                        border: `1px solid ${compositeColor(score)}`,
+                        padding: '1px 6px', borderRadius: 4,
+                      }}>{t(meta?.label, locale)}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }}>
+                      <span className="mono" style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', color: compositeColor(score) }}>
+                        {score > 0 ? '+' : ''}{score}
+                      </span>
+                      <span style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>{t(S.maxScore, locale)}</span>
+                    </div>
+                    <ScoreBar score={score} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--fg-subtle)', marginBottom: 6 }}>
+                      <span>{t(S.extremeFear, locale)}</span>
+                      <span>{t(S.neutral, locale)}</span>
+                      <span>{t(S.euphoric, locale)}</span>
+                    </div>
+                    <div style={{ marginBottom: 6 }}><DeltaLabel delta={it.score_delta ?? null} /></div>
+                    <div style={{ fontSize: 10.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 6 }}>{keyReason}</div>
+                    <TopNewsBox topNews={it.top_news} />
+                    <div style={{ display: 'flex', gap: 8, fontSize: 10, color: 'var(--fg-subtle)' }}>
+                      {trend && <span>{trend.icon} {t(trend.label, locale)}</span>}
+                      {vol && <span>· {t(vol.label, locale)}</span>}
+                      {it.bot_suspected === 'yes' && <span style={{ color: 'var(--warn)' }}>· {t(S.botSuspected, locale)}</span>}
+                    </div>
+                    {expandedSymbol === it.symbol && <SentimentTrendChart symbol={it.symbol} locale={locale} />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 분류 외 심볼 */}
+        {otherSymbols.length > 0 && (
+          <div className="sym-sentiment-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+            {otherSymbols.map(it => {
+              const score = it.composite_score ?? it.sentiment_score;
+              const meta = SENTIMENT_META[it.sentiment];
+              return (
+                <div key={it.symbol} style={{ padding: 12, borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--card)' }}>
+                  <span style={{ fontWeight: 700 }}>{it.symbol}</span>
+                  <span style={{ fontSize: 14, color: compositeColor(score), marginLeft: 8 }}>{score > 0 ? '+' : ''}{score}</span>
+                  <span style={{ fontSize: 10, color: 'var(--fg-subtle)', marginLeft: 4 }}>{t(meta?.label, locale)}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {symbols.length === 0 && (
           <div className="subtle" style={{ textAlign: 'center', padding: 24 }}>{t(S.noSymbolData, locale)}</div>
         )}

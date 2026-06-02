@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.endpoints import router, WATCHLIST_SYMS
 from services.overnight_service import start_overnight_service
+from core.signal_tracker import init_db
 
 # SYMBOLS that need overnight price: watchlist + macro index ETFs shown in MarketStrip
 _OVERNIGHT_SYMBOLS = list(dict.fromkeys(WATCHLIST_SYMS + ["SPY", "QQQ", "IWM"]))
@@ -10,6 +11,7 @@ _OVERNIGHT_SYMBOLS = list(dict.fromkeys(WATCHLIST_SYMS + ["SPY", "QQQ", "IWM"]))
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    init_db()
     start_overnight_service(_OVERNIGHT_SYMBOLS)
     yield
 

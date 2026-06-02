@@ -411,3 +411,79 @@ class PrePostResponse(BaseModel):
     overnight_change_pct: Optional[float] = None
     regular_close: Optional[float] = None
     regular_change_pct: Optional[float] = None  # regularMarketChangePercent from yfinance
+
+
+# --- Signal Tracker (실거래 트래킹) ---
+
+class SignalLogEntry(BaseModel):
+    id: int
+    symbol: str
+    signal_date: str
+    stage2_score: int
+    rs_score: Optional[float] = None
+    entry: float
+    stop: float
+    target: float
+    status: str           # PENDING / ACTIVE / WIN / LOSS / TIMEOUT / CANCELLED
+    entry_date: Optional[str] = None
+    entry_price: Optional[float] = None
+    exit_date: Optional[str] = None
+    exit_price: Optional[float] = None
+    r_multiple: Optional[float] = None
+    bars_held: Optional[int] = None
+    regime: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class HealthInfo(BaseModel):
+    status: str           # ON_TRACK / WATCH / UNDERPERFORMING / INSUFFICIENT_DATA
+    confidence: str       # LOW / MEDIUM / HIGH
+    expectancy_delta: Optional[float] = None
+    win_rate_delta: Optional[float] = None
+
+
+class BacktestBaseline(BaseModel):
+    expectancy_r: float
+    win_rate: float
+    profit_factor: float
+    n: int
+    oos_expectancy_r: float
+
+
+class RegimeBreakdownItem(BaseModel):
+    n: int
+    win_rate: Optional[float] = None
+    expectancy_r: Optional[float] = None
+
+
+class EquityCurvePoint(BaseModel):
+    date: str
+    equity: float
+    trade_n: int
+
+
+class SignalLogStats(BaseModel):
+    n_closed: int
+    n_active: int
+    n_pending: int
+    n_total: int
+    wins: int
+    losses: int
+    timeouts: int
+    win_rate: Optional[float] = None
+    expectancy_r: Optional[float] = None
+    profit_factor: Optional[float] = None
+    mdd: Optional[float] = None
+    avg_win_r: Optional[float] = None
+    avg_loss_r: Optional[float] = None
+    equity_curve: List[EquityCurvePoint] = []
+    regime_breakdown: Dict[str, RegimeBreakdownItem] = {}
+    pipeline: List[Any] = []
+    health: HealthInfo
+    backtest_baseline: BacktestBaseline
+
+
+class SignalLogResponse(BaseModel):
+    entries: List[SignalLogEntry]
+    total: int

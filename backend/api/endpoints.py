@@ -15,6 +15,7 @@ from api.schemas import (
     MacroResponse, MacroInsightResponse, MacroOverallInsight, MacroGroupInsight, MacroAiMeta,
     RegimeResponse, DistributionDayResponse, SentimentResponse,
     BriefResponse, EarningsResponse, SentimentHistoryResponse, PrePostResponse,
+    SignalLogResponse, SignalLogStats,
 )
 from services.sentiment_service import fetch_latest, enrich_with_delta, fetch_today_slots, fetch_sentiment_history
 from services.overnight_service import get_overnight_price
@@ -26,6 +27,7 @@ from core.distribution_day import count_distribution_days
 from core.regime_engine import compute_regime
 from core.conviction_calculator import calculate_conviction
 from core.backtest_engine import run_full_backtest, load_cached_result, run_parameter_sweep, STAGE2_THRESHOLD
+from core.signal_tracker import scan_and_log, update_outcomes, get_signal_log, compute_live_stats
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -574,6 +576,13 @@ async def get_watchlist_endpoint():
                 logger.error(f"Watchlist error for {sym}: {e}", exc_info=True)
 
         result.sort(key=lambda x: x["score"], reverse=True)
+
+        # 자동 신호 스캔 — 워치리스트 갱신 시마다 Stage2 >= 5 신호를 자동 기록
+        try:
+            scan_and_log(result, regime=regime_label)
+        except Exception as e:
+            logger.warning(f"scan_and_log failed (non-fatal): {e}")
+
         return {"watchlist": result}
     except Exception as e:
         logger.error(f"Error in /watchlist endpoint: {e}", exc_info=True)
@@ -734,6 +743,41 @@ async def run_backtest_sweep_endpoint(
     except Exception as e:
         logger.error(f"Backtest sweep failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"스윕 실행 중 오류: {str(e)}")
+
+
+@router.get("/signal-log", response_model=SignalLogResponse)
+async def get_signal_log_endpoint(
+    symbol: Optional[str] = Query(None, description="종목 필터 (미지정 시 전체)"),
+    limit: int = Query(200, ge=1, le=500),
+):
+    """실거래 신호 로그 조회."""
+    entries = get_signal_log(limit=limit, symbol=symbol.upper() if symbol else None)
+    return {"entries": entries, "total": len(entries)}
+
+
+@router.get("/signal-log/stats", response_model=SignalLogStats)
+async def get_signal_log_stats_endpoint():
+    """라이브 성과 통계 + 백테스트 기준값 비교."""
+    stats = compute_live_stats()
+    return stats
+
+
+@router.post("/signal-log/refresh")
+async def refresh_signal_log_endpoint(background_tasks: BackgroundTasks):
+    """
+    PENDING/ACTIVE 신호의 결과를 최신 일봉으로 갱신.
+    현재 워치리스트를 스캔하여 신규 신호도 기록.
+    수십 초 소요 가능 — 백그라운드 작업으로 실행.
+    """
+    def _run():
+        try:
+            result = update_outcomes()
+            logger.info(f"signal-log refresh complete: {result}")
+        except Exception as e:
+            logger.error(f"signal-log refresh failed: {e}", exc_info=True)
+
+    background_tasks.add_task(_run)
+    return {"status": "refresh_started", "message": "결과 갱신이 백그라운드에서 실행됩니다."}
 
 
 @router.get("/distribution-days", response_model=DistributionDayResponse)
