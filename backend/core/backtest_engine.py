@@ -48,6 +48,7 @@ IN_SAMPLE_END = "2023-12-31"  # In-sample 종료일 (이후: Out-of-sample)
 BACKTEST_START = "2019-01-01" # 데이터 시작일
 
 CACHE_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "backtest_result.json")
+SWEEP_CACHE_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "backtest_sweep.json")
 
 
 @dataclass
@@ -705,15 +706,20 @@ def run_parameter_sweep(
     반환: 각 config별 {config, aggregate, n_trades} 리스트 (성과 비교용)
     """
     if configs is None:
+        # 2(threshold) × 3(rs) × 2(spy) = 12개 완전 그리드
         configs = [
-            {"label": "기본 (threshold=5, RS≥50)", "threshold": 5, "rs_threshold": 50, "use_spy_filter": False},
-            {"label": "threshold=6", "threshold": 6, "rs_threshold": 50, "use_spy_filter": False},
-            {"label": "SPY필터 (threshold=5, RS≥50)", "threshold": 5, "rs_threshold": 50, "use_spy_filter": True},
-            {"label": "RS≥60 (threshold=5)", "threshold": 5, "rs_threshold": 60, "use_spy_filter": False},
-            {"label": "RS≥60 + SPY필터", "threshold": 5, "rs_threshold": 60, "use_spy_filter": True},
-            {"label": "threshold=6 + RS≥60", "threshold": 6, "rs_threshold": 60, "use_spy_filter": False},
-            {"label": "threshold=6 + RS≥60 + SPY필터", "threshold": 6, "rs_threshold": 60, "use_spy_filter": True},
-            {"label": "RS≥70 + SPY필터", "threshold": 5, "rs_threshold": 70, "use_spy_filter": True},
+            {"label": "Stage2≥5 · RS≥50",         "threshold": 5, "rs_threshold": 50, "use_spy_filter": False},
+            {"label": "Stage2≥5 · RS≥50 · SPY필터", "threshold": 5, "rs_threshold": 50, "use_spy_filter": True},
+            {"label": "Stage2≥5 · RS≥60",         "threshold": 5, "rs_threshold": 60, "use_spy_filter": False},
+            {"label": "Stage2≥5 · RS≥60 · SPY필터", "threshold": 5, "rs_threshold": 60, "use_spy_filter": True},
+            {"label": "Stage2≥5 · RS≥70",         "threshold": 5, "rs_threshold": 70, "use_spy_filter": False},
+            {"label": "Stage2≥5 · RS≥70 · SPY필터", "threshold": 5, "rs_threshold": 70, "use_spy_filter": True},
+            {"label": "Stage2≥6 · RS≥50",         "threshold": 6, "rs_threshold": 50, "use_spy_filter": False},
+            {"label": "Stage2≥6 · RS≥50 · SPY필터", "threshold": 6, "rs_threshold": 50, "use_spy_filter": True},
+            {"label": "Stage2≥6 · RS≥60",         "threshold": 6, "rs_threshold": 60, "use_spy_filter": False},
+            {"label": "Stage2≥6 · RS≥60 · SPY필터", "threshold": 6, "rs_threshold": 60, "use_spy_filter": True},
+            {"label": "Stage2≥6 · RS≥70",         "threshold": 6, "rs_threshold": 70, "use_spy_filter": False},
+            {"label": "Stage2≥6 · RS≥70 · SPY필터", "threshold": 6, "rs_threshold": 70, "use_spy_filter": True},
         ]
 
     logger.info(f"파라미터 스윕 시작: {len(configs)}개 조합, 종목={symbols}")
@@ -784,7 +790,29 @@ def run_parameter_sweep(
             f"exp={agg.get('expectancy_r',0):.3f}R, pf={agg.get('profit_factor',0):.3f}"
         )
 
+    # 캐시 저장
+    payload = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "symbols": symbols,
+        "results": sweep_results,
+    }
+    os.makedirs(os.path.dirname(SWEEP_CACHE_PATH), exist_ok=True)
+    with open(SWEEP_CACHE_PATH, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, default=str)
+    logger.info("파라미터 스윕 캐시 저장 완료")
+
     return sweep_results
+
+
+def load_cached_sweep() -> Optional[dict]:
+    if not os.path.exists(SWEEP_CACHE_PATH):
+        return None
+    try:
+        with open(SWEEP_CACHE_PATH, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        logger.error(f"스윕 캐시 로드 실패: {e}")
+        return None
 
 
 def load_cached_result() -> Optional[dict]:

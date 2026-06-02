@@ -26,7 +26,7 @@ from services.macro_insight_service import fetch_macro_insight, get_ai_meta
 from core.distribution_day import count_distribution_days
 from core.regime_engine import compute_regime
 from core.conviction_calculator import calculate_conviction
-from core.backtest_engine import run_full_backtest, load_cached_result, run_parameter_sweep, STAGE2_THRESHOLD
+from core.backtest_engine import run_full_backtest, load_cached_result, load_cached_sweep, run_parameter_sweep, STAGE2_THRESHOLD
 from core.signal_tracker import scan_and_log, update_outcomes, get_signal_log, compute_live_stats
 
 router = APIRouter()
@@ -727,12 +727,24 @@ async def run_backtest_endpoint(
         raise HTTPException(status_code=500, detail=f"백테스트 실행 중 오류: {str(e)}")
 
 
+@router.get("/backtest/sweep")
+async def get_backtest_sweep_result():
+    """캐시된 파라미터 스윕 결과 조회. 결과 없으면 404."""
+    cached = load_cached_sweep()
+    if cached is None:
+        raise HTTPException(
+            status_code=404,
+            detail="스윕 결과가 없습니다. POST /api/backtest/sweep 으로 먼저 실행하세요."
+        )
+    return cached
+
+
 @router.post("/backtest/sweep")
 async def run_backtest_sweep_endpoint(
     symbols: Optional[List[str]] = None,
 ):
     """
-    8가지 파라미터 조합으로 백테스트 스윕 실행 후 비교 결과 반환.
+    8가지 파라미터 조합으로 백테스트 스윕 실행 후 결과 반환 및 캐시 저장.
     symbols 미지정 시 TIER1 종목 대상.
     주의: 수분 소요될 수 있습니다.
     """

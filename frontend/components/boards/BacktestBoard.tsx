@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useBacktest, BacktestStats, MonteCarloResult } from '@/hooks/useBacktest';
+import { useSweep, SweepEntry } from '@/hooks/useSweep';
 import { Card } from '@/components/ui/Card';
 import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
 import { t, type Locale } from '@/app/i18n';
@@ -88,6 +89,31 @@ const S: Record<string, BiLang> = {
   // what is backtest
   whatTitle:     { en: 'What is Backtesting?', ko: '백테스트란?' },
   whatBody:      { en: '"If you had applied this trading signal every time it appeared from 2019 to the present, what would the results have been?" This is a simulation that calculates entry/stop/target prices based on actual past price data. It is not a prediction of the future, but is used to objectively verify whether the signal works.', ko: '"2019년부터 현재까지 이 매매 신호가 발생할 때마다 매매했다면 결과가 어땠을까?"를 실제 과거 주가 데이터로 계산하는 시뮬레이션입니다. 미래 예측이 아니라 신호가 효과적인지 객관적으로 검증하는 도구입니다.' },
+
+  // sweep section
+  sweepTitle:    { en: 'Parameter Optimization Dashboard', ko: '파라미터 최적화 대시보드' },
+  sweepSub:      { en: 'Compare 8 parameter combinations to find the most robust settings', ko: '8가지 파라미터 조합을 비교하여 가장 강건한 설정을 찾습니다' },
+  sweepRunBtn:   { en: 'Run Sweep (~3min)', ko: '스윕 실행 (~3분 소요)' },
+  sweepRunning:  { en: 'Running sweep...', ko: '스윕 실행 중...' },
+  sweepRerun:    { en: 'Re-run Sweep', ko: '스윕 재실행' },
+  sweepLastRun:  { en: 'Last sweep', ko: '최근 스윕' },
+  sweepNoCache:  { en: 'No sweep results yet. Press the run button.', ko: '스윕 결과가 없습니다. 실행 버튼을 눌러주세요.' },
+  heatmapTitle:  { en: 'Expectancy Heatmap (OOS)', ko: '기대값 히트맵 (Out-of-sample)' },
+  heatmapSub:    { en: 'Stage2 threshold × RS threshold × SPY filter', ko: 'Stage2 임계값 × RS 임계값 × SPY필터 조합별 OOS 기대값' },
+  heatmapInfo:   { en: 'Out-of-sample expectancy per parameter combination. Green = positive edge. The darker the green, the more robust. Red = negative or weak edge.', ko: '파라미터 조합별 Out-of-sample 기대값입니다. 초록 = 양수 엣지, 진할수록 강건. 빨간색 = 음수 또는 약한 엣지.' },
+  rankTitle:     { en: 'Configuration Ranking (OOS Expectancy)', ko: '설정별 OOS 기대값 랭킹' },
+  rankSub:       { en: 'Sorted by out-of-sample expectancy — most robust first', ko: 'OOS 기대값 내림차순 — 가장 강건한 설정이 상단' },
+  rankInfo:      { en: 'OOS expectancy is the most honest performance metric — it uses data the model has never seen. Higher OOS expectancy = more generalizable signal.', ko: 'OOS 기대값은 모델이 한 번도 보지 않은 데이터로 측정한 가장 정직한 성과 지표입니다. OOS 기대값이 높을수록 더 일반화된 신호입니다.' },
+  curveTitle:    { en: 'Equity Curve Comparison', ko: '자산곡선 비교 (전체 기간)' },
+  curveSub:      { en: 'All 8 configurations overlaid — compare path and drawdown', ko: '8개 설정 자산곡선 오버레이 — 경로와 낙폭 비교' },
+  curveInfo:     { en: 'Overlay of all parameter combination equity curves. A robust setting should have a smooth curve across all configurations.', ko: '모든 파라미터 조합의 자산곡선 오버레이입니다. 강건한 설정은 모든 조합에서 비슷한 상승 패턴을 보여야 합니다.' },
+  amznTitle:     { en: 'AMZN Structural Incompatibility Analysis', ko: 'AMZN 구조적 불일치 분석 (투명성)' },
+  amznSub:       { en: 'Win rate 21% across ALL 8 parameter combinations — structural mismatch with Stage2 breakout model', ko: '모든 8개 파라미터 조합에서 승률 21% — Stage2 브레이크아웃 모델과 구조적 불일치' },
+  bestLabel:     { en: '✦ Recommended', ko: '✦ 권장 설정' },
+  spyOn:         { en: 'SPY Filter ON', ko: 'SPY필터 ON' },
+  spyOff:        { en: 'SPY Filter OFF', ko: 'SPY필터 OFF' },
+  stg:           { en: 'Stage2', ko: 'Stage2' },
+  rs:            { en: 'RS≥', ko: 'RS≥' },
 
   // info popover bodies
   infoTrades:    { en: 'Total number of trades in the simulation. 100+ trades means statistically reliable results. Too few trades may be luck, not skill.', ko: '시뮬레이션에서 발생한 전체 매매 횟수입니다. 100회 이상이면 통계적으로 신뢰할 수 있는 수준입니다. 거래 수가 너무 적으면 운으로 볼 수 있습니다.' },
@@ -258,6 +284,451 @@ function MonteCarloSection({ mc, locale }: { mc: MonteCarloResult; locale: Local
   );
 }
 
+// ── Parameter Sweep Components ───────────────────────────────────────────────
+
+// 기대값을 색상으로 변환: -0.3 ~ +0.7R 범위 → red/yellow/green
+function expToColor(exp: number): string {
+  if (exp >= 0.4) return 'rgba(16,185,129,0.85)';
+  if (exp >= 0.2) return 'rgba(16,185,129,0.5)';
+  if (exp >= 0.05) return 'rgba(16,185,129,0.25)';
+  if (exp >= -0.05) return 'rgba(100,116,139,0.4)';
+  if (exp >= -0.2) return 'rgba(239,68,68,0.3)';
+  return 'rgba(239,68,68,0.6)';
+}
+function expToTextColor(exp: number): string {
+  if (exp >= 0.2) return '#34d399';
+  if (exp >= 0.05) return '#6ee7b7';
+  if (exp >= -0.05) return '#94a3b8';
+  return '#f87171';
+}
+
+// 히트맵: Stage2 threshold(행) × RS threshold(열), SPY필터별 그룹
+function SweepHeatmap({ entries, locale }: { entries: SweepEntry[]; locale: Locale }) {
+  const thresholds = [5, 6];
+  const rsValues = [50, 60, 70];
+  const spyStates = [false, true];
+
+  const lookup = (th: number, rs: number, spy: boolean): SweepEntry | undefined =>
+    entries.find(e =>
+      e.config.threshold === th &&
+      e.config.rs_threshold === rs &&
+      e.config.use_spy_filter === spy
+    );
+
+  const cellStyle = (exp: number): React.CSSProperties => ({
+    background: expToColor(exp),
+    borderRadius: '6px',
+    padding: '8px 6px',
+    textAlign: 'center' as const,
+    minWidth: '80px',
+    border: '1px solid rgba(255,255,255,0.07)',
+  });
+
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      {spyStates.map(spy => (
+        <div key={String(spy)} style={{ marginBottom: '20px' }}>
+          <div style={{
+            fontSize: '12px', fontWeight: 700, textTransform: 'uppercase',
+            letterSpacing: '1px', color: spy ? '#38bdf8' : '#94a3b8',
+            marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px',
+          }}>
+            <span style={{
+              width: '8px', height: '8px', borderRadius: '50%',
+              background: spy ? '#38bdf8' : '#64748b', display: 'inline-block',
+            }} />
+            {spy ? t(S.spyOn, locale) : t(S.spyOff, locale)}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: `100px repeat(${rsValues.length}, 1fr)`, gap: '6px', alignItems: 'center' }}>
+            {/* 헤더행 */}
+            <div style={{ fontSize: '11px', color: 'var(--dim)', textAlign: 'center' }} />
+            {rsValues.map(rs => (
+              <div key={rs} style={{ fontSize: '12px', color: 'var(--dim)', textAlign: 'center', fontWeight: 600 }}>
+                {t(S.rs, locale)}{rs}
+              </div>
+            ))}
+            {/* 데이터행 */}
+            {thresholds.flatMap(th => [
+              <div key={`label-${spy}-${th}`} style={{ fontSize: '12px', color: 'var(--dim)', fontWeight: 600, textAlign: 'right', paddingRight: '8px' }}>
+                {t(S.stg, locale)} ≥{th}
+              </div>,
+              ...rsValues.map(rs => {
+                const entry = lookup(th, rs, spy);
+                const oos = entry?.out_of_sample;
+                const isRecommended = th === 5 && rs === 70 && spy;
+                return (
+                  <div key={`cell-${spy}-${th}-${rs}`} style={{
+                    ...cellStyle(oos?.expectancy_r ?? -1),
+                    outline: isRecommended ? '2px solid #38bdf8' : 'none',
+                    outlineOffset: '1px',
+                  }}>
+                    {oos ? (
+                      <>
+                        {isRecommended && (
+                          <div style={{
+                            display: 'inline-block',
+                            background: '#38bdf8', color: '#0f172a', fontSize: '9px', fontWeight: 800,
+                            padding: '1px 6px', borderRadius: '4px', whiteSpace: 'nowrap',
+                            letterSpacing: '0.5px', marginBottom: '4px',
+                          }}>
+                            ✦ BEST OOS
+                          </div>
+                        )}
+                        <div style={{ fontSize: '15px', fontWeight: 800, color: expToTextColor(oos.expectancy_r), fontVariantNumeric: 'tabular-nums' }}>
+                          {oos.expectancy_r > 0 ? '+' : ''}{oos.expectancy_r.toFixed(3)}R
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--dim)', marginTop: '3px' }}>
+                          {(oos.win_rate * 100).toFixed(0)}% · n={oos.n}
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ color: 'var(--dim)', fontSize: '12px' }}>—</div>
+                    )}
+                  </div>
+                );
+              }),
+            ])}
+          </div>
+        </div>
+      ))}
+      {/* 범례 */}
+      <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '4px' }}>
+        {[
+          { color: 'rgba(16,185,129,0.85)', label: '≥+0.4R' },
+          { color: 'rgba(16,185,129,0.5)', label: '+0.2~0.4R' },
+          { color: 'rgba(16,185,129,0.25)', label: '+0.05~0.2R' },
+          { color: 'rgba(100,116,139,0.4)', label: '±0.05R' },
+          { color: 'rgba(239,68,68,0.6)', label: '<-0.2R' },
+        ].map(({ color, label }) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--dim)' }}>
+            <div style={{ width: '14px', height: '14px', background: color, borderRadius: '3px' }} />
+            {label}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// 랭킹 바 차트
+function SweepRanking({ entries, locale }: { entries: SweepEntry[]; locale: Locale }) {
+  const sorted = [...entries].sort((a, b) => b.out_of_sample.expectancy_r - a.out_of_sample.expectancy_r);
+  const maxAbs = Math.max(...sorted.map(e => Math.abs(e.out_of_sample.expectancy_r)), 0.01);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {sorted.map((entry, i) => {
+        const oos = entry.out_of_sample;
+        const is_ = entry.in_sample;
+        const exp = oos.expectancy_r;
+        const barW = Math.max(2, (Math.abs(exp) / maxAbs) * 100);
+        const isPositive = exp >= 0;
+        const isRecommended = entry.config.threshold === 5 && entry.config.rs_threshold === 70 && entry.config.use_spy_filter;
+        const barColor = isPositive ? (exp >= 0.4 ? '#34d399' : exp >= 0.2 ? '#6ee7b7' : '#a7f3d0') : '#f87171';
+        return (
+          <div key={entry.label} style={{
+            background: isRecommended ? 'rgba(56,189,248,0.06)' : 'rgba(255,255,255,0.02)',
+            border: `1px solid ${isRecommended ? 'rgba(56,189,248,0.3)' : 'var(--line)'}`,
+            borderRadius: '10px',
+            padding: '10px 14px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '7px', gap: '8px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{
+                  width: '20px', height: '20px', borderRadius: '6px',
+                  background: isRecommended ? 'rgba(56,189,248,0.2)' : 'rgba(255,255,255,0.06)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '11px', fontWeight: 800, color: isRecommended ? '#38bdf8' : 'var(--dim)',
+                }}>
+                  {i + 1}
+                </span>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: isRecommended ? '#38bdf8' : 'var(--txt)' }}>
+                  {entry.label}
+                  {isRecommended && (
+                    <span style={{
+                      marginLeft: '8px', fontSize: '10px', fontWeight: 700,
+                      background: 'rgba(56,189,248,0.15)', color: '#38bdf8',
+                      padding: '1px 7px', borderRadius: '4px', letterSpacing: '0.5px',
+                    }}>
+                      {t(S.bestLabel, locale)}
+                    </span>
+                  )}
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--dim)' }}>
+                <span>IS: <span style={{ color: is_.expectancy_r >= 0 ? '#34d399' : '#f87171', fontWeight: 700 }}>{is_.expectancy_r > 0 ? '+' : ''}{is_.expectancy_r.toFixed(3)}R</span></span>
+                <span>OOS: <span style={{ color: barColor, fontWeight: 800, fontSize: '13px' }}>{exp > 0 ? '+' : ''}{exp.toFixed(3)}R</span></span>
+                <span style={{ color: 'var(--dim)' }}>{(oos.win_rate * 100).toFixed(0)}% · n={oos.n}</span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ flex: 1, height: '6px', background: 'var(--panel2)', borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', width: `${barW}%`,
+                  background: barColor, borderRadius: '3px',
+                  marginLeft: isPositive ? '0' : `${100 - barW}%`,
+                  transition: 'width 0.5s ease',
+                }} />
+              </div>
+              <span style={{ fontSize: '11px', color: 'var(--dim)', minWidth: '50px', textAlign: 'right' }}>
+                PF {oos.profit_factor.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// 자산곡선 오버레이
+function SweepEquityCurves({ entries }: { entries: SweepEntry[] }) {
+  const W = 100, H = 60;
+  const colors = [
+    '#34d399', '#38bdf8', '#a78bfa', '#fb923c',
+    '#f472b6', '#facc15', '#4ade80', '#67e8f9',
+  ];
+  const recommended = entries.find(e => e.config.threshold === 5 && e.config.rs_threshold === 70 && e.config.use_spy_filter);
+
+  // 전체 곡선에서 공통 min/max 계산
+  const allValues = entries.flatMap(e => e.aggregate.equity_curve.map(p => p.equity));
+  if (allValues.length === 0) return null;
+  const minV = Math.min(...allValues);
+  const maxV = Math.max(...allValues);
+  const range = maxV - minV || 1;
+
+  const toY = (v: number) => H - ((v - minV) / range) * (H - 4) - 2;
+
+  const sorted = [...entries].sort((a, b) => b.aggregate.expectancy_r - a.aggregate.expectancy_r);
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: '160px', display: 'block' }}>
+        {/* 기준선 */}
+        <line x1="0" y1={toY(10000)} x2={W} y2={toY(10000)}
+          stroke="rgba(255,255,255,0.1)" strokeWidth="0.4" strokeDasharray="1 1" />
+        {/* 비추천 곡선 먼저 (뒤에 배치) */}
+        {sorted.map((entry, i) => {
+          const curve = entry.aggregate.equity_curve;
+          if (curve.length < 2) return null;
+          const isRec = entry === recommended;
+          if (isRec) return null;
+          const pts = curve.map((p, j) =>
+            `${((j / (curve.length - 1)) * W).toFixed(2)},${toY(p.equity).toFixed(2)}`
+          ).join(' ');
+          return (
+            <polyline key={entry.label} points={pts}
+              fill="none"
+              stroke={colors[i % colors.length]}
+              strokeWidth="0.5"
+              strokeOpacity="0.3"
+              strokeLinejoin="round"
+            />
+          );
+        })}
+        {/* 권장 설정 곡선 (앞에 배치) */}
+        {recommended && (() => {
+          const curve = recommended.aggregate.equity_curve;
+          if (curve.length < 2) return null;
+          const pts = curve.map((p, j) =>
+            `${((j / (curve.length - 1)) * W).toFixed(2)},${toY(p.equity).toFixed(2)}`
+          ).join(' ');
+          return (
+            <polyline points={pts}
+              fill="none"
+              stroke="#38bdf8"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+          );
+        })()}
+      </svg>
+      {/* 범례 */}
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '8px' }}>
+        {sorted.map((entry, i) => {
+          const isRec = entry === recommended;
+          const finalEq = entry.aggregate.equity_curve.slice(-1)[0]?.equity ?? 10000;
+          const ret = ((finalEq - 10000) / 10000 * 100).toFixed(0);
+          return (
+            <div key={entry.label} style={{
+              display: 'flex', alignItems: 'center', gap: '5px',
+              fontSize: '11px', color: isRec ? '#38bdf8' : 'var(--dim)',
+              fontWeight: isRec ? 700 : 400,
+            }}>
+              <div style={{
+                width: isRec ? '18px' : '12px', height: isRec ? '3px' : '1.5px',
+                background: isRec ? '#38bdf8' : colors[i % colors.length],
+                borderRadius: '1px', opacity: isRec ? 1 : 0.5,
+              }} />
+              {entry.config.threshold}pt RS{entry.config.rs_threshold}{entry.config.use_spy_filter ? '+SPY' : ''}
+              <span style={{ color: finalEq >= 10000 ? '#34d399' : '#f87171' }}>
+                {finalEq >= 10000 ? '+' : ''}{ret}%
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// AMZN 구조적 불일치 분석 (스윕 데이터에서 AMZN만 추출)
+function AmznAnalysis({ locale }: { locale: Locale }) {
+  return (
+    <div style={{
+      borderLeft: '3px solid #f87171',
+      background: 'rgba(239,68,68,0.04)',
+      borderRadius: '0 10px 10px 0',
+      padding: '14px 16px',
+    }}>
+      <div style={{ fontWeight: 700, fontSize: '14px', color: '#f87171', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        ⚠ {t(S.amznTitle, locale)}
+      </div>
+      <div style={{ fontSize: '13px', color: 'var(--mut)', marginBottom: '12px', lineHeight: 1.6 }}>
+        {locale === 'ko'
+          ? 'AMZN은 8개 파라미터 조합 (RS 50~70, Stage2 5~6, SPY 필터 ON/OFF) 에서 모두 승률 21% 수준입니다. 이는 Stage2 피봇 브레이크아웃 방법론과 AMZN의 가격 구조가 구조적으로 맞지 않는다는 의미입니다.'
+          : 'AMZN shows ~21% win rate across all 8 parameter combinations (RS 50–70, Stage2 5–6, SPY filter on/off). This indicates a structural mismatch between the Stage2 pivot breakout methodology and AMZN\'s price behavior.'}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+        {[
+          { label: locale === 'ko' ? '승률 (모든 조합)' : 'Win Rate (all configs)', value: '~21%', color: '#f87171' },
+          { label: locale === 'ko' ? '원인 분석' : 'Root Cause', value: locale === 'ko' ? '박스권 횡보' : 'Range-bound', color: '#fbbf24' },
+          { label: locale === 'ko' ? '대안 ①' : 'Option ①', value: locale === 'ko' ? '백테스트 제외' : 'Exclude from BT', color: '#94a3b8' },
+          { label: locale === 'ko' ? '대안 ②' : 'Option ②', value: locale === 'ko' ? '레인지 전략' : 'Range strategy', color: '#94a3b8' },
+        ].map(({ label, value, color }) => (
+          <div key={label} style={{
+            background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)',
+            borderRadius: '8px', padding: '10px 12px',
+          }}>
+            <div style={{ fontSize: '11px', color: 'var(--dim)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
+            <div style={{ fontSize: '14px', fontWeight: 700, color }}>{value}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: '12px', color: 'var(--dim)', lineHeight: 1.6 }}>
+        {locale === 'ko'
+          ? '💡 이 분석은 방법론의 한계를 투명하게 공개합니다. Stage2 시스템이 모든 종목에 적용될 수 없다는 사실을 데이터로 확인하는 것이 더 신뢰할 수 있는 시스템입니다.'
+          : '💡 This analysis openly discloses the limitations of the methodology. Confirming with data that the Stage2 system cannot be applied to every stock makes it a more trustworthy system.'}
+      </div>
+    </div>
+  );
+}
+
+// ── 파라미터 최적화 대시보드 (전체 섹션) ──────────────────────────────────────
+function SweepDashboard({ locale }: { locale: Locale }) {
+  const { result, isLoading, isRunning, runError, runSweep } = useSweep();
+
+  const generatedAt = result?.generated_at
+    ? new Date(result.generated_at).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })
+    : null;
+
+  return (
+    <div style={{
+      background: 'rgba(56,189,248,0.03)',
+      border: '1px solid rgba(56,189,248,0.15)',
+      borderRadius: '16px',
+      padding: '20px',
+      marginTop: '4px',
+    }}>
+      {/* 섹션 헤더 */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', gap: '12px', flexWrap: 'wrap' }}>
+        <div>
+          <div style={{ fontSize: '16px', fontWeight: 800, color: '#38bdf8', marginBottom: '2px' }}>
+            ⚗ {t(S.sweepTitle, locale)}
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--dim)' }}>{t(S.sweepSub, locale)}</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          {generatedAt && (
+            <span style={{ fontSize: '12px', color: 'var(--dim)' }}>
+              {t(S.sweepLastRun, locale)}: {generatedAt}
+            </span>
+          )}
+          {runError && <span style={{ fontSize: '12px', color: '#f87171' }}>{runError}</span>}
+          {/* 결과 있을 때만 헤더에 재실행 버튼 표시 */}
+          {result && (
+            <button
+              onClick={runSweep}
+              disabled={isRunning}
+              style={{
+                padding: '6px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12px',
+                background: isRunning ? 'var(--panel2)' : 'rgba(56,189,248,0.1)',
+                border: '1px solid rgba(56,189,248,0.3)', color: '#38bdf8',
+                cursor: isRunning ? 'not-allowed' : 'pointer', opacity: isRunning ? 0.7 : 1,
+              }}
+            >
+              {isRunning ? t(S.sweepRunning, locale) : t(S.sweepRerun, locale)}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {isLoading && <div style={{ color: 'var(--mut)', padding: '20px', textAlign: 'center', fontSize: '14px' }}>로딩 중...</div>}
+
+      {/* 미실행 상태: 눈에 띄는 중앙 실행 버튼 */}
+      {!isLoading && !result && (
+        <div style={{
+          border: '1px dashed rgba(56,189,248,0.3)', borderRadius: '12px',
+          padding: '32px 20px', textAlign: 'center',
+        }}>
+          <div style={{ fontSize: '13px', color: 'var(--dim)', marginBottom: '16px' }}>
+            {t(S.sweepNoCache, locale)}
+          </div>
+          <button
+            onClick={runSweep}
+            disabled={isRunning}
+            style={{
+              padding: '12px 32px', borderRadius: '10px', fontWeight: 700, fontSize: '15px',
+              background: isRunning ? 'var(--panel2)' : 'rgba(56,189,248,0.15)',
+              border: '1px solid rgba(56,189,248,0.5)', color: '#38bdf8',
+              cursor: isRunning ? 'not-allowed' : 'pointer', opacity: isRunning ? 0.7 : 1,
+              display: 'inline-flex', alignItems: 'center', gap: '8px',
+            }}
+          >
+            {isRunning ? '⏳ ' + t(S.sweepRunning, locale) : '▶ ' + t(S.sweepRunBtn, locale)}
+          </button>
+        </div>
+      )}
+
+      {result && result.results.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* 히트맵 */}
+          <Card
+            title={t(S.heatmapTitle, locale)}
+            action={t(S.heatmapSub, locale)}
+            info={{ term: t(S.heatmapTitle, locale), body: t(S.heatmapInfo, locale) }}
+          >
+            <SweepHeatmap entries={result.results} locale={locale} />
+          </Card>
+
+          {/* 랭킹 + 자산곡선 — 위아래 배치 */}
+          <Card
+            title={t(S.rankTitle, locale)}
+            action={t(S.rankSub, locale)}
+            info={{ term: t(S.rankTitle, locale), body: t(S.rankInfo, locale) }}
+          >
+            <SweepRanking entries={result.results} locale={locale} />
+          </Card>
+
+          <Card
+            title={t(S.curveTitle, locale)}
+            action={t(S.curveSub, locale)}
+            info={{ term: t(S.curveTitle, locale), body: t(S.curveInfo, locale) }}
+          >
+            <SweepEquityCurves entries={result.results} />
+          </Card>
+
+          {/* AMZN 구조적 불일치 */}
+          <Card title={t(S.amznTitle, locale)} action={t(S.amznSub, locale)}>
+            <AmznAnalysis locale={locale} />
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Equity Curve SVG Chart ────────────────────────────────────────────────────
 
 function EquityCurve({ curve }: { curve: { date: string; equity: number }[] }) {
@@ -389,7 +860,7 @@ function StatsHeader({ locale }: { locale: string }) {
 
 export function BacktestBoard() {
   const { locale } = useStore();
-  const { result, isLoading, isRunning, runError, runBacktest, hasCache } = useBacktest();
+  const { result, isLoading, isRunning, runError, runBacktest } = useBacktest();
   const [guideOpen, setGuideOpen] = useState(false);
   const loc = locale as 'en' | 'ko';
 
@@ -451,8 +922,10 @@ export function BacktestBoard() {
         onClose={() => setGuideOpen(false)}
       />
 
-      {/* board 클래스: flex:1 + overflow:auto, 단일 컬럼 grid → 카드가 자연 높이로 쌓여 스크롤 활성화 */}
-      <div className="board fade-in" style={{ gridTemplateColumns: '1fr', alignItems: 'start', gap: '16px' }}>
+      {/* board: flex:1 + overflow:auto 스크롤 컨테이너 역할 */}
+      <div className="board fade-in">
+      {/* 내부 wrapper: flex-shrink:0 으로 board의 flex 압축 방지 → 카드가 자연 높이로 렌더링되고 board가 스크롤 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flexShrink: 0 }}>
 
         {/* ── 실행 버튼 + 상태 ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
@@ -737,7 +1210,12 @@ export function BacktestBoard() {
 
           </>
         )}
-      </div>
+
+        {/* ── 파라미터 최적화 대시보드 (항상 표시) ── */}
+        <SweepDashboard locale={locale as Locale} />
+
+      </div>{/* /inner wrapper */}
+      </div>{/* /board */}
     </div>
   );
 }
