@@ -544,6 +544,27 @@ class MorningWatchlistItem(BaseModel):
     correction_note_en: Optional[str] = None
     correction_note_ko: Optional[str] = None
 
+class GlobalIssue(BaseModel):
+    rank: int
+    tier: str                                    # "breaking" | "ongoing"
+    category: str                                # "trade_tariff" | "geopolitical" | "central_bank" | "ai_regulation"
+    title_en: Optional[str] = None
+    title_ko: Optional[str] = None
+    summary_en: Optional[str] = None
+    summary_ko: Optional[str] = None
+    source_hint: Optional[str] = None
+    confidence: Optional[str] = None            # "confirmed" | "developing" | "unverified"
+    us_stock_impact_en: Optional[str] = None
+    us_stock_impact_ko: Optional[str] = None
+    impact_direction: Optional[str] = None      # "positive" | "negative" | "neutral" | "watch"
+
+class GlobalContext(BaseModel):
+    fetched_at: Optional[str] = None
+    search_window: Optional[str] = None
+    issues: List[GlobalIssue] = []
+    ongoing_no_update: List[str] = []
+    fallback: Optional[bool] = None
+
 class MorningBriefingData(BaseModel):
     generated_at: Optional[str] = None
     schema_version: Optional[str] = None
@@ -554,6 +575,7 @@ class MorningBriefingData(BaseModel):
     executive_bullets_ko: List[str] = []
     market_mood: Optional[MorningMood] = None
     big_picture: Optional[MorningBigPicture] = None
+    global_context: Optional[GlobalContext] = None
     sector_analysis: Optional[MorningSectorAnalysis] = None
     spotlight: List[MorningSpotlight] = []
     watchlist: List[MorningWatchlistItem] = []
