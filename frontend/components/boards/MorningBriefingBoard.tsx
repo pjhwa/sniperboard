@@ -152,6 +152,18 @@ function buildShareText(
     (bp as any)?.btc_note_en ? `· ${ko ? '비트코인' : 'BTC'}: ${ko ? (bp as any).btc_note_ko : (bp as any).btc_note_en}` : '',
   ].filter(Boolean).join('\n');
 
+  const gc = d.global_context;
+  const gcLines = gc && gc.issues && gc.issues.length > 0
+    ? gc.issues.map(iss => {
+        const title  = ko ? iss.title_ko  : iss.title_en;
+        const impact = ko ? iss.us_stock_impact_ko : iss.us_stock_impact_en;
+        const dir = iss.impact_direction === 'positive' ? '▲'
+                  : iss.impact_direction === 'negative' ? '▼'
+                  : iss.impact_direction === 'watch'    ? '⚠' : '—';
+        return `[${dir}] ${title ?? ''}${impact ? `\n  → ${impact}` : ''}`;
+      }).join('\n')
+    : '';
+
   const saLines = [
     sa?.leaders_en  ? `▲ ${ko ? sa.leaders_ko  : sa.leaders_en}`  : '',
     sa?.laggards_en ? `▼ ${ko ? sa.laggards_ko : sa.laggards_en}` : '',
@@ -191,6 +203,8 @@ function buildShareText(
     '',
     `🌍 ${ko ? '거시환경' : 'Macro'}`,
     bpLines,
+    '',
+    gcLines ? `🌐 ${ko ? '글로벌 이슈' : 'Global Issues'}\n${gcLines}` : '',
     '',
     `📈 ${ko ? '섹터 동향' : 'Sectors'}`,
     saLines,
