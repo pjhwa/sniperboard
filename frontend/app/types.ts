@@ -400,6 +400,7 @@ export const MACRO_SYMBOL_NAMES: Record<string, BiLang> = {
   'XLY':      { en: 'Consumer Disc. (XLY)',      ko: '소비재 (XLY)' },
   'XHB':      { en: 'Homebuilders (XHB)',        ko: '홈빌더 (XHB)' },
   'ITA':      { en: 'Aerospace/Def. (ITA)',      ko: '방산 (ITA)' },
+  'BTC-USD':  { en: 'Bitcoin (BTC)',             ko: '비트코인 (BTC)' },
 };
 
 // Conviction score → BiLang label mapping (matches conviction_calculator.py thresholds)

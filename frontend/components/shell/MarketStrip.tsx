@@ -8,7 +8,7 @@ import { usePrePost } from '@/hooks/usePrePost';
 import { Sparkline } from '@/components/ui/Sparkline';
 import { t } from '@/app/i18n';
 
-const STRIP_SYMBOLS = ['SPY', 'QQQ', 'IWM', '^VIX', 'DX-Y.NYB', 'GLD', 'CL=F'];
+const STRIP_SYMBOLS = ['SPY', 'QQQ', 'IWM', '^VIX', 'DX-Y.NYB', 'GLD', 'CL=F', 'BTC-USD'];
 
 const SYMBOL_TOOLTIPS: Record<string, { en: string; ko: string }> = {
   'SPY':      { en: 'S&P 500 ETF — tracks 500 large US stocks. Market temperature gauge', ko: 'S&P 500 ETF — 미국 대형주 500개 추종. 전체 시장 체온계' },
@@ -18,6 +18,7 @@ const SYMBOL_TOOLTIPS: Record<string, { en: string; ko: string }> = {
   'DX-Y.NYB': { en: 'DXY Dollar Index — dollar strength vs. 6 major currencies. Strong dollar → risk assets tend to fall', ko: 'DXY 달러 인덱스 — 6개 주요 통화 대비 달러 강도. 달러↑ = 위험자산↓ 경향' },
   'GLD':      { en: 'Gold ETF — safe-haven and inflation hedge. Inverse to dollar and rates', ko: '금 ETF — 안전자산·인플레이션 헤지. 달러·금리와 역관계' },
   'CL=F':     { en: 'WTI Crude Oil Futures — West Texas crude. Leading indicator for energy sector and inflation', ko: 'WTI 원유 선물 — 서부 텍사스산 원유. 에너지 섹터·인플레이션 선행 지표' },
+  'BTC-USD':  { en: 'Bitcoin — digital gold and risk sentiment proxy. Often leads risk-on/off moves', ko: '비트코인 — 디지털 금이자 리스크 심리 대리지표. 위험선호/회피 움직임을 선행하는 경향' },
 };
 
 export function MarketStrip() {

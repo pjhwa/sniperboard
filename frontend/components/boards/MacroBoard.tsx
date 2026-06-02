@@ -63,7 +63,7 @@ const MACRO_GROUPS: { key: string; subtitle: string; symbols: string[]; infoKey:
   { key: 'breadth',     subtitle: 'Broad Market', symbols: ['SPY', 'RSP', 'MAGS', 'IWM'],        infoKey: 'breadth' },
   { key: 'credit',      subtitle: 'Credit',       symbols: ['HYG', 'JNK', 'LQD', 'IEF'],        infoKey: 'credit' },
   { key: 'rates',       subtitle: 'Rates/USD',    symbols: ['DX-Y.NYB', '^TNX', 'TLT'],          infoKey: 'rates_dollar' },
-  { key: 'commodities', subtitle: 'Commodities',  symbols: ['CL=F', 'GLD'],                      infoKey: 'commodities' },
+  { key: 'commodities', subtitle: 'Commodities',  symbols: ['CL=F', 'GLD', 'BTC-USD'],            infoKey: 'commodities' },
   { key: 'sectors',     subtitle: 'Rotation',     symbols: ['SMH', 'XLE', 'XLY', 'XHB', 'ITA'], infoKey: 'sector_momentum' },
 ];
 
