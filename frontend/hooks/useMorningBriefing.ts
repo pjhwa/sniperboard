@@ -32,6 +32,29 @@ export interface MorningSectorAnalysis {
   rotation_signal_ko?: string;
 }
 
+export interface GlobalIssue {
+  rank: number;
+  tier: 'breaking' | 'ongoing';
+  category: 'trade_tariff' | 'geopolitical' | 'central_bank' | 'ai_regulation';
+  title_en?: string;
+  title_ko?: string;
+  summary_en?: string;
+  summary_ko?: string;
+  source_hint?: string;
+  confidence?: 'confirmed' | 'developing' | 'unverified';
+  us_stock_impact_en?: string;
+  us_stock_impact_ko?: string;
+  impact_direction?: 'positive' | 'negative' | 'neutral' | 'watch';
+}
+
+export interface GlobalContext {
+  fetched_at?: string;
+  search_window?: string;
+  issues: GlobalIssue[];
+  ongoing_no_update?: string[];
+  fallback?: boolean;
+}
+
 export interface MorningSpotlight {
   symbol: string;
   company: string;
@@ -79,6 +102,7 @@ export interface MorningBriefingData {
   today_checkpoints_ko: string[];
   earnings_alert_en?: string;
   earnings_alert_ko?: string;
+  global_context?: GlobalContext;
 }
 
 export interface MorningBriefingMeta {
