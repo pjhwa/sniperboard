@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useMorningBriefing, MorningWatchlistItem, MorningSpotlight, GlobalIssue, GlobalContext } from '@/hooks/useMorningBriefing';
 import { Card } from '@/components/ui/Card';
@@ -684,14 +684,6 @@ function ShareSection({ text, locale, forceOpen = false }: { text: string; local
 export function MorningBriefingBoard() {
   const { locale } = useStore();
   const { briefingData, briefingMeta, available, isLoading, error } = useMorningBriefing();
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)');
-    setIsMobile(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
 
   if (isLoading) {
     return (
@@ -717,27 +709,6 @@ export function MorningBriefingBoard() {
   }
 
   const d = briefingData;
-
-  // ── 모바일: 공유 카드만 표시 ───────────────────────────────────────────────
-  if (isMobile) {
-    const shareText = buildShareText(d, locale);
-    const dateStr = d.generated_at
-      ? new Date(d.generated_at).toLocaleDateString(locale === 'ko' ? 'ko-KR' : 'en-US', {
-          timeZone: 'Asia/Seoul', month: 'short', day: 'numeric',
-        })
-      : '';
-    return (
-      <div className="board fade-in" style={{ alignContent: 'start' }}>
-        <div className="card" style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 16 }}>📰</span>
-          <span style={{ fontWeight: 700, fontSize: 13 }}>{t(S.headline, locale)}</span>
-          {dateStr && <span style={{ fontSize: 11, color: 'var(--fg-muted)' }}>{dateStr}</span>}
-          {briefingMeta && <AgeBadge minutes={briefingMeta.age_minutes} />}
-        </div>
-        <ShareSection text={shareText} locale={locale} forceOpen />
-      </div>
-    );
-  }
   const mood  = d.market_mood;
   const bp    = d.big_picture;
   const sa    = d.sector_analysis;
@@ -753,8 +724,39 @@ export function MorningBriefingBoard() {
   return (
     <div className="board fade-in" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', alignContent: 'start' }}>
 
+      {/* ── 모바일 히어로 카드 (데스크톱에서는 mob-show CSS로 숨김) ── */}
+      {mood && (
+        <div
+          className="mob-hero mob-show mob-order-1"
+          style={{
+            background: mood.traffic_light === 'green'
+              ? 'var(--bull-soft)'
+              : mood.traffic_light === 'red'
+              ? 'var(--bear-soft)'
+              : 'var(--warn-soft)',
+          }}
+        >
+          <div className="mob-hero__top">
+            <span className={`badge mob-hero__tone ${
+              mood.traffic_light === 'green' ? 'bull'
+              : mood.traffic_light === 'red' ? 'bear'
+              : 'warn'
+            }`}>
+              {tField(mood.label_en, mood.label_ko, '', locale)}
+            </span>
+            <span className="mob-hero__date">
+              {dateStr}
+              {briefingMeta && <AgeBadge minutes={briefingMeta.age_minutes} />}
+            </span>
+          </div>
+          <p className="mob-hero__headline">
+            {tField(d.headline_en, d.headline_ko, '', locale)}
+          </p>
+        </div>
+      )}
+
       {/* ── 헤드라인 — span 4 ── */}
-      <div style={{ gridColumn: 'span 4' }}>
+      <div style={{ gridColumn: 'span 4' }} className="mob-hide">
         <div className="ai-card">
           <div className="ai-card__head">
             <div className="ico"><Sparkle /></div>
@@ -772,7 +774,7 @@ export function MorningBriefingBoard() {
 
       {/* 시장 분위기 — span 2 (넓게 줘서 텍스트가 잘리지 않음) */}
       {mood && (
-        <div style={{ gridColumn: 'span 2' }}>
+        <div style={{ gridColumn: 'span 2' }} className="mob-hide">
           <Card title={t(S.moodTitle, locale)}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 14 }}>
               <div style={{
@@ -797,7 +799,7 @@ export function MorningBriefingBoard() {
       )}
 
       {/* 핵심요약 — span 2 */}
-      <div style={{ gridColumn: 'span 2' }}>
+      <div style={{ gridColumn: 'span 2' }} className="mob-order-2">
         <Card title={t(S.highlights, locale)}>
           <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {(locale === 'ko' ? d.executive_bullets_ko : d.executive_bullets_en).map((b, i) => (
@@ -811,30 +813,57 @@ export function MorningBriefingBoard() {
 
       {/* 큰 그림 — span 2 */}
       {bp && (
-        <div style={{ gridColumn: 'span 2' }}>
-          <Card title={t(S.bigPicture, locale)}>
-            {(bp.summary_en || bp.summary_ko) && (
-              <p style={{ margin: '0 0 12px', fontSize: 13, lineHeight: 1.7 }}>
-                {tField(bp.summary_en, bp.summary_ko, '', locale)}
-              </p>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-              {([
-                { key: 'vix',   en: bp.vix_note_en,        ko: bp.vix_note_ko,        color: 'var(--warn)' },
-                { key: 'rates', en: bp.rates_note_en,      ko: bp.rates_note_ko,      color: 'var(--info)' },
-                { key: 'dollar',en: bp.dollar_note_en,     ko: bp.dollar_note_ko,     color: 'var(--teal)' },
-                { key: 'btc',   en: (bp as any).btc_note_en, ko: (bp as any).btc_note_ko, color: 'var(--bull)' },
-              ]).filter(r => r.en || r.ko).map(row => (
-                <div key={row.key} style={{ display: 'flex', gap: 10, padding: '7px 10px', borderRadius: 'var(--r-sm)', background: 'var(--bg-subtle)' }}>
-                  <div style={{ width: 3, borderRadius: 2, background: row.color, flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: row.color, marginBottom: 2 }}>
-                      {t(S[row.key as 'vix' | 'rates' | 'dollar' | 'btc'], locale)}
+        <details className="mob-collapse mob-order-7" style={{ gridColumn: 'span 2' }}>
+          <summary>{t(S.bigPicture, locale)}</summary>
+          <div className="mob-collapse-body">
+            <Card title={t(S.bigPicture, locale)}>
+              {(bp.summary_en || bp.summary_ko) && (
+                <p style={{ margin: '0 0 12px', fontSize: 13, lineHeight: 1.7 }}>
+                  {tField(bp.summary_en, bp.summary_ko, '', locale)}
+                </p>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                {([
+                  { key: 'vix',   en: bp.vix_note_en,        ko: bp.vix_note_ko,        color: 'var(--warn)' },
+                  { key: 'rates', en: bp.rates_note_en,      ko: bp.rates_note_ko,      color: 'var(--info)' },
+                  { key: 'dollar',en: bp.dollar_note_en,     ko: bp.dollar_note_ko,     color: 'var(--teal)' },
+                  { key: 'btc',   en: (bp as any).btc_note_en, ko: (bp as any).btc_note_ko, color: 'var(--bull)' },
+                ]).filter(r => r.en || r.ko).map(row => (
+                  <div key={row.key} style={{ display: 'flex', gap: 10, padding: '7px 10px', borderRadius: 'var(--r-sm)', background: 'var(--bg-subtle)' }}>
+                    <div style={{ width: 3, borderRadius: 2, background: row.color, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: row.color, marginBottom: 2 }}>
+                        {t(S[row.key as 'vix' | 'rates' | 'dollar' | 'btc'], locale)}
+                      </div>
+                      <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.6, color: 'var(--fg-muted)' }}>
+                        {tField(row.en, row.ko, '', locale)}
+                      </p>
                     </div>
-                    <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.6, color: 'var(--fg-muted)' }}>
-                      {tField(row.en, row.ko, '', locale)}
-                    </p>
                   </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        </details>
+      )}
+
+      {/* 섹터 분석 — span 1 */}
+      {sa && (
+        <div className="mob-order-3">
+          <Card title={t(S.sectors, locale)}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {([
+                { key: 'leaderTag',  en: sa.leaders_en,   ko: sa.leaders_ko,   color: 'var(--bull)' },
+                { key: 'laggardTag', en: sa.laggards_en,  ko: sa.laggards_ko,  color: 'var(--bear)' },
+                { key: 'rotationTag',en: sa.rotation_signal_en, ko: sa.rotation_signal_ko, color: 'var(--fg-subtle)' },
+              ] as const).filter(r => r.en || r.ko).map(row => (
+                <div key={row.key}>
+                  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: row.color, marginBottom: 4 }}>
+                    {t(S[row.key as keyof typeof S], locale)}
+                  </div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65 }}>
+                    {tField(row.en, row.ko, '', locale)}
+                  </p>
                 </div>
               ))}
             </div>
@@ -842,89 +871,93 @@ export function MorningBriefingBoard() {
         </div>
       )}
 
-      {/* 섹터 분석 — span 1 */}
-      {sa && (
-        <Card title={t(S.sectors, locale)}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {([
-              { key: 'leaderTag',  en: sa.leaders_en,   ko: sa.leaders_ko,   color: 'var(--bull)' },
-              { key: 'laggardTag', en: sa.laggards_en,  ko: sa.laggards_ko,  color: 'var(--bear)' },
-              { key: 'rotationTag',en: sa.rotation_signal_en, ko: sa.rotation_signal_ko, color: 'var(--fg-subtle)' },
-            ] as const).filter(r => r.en || r.ko).map(row => (
-              <div key={row.key}>
-                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: row.color, marginBottom: 4 }}>
-                  {t(S[row.key as keyof typeof S], locale)}
-                </div>
-                <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.65 }}>
-                  {tField(row.en, row.ko, '', locale)}
-                </p>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
       {/* 주의사항 + 실적 — span 1 */}
-      <Card title={t(S.checkpoints, locale)}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {(locale === 'ko' ? d.today_checkpoints_ko : d.today_checkpoints_en).map((c, i) => (
-            <div key={i} style={{ display: 'flex', gap: 7, padding: '4px 0', borderBottom: i < d.today_checkpoints_en.length - 1 ? '1px solid var(--border-soft)' : 'none' }}>
-              <span style={{ color: 'var(--em-500)', fontSize: 14, lineHeight: 1.2, flexShrink: 0 }}>·</span>
-              <span style={{ fontSize: 12.5, lineHeight: 1.6 }}>{c}</span>
+      <details className="mob-collapse mob-order-5">
+        <summary>{t(S.checkpoints, locale)}</summary>
+        <div className="mob-collapse-body">
+          <Card title={t(S.checkpoints, locale)}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {(locale === 'ko' ? d.today_checkpoints_ko : d.today_checkpoints_en).map((c, i) => (
+                <div key={i} style={{ display: 'flex', gap: 7, padding: '4px 0', borderBottom: i < d.today_checkpoints_en.length - 1 ? '1px solid var(--border-soft)' : 'none' }}>
+                  <span style={{ color: 'var(--em-500)', fontSize: 14, lineHeight: 1.2, flexShrink: 0 }}>·</span>
+                  <span style={{ fontSize: 12.5, lineHeight: 1.6 }}>{c}</span>
+                </div>
+              ))}
             </div>
-          ))}
+            {(d.earnings_alert_en || d.earnings_alert_ko) && (
+              <div style={{ marginTop: 12, padding: '7px 10px', borderRadius: 'var(--r-sm)', background: 'var(--info-soft)', fontSize: 12, color: 'var(--info)', lineHeight: 1.5 }}>
+                📅 {tField(d.earnings_alert_en, d.earnings_alert_ko, '', locale)}
+              </div>
+            )}
+          </Card>
         </div>
-        {(d.earnings_alert_en || d.earnings_alert_ko) && (
-          <div style={{ marginTop: 12, padding: '7px 10px', borderRadius: 'var(--r-sm)', background: 'var(--info-soft)', fontSize: 12, color: 'var(--info)', lineHeight: 1.5 }}>
-            📅 {tField(d.earnings_alert_en, d.earnings_alert_ko, '', locale)}
-          </div>
-        )}
-      </Card>
+      </details>
 
       {/* ── 글로벌 컨텍스트 ── */}
       {d.global_context && !d.global_context.fallback && (
-        <GlobalContextSection ctx={d.global_context} locale={locale} />
+        <details className="mob-collapse mob-order-6" style={{ gridColumn: 'span 4' }}>
+          <summary>🌐 {locale === 'ko' ? '글로벌 매크로 · 리스크' : 'Global Macro & Risk'}</summary>
+          <div className="mob-collapse-body">
+            <GlobalContextSection ctx={d.global_context} locale={locale} />
+          </div>
+        </details>
       )}
 
       {/* ── Spotlight ── */}
       {d.spotlight.length > 0 && (
-        <>
+        <div className="mob-order-4" style={{ gridColumn: 'span 4' }}>
           <SectionDivider label={`⚡ ${t(S.spotlight, locale)}`} color="var(--em-500)" />
-          <div style={{ gridColumn: 'span 4', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
             {d.spotlight.map(item => <SpotlightCard key={item.symbol} item={item} locale={locale} />)}
           </div>
-        </>
+        </div>
       )}
 
       {/* ── TIER 1 상세 분석 ── */}
-      <SectionDivider label={t(S.tier1Sec, locale)} color="var(--info)" />
-      <div style={{ gridColumn: 'span 4', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
-        {tier1.map(item => <Tier1Card key={item.symbol} item={item} locale={locale} />)}
+      <div className="mob-hide" style={{ gridColumn: 'span 4' }}>
+        <SectionDivider label={t(S.tier1Sec, locale)} color="var(--info)" />
       </div>
+      <details className="mob-collapse mob-order-8" style={{ gridColumn: 'span 4' }}>
+        <summary>{t(S.tier1Sec, locale)}</summary>
+        <div className="mob-collapse-body">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+            {tier1.map(item => <Tier1Card key={item.symbol} item={item} locale={locale} />)}
+          </div>
+        </div>
+      </details>
 
       {/* ── TIER 2 컴팩트 ── */}
-      <SectionDivider label={t(S.tier2Sec, locale)} color="var(--purple)" />
-      <div style={{ gridColumn: 'span 4' }}>
-        <div className="card">
-          <div style={{
-            display: 'flex', gap: 10, padding: '7px 14px', borderBottom: '1px solid var(--border)',
-            fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--fg-subtle)',
-          }}>
-            <span style={{ minWidth: 50 }}>{locale === 'ko' ? '종목' : 'Symbol'}</span>
-            <span style={{ flex: 1 }}>{locale === 'ko' ? '회사' : 'Company'}</span>
-            <span style={{ minWidth: 90 }}>{t(S.sentLabel, locale)}</span>
-            <span style={{ minWidth: 70 }}>{t(S.analysis, locale)}</span>
-            <span style={{ minWidth: 20 }} />
-          </div>
-          {tier2.map(item => <Tier2Row key={item.symbol} item={item} locale={locale} />)}
-        </div>
+      <div className="mob-hide" style={{ gridColumn: 'span 4' }}>
+        <SectionDivider label={t(S.tier2Sec, locale)} color="var(--purple)" />
       </div>
+      <details className="mob-collapse mob-order-9" style={{ gridColumn: 'span 4' }}>
+        <summary>{t(S.tier2Sec, locale)}</summary>
+        <div className="mob-collapse-body">
+          <div className="card">
+            <div style={{
+              display: 'flex', gap: 10, padding: '7px 14px', borderBottom: '1px solid var(--border)',
+              fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--fg-subtle)',
+            }}>
+              <span style={{ minWidth: 50 }}>{locale === 'ko' ? '종목' : 'Symbol'}</span>
+              <span style={{ flex: 1 }}>{locale === 'ko' ? '회사' : 'Company'}</span>
+              <span style={{ minWidth: 90 }}>{t(S.sentLabel, locale)}</span>
+              <span style={{ minWidth: 70 }}>{t(S.analysis, locale)}</span>
+              <span style={{ minWidth: 20 }} />
+            </div>
+            {tier2.map(item => <Tier2Row key={item.symbol} item={item} locale={locale} />)}
+          </div>
+        </div>
+      </details>
 
       {/* ── 용어 설명 ── */}
-      <GlossarySection locale={locale} />
+      <div className="mob-hide" style={{ gridColumn: 'span 4' }}>
+        <GlossarySection locale={locale} />
+      </div>
 
       {/* ── SNS 공유 ── */}
-      <ShareSection text={shareText} locale={locale} />
+      <div className="mob-order-10" style={{ gridColumn: 'span 4' }}>
+        <ShareSection text={shareText} locale={locale} />
+      </div>
 
     </div>
   );
