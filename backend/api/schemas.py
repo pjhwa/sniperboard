@@ -550,19 +550,29 @@ class GlobalIssue(BaseModel):
     category: str                                # "trade_tariff" | "geopolitical" | "central_bank" | "ai_regulation"
     title_en: Optional[str] = None
     title_ko: Optional[str] = None
+    current_state_en: Optional[str] = None      # where does this stand RIGHT NOW
+    current_state_ko: Optional[str] = None
+    direction: Optional[str] = None             # "escalating" | "de-escalating" | "stable_elevated" | "stable_fading"
     summary_en: Optional[str] = None
     summary_ko: Optional[str] = None
     source_hint: Optional[str] = None
     confidence: Optional[str] = None            # "confirmed" | "developing" | "unverified"
+    asymmetric_impact_en: Optional[str] = None  # per-ticker directional analysis
+    asymmetric_impact_ko: Optional[str] = None
+    impact_direction: Optional[str] = None      # "positive" | "negative" | "neutral" | "watch"
+    market_insight_en: Optional[str] = None     # actionable investor implication
+    market_insight_ko: Optional[str] = None
+    # legacy field — kept for backward compat with older briefing snapshots
     us_stock_impact_en: Optional[str] = None
     us_stock_impact_ko: Optional[str] = None
-    impact_direction: Optional[str] = None      # "positive" | "negative" | "neutral" | "watch"
 
 class GlobalContext(BaseModel):
     fetched_at: Optional[str] = None
     search_window: Optional[str] = None
     issues: List[GlobalIssue] = []
     ongoing_no_update: List[str] = []
+    market_paradox_en: Optional[str] = None     # VIX vs actual risk disconnect flag
+    market_paradox_ko: Optional[str] = None
     fallback: Optional[bool] = None
 
 class MorningBriefingData(BaseModel):

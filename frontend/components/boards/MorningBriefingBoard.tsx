@@ -41,14 +41,22 @@ const S: Record<string, { en: string; ko: string }> = {
   rates:        { en: '10Y Yield',                          ko: '미국 10년 금리' },
   dollar:       { en: 'Dollar (DXY)',                       ko: '달러 (DXY)' },
   btc:          { en: 'Bitcoin (BTC)',                      ko: '비트코인 (BTC)' },
-  globalTitle:    { en: '🌐 Global Macro & Geopolitical Context', ko: '🌐 글로벌 매크로 · 지정학 리스크' },
-  breaking:       { en: 'BREAKING',    ko: '속보' },
-  ongoing:        { en: 'ONGOING',     ko: '지속 리스크' },
-  developing:     { en: 'DEVELOPING',  ko: '진행중' },
-  unverified:     { en: 'UNVERIFIED',  ko: '미확인' },
-  sourceLabel:    { en: 'Source',      ko: '출처' },
-  usImpact:       { en: 'US Stock Impact', ko: '미국 주식 영향' },
-  noUpdate:       { en: 'No significant update in 48h', ko: '48시간 내 주요 변동 없음' },
+  globalTitle:      { en: '🌐 Global Macro & Geopolitical Context', ko: '🌐 글로벌 매크로 · 지정학 리스크' },
+  breaking:         { en: 'BREAKING',       ko: '속보' },
+  ongoing:          { en: 'ONGOING',        ko: '지속 리스크' },
+  developing:       { en: 'DEVELOPING',     ko: '진행중' },
+  unverified:       { en: 'UNVERIFIED',     ko: '미확인' },
+  sourceLabel:      { en: 'Source',         ko: '출처' },
+  usImpact:         { en: 'US Stock Impact', ko: '미국 주식 영향' },
+  asymmetricImpact: { en: 'Asymmetric Impact', ko: '종목별 비대칭 영향' },
+  currentState:     { en: 'Current State',  ko: '현재 상태' },
+  marketInsight:    { en: 'Investor Action', ko: '투자자 대응' },
+  marketParadox:    { en: '⚠ Market Paradox', ko: '⚠ 시장 역설' },
+  noUpdate:         { en: 'No significant update in 48h', ko: '48시간 내 주요 변동 없음' },
+  dirEscalating:    { en: 'ESCALATING',     ko: '악화중' },
+  dirDeEscalating:  { en: 'DE-ESCALATING',  ko: '완화중' },
+  dirStableHigh:    { en: 'STABLE↑RISK',    ko: '안정·고위험' },
+  dirStableFading:  { en: 'STABLE↓RISK',    ko: '안정·리스크소멸' },
 };
 const t = (o: { en: string; ko: string }, l: Locale) => o[l];
 
@@ -356,10 +364,31 @@ function Tier2Row({ item, locale }: { item: MorningWatchlistItem; locale: Locale
 }
 
 // ── 서브컴포넌트: 글로벌 컨텍스트 카드 ───────────────────────────────────────
+function directionLabel(dir: GlobalIssue['direction'], locale: Locale): string {
+  if (dir === 'escalating')    return t(S.dirEscalating,   locale);
+  if (dir === 'de-escalating') return t(S.dirDeEscalating, locale);
+  if (dir === 'stable_elevated') return t(S.dirStableHigh, locale);
+  if (dir === 'stable_fading') return t(S.dirStableFading, locale);
+  return '';
+}
+function directionCls(dir: GlobalIssue['direction']): string {
+  if (dir === 'escalating')    return 'bear';
+  if (dir === 'de-escalating') return 'bull';
+  return 'neutral';
+}
+
 function GlobalIssueCard({ issue, locale }: { issue: GlobalIssue; locale: Locale }) {
-  const title   = tField(issue.title_en,           issue.title_ko,           '', locale);
-  const summary = tField(issue.summary_en,          issue.summary_ko,         '', locale);
-  const impact  = tField(issue.us_stock_impact_en,  issue.us_stock_impact_ko, '', locale);
+  const title        = tField(issue.title_en,            issue.title_ko,            '', locale);
+  const currentState = tField(issue.current_state_en,    issue.current_state_ko,    '', locale);
+  const summary      = tField(issue.summary_en,          issue.summary_ko,          '', locale);
+  // prefer new asymmetric_impact; fall back to legacy us_stock_impact
+  const impact       = tField(
+    issue.asymmetric_impact_en ?? issue.us_stock_impact_en,
+    issue.asymmetric_impact_ko ?? issue.us_stock_impact_ko,
+    '', locale
+  );
+  const insight      = tField(issue.market_insight_en,   issue.market_insight_ko,   '', locale);
+  const impactLabel  = issue.asymmetric_impact_en ? t(S.asymmetricImpact, locale) : t(S.usImpact, locale);
   const catColor = categoryColor(issue.category);
 
   return (
@@ -371,6 +400,11 @@ function GlobalIssueCard({ issue, locale }: { issue: GlobalIssue; locale: Locale
         <span className={`badge ${issue.tier === 'breaking' ? 'bull' : 'neutral'}`} style={{ fontSize: 10 }}>
           {issue.tier === 'breaking' ? t(S.breaking, locale) : t(S.ongoing, locale)}
         </span>
+        {issue.direction && (
+          <span className={`badge ${directionCls(issue.direction)}`} style={{ fontSize: 10 }}>
+            {directionLabel(issue.direction, locale)}
+          </span>
+        )}
         {issue.confidence && issue.confidence !== 'confirmed' && (
           <span className={`badge ${confidenceCls(issue.confidence)}`} style={{ fontSize: 10 }}>
             {issue.confidence === 'developing' ? t(S.developing, locale) : t(S.unverified, locale)}
@@ -384,12 +418,23 @@ function GlobalIssueCard({ issue, locale }: { issue: GlobalIssue; locale: Locale
       </div>
 
       <div className="card__bd" style={{ paddingTop: 6 }}>
-        <p style={{ margin: '0 0 8px', fontSize: 13.5, fontWeight: 700, lineHeight: 1.4 }}>{title}</p>
+        <p style={{ margin: '0 0 6px', fontSize: 13.5, fontWeight: 700, lineHeight: 1.4 }}>{title}</p>
+        {currentState && (
+          <p style={{ margin: '0 0 6px', fontSize: 12, lineHeight: 1.6, color: 'var(--fg)', fontStyle: 'italic' }}>
+            {currentState}
+          </p>
+        )}
         <p style={{ margin: '0 0 10px', fontSize: 12.5, lineHeight: 1.7, color: 'var(--fg-muted)' }}>{summary}</p>
         {impact && (
-          <div style={{ padding: '6px 10px', borderRadius: 'var(--r-sm)', background: 'var(--bg-subtle)', fontSize: 12 }}>
-            <span style={{ fontWeight: 700, color: catColor, marginRight: 6 }}>{t(S.usImpact, locale)}:</span>
+          <div style={{ padding: '6px 10px', borderRadius: 'var(--r-sm)', background: 'var(--bg-subtle)', fontSize: 12, marginBottom: 6 }}>
+            <span style={{ fontWeight: 700, color: catColor, marginRight: 6 }}>{impactLabel}:</span>
             <span style={{ color: 'var(--fg)' }}>{impact}</span>
+          </div>
+        )}
+        {insight && (
+          <div style={{ padding: '5px 10px', borderRadius: 'var(--r-sm)', background: 'var(--bg-em-faint)', fontSize: 12, borderLeft: `3px solid var(--em-500)` }}>
+            <span style={{ fontWeight: 700, color: 'var(--em-500)', marginRight: 6 }}>{t(S.marketInsight, locale)}:</span>
+            <span style={{ color: 'var(--fg)' }}>{insight}</span>
           </div>
         )}
         {issue.source_hint && (
@@ -404,10 +449,26 @@ function GlobalIssueCard({ issue, locale }: { issue: GlobalIssue; locale: Locale
 
 function GlobalContextSection({ ctx, locale }: { ctx: GlobalContext; locale: Locale }) {
   if (!ctx.issues || ctx.issues.length === 0) return null;
+  const paradox = locale === 'ko' ? ctx.market_paradox_ko : ctx.market_paradox_en;
 
   return (
     <>
       <SectionDivider label={t(S.globalTitle, locale)} color="var(--em-500)" />
+      {paradox && (
+        <div style={{
+          gridColumn: 'span 4',
+          padding: '8px 14px',
+          borderRadius: 'var(--r-sm)',
+          background: 'var(--bg-warn-faint)',
+          borderLeft: '3px solid var(--warn-500)',
+          fontSize: 12.5,
+          lineHeight: 1.6,
+          marginBottom: 4,
+        }}>
+          <span style={{ fontWeight: 700, color: 'var(--warn-500)', marginRight: 8 }}>{t(S.marketParadox, locale)}:</span>
+          <span>{paradox}</span>
+        </div>
+      )}
       <div style={{ gridColumn: 'span 4', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
         {ctx.issues.map(issue => (
           <GlobalIssueCard key={issue.rank} issue={issue} locale={locale} />

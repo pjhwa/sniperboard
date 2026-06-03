@@ -38,13 +38,22 @@ export interface GlobalIssue {
   category: 'trade_tariff' | 'geopolitical' | 'central_bank' | 'ai_regulation';
   title_en?: string;
   title_ko?: string;
+  current_state_en?: string;
+  current_state_ko?: string;
+  direction?: 'escalating' | 'de-escalating' | 'stable_elevated' | 'stable_fading';
   summary_en?: string;
   summary_ko?: string;
   source_hint?: string;
   confidence?: 'confirmed' | 'developing' | 'unverified';
-  us_stock_impact_en?: string;
-  us_stock_impact_ko?: string;
+  asymmetric_impact_en?: string;
+  asymmetric_impact_ko?: string;
   impact_direction?: 'positive' | 'negative' | 'neutral' | 'watch';
+  market_insight_en?: string;
+  market_insight_ko?: string;
+  /** @deprecated use asymmetric_impact_en */
+  us_stock_impact_en?: string;
+  /** @deprecated use asymmetric_impact_ko */
+  us_stock_impact_ko?: string;
 }
 
 export interface GlobalContext {
@@ -52,6 +61,8 @@ export interface GlobalContext {
   search_window?: string;
   issues: GlobalIssue[];
   ongoing_no_update?: string[];
+  market_paradox_en?: string;
+  market_paradox_ko?: string;
   fallback?: boolean;
 }
 
