@@ -1180,8 +1180,9 @@ body {
   .mob-show { display: none !important; }
   .bottom-tabs { display: none; }
 
-  /* details.mob-collapse: open 속성으로 항상 렌더됨 — summary만 숨김 */
+  /* details.mob-collapse: summary 숨김 + 콘텐츠 강제 표시 (open 속성 없어도) */
   details.mob-collapse > summary { display: none; }
+  details.mob-collapse > :not(summary) { display: block !important; }
   /* AI Brief: details가 card 역할 — 데스크톱에서 flex 카드처럼 표시 */
   details.mob-collapse.card { display: flex !important; flex-direction: column; }
 
