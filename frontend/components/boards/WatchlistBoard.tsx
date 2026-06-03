@@ -114,8 +114,8 @@ export function WatchlistBoard() {
     <div className="board fade-in" style={{ gridTemplateColumns: '1fr 1fr 1fr', alignContent: 'start' }}>
 
       {/* ── 모바일 전용: 2줄 카드 뷰 ────────────────────────────── */}
-      <Card title={t(S.tableTitle, locale)} action={t(S.tableAction, locale).replace('{n}', String(watchlist.length))} className="mob-show" style={{ gridColumn: 'span 3' }}>
-        <div className="card__bd--flush mob-watchlist-cards">
+      <Card title={t(S.tableTitle, locale)} action={t(S.tableAction, locale).replace('{n}', String(watchlist.length))} flush className="mob-show" style={{ gridColumn: 'span 3' }}>
+        <div className="mob-watchlist-cards">
           {[...watchlist]
             .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
             .map(w => {
@@ -186,7 +186,7 @@ export function WatchlistBoard() {
       </Card>
 
       {/* Desktop-only content ── */}
-      <div className="mob-hide" style={{ display: 'contents' }}>
+      <div className="mob-hide mob-wrap">
 
       {/* Main table — full 3 columns */}
       <div style={{ gridColumn: 'span 3' }}>
