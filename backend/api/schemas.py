@@ -61,6 +61,7 @@ class Stage2Schema(BaseModel):
     stop: float
     target: float
     latest_close: float
+    price_date: Optional[str] = None  # 마지막 봉 날짜 (데이터 스테일니스 감지용)
     pivot_high: float
     gc_upper: Optional[float] = None
     gc_mid: Optional[float] = None

@@ -319,6 +319,8 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None, rsp
     latest_ema50 = float(df['ema50'].iloc[-1])
     latest_ema200 = float(df['ema200'].iloc[-1])
     latest_atr = float(df['atr14'].iloc[-1])
+    # 마지막 봉 날짜 — 데이터 스테일니스 감지용
+    price_date = str(df.index[-1].date()) if hasattr(df.index[-1], 'date') else str(df.index[-1])[:10]
 
     ema200_slope = 0.0
     if len(df) >= 20:
@@ -464,6 +466,7 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None, rsp
         'stop': stop,
         'target': target,
         'latest_close': round(latest_close, 2),
+        'price_date': price_date,
         'pivot_high':   round(recent_high, 2),
         'gc_upper': round(gc_upper_val, 2) if gc_upper_val is not None else None,
         'gc_mid':   round(gc_mid_val,   2) if gc_mid_val   is not None else None,
