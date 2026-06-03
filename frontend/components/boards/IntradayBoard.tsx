@@ -106,7 +106,7 @@ export function IntradayBoard() {
       <BoardGuidePanel title={t(S.guideTitle, locale)} sections={INTRADAY_GUIDE()} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <div
       className="board fade-in"
-      style={{ gridTemplateColumns: '1fr 300px', gridTemplateRows: 'auto 1fr auto' }}
+      style={{ gridTemplateColumns: '1fr 300px' }}
     >
       {/* Chart */}
       <div className="card" style={{ gridRow: 'span 2' }}>

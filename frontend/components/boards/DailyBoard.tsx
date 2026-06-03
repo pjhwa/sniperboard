@@ -125,7 +125,7 @@ export function DailyBoard() {
       <BoardGuidePanel title={t(S.guideTitle, locale)} sections={DAILY_GUIDE()} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <div
       className="board fade-in"
-      style={{ gridTemplateColumns: '1fr 340px', gridTemplateRows: 'auto 1fr auto' }}
+      style={{ gridTemplateColumns: '1fr 340px' }}
     >
       {/* Daily chart */}
       <div className="card" style={{ gridRow: 'span 2' }}>

@@ -388,7 +388,7 @@ body {
   color: var(--fg-subtle);
   white-space: nowrap; flex-shrink: 0;
 }
-.card__bd { padding: 8px 14px 14px; flex: 1; min-height: 0; overflow-y: auto; }
+.card__bd { padding: 8px 14px 14px; flex: 1; }
 .card__bd--flush { padding: 0; }
 
 .card-flag {

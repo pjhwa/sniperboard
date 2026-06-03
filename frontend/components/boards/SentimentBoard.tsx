@@ -226,7 +226,7 @@ export function SentimentBoard() {
   return (
     <div className="board-wrap">
       <BoardGuidePanel title={t(S.guideTitle, locale)} sections={SENTIMENT_GUIDE()} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
-    <div className="board fade-in" style={{ gridTemplateColumns: '380px 1fr', gridTemplateRows: 'auto 1fr auto', alignContent: 'start' }}>
+    <div className="board fade-in" style={{ gridTemplateColumns: '380px 1fr', alignContent: 'start' }}>
       {/* Market-wide sentiment */}
       <Card title={t(S.marketSentTitle, locale)} className="mob-order-1" action={formatDateTime(market?.as_of)} info={{ term: t(G.composite_score.term, locale), body: t(G.composite_score.body, locale) }}>
         {market ? (
