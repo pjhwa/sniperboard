@@ -981,6 +981,8 @@ body {
   .mob-order-6 { order: 6; }
   .mob-order-7 { order: 7; }
   .mob-order-8 { order: 8; }
+  .mob-order-9  { order: 9; }
+  .mob-order-10 { order: 10; }
 
   /* 접기/펼치기 details 스타일 */
   details.mob-collapse summary {
@@ -1078,6 +1080,94 @@ body {
     display: flex !important;
     flex-direction: column !important;
     gap: 8px !important;
+  }
+
+  /* ── 모바일 폰트 상향 ─────────────────────────────────────── */
+  .card__hd h3 { font-size: 15px; }
+  .card__bd { font-size: 14px; }
+  .badge { font-size: 13px; }
+
+  /* 카드 내 행 텍스트 (mob-order 섹션들) */
+  .board > * { font-size: 14px; }
+
+  /* ── 브리핑 히어로 카드 (모바일 전용) ───────────────────── */
+  .mob-hero {
+    padding: 16px;
+    border-radius: var(--r-md);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .mob-hero__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .mob-hero__tone {
+    font-size: 15px;
+    padding: 6px 14px;
+  }
+  .mob-hero__date {
+    font-size: 12px;
+    color: var(--fg-subtle);
+  }
+  .mob-hero__headline {
+    font-size: 17px;
+    line-height: 1.65;
+    font-weight: 600;
+    margin: 0 0 8px;
+    color: var(--fg);
+  }
+
+  /* ── 워치리스트 모바일 카드 뷰 ────────────────────────────── */
+  .mob-watchlist-cards { display: flex; flex-direction: column; gap: 0; }
+  .mob-watchlist-card {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .mob-watchlist-card:last-child { border-bottom: none; }
+  .mob-watchlist-card__row1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+  }
+  .mob-watchlist-card__sym {
+    font-weight: 700;
+    font-family: var(--font-mono);
+    min-width: 52px;
+  }
+  .mob-watchlist-card__price {
+    font-family: var(--font-mono);
+    flex: 1;
+  }
+  .mob-watchlist-card__row2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+  .mob-watchlist-card__dist {
+    min-width: 70px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+  .mob-watchlist-card__bar {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-subtle);
+    border-radius: var(--r-pill);
+    overflow: hidden;
+  }
+  .mob-watchlist-card__bar-fill {
+    height: 100%;
+    border-radius: var(--r-pill);
+    transition: width 0.4s;
   }
 }
 
