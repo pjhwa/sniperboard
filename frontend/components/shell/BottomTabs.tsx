@@ -2,15 +2,15 @@
 
 import React from 'react';
 import { useStore, Board } from '@/hooks/useStore';
-import { Crosshair, Layers, Globe, Heart, Newspaper } from '@/components/ui/Icons';
+import { Crosshair, Layers, Globe, Heart, Newspaper, Eye } from '@/components/ui/Icons';
 import { t } from '@/app/i18n';
 
 const TABS: { id: Board; label: { en: string; ko: string }; Icon: () => React.ReactElement }[] = [
-  { id: 'overview',  label: { en: 'Overview',  ko: '시장'    }, Icon: Crosshair },
-  { id: 'deepdive',  label: { en: 'Analysis',  ko: '분석'    }, Icon: Layers },
-  { id: 'macro',     label: { en: 'Macro',     ko: '매크로'  }, Icon: Globe },
-  { id: 'sentiment', label: { en: 'Sentiment', ko: '심리'    }, Icon: Heart },
   { id: 'briefing',  label: { en: 'Briefing',  ko: '브리핑'  }, Icon: Newspaper },
+  { id: 'overview',  label: { en: 'Market',    ko: '시장'    }, Icon: Crosshair },
+  { id: 'watchlist', label: { en: 'Watch',     ko: '워치'    }, Icon: Eye },
+  { id: 'sentiment', label: { en: 'Sentiment', ko: '심리'    }, Icon: Heart },
+  { id: 'deepdive',  label: { en: 'Analysis',  ko: '분석'    }, Icon: Layers },
 ];
 
 export function BottomTabs() {
