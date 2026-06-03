@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useWatchlist } from '@/hooks/useWatchlist';
+import { useBrief } from '@/hooks/useBrief';
 import { Card, ScorePill } from '@/components/ui/Card';
 import { ArrowRight } from '@/components/ui/Icons';
 import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
@@ -66,6 +67,10 @@ const CHECK_LABELS: [keyof ReturnType<typeof useWatchlist>['watchlist'][number][
 export function WatchlistBoard() {
   const { symbol, setSymbol, setBoard, locale } = useStore();
   const { watchlist, isLoading } = useWatchlist();
+  const { briefData } = useBrief();
+  const briefMap = new Map(
+    (briefData?.symbol_briefs ?? []).map(sb => [sb.symbol, sb])
+  );
   const [guideOpen, setGuideOpen] = useState(false);
 
   useEffect(() => {
@@ -107,6 +112,81 @@ export function WatchlistBoard() {
     <div className="board-wrap">
       <BoardGuidePanel title={t(S.guideTitle, locale)} sections={WATCHLIST_GUIDE()} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <div className="board fade-in" style={{ gridTemplateColumns: '1fr 1fr 1fr', alignContent: 'start' }}>
+
+      {/* ── 모바일 전용: 2줄 카드 뷰 ────────────────────────────── */}
+      <Card title={t(S.tableTitle, locale)} action={t(S.tableAction, locale).replace('{n}', String(watchlist.length))} className="mob-show" style={{ gridColumn: 'span 3' }}>
+        <div className="card__bd--flush mob-watchlist-cards">
+          {[...watchlist]
+            .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+            .map(w => {
+              const sb = briefMap.get(w.symbol);
+              const entryDist = w.entry > 0 ? (w.entry - w.price) / w.price * 100 : null;
+              const inZone = entryDist !== null && entryDist > 0 && entryDist <= 5;
+              const broken = entryDist !== null && entryDist <= 0;
+              const conviction = w.conviction_score ?? 0;
+              const convColor = conviction >= 65 ? 'var(--bull)' : conviction >= 50 ? 'var(--teal)' : conviction >= 35 ? 'var(--warn)' : 'var(--bear)';
+              const actionCls = sb?.action_bias === 'buy' ? 'bull' : sb?.action_bias === 'avoid' ? 'bear' : sb?.action_bias === 'hold' ? 'teal' : 'neutral';
+              const actionLabel = sb?.action_bias === 'buy' ? (locale === 'ko' ? '매수' : 'BUY')
+                : sb?.action_bias === 'avoid' ? (locale === 'ko' ? '회피' : 'AVOID')
+                : sb?.action_bias === 'hold' ? (locale === 'ko' ? '보유' : 'HOLD')
+                : (locale === 'ko' ? '관망' : 'WATCH');
+              const gradeColor = sb?.setup_quality === 'A+' || sb?.setup_quality === 'A' ? 'var(--bull)'
+                : sb?.setup_quality === 'B' ? 'var(--teal)'
+                : sb?.setup_quality === 'C' ? 'var(--warn)' : 'var(--fg-subtle)';
+
+              return (
+                <div
+                  key={w.symbol}
+                  className="mob-watchlist-card"
+                  style={{
+                    background: broken ? 'var(--bull-soft)' : inZone ? 'var(--em-soft)' : 'transparent',
+                  }}
+                >
+                  {/* 1행: 심볼 + 가격 + Action Bias + Setup Quality */}
+                  <div className="mob-watchlist-card__row1">
+                    <span className="mob-watchlist-card__sym">{w.symbol}</span>
+                    <span className="mob-watchlist-card__price">${w.price.toFixed(2)}</span>
+                    {sb && (
+                      <span className={`badge ${actionCls}`} style={{ fontSize: 13 }}>
+                        {actionLabel}
+                      </span>
+                    )}
+                    {sb?.setup_quality && (
+                      <span style={{ fontWeight: 700, fontSize: 14, color: gradeColor }}>
+                        {sb.setup_quality}
+                      </span>
+                    )}
+                  </div>
+                  {/* 2행: 진입 거리 + Conviction 바 + 점수 */}
+                  <div className="mob-watchlist-card__row2">
+                    <span
+                      className="mob-watchlist-card__dist"
+                      style={{
+                        color: broken ? 'var(--bull)' : inZone ? 'var(--em-500)' : entryDist && entryDist > 15 ? 'var(--fg-subtle)' : 'var(--fg)',
+                      }}
+                    >
+                      {broken
+                        ? (locale === 'ko' ? '✓ 돌파' : '✓ Break')
+                        : entryDist !== null
+                        ? `+${entryDist.toFixed(1)}%`
+                        : '—'}
+                    </span>
+                    <div className="mob-watchlist-card__bar">
+                      <div
+                        className="mob-watchlist-card__bar-fill"
+                        style={{ width: `${conviction}%`, background: convColor }}
+                      />
+                    </div>
+                    <ConvictionBadge score={w.conviction_score ?? undefined} locale={locale} size="sm" />
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      </Card>
+
+      {/* Desktop-only content ── */}
+      <div className="mob-hide" style={{ display: 'contents' }}>
 
       {/* Main table — full 3 columns */}
       <div style={{ gridColumn: 'span 3' }}>
@@ -326,6 +406,8 @@ export function WatchlistBoard() {
           </div>
         )}
       </Card>
+
+      </div>{/* end mob-hide */}
 
     </div>
     </div>
