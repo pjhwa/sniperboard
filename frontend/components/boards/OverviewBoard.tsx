@@ -335,7 +335,7 @@ export function OverviewBoard() {
       </div>
 
       {/* Earnings Calendar */}
-      <details className="mob-collapse mob-order-8">
+      <details className="mob-collapse mob-order-8" open>
         <summary>{t(S.earningsTitle, locale)}</summary>
         <div className="mob-collapse-body">
           <Card title={t(S.earningsTitle, locale)} action={t(S.earningsAction, locale)}>
@@ -420,7 +420,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Distribution Days */}
-      <details className="mob-collapse mob-order-7">
+      <details className="mob-collapse mob-order-7" open>
         <summary>Distribution Days</summary>
         <div className="mob-collapse-body">
           <Card title="Distribution Days" action={t(S.ddAction, locale)} info={{ term: t(G.distribution_days.term, locale), body: t(G.distribution_days.body, locale) }}>
@@ -522,7 +522,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Credit Stress */}
-      <details className="mob-collapse mob-order-7" style={{ gridColumn: undefined }}>
+      <details className="mob-collapse mob-order-7" style={{ gridColumn: undefined }} open>
         <summary>{t(S.creditTitle, locale)}</summary>
         <div className="mob-collapse-body">
           <Card title={t(S.creditTitle, locale)} action={t(S.creditAction, locale)} info={{ term: t(G.credit.term, locale), body: t(G.credit.body, locale) }}>
@@ -586,7 +586,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Conviction Leaderboard */}
-      <details className="mob-collapse mob-order-8">
+      <details className="mob-collapse mob-order-8" open>
         <summary>{t(S.convictionTitle, locale)}</summary>
         <div className="mob-collapse-body">
           <Card title={t(S.convictionTitle, locale)} action={t(S.convictionAction, locale)} info={{ term: t(G.conviction.term, locale), body: t(G.conviction.body, locale) }}>
@@ -658,7 +658,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* Top watchlist preview */}
-      <details className="mob-collapse mob-order-8">
+      <details className="mob-collapse mob-order-8" open>
         <summary>{t(S.watchlistTitle, locale)}</summary>
         <div className="mob-collapse-body">
           <Card title={t(S.watchlistTitle, locale)} action={t(S.watchlistAction, locale)}>

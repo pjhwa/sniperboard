@@ -813,7 +813,7 @@ export function MorningBriefingBoard() {
 
       {/* 큰 그림 — span 2 */}
       {bp && (
-        <details className="mob-collapse mob-order-7" style={{ gridColumn: 'span 2' }}>
+        <details className="mob-collapse mob-order-7" style={{ gridColumn: 'span 2' }} open>
           <summary>{t(S.bigPicture, locale)}</summary>
           <div className="mob-collapse-body">
             <Card title={t(S.bigPicture, locale)}>
@@ -872,7 +872,7 @@ export function MorningBriefingBoard() {
       )}
 
       {/* 주의사항 + 실적 — span 1 */}
-      <details className="mob-collapse mob-order-5">
+      <details className="mob-collapse mob-order-5" open>
         <summary>{t(S.checkpoints, locale)}</summary>
         <div className="mob-collapse-body">
           <Card title={t(S.checkpoints, locale)}>
@@ -895,7 +895,7 @@ export function MorningBriefingBoard() {
 
       {/* ── 글로벌 컨텍스트 ── */}
       {d.global_context && !d.global_context.fallback && (
-        <details className="mob-collapse mob-order-6" style={{ gridColumn: 'span 4' }}>
+        <details className="mob-collapse mob-order-6" style={{ gridColumn: 'span 4' }} open>
           <summary>🌐 {locale === 'ko' ? '글로벌 매크로 · 리스크' : 'Global Macro & Risk'}</summary>
           <div className="mob-collapse-body">
             <GlobalContextSection ctx={d.global_context} locale={locale} />
@@ -917,7 +917,7 @@ export function MorningBriefingBoard() {
       <div className="mob-hide" style={{ gridColumn: 'span 4' }}>
         <SectionDivider label={t(S.tier1Sec, locale)} color="var(--info)" />
       </div>
-      <details className="mob-collapse mob-order-8" style={{ gridColumn: 'span 4' }}>
+      <details className="mob-collapse mob-order-8" style={{ gridColumn: 'span 4' }} open>
         <summary>{t(S.tier1Sec, locale)}</summary>
         <div className="mob-collapse-body">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
@@ -930,7 +930,7 @@ export function MorningBriefingBoard() {
       <div className="mob-hide" style={{ gridColumn: 'span 4' }}>
         <SectionDivider label={t(S.tier2Sec, locale)} color="var(--purple)" />
       </div>
-      <details className="mob-collapse mob-order-9" style={{ gridColumn: 'span 4' }}>
+      <details className="mob-collapse mob-order-9" style={{ gridColumn: 'span 4' }} open>
         <summary>{t(S.tier2Sec, locale)}</summary>
         <div className="mob-collapse-body">
           <div className="card">
