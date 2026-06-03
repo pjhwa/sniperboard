@@ -342,7 +342,7 @@ export function DeepDiveBoard() {
       <BoardGuidePanel title={t(S.guideTitle, locale)} sections={DEEPDIVE_GUIDE(locale)} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <div
       className="board fade-in"
-      style={{ gridTemplateColumns: '3fr 2fr', alignItems: 'start', alignContent: 'start', gridAutoRows: 'max-content' }}
+      style={{ gridTemplateColumns: '3fr 2fr', alignContent: 'start' }}
     >
 
       {/* ════════════════════════════════════════════════════════════════

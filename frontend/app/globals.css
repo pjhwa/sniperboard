@@ -1005,9 +1005,10 @@ body {
   details.mob-collapse[open] summary::before { transform: rotate(90deg); }
   details.mob-collapse .mob-collapse-body { padding: 0 14px 12px; }
 
-  /* 차트: 고정 높이, 자식 div(chartContainerRef)도 동일 높이 상속 */
+  /* 차트: 고정 높이, chartContainerRef까지 높이 상속 (3단계 모두 필요) */
   .mob-chart-limit { height: 300px; }
-  .mob-chart-limit > div { height: 100%; }
+  .mob-chart-limit > div,
+  .mob-chart-limit > div > div:first-child { height: 100%; }
 
   /* BottomTabs */
   .bottom-tabs {

@@ -72,6 +72,7 @@ export function WatchlistBoard() {
     (briefData?.symbol_briefs ?? []).map(sb => [sb.symbol, sb])
   );
   const [guideOpen, setGuideOpen] = useState(false);
+  const [openTier, setOpenTier] = useState<1 | 2>(1);
 
   useEffect(() => {
     const handler = () => setGuideOpen(true);
@@ -273,9 +274,14 @@ export function WatchlistBoard() {
                     </tr>
                   );
 
-                  const tierLabel = (label: string, color: string) => (
-                    <tr key={`tier-${label}`}>
-                      <td colSpan={12} style={{ padding: '6px 8px 2px', fontSize: 11, fontWeight: 700, color, letterSpacing: '0.5px', borderTop: '1px solid var(--border-soft)', background: 'rgba(0,0,0,0.03)' }}>
+                  const tierLabel = (tier: 1 | 2, label: string, color: string) => (
+                    <tr
+                      key={`tier-${tier}`}
+                      onClick={() => setOpenTier(tier)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <td colSpan={12} style={{ padding: '6px 8px 2px', fontSize: 11, fontWeight: 700, color, letterSpacing: '0.5px', borderTop: '1px solid var(--border-soft)', background: 'rgba(0,0,0,0.03)', userSelect: 'none' }}>
+                        <span style={{ marginRight: 5, fontSize: 9 }}>{openTier === tier ? '▼' : '▶'}</span>
                         {label}
                       </td>
                     </tr>
@@ -283,15 +289,19 @@ export function WatchlistBoard() {
 
                   return [
                     tierLabel(
-                      locale === 'ko' ? '● TIER 1 — 빅테크/대형주 (개별 심층 분석, 백테스트 포함)' : '● TIER 1 — Large Cap (Deep Analysis, Backtested)',
+                      1,
+                      locale === 'ko' ? 'TIER 1 — 빅테크/대형주 (개별 심층 분석, 백테스트 포함)' : 'TIER 1 — Large Cap (Deep Analysis, Backtested)',
                       'var(--sky, #38bdf8)',
                     ),
-                    ...tier1.map(renderRow),
-                    tier2.length > 0 && tierLabel(
-                      locale === 'ko' ? '● TIER 2 — 모멘텀/테마주 (배치 분석, 백테스트 제외)' : '● TIER 2 — Momentum/Theme (Batch Analysis, Not Backtested)',
-                      'var(--purple, #a78bfa)',
-                    ),
-                    ...tier2.map(renderRow),
+                    ...(openTier === 1 ? tier1.map(renderRow) : []),
+                    ...(tier2.length > 0 ? [
+                      tierLabel(
+                        2,
+                        locale === 'ko' ? 'TIER 2 — 모멘텀/테마주 (배치 분석, 백테스트 제외)' : 'TIER 2 — Momentum/Theme (Batch Analysis, Not Backtested)',
+                        'var(--purple, #a78bfa)',
+                      ),
+                      ...(openTier === 2 ? tier2.map(renderRow) : []),
+                    ] : []),
                   ].filter(Boolean);
                 })()}
               </tbody>
