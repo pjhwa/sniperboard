@@ -122,7 +122,7 @@ export function MacroBoard() {
   return (
     <div className="board-wrap">
       <BoardGuidePanel title={t(S.guideTitle, locale)} sections={MACRO_GUIDE()} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
-      <div className="board fade-in" style={{ gridTemplateColumns: '1fr 1fr 1fr', gridAutoRows: 'min-content' }}>
+      <div className="board fade-in" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
 
         {/* Overall Insight Banner */}
         {insightData && (

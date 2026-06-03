@@ -174,7 +174,7 @@ export function OverviewBoard() {
       />
     <div
       className="board fade-in"
-      style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', gridTemplateRows: 'auto auto auto auto', alignContent: 'start' }}
+      style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', alignContent: 'start' }}
     >
       {/* AI Insight — span 2 */}
       <div style={{ gridColumn: 'span 2' }} className="mob-order-1">

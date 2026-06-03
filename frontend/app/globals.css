@@ -360,6 +360,7 @@ body {
   flex: 1; overflow: auto;
   padding: 14px;
   display: grid; gap: 12px;
+  grid-auto-rows: max-content;
 }
 
 /* ============================================================
@@ -388,7 +389,7 @@ body {
   color: var(--fg-subtle);
   white-space: nowrap; flex-shrink: 0;
 }
-.card__bd { padding: 8px 14px 14px; flex: 1; }
+.card__bd { padding: 8px 14px 14px; flex: none; }
 .card__bd--flush { padding: 0; }
 
 .card-flag {
