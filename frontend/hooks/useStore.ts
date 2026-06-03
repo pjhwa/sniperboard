@@ -31,7 +31,7 @@ export const useStore = create<StoreState>()(
     (set) => ({
       symbol: 'TSLA',
       timeframe: '5m',
-      board: 'overview' as Board,
+      board: 'briefing' as Board,
       theme: 'dark' as Theme,
       locale: 'ko' as Locale,
       cmdOpen: false,
