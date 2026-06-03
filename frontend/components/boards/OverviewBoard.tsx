@@ -177,7 +177,7 @@ export function OverviewBoard() {
       style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', gridTemplateRows: 'auto auto auto auto', alignContent: 'start' }}
     >
       {/* AI Insight — span 2 */}
-      <div style={{ gridColumn: 'span 2' }} className="mob-order-6">
+      <div style={{ gridColumn: 'span 2' }} className="mob-order-1">
         <details className="mob-collapse" open>
           <summary>AI Insight — Market Snapshot</summary>
           <div className="mob-collapse-body">
@@ -335,44 +335,49 @@ export function OverviewBoard() {
       </div>
 
       {/* Earnings Calendar */}
-      <Card title={t(S.earningsTitle, locale)} action={t(S.earningsAction, locale)} className="mob-order-7">
-        {earningsData?.upcoming_earnings && earningsData.upcoming_earnings.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {earningsData.upcoming_earnings.map((e: UpcomingEarning) => {
-              const rm = EARNINGS_RISK_META[e.risk_level] ?? EARNINGS_RISK_META.med;
-              const tierLabel = e.relevance_tier === 'imminent' ? t(S.tierImminent, locale) : e.relevance_tier === 'approaching' ? t(S.tierApproaching, locale) : t(S.tierWatching, locale);
-              const tierColor = e.relevance_tier === 'imminent' ? 'var(--bear)' : e.relevance_tier === 'approaching' ? 'var(--warn)' : 'var(--fg-subtle)';
-              return (
-                <div key={e.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                  <span style={{ fontWeight: 600, width: 40, fontFamily: 'var(--mono)' }}>{e.symbol}</span>
-                  <span style={{ color: 'var(--fg-muted)', flex: 1 }}>
-                    {e.earnings_date.slice(5)} · {e.days_until}{locale === 'ko' ? '일 후' : 'd'}
-                  </span>
-                  {e.eps_estimate == null && (
-                    <span style={{ fontSize: 10.5, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>{t(S.estimateNA, locale)}</span>
-                  )}
-                  <span style={{ fontSize: 10.5, color: tierColor, fontWeight: 600 }}>{tierLabel}</span>
-                  <span className={`badge ${rm.color}`} style={{ fontSize: 11 }}>
-                    {rm.dot} {e.risk_level.toUpperCase()}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div style={{ color: 'var(--fg-muted)', fontSize: 13 }}>
-            {earningsData === null ? t(S.earningsLoading, locale) : t(S.earningsNone, locale)}
-          </div>
-        )}
-        {earningsMeta && (
-          <div style={{ marginTop: 6, paddingTop: 4, borderTop: '1px solid var(--border-soft)' }}>
-            <FreshnessBadge meta={earningsMeta} />
-          </div>
-        )}
-      </Card>
+      <details className="mob-collapse mob-order-8">
+        <summary>{t(S.earningsTitle, locale)}</summary>
+        <div className="mob-collapse-body">
+          <Card title={t(S.earningsTitle, locale)} action={t(S.earningsAction, locale)}>
+            {earningsData?.upcoming_earnings && earningsData.upcoming_earnings.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {earningsData.upcoming_earnings.map((e: UpcomingEarning) => {
+                  const rm = EARNINGS_RISK_META[e.risk_level] ?? EARNINGS_RISK_META.med;
+                  const tierLabel = e.relevance_tier === 'imminent' ? t(S.tierImminent, locale) : e.relevance_tier === 'approaching' ? t(S.tierApproaching, locale) : t(S.tierWatching, locale);
+                  const tierColor = e.relevance_tier === 'imminent' ? 'var(--bear)' : e.relevance_tier === 'approaching' ? 'var(--warn)' : 'var(--fg-subtle)';
+                  return (
+                    <div key={e.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                      <span style={{ fontWeight: 600, width: 40, fontFamily: 'var(--mono)' }}>{e.symbol}</span>
+                      <span style={{ color: 'var(--fg-muted)', flex: 1 }}>
+                        {e.earnings_date.slice(5)} · {e.days_until}{locale === 'ko' ? '일 후' : 'd'}
+                      </span>
+                      {e.eps_estimate == null && (
+                        <span style={{ fontSize: 10.5, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>{t(S.estimateNA, locale)}</span>
+                      )}
+                      <span style={{ fontSize: 10.5, color: tierColor, fontWeight: 600 }}>{tierLabel}</span>
+                      <span className={`badge ${rm.color}`} style={{ fontSize: 11 }}>
+                        {rm.dot} {e.risk_level.toUpperCase()}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ color: 'var(--fg-muted)', fontSize: 13 }}>
+                {earningsData === null ? t(S.earningsLoading, locale) : t(S.earningsNone, locale)}
+              </div>
+            )}
+            {earningsMeta && (
+              <div style={{ marginTop: 6, paddingTop: 4, borderTop: '1px solid var(--border-soft)' }}>
+                <FreshnessBadge meta={earningsMeta} />
+              </div>
+            )}
+          </Card>
+        </div>
+      </details>
 
       {/* Regime gauge */}
-      <Card title={t(S.riskRegimeTitle, locale)} action={locale === 'ko' ? '5요소 종합' : '5-factor composite'} info={{ term: t(G.risk_regime.term, locale), body: t(G.risk_regime.body, locale) }} className="mob-order-1">
+      <Card title={t(S.riskRegimeTitle, locale)} action={locale === 'ko' ? '5요소 종합' : '5-factor composite'} info={{ term: t(G.risk_regime.term, locale), body: t(G.risk_regime.body, locale) }} className="mob-order-2">
         {regimeData ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <RadialGauge value={regimeData.total ?? 0} size={100} label={regimeData.total ?? '—'} sublabel="/ 100" />
@@ -415,42 +420,47 @@ export function OverviewBoard() {
       </Card>
 
       {/* Distribution Days */}
-      <Card title="Distribution Days" action={t(S.ddAction, locale)} info={{ term: t(G.distribution_days.term, locale), body: t(G.distribution_days.body, locale) }} className="mob-order-7">
-        {ddData ? (
-          <>
-            {(['spy', 'qqq'] as const).map(key => {
-              const d = ddData[key];
-              const cls = d.level === 'OK' ? 'bull' : d.level === 'WARNING' ? 'warn' : 'bear';
-              return (
-                <div key={key} style={{ marginBottom: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontWeight: 600, fontSize: 13 }}>{key.toUpperCase()}</span>
-                    <span className={'badge ' + cls}>{d.count}{locale === 'ko' ? '일' : 'd'}</span>
-                    <small style={{ marginLeft: 'auto', color: 'var(--fg-subtle)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{d.level}</small>
-                  </div>
-                  <div style={{ display: 'flex', gap: 2 }}>
-                    {Array.from({ length: 25 }).map((_, i) => (
-                      <div key={i} style={{
-                        flex: 1, height: 10, borderRadius: 2,
-                        background: i < d.count ? `var(--${cls === 'warn' ? 'warn' : cls})` : 'var(--bg-subtle)',
-                        opacity: i < d.count ? (0.5 + (i / Math.max(d.count, 1)) * 0.5) : 1,
-                      }} />
-                    ))}
-                  </div>
+      <details className="mob-collapse mob-order-7">
+        <summary>Distribution Days</summary>
+        <div className="mob-collapse-body">
+          <Card title="Distribution Days" action={t(S.ddAction, locale)} info={{ term: t(G.distribution_days.term, locale), body: t(G.distribution_days.body, locale) }}>
+            {ddData ? (
+              <>
+                {(['spy', 'qqq'] as const).map(key => {
+                  const d = ddData[key];
+                  const cls = d.level === 'OK' ? 'bull' : d.level === 'WARNING' ? 'warn' : 'bear';
+                  return (
+                    <div key={key} style={{ marginBottom: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontWeight: 600, fontSize: 13 }}>{key.toUpperCase()}</span>
+                        <span className={'badge ' + cls}>{d.count}{locale === 'ko' ? '일' : 'd'}</span>
+                        <small style={{ marginLeft: 'auto', color: 'var(--fg-subtle)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{d.level}</small>
+                      </div>
+                      <div style={{ display: 'flex', gap: 2 }}>
+                        {Array.from({ length: 25 }).map((_, i) => (
+                          <div key={i} style={{
+                            flex: 1, height: 10, borderRadius: 2,
+                            background: i < d.count ? `var(--${cls === 'warn' ? 'warn' : cls})` : 'var(--bg-subtle)',
+                            opacity: i < d.count ? (0.5 + (i / Math.max(d.count, 1)) * 0.5) : 1,
+                          }} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)', lineHeight: 1.5 }}>
+                  OK &lt;4 · WARNING 4~5 · DANGER 6+
                 </div>
-              );
-            })}
-            <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)', lineHeight: 1.5 }}>
-              OK &lt;4 · WARNING 4~5 · DANGER 6+
-            </div>
-          </>
-        ) : (
-          <div className="subtle">{t(S.loading, locale)}</div>
-        )}
-      </Card>
+              </>
+            ) : (
+              <div className="subtle">{t(S.loading, locale)}</div>
+            )}
+          </Card>
+        </div>
+      </details>
 
       {/* Market Breadth */}
-      <Card title={t(S.mktBreadthTitle, locale)} action={t(S.breadthAction, locale)} info={{ term: t(G.market_breadth_spy_rsp.term, locale), body: t(G.market_breadth_spy_rsp.body, locale) }} className="mob-order-2">
+      <Card title={t(S.mktBreadthTitle, locale)} action={t(S.breadthAction, locale)} info={{ term: t(G.market_breadth_spy_rsp.term, locale), body: t(G.market_breadth_spy_rsp.body, locale) }} className="mob-order-5">
         {([
           ['SPY',  spy,  t(S.breadthMktCap, locale)],
           ['RSP',  rsp,  t(S.breadthEqual, locale)],
@@ -482,7 +492,7 @@ export function OverviewBoard() {
       </Card>
 
       {/* VIX Panel */}
-      <Card title={t(S.vixTitle, locale)} action={backward ? t(S.vixBackward, locale) : t(S.vixNormal, locale)} info={{ term: t(G.volatility.term, locale), body: t(G.volatility.body, locale) }} className="mob-order-2">
+      <Card title={t(S.vixTitle, locale)} action={backward ? t(S.vixBackward, locale) : t(S.vixNormal, locale)} info={{ term: t(G.volatility.term, locale), body: t(G.volatility.body, locale) }} className="mob-order-5">
         {vix ? (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 8 }}>
@@ -512,22 +522,27 @@ export function OverviewBoard() {
       </Card>
 
       {/* Credit Stress */}
-      <Card title={t(S.creditTitle, locale)} action={t(S.creditAction, locale)} info={{ term: t(G.credit.term, locale), body: t(G.credit.body, locale) }} className="mob-order-7">
-        {([['HYG', hyg], ['JNK', jnk], ['LQD', lqd], ['IEF', ief]] as [string, MacroItem | undefined][]).map(([label, m]) => {
-          if (!m) return null;
-          const up = (m.change_pct_5d ?? 0) >= 0;
-          return (
-            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '5px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 12.5 }}>
-              <span style={{ width: 36, fontWeight: 600 }}>{label}</span>
-              <span style={{ flex: 1, color: 'var(--fg-subtle)', fontSize: 11.5 }}>{m.name}</span>
-              <span className="mono" style={{ textAlign: 'right' }}>${(m.price ?? 0).toFixed(2)}</span>
-              <span className={'mono ' + (up ? 'chg up' : 'chg down')} style={{ width: 56, textAlign: 'right' }}>
-                {up ? '+' : ''}{(m.change_pct_5d ?? 0).toFixed(2)}%
-              </span>
-            </div>
-          );
-        })}
-      </Card>
+      <details className="mob-collapse mob-order-7" style={{ gridColumn: undefined }}>
+        <summary>{t(S.creditTitle, locale)}</summary>
+        <div className="mob-collapse-body">
+          <Card title={t(S.creditTitle, locale)} action={t(S.creditAction, locale)} info={{ term: t(G.credit.term, locale), body: t(G.credit.body, locale) }}>
+            {([['HYG', hyg], ['JNK', jnk], ['LQD', lqd], ['IEF', ief]] as [string, MacroItem | undefined][]).map(([label, m]) => {
+              if (!m) return null;
+              const up = (m.change_pct_5d ?? 0) >= 0;
+              return (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '5px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 12.5 }}>
+                  <span style={{ width: 36, fontWeight: 600 }}>{label}</span>
+                  <span style={{ flex: 1, color: 'var(--fg-subtle)', fontSize: 11.5 }}>{m.name}</span>
+                  <span className="mono" style={{ textAlign: 'right' }}>${(m.price ?? 0).toFixed(2)}</span>
+                  <span className={'mono ' + (up ? 'chg up' : 'chg down')} style={{ width: 56, textAlign: 'right' }}>
+                    {up ? '+' : ''}{(m.change_pct_5d ?? 0).toFixed(2)}%
+                  </span>
+                </div>
+              );
+            })}
+          </Card>
+        </div>
+      </details>
 
       {/* Entry Radar */}
       <Card title={t(S.entryRadarTitle, locale)} action={t(S.entryRadarAction, locale)} className="mob-order-4">
@@ -571,29 +586,34 @@ export function OverviewBoard() {
       </Card>
 
       {/* Conviction Leaderboard */}
-      <Card title={t(S.convictionTitle, locale)} action={t(S.convictionAction, locale)} info={{ term: t(G.conviction.term, locale), body: t(G.conviction.body, locale) }} className="mob-order-5">
-        {watchlist.length === 0 ? (
-          <div className="subtle">{t(S.loading, locale)}</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 340, overflowY: 'auto' }}>
-            {[...watchlist]
-              .sort((a, b) => (b.conviction_score ?? 0) - (a.conviction_score ?? 0))
-              .map(w => {
-                const s = w.conviction_score ?? 0;
-                const color = s >= 65 ? 'var(--bull)' : s >= 50 ? 'var(--teal)' : s >= 35 ? 'var(--warn)' : 'var(--bear)';
-                return (
-                  <div key={w.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
-                    <span style={{ fontWeight: 600, width: 46, fontFamily: 'var(--mono)', fontSize: 12, flexShrink: 0 }}>{w.symbol}</span>
-                    <div className="bar" style={{ flex: 1 }}>
-                      <div className="bar__fill" style={{ width: `${s}%`, background: color }} />
-                    </div>
-                    <ConvictionBadge score={w.conviction_score ?? undefined} locale={locale} size="sm" />
-                  </div>
-                );
-              })}
-          </div>
-        )}
-      </Card>
+      <details className="mob-collapse mob-order-8">
+        <summary>{t(S.convictionTitle, locale)}</summary>
+        <div className="mob-collapse-body">
+          <Card title={t(S.convictionTitle, locale)} action={t(S.convictionAction, locale)} info={{ term: t(G.conviction.term, locale), body: t(G.conviction.body, locale) }}>
+            {watchlist.length === 0 ? (
+              <div className="subtle">{t(S.loading, locale)}</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 340, overflowY: 'auto' }}>
+                {[...watchlist]
+                  .sort((a, b) => (b.conviction_score ?? 0) - (a.conviction_score ?? 0))
+                  .map(w => {
+                    const s = w.conviction_score ?? 0;
+                    const color = s >= 65 ? 'var(--bull)' : s >= 50 ? 'var(--teal)' : s >= 35 ? 'var(--warn)' : 'var(--bear)';
+                    return (
+                      <div key={w.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
+                        <span style={{ fontWeight: 600, width: 46, fontFamily: 'var(--mono)', fontSize: 12, flexShrink: 0 }}>{w.symbol}</span>
+                        <div className="bar" style={{ flex: 1 }}>
+                          <div className="bar__fill" style={{ width: `${s}%`, background: color }} />
+                        </div>
+                        <ConvictionBadge score={w.conviction_score ?? undefined} locale={locale} size="sm" />
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </Card>
+        </div>
+      </details>
 
       {/* Sector Momentum */}
       <Card title={t(S.sectorTitle, locale)} action={t(S.sectorAction, locale)} info={{ term: t(G.sector_momentum.term, locale), body: t(G.sector_momentum.body, locale) }} className="mob-order-3">
@@ -638,22 +658,27 @@ export function OverviewBoard() {
       </Card>
 
       {/* Top watchlist preview */}
-      <Card title={t(S.watchlistTitle, locale)} action={t(S.watchlistAction, locale)} className="mob-order-8">
-        {watchlist.slice(0, 3).map(w => (
-          <div key={w.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-soft)' }}>
-            <span className="sym-pill__badge" style={{ width: 22, height: 22 }}>{w.symbol[0]}</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 600, fontSize: 13 }}>{w.symbol}</div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div className="mono" style={{ fontSize: 12.5 }}>${w.price.toFixed(2)}</div>
-            </div>
-            <ScorePill score={w.score} />
-            <ConvictionBadge score={w.conviction_score ?? undefined} locale={locale} size="sm" />
-          </div>
-        ))}
-        {watchlist.length === 0 && <div className="subtle">{t(S.loading, locale)}</div>}
-      </Card>
+      <details className="mob-collapse mob-order-8">
+        <summary>{t(S.watchlistTitle, locale)}</summary>
+        <div className="mob-collapse-body">
+          <Card title={t(S.watchlistTitle, locale)} action={t(S.watchlistAction, locale)}>
+            {watchlist.slice(0, 3).map(w => (
+              <div key={w.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-soft)' }}>
+                <span className="sym-pill__badge" style={{ width: 22, height: 22 }}>{w.symbol[0]}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: 13 }}>{w.symbol}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div className="mono" style={{ fontSize: 12.5 }}>${w.price.toFixed(2)}</div>
+                </div>
+                <ScorePill score={w.score} />
+                <ConvictionBadge score={w.conviction_score ?? undefined} locale={locale} size="sm" />
+              </div>
+            ))}
+            {watchlist.length === 0 && <div className="subtle">{t(S.loading, locale)}</div>}
+          </Card>
+        </div>
+      </details>
 
     </div>
     </div>
