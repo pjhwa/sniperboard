@@ -349,6 +349,7 @@ async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주
 
 MACRO_SYMBOLS = {
     # Dollar / Rates / Bonds / Commodities
+    "KRW=X":    "USD/KRW",
     "DX-Y.NYB": "Dollar Index (DXY)",
     "^TNX":     "10Y Treasury (TNX)",
     "TLT":      "Long Bond ETF (TLT)",
