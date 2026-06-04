@@ -23,7 +23,7 @@ from services.brief_service import fetch_brief
 from services.morning_briefing_service import fetch_morning_briefing
 from services.earnings_service import fetch_earnings
 from core.macro_rules import compute_macro_signals
-from services.macro_insight_service import fetch_macro_insight, get_ai_meta
+from services.macro_insight_service import fetch_macro_insight, get_ai_meta, get_cached_signals
 from core.distribution_day import count_distribution_days
 from core.regime_engine import compute_regime
 from core.conviction_calculator import calculate_conviction
@@ -471,7 +471,20 @@ async def get_macro_insight_endpoint():
         ai_meta_data = get_ai_meta(ai_raw) if ai_raw else None
         ai_meta = MacroAiMeta(**ai_meta_data) if ai_meta_data else None
 
-        return MacroInsightResponse(overall=overall, groups=groups, ai_meta=ai_meta)
+        # text_signal_drift: live 신호와 AI 텍스트 생성 시점 신호가 다른 그룹 목록
+        # collect_macro_insight.py v2가 computed_signals를 JSON에 저장하므로 비교 가능
+        cached_sigs = get_cached_signals(ai_raw) if ai_raw else {}
+        text_signal_drift = [
+            key for key, sig in signals["groups"].items()
+            if cached_sigs.get(key) and cached_sigs[key] != sig["signal"]
+        ]
+
+        return MacroInsightResponse(
+            overall=overall,
+            groups=groups,
+            ai_meta=ai_meta,
+            text_signal_drift=text_signal_drift,
+        )
     except Exception as e:
         logger.error(f"Error in /macro/insight endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error in macro insight")

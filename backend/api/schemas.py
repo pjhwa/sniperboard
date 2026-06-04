@@ -183,11 +183,13 @@ class MacroOverallInsight(BaseModel):
 class MacroAiMeta(BaseModel):
     generated_at: str
     age_minutes: int
+    stale: bool = False   # True when age_minutes > 720 (12h) — AI text may not match current signals
 
 class MacroInsightResponse(BaseModel):
     overall: MacroOverallInsight
     groups: Dict[str, MacroGroupInsight]
     ai_meta: Optional[MacroAiMeta] = None
+    text_signal_drift: List[str] = []   # groups where live signal ≠ signal when AI text was written
 
 
 # --- Regime + Distribution Day ---
@@ -504,6 +506,8 @@ class MorningBigPicture(BaseModel):
     rates_note_ko: Optional[str] = None
     dollar_note_en: Optional[str] = None
     dollar_note_ko: Optional[str] = None
+    btc_note_en: Optional[str] = None   # Bitcoin risk-appetite signal (added by collect_morning_briefing v2)
+    btc_note_ko: Optional[str] = None
 
 class MorningSectorAnalysis(BaseModel):
     leaders_en: Optional[str] = None

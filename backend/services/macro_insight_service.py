@@ -34,14 +34,31 @@ def fetch_macro_insight() -> Optional[dict]:
         return _cache["data"]
 
 
+_STALE_THRESHOLD_MINUTES = 720  # 12시간 — 이 이상이면 AI 텍스트가 현재 신호와 다를 가능성 높음
+
+
 def get_ai_meta(raw: dict) -> Optional[dict]:
-    """raw 데이터에서 generated_at와 age_minutes 추출."""
+    """raw 데이터에서 generated_at, age_minutes, stale 추출."""
     generated_at = raw.get("generated_at")
     if not generated_at:
         return None
     try:
         gen = datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
         age_minutes = int((datetime.now(timezone.utc) - gen).total_seconds() / 60)
-        return {"generated_at": generated_at, "age_minutes": age_minutes}
+        return {
+            "generated_at": generated_at,
+            "age_minutes": age_minutes,
+            "stale": age_minutes > _STALE_THRESHOLD_MINUTES,
+        }
     except Exception:
         return None
+
+
+def get_cached_signals(raw: dict) -> dict[str, str]:
+    """JSON에 저장된 computed_signals를 {group: signal} dict로 반환.
+
+    collect_macro_insight.py v2가 저장한 computed_signals 필드를 읽는다.
+    없으면 빈 dict 반환 (구버전 JSON 대응).
+    """
+    computed = raw.get("computed_signals", {})
+    return {k: v.get("signal", "") for k, v in computed.items() if isinstance(v, dict)}
