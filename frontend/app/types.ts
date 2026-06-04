@@ -378,6 +378,7 @@ export const SYMBOLS = ALL_SYMBOLS;
 
 // Macro symbol display names (BiLang) — covers all 21 MACRO_SYMBOLS from the backend
 export const MACRO_SYMBOL_NAMES: Record<string, BiLang> = {
+  'KRW=X':    { en: 'USD/KRW (Korean Won)',      ko: '달러/원 환율' },
   'DX-Y.NYB': { en: 'Dollar Index (DXY)',        ko: '달러인덱스 (DXY)' },
   '^TNX':     { en: '10Y Treasury (TNX)',          ko: '10년물 금리 (TNX)' },
   'TLT':      { en: 'Long Bond ETF (TLT)',         ko: '장기채 ETF (TLT)' },
