@@ -389,7 +389,7 @@ body {
   color: var(--fg-subtle);
   white-space: nowrap; flex-shrink: 0;
 }
-.card__bd { padding: 8px 14px 14px; flex: none; }
+.card__bd { padding: 8px 14px 14px; flex: 1; }
 .card__bd--flush { padding: 0; }
 
 .card-flag {
@@ -1180,9 +1180,12 @@ body {
   .mob-show { display: none !important; }
   .bottom-tabs { display: none; }
 
-  /* details.mob-collapse: summary 숨김 + 콘텐츠 강제 표시 (open 속성 없어도) */
+  /* details.mob-collapse: summary 숨김 + height:100% 체인으로 card가 grid cell 채움
+     details(grid item) → mob-collapse-body → .card 모두 height:100% */
   details.mob-collapse > summary { display: none; }
-  details.mob-collapse > :not(summary) { display: block !important; }
+  details.mob-collapse { height: 100%; }
+  details.mob-collapse > .mob-collapse-body { height: 100%; }
+  details.mob-collapse > .mob-collapse-body > .card { height: 100%; }
   /* AI Brief: details가 card 역할 — 데스크톱에서 flex 카드처럼 표시 */
   details.mob-collapse.card { display: flex !important; flex-direction: column; }
 

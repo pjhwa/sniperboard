@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useMorningBriefing, MorningWatchlistItem, MorningSpotlight, GlobalIssue, GlobalContext } from '@/hooks/useMorningBriefing';
+import { useRegime } from '@/hooks/useRegime';
 import { Card } from '@/components/ui/Card';
 import { Sparkle } from '@/components/ui/Icons';
 import { tField } from '@/app/i18n';
@@ -684,6 +685,7 @@ function ShareSection({ text, locale, forceOpen = false }: { text: string; local
 export function MorningBriefingBoard() {
   const { locale } = useStore();
   const { briefingData, briefingMeta, available, isLoading, error } = useMorningBriefing();
+  const { regimeData } = useRegime();
 
   if (isLoading) {
     return (
@@ -787,7 +789,12 @@ export function MorningBriefingBoard() {
                   {tField(mood.label_en, mood.label_ko, '', locale)}
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--fg-muted)', fontFamily: 'var(--font-mono)', marginTop: 3 }}>
-                  {mood.score ?? '—'} / 100
+                  {regimeData?.total ?? mood.score ?? '—'} / 100
+                  {regimeData?.total != null && mood.score != null && regimeData.total !== mood.score && (
+                    <span style={{ marginLeft: 6, opacity: 0.6 }}>
+                      ({locale === 'ko' ? '생성 시' : 'at gen'}: {mood.score})
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
