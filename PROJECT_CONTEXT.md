@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-06-02 morning-briefing-board)
+# SniperBoard — Project Context (UPDATED 2026-06-04 usd-krw-exchange-rate)
 
 ## 0. Purpose of This Document
 
@@ -67,7 +67,7 @@ sniperboard/
 │   │   │   ├── Rail.tsx          # Left navigation rail (7 board icons + active indicator). deepdive=Layers icon in 2nd position. Mobile: hidden via hide-mobile class.
 │   │   │   ├── Topbar.tsx        # Top bar (title, search, symbol buttons, Regime mini, theme toggle, EN/KO locale toggle). Mobile: topbar__symbols/topbar__regime/topbar__sep/topbar__search hidden → logo+board name+theme toggle only (48px slim). EN/KO toggle added 2026-05-31. BOARD_LABELS now includes all 9 boards (backtest/track added 2026-06-02) — fallback 'Overview' bug fixed.
 │   │   │   ├── BottomTabs.tsx    # Mobile-only bottom tab bar (4 tabs: Overview/Analysis/Macro/Sentiment). Shows only at max-width:767px. Connected to useStore board/setBoard. safe-area-inset-bottom applied. Bilingual labels (2026-05-31).
-│   │   │   ├── MarketStrip.tsx   # Slim market strip (selected symbol + SPY/QQQ/IWM/VIX/DXY/GLD/CL=F). PRE/POST price display (usePrePost). "? Guide" button on far right — dispatches 'guide:open' custom event on click. Mobile: hidden via hide-mobile class. Bilingual tooltips and guide button (2026-05-31).
+│   │   │   ├── MarketStrip.tsx   # Slim market strip (selected symbol + SPY/QQQ/IWM/VIX/DXY/GLD/CL=F/KRW=X). PRE/POST price display (usePrePost). "? Guide" button on far right — dispatches 'guide:open' custom event on click. Mobile: hidden via hide-mobile class. Bilingual tooltips and guide button (2026-05-31).
 │   │   │   └── CommandPalette.tsx # ⌘K command palette (symbol/board search). Typing '?' switches to glossary search mode — filters GLOSSARY array, shows "Glossary search mode — N results" banner. Bilingual nav subs and glossary entries (2026-05-31).
 │   │   ├── ui/
 │   │   │   ├── Icons.tsx         # SVG icons (Crosshair, Activity, Candles, Eye, Globe, Heart, etc.)
@@ -123,7 +123,7 @@ Base URL: `http://<host>:4000/api` (via Next.js proxy) or `http://<host>:5001/ap
 | `GET /ohlcv` | `symbol`, `tf` (default 5m) | OHLCV candles + 6 signal boolean arrays + ema21/50/rsi/atr |
 | `GET /latest-signal` | `symbol`, `tf` (default 5m) | Latest candle signal summary (active_signals, price/RSI/EMA) |
 | `GET /daily` | `symbol` | 252-candle daily data + EMA8/21/50/200/ATR14/GC + full Stage2 |
-| `GET /macro` | — | 21 macro symbols: price · 1D/5D change · EMA8/21 · market structure · RSI14 |
+| `GET /macro` | — | 21 macro symbols: price · 1D/5D change · EMA8/21 · market structure · RSI14. Includes `KRW=X` (USD/KRW exchange rate). |
 | `GET /watchlist` | — | WATCHLIST_SYMS 6 symbols Stage2 score descending |
 | `GET /regime` | — | Risk Regime 5-factor scores + regime string |
 | `GET /distribution-days` | — | SPY·QQQ DD count/level/dates |

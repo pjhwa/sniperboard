@@ -283,6 +283,7 @@ Symbol selector buttons | Current price · RSI · EMA21 + intraday sparkline | S
   - **Credit Stress**: HYG · JNK · LQD · IEF (HYG strong = Risk-On, weak = fear)
   - **Rates & Dollar**: DXY · TNX · TLT (strong dollar + rising rates = equity headwind)
   - **Commodities**: CL=F (crude oil) · GLD (gold) (crude = economic leading indicator, gold = safe-haven demand)
+  - **USD/KRW (KRW=X)**: displayed in MarketStrip as `USD/KRW` with comma-thousands format (e.g. `1,380`). KRW=X yfinance ticker returns Korean Won per 1 USD.
   - **Sector ETFs**: SMH · XLE · XLY · XHB · ITA (track where money is flowing)
 - 21 symbols: price · 1D change · market structure · ⏱ AI freshness badge
 
