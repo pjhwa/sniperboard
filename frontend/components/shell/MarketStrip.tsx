@@ -12,12 +12,12 @@ const STRIP_SYMBOLS = ['SPY', 'QQQ', 'IWM', '^VIX', 'DX-Y.NYB', 'GLD', 'CL=F', '
 
 // 심볼별 레이블 override (displaySym 변환으로 처리 불가한 경우)
 const STRIP_LABEL_OVERRIDE: Record<string, string> = {
-  'KRW=X': 'KRW',
+  'KRW=X': 'USD/KRW',
 };
 
 // 심볼별 가격 포맷터
 const STRIP_PRICE_FORMAT: Record<string, (price: number) => string> = {
-  'KRW=X': (p) => '₩' + Math.round(p).toLocaleString(),
+  'KRW=X': (p) => Math.round(p).toLocaleString('en-US'),
 };
 
 const SYMBOL_TOOLTIPS: Record<string, { en: string; ko: string }> = {
