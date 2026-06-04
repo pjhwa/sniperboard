@@ -8,7 +8,17 @@ import { usePrePost } from '@/hooks/usePrePost';
 import { Sparkline } from '@/components/ui/Sparkline';
 import { t } from '@/app/i18n';
 
-const STRIP_SYMBOLS = ['SPY', 'QQQ', 'IWM', '^VIX', 'DX-Y.NYB', 'GLD', 'CL=F', 'BTC-USD'];
+const STRIP_SYMBOLS = ['SPY', 'QQQ', 'IWM', '^VIX', 'DX-Y.NYB', 'GLD', 'CL=F', 'BTC-USD', 'KRW=X'];
+
+// 심볼별 레이블 override (displaySym 변환으로 처리 불가한 경우)
+const STRIP_LABEL_OVERRIDE: Record<string, string> = {
+  'KRW=X': 'KRW',
+};
+
+// 심볼별 가격 포맷터
+const STRIP_PRICE_FORMAT: Record<string, (price: number) => string> = {
+  'KRW=X': (p) => '₩' + Math.round(p).toLocaleString(),
+};
 
 const SYMBOL_TOOLTIPS: Record<string, { en: string; ko: string }> = {
   'SPY':      { en: 'S&P 500 ETF — tracks 500 large US stocks. Market temperature gauge', ko: 'S&P 500 ETF — 미국 대형주 500개 추종. 전체 시장 체온계' },
@@ -19,6 +29,7 @@ const SYMBOL_TOOLTIPS: Record<string, { en: string; ko: string }> = {
   'GLD':      { en: 'Gold ETF — safe-haven and inflation hedge. Inverse to dollar and rates', ko: '금 ETF — 안전자산·인플레이션 헤지. 달러·금리와 역관계' },
   'CL=F':     { en: 'WTI Crude Oil Futures — West Texas crude. Leading indicator for energy sector and inflation', ko: 'WTI 원유 선물 — 서부 텍사스산 원유. 에너지 섹터·인플레이션 선행 지표' },
   'BTC-USD':  { en: 'Bitcoin — digital gold and risk sentiment proxy. Often leads risk-on/off moves', ko: '비트코인 — 디지털 금이자 리스크 심리 대리지표. 위험선호/회피 움직임을 선행하는 경향' },
+  'KRW=X':    { en: 'USD/KRW — dollar to Korean Won. Higher = weaker won vs. dollar', ko: '달러/원 환율 — 숫자가 높을수록 원화 약세 (1달러에 필요한 원화)' },
 };
 
 export function MarketStrip() {
@@ -105,7 +116,10 @@ export function MarketStrip() {
 
       {items.map(m => {
         const up = (m.change_pct_1d ?? 0) >= 0;
-        const displaySym = m.symbol.replace('^', '').replace('-Y.NYB', 'Y');
+        const displaySym = STRIP_LABEL_OVERRIDE[m.symbol]
+          ?? m.symbol.replace('^', '').replace('-Y.NYB', 'Y');
+        const formatPrice = STRIP_PRICE_FORMAT[m.symbol]
+          ?? ((p: number) => p.toLocaleString(undefined, { maximumFractionDigits: 2 }));
         return (
           <div
             key={m.symbol}
@@ -120,7 +134,7 @@ export function MarketStrip() {
             <div>
               <div className="strip__label" style={{ marginBottom: 1 }}>{displaySym}</div>
               <div className="strip__val">
-                {m.price != null ? m.price.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—'}
+                {m.price != null ? formatPrice(m.price) : '—'}
               </div>
             </div>
             {m.change_pct_1d != null && (
