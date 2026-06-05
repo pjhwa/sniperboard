@@ -82,7 +82,7 @@ def collect_email_data() -> dict:
 
     try:
         all_syms = _WATCHLIST_SYMS + ["SPY", "RSP"]
-        dfs = get_multi_daily(all_syms, period="3mo")
+        dfs = get_multi_daily(all_syms, period="2y")
     except Exception as e:
         logger.warning(f"Watchlist data fetch failed: {e}")
         dfs = {}
