@@ -64,6 +64,22 @@ _REGIME_CSS = {
     "RISK_OFF": "risk-off",
 }
 
+_MOOD_DOT = {"green": "🟢", "yellow": "🟡", "red": "🔴"}
+_SIGNAL_ICON = {"GREEN": "🟢", "YELLOW": "🟡", "RED": "🔴"}
+_SENTIMENT_ICON = {
+    "euphoric": "🚀", "optimistic": "😊", "neutral": "😐",
+    "cautious": "😟", "fearful": "😨",
+}
+_ACTION_CLASS = {"buy": "act-buy", "hold": "act-hold", "watch": "act-watch", "avoid": "act-avoid"}
+_MACRO_GROUP_KO = {
+    "volatility": "변동성 (VIX)",
+    "breadth": "시장 폭 (RSP)",
+    "credit": "신용 스프레드",
+    "rates": "금리 (IEF)",
+    "commodities": "원자재",
+    "sectors": "섹터 로테이션",
+}
+
 
 def collect_email_data() -> dict:
     """Gather all data needed for the morning email report.
@@ -168,13 +184,87 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
     briefing_available = briefing_data.get("available", False)
     bdata = briefing_data.get("data", {}) if briefing_available else {}
 
-    macro = data.get("macro") or {}
-    macro_summary = macro.get("summary") or macro.get("summary_en", "")
-    macro_bullets_raw = macro.get("bullets") or macro.get("bullets_en") or []
-    macro_bullets = [b for b in macro_bullets_raw if b][:5]
+    # ── existing fields (ko/en priority) ────────────────────────────────────
+    headline = bdata.get("headline_ko") or bdata.get("headline_en") or bdata.get("headline", "")
+    executive_bullets = (bdata.get("executive_bullets_ko")
+                         or bdata.get("executive_bullets_en")
+                         or bdata.get("executive_bullets") or [])
+    today_checkpoints = (bdata.get("today_checkpoints_ko")
+                         or bdata.get("today_checkpoints_en")
+                         or bdata.get("today_checkpoints") or [])
+    earnings_alert = (bdata.get("earnings_alert_ko")
+                      or bdata.get("earnings_alert_en")
+                      or bdata.get("earnings_alert", ""))
 
-    macro_bar_b64 = (base64.b64encode(macro_bar_png).decode()
-                     if macro_bar_png else "")
+    # ── ② Morning Mood ──────────────────────────────────────────────────────
+    mood_raw = bdata.get("market_mood") or {}
+    mood_light = mood_raw.get("traffic_light", "yellow")
+    mood_dot = _MOOD_DOT.get(mood_light, "🟡")
+    mood_label = mood_raw.get("label_ko") or mood_raw.get("label_en", "")
+    mood_explanation = mood_raw.get("explanation_ko") or mood_raw.get("explanation_en", "")
+
+    # ── ③ Macro ─────────────────────────────────────────────────────────────
+    macro = data.get("macro") or {}
+    macro_summary = (macro.get("summary_ko") or macro.get("summary")
+                     or macro.get("summary_en", ""))
+    macro_bullets_raw = (macro.get("bullets_ko") or macro.get("bullets")
+                         or macro.get("bullets_en") or [])
+    macro_bullets = [b for b in macro_bullets_raw if b][:5]
+    macro_bar_b64 = base64.b64encode(macro_bar_png).decode() if macro_bar_png else ""
+
+    macro_groups_detail = []
+    for key, val in (macro.get("groups") or {}).items():
+        if not isinstance(val, dict):
+            continue
+        text = val.get("text_ko") or val.get("text_en") or val.get("text", "")
+        macro_groups_detail.append({
+            "name": _MACRO_GROUP_KO.get(key, key),
+            "signal_icon": _SIGNAL_ICON.get(val.get("signal", "YELLOW"), "🟡"),
+            "direction": val.get("direction", ""),
+            "text": text,
+        })
+
+    # ── ③ Big Picture ───────────────────────────────────────────────────────
+    bp = bdata.get("big_picture") or {}
+    big_picture_items = []
+    for label, key in [("VIX", "vix_note"), ("금리", "rates_note"),
+                        ("달러", "dollar_note"), ("BTC", "btc_note")]:
+        note = bp.get(f"{key}_ko") or bp.get(f"{key}_en", "")
+        if note:
+            big_picture_items.append({"label": label, "note": note})
+
+    # ── ④ Sector Analysis ───────────────────────────────────────────────────
+    sa = bdata.get("sector_analysis") or {}
+    sector_leaders = sa.get("leaders_ko") or sa.get("leaders_en", "")
+    sector_laggards = sa.get("laggards_ko") or sa.get("laggards_en", "")
+    sector_rotation = sa.get("rotation_signal_ko") or sa.get("rotation_signal_en", "")
+
+    # ── ⑥ Spotlight ─────────────────────────────────────────────────────────
+    spotlight_items = []
+    for s in (bdata.get("spotlight") or []):
+        if not isinstance(s, dict):
+            continue
+        spotlight_items.append({
+            "symbol": s.get("symbol", ""),
+            "company": s.get("company", ""),
+            "why": s.get("why_ko") or s.get("why_en", ""),
+            "watch_level": s.get("watch_level_ko") or s.get("watch_level_en", ""),
+        })
+
+    # ── ⑥ Morning Watchlist (AI per-symbol analysis) ────────────────────────
+    morning_watchlist = []
+    for w in (bdata.get("watchlist") or []):
+        if not isinstance(w, dict):
+            continue
+        action = w.get("action", "watch")
+        analysis = w.get("analysis_ko") or w.get("analysis_en", "")
+        morning_watchlist.append({
+            "symbol": w.get("symbol", ""),
+            "action": action,
+            "action_class": _ACTION_CLASS.get(action, "act-watch"),
+            "sentiment_icon": _SENTIMENT_ICON.get(w.get("sentiment_mood", ""), "😐"),
+            "analysis": analysis[:90] + "…" if len(analysis) > 90 else analysis,
+        })
 
     tmpl = _jinja_env.get_template("email_report.html.j2")
     return tmpl.render(
@@ -189,11 +279,21 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
         macro_summary=macro_summary,
         macro_bullets=macro_bullets,
         macro_bar_b64=macro_bar_b64,
+        macro_groups_detail=macro_groups_detail,
+        big_picture_items=big_picture_items,
         briefing_available=briefing_available,
-        headline=bdata.get("headline", ""),
-        executive_bullets=bdata.get("executive_bullets", []),
-        today_checkpoints=bdata.get("today_checkpoints", []),
-        earnings_alert=bdata.get("earnings_alert", ""),
+        headline=headline,
+        executive_bullets=executive_bullets[:5],
+        today_checkpoints=today_checkpoints,
+        earnings_alert=earnings_alert,
+        mood_dot=mood_dot,
+        mood_label=mood_label,
+        mood_explanation=mood_explanation,
+        sector_leaders=sector_leaders,
+        sector_laggards=sector_laggards,
+        sector_rotation=sector_rotation,
+        spotlight_items=spotlight_items,
+        morning_watchlist=morning_watchlist,
         dashboard_url=DASHBOARD_URL,
     )
 
