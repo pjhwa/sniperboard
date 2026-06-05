@@ -7,3 +7,6 @@ pytest
 requests
 jsonschema
 websockets
+matplotlib
+jinja2
+apscheduler>=3.10
