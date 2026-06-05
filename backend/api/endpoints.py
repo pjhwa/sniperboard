@@ -836,3 +836,41 @@ async def get_distribution_days_endpoint():
     except Exception as e:
         logger.error(f"Error in /distribution-days: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="DD computation failed")
+
+
+# ── Email Report ────────────────────────────────────────────────────────────
+
+from fastapi.responses import HTMLResponse as _HTMLResponse
+
+
+@router.post("/email-report/send")
+async def trigger_email_report(background_tasks: BackgroundTasks):
+    """Manually trigger the morning email report. Runs in background thread."""
+    import asyncio
+    from services.email_report_service import run_morning_report
+    loop = asyncio.get_event_loop()
+    loop.run_in_executor(None, run_morning_report)
+    return {"status": "queued", "message": "Morning report is being generated and sent."}
+
+
+@router.get("/email-report/preview", response_class=_HTMLResponse)
+async def preview_email_report():
+    """Return the morning email HTML for browser preview (no email sent)."""
+    import asyncio
+    from services.email_report_service import (
+        collect_email_data, render_html,
+    )
+    from services.charts import render_regime_gauge, render_watchlist_sparklines, render_macro_bar
+
+    loop = asyncio.get_event_loop()
+
+    def _build():
+        data = collect_email_data()
+        regime = data["regime"]
+        gauge_png = render_regime_gauge(regime.get("total", 50.0), regime.get("regime", "UNKNOWN"))
+        sparklines_png = render_watchlist_sparklines(data["sparkline_data"], data["watchlist"])
+        macro_bar_png = render_macro_bar((data.get("macro") or {}).get("groups", {}))
+        return render_html(data, gauge_png, sparklines_png, macro_bar_png)
+
+    html = await loop.run_in_executor(None, _build)
+    return _HTMLResponse(content=html)
