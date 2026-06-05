@@ -20,6 +20,11 @@ services:
       MORNING_BRIEFING_URL: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/briefing/latest.json"
       # Private 리포일 때만 필요 (GitHub PAT). Public이면 빈 채로 두세요.
       SENTIMENT_DATA_TOKEN: ""
+      # Email report (optional — leave blank to disable)
+      GMAIL_USER: ${GMAIL_USER:-}
+      GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD:-}
+      REPORT_TO: ${REPORT_TO:-}
+      DASHBOARD_URL: ${DASHBOARD_URL:-http://localhost:4000}
     restart: unless-stopped
 
   frontend:
