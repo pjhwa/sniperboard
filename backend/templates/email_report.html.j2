@@ -122,7 +122,9 @@
   {% if today_checkpoints %}
   <div class="section">
     <p class="section-title">오늘 체크포인트</p>
-    <div class="checkpoint">{{ today_checkpoints | join("<br>") }}</div>
+    <div class="checkpoint">
+  {% for cp in today_checkpoints %}{{ cp }}{% if not loop.last %}<br>{% endif %}{% endfor %}
+</div>
   </div>
   {% endif %}
 

@@ -125,7 +125,7 @@ def test_send_report_email_calls_smtp(monkeypatch):
     with patch("smtplib.SMTP", smtp_class):
         svc.send_report_email(html="<html>Test</html>", subject="Test Report")
 
-    smtp_class.assert_called_once_with("smtp.gmail.com", 587)
+    smtp_class.assert_called_once_with("smtp.gmail.com", 587, timeout=30)
     smtp_instance.starttls.assert_called_once()
     smtp_instance.login.assert_called_once_with("test@gmail.com", "secret")
     smtp_instance.send_message.assert_called_once()

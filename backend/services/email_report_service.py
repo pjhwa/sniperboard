@@ -73,11 +73,19 @@ def collect_email_data() -> dict:
     """
     briefing = fetch_morning_briefing()
 
-    regime_dfs = get_multi_daily(["SPY", "RSP", "HYG", "IEF", "^VIX"], period="1y")
-    regime = compute_regime(regime_dfs)
+    try:
+        regime_dfs = get_multi_daily(["SPY", "RSP", "HYG", "IEF", "^VIX"], period="1y")
+        regime = compute_regime(regime_dfs)
+    except Exception as e:
+        logger.warning(f"Regime data fetch failed, using neutral fallback: {e}")
+        regime = {"total": 50.0, "regime": "UNKNOWN"}
 
-    all_syms = _WATCHLIST_SYMS + ["SPY", "RSP"]
-    dfs = get_multi_daily(all_syms, period="3mo")
+    try:
+        all_syms = _WATCHLIST_SYMS + ["SPY", "RSP"]
+        dfs = get_multi_daily(all_syms, period="3mo")
+    except Exception as e:
+        logger.warning(f"Watchlist data fetch failed: {e}")
+        dfs = {}
     spy_df = dfs.get("SPY")
     rsp_df = dfs.get("RSP")
     spy_close = spy_df["close"] if spy_df is not None and not spy_df.empty else None
@@ -127,7 +135,11 @@ def collect_email_data() -> dict:
 
     watchlist_items.sort(key=lambda x: x["stage2_score"], reverse=True)
 
-    macro = fetch_macro_insight()
+    try:
+        macro = fetch_macro_insight()
+    except Exception as e:
+        logger.warning(f"Macro insight fetch failed: {e}")
+        macro = None
 
     return {
         "briefing": briefing,
@@ -199,12 +211,15 @@ def send_report_email(html: str, subject: str) -> None:
     msg["To"] = ", ".join(recipients)
     msg.attach(MIMEText(html, "html", "utf-8"))
 
-    with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
-        smtp.starttls()
-        smtp.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-        smtp.send_message(msg)
-
-    logger.info(f"Morning report emailed to {recipients}")
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as smtp:
+            smtp.starttls()
+            smtp.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+            smtp.send_message(msg)
+        logger.info(f"Morning report emailed to {recipients}")
+    except Exception as exc:
+        logger.error(f"Failed to send morning report email: {exc}", exc_info=True)
+        raise
 
 
 def run_morning_report() -> None:
