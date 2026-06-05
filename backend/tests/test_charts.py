@@ -48,6 +48,18 @@ def test_render_watchlist_sparklines_handles_missing_symbol():
     assert result[:4] == b'\x89PNG'
 
 
+def test_render_watchlist_sparklines_handles_empty_price_list():
+    from services.charts import render_watchlist_sparklines
+    # symbol exists in price_data but has empty list — should not crash
+    price_data = {"NVDA": [], "META": [100.0 + i for i in range(30)]}
+    items = [
+        {"symbol": "NVDA", "stage2_score": 7, "conviction_label": "Very High"},
+        {"symbol": "META", "stage2_score": 6, "conviction_label": "High"},
+    ]
+    result = render_watchlist_sparklines(price_data=price_data, items=items)
+    assert result[:4] == b'\x89PNG'
+
+
 def test_render_macro_bar_returns_png_bytes():
     from services.charts import render_macro_bar
     groups = {

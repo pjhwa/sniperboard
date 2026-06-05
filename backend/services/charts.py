@@ -65,7 +65,7 @@ def render_regime_gauge(score: float, regime_label: str) -> bytes:
 
 def render_watchlist_sparklines(price_data: dict, items: list) -> bytes:
     """2×N grid of sparklines for watchlist symbols. Returns PNG bytes."""
-    valid = [item for item in items if item["symbol"] in price_data]
+    valid = [item for item in items if item["symbol"] in price_data and len(price_data[item["symbol"]]) >= 2]
     n = len(valid)
     if n == 0:
         fig, ax = plt.subplots(figsize=(9, 1), facecolor=_BG)
@@ -82,7 +82,6 @@ def render_watchlist_sparklines(price_data: dict, items: list) -> bytes:
 
     for i, item in enumerate(valid):
         ax = axes_flat[i]
-        ax.set_facecolor(_BG)
         prices = price_data[item["symbol"]]
         color = _GREEN if prices[-1] >= prices[0] else _RED
         ax.plot(prices, color=color, linewidth=1.5)
