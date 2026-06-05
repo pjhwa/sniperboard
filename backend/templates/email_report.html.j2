@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SniperBoard Morning Brief — {{ date_str }}</title>
+<style>
+  body { margin:0; padding:0; background:#0f0f1a; font-family:Arial,sans-serif; }
+  .wrap { max-width:620px; margin:0 auto; background:#0f0f1a; }
+  .hd { background:#1e1e3a; padding:20px 24px; border-bottom:2px solid #7c3aed; }
+  .hd-title { color:#e2e8f0; font-size:18px; font-weight:bold; margin:0; }
+  .hd-sub { color:#94a3b8; font-size:12px; margin:4px 0 0; }
+  .section { padding:16px 24px; border-bottom:1px solid #1e293b; }
+  .section-title { color:#7c3aed; font-size:11px; font-weight:bold; letter-spacing:1px;
+                   text-transform:uppercase; margin:0 0 10px; }
+  .mood-banner { border-radius:6px; padding:12px 16px; margin-bottom:4px; }
+  .mood-risk-on  { background:#14532d; border-left:4px solid #22c55e; }
+  .mood-constructive { background:#14532d; border-left:4px solid #4ade80; }
+  .mood-mixed    { background:#451a03; border-left:4px solid #f59e0b; }
+  .mood-defensive { background:#431407; border-left:4px solid #fb923c; }
+  .mood-risk-off { background:#450a0a; border-left:4px solid #ef4444; }
+  .mood-text { color:#e2e8f0; font-size:15px; font-weight:bold; margin:0; }
+  .mood-sub { color:#94a3b8; font-size:11px; margin:4px 0 0; }
+  .chart-img { display:block; margin:8px auto; max-width:100%; }
+  table.wl { width:100%; border-collapse:collapse; font-size:12px; }
+  table.wl th { color:#64748b; text-align:left; padding:4px 6px;
+                border-bottom:1px solid #1e293b; font-weight:normal; }
+  table.wl td { color:#e2e8f0; padding:5px 6px; border-bottom:1px solid #0f172a; }
+  .badge { display:inline-block; border-radius:3px; padding:1px 5px; font-size:10px;
+           font-weight:bold; }
+  .b-vhigh { background:#14532d; color:#4ade80; }
+  .b-high   { background:#0c4a6e; color:#38bdf8; }
+  .b-mod    { background:#164e63; color:#67e8f9; }
+  .b-low    { background:#431407; color:#fb923c; }
+  .b-vlow   { background:#450a0a; color:#f87171; }
+  .bar { display:inline-block; height:8px; border-radius:2px; vertical-align:middle; }
+  .bar-g { background:#22c55e; }
+  .bar-e { background:#1e293b; }
+  ul.bullets { margin:6px 0 0; padding-left:18px; color:#cbd5e1; font-size:12px; line-height:1.7; }
+  .checkpoint { background:#1e293b; border-radius:4px; padding:10px 14px; margin-top:6px;
+                color:#e2e8f0; font-size:12px; line-height:1.8; }
+  .footer { padding:14px 24px; text-align:center; color:#475569; font-size:11px; }
+  .footer a { color:#7c3aed; text-decoration:none; }
+  .label-on  { color:#22c55e; font-weight:bold; }
+  .label-off { color:#ef4444; font-weight:bold; }
+  .label-mix { color:#f59e0b; font-weight:bold; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="hd">
+    <p class="hd-title">📊 SniperBoard Morning Brief</p>
+    <p class="hd-sub">{{ date_str }} &nbsp;·&nbsp; Generated {{ generated_kst }}</p>
+  </div>
+
+  <!-- Block 1: Regime -->
+  <div class="section">
+    <p class="section-title">시장 분위기 · Risk Regime</p>
+    <div class="mood-banner mood-{{ regime_class }}">
+      <p class="mood-text">{{ regime_label_display }}</p>
+      <p class="mood-sub">Regime Score: {{ regime_score }}/100</p>
+    </div>
+    <img class="chart-img" src="data:image/png;base64,{{ gauge_b64 }}" alt="Regime Gauge" width="320">
+  </div>
+
+  <!-- Block 2: Watchlist -->
+  <div class="section">
+    <p class="section-title">감시종목 현황 · Watchlist (Stage2 순)</p>
+    <table class="wl">
+      <tr>
+        <th>종목</th><th>가격</th><th>Stage2</th><th>RS</th><th>Conviction</th>
+      </tr>
+      {% for item in watchlist %}
+      <tr>
+        <td style="font-weight:bold">{{ item.symbol }}</td>
+        <td>${{ "%.2f"|format(item.price) }}</td>
+        <td>
+          <span class="bar bar-g" style="width:{{ (item.stage2_score / 7 * 42)|int }}px"></span>
+          <span class="bar bar-e" style="width:{{ ((7 - item.stage2_score) / 7 * 42)|int }}px"></span>
+          &nbsp;{{ item.stage2_score }}/7
+        </td>
+        <td>{{ item.rs_score if item.rs_score is not none else "—" }}</td>
+        <td>
+          <span class="badge {{ item.conviction_class }}">{{ item.conviction_label or "—" }}</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    <img class="chart-img" src="data:image/png;base64,{{ sparklines_b64 }}" alt="Sparklines" width="560">
+  </div>
+
+  <!-- Block 3: Macro -->
+  <div class="section">
+    <p class="section-title">매크로 신호 · Macro Signals</p>
+    <img class="chart-img" src="data:image/png;base64,{{ macro_bar_b64 }}" alt="Macro Signals" width="480">
+    {% if macro_summary %}
+    <p style="color:#94a3b8; font-size:12px; margin:8px 0 0; line-height:1.6;">{{ macro_summary }}</p>
+    {% endif %}
+    {% if macro_bullets %}
+    <ul class="bullets">
+      {% for b in macro_bullets %}<li>{{ b }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+
+  <!-- Block 4: Morning Briefing -->
+  {% if briefing_available %}
+  <div class="section">
+    <p class="section-title">AI 브리핑 · Morning Briefing</p>
+    {% if headline %}
+    <p style="color:#e2e8f0; font-size:14px; font-weight:bold; margin:0 0 8px;">{{ headline }}</p>
+    {% endif %}
+    {% if executive_bullets %}
+    <ul class="bullets">
+      {% for b in executive_bullets[:5] %}<li>{{ b }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+
+  {% if today_checkpoints %}
+  <div class="section">
+    <p class="section-title">오늘 체크포인트</p>
+    <div class="checkpoint">{{ today_checkpoints | join("<br>") }}</div>
+  </div>
+  {% endif %}
+
+  {% if earnings_alert %}
+  <div class="section">
+    <p class="section-title">실적 알림 · Earnings Alert</p>
+    <p style="color:#fbbf24; font-size:12px; margin:0;">{{ earnings_alert }}</p>
+  </div>
+  {% endif %}
+  {% endif %}
+
+  <!-- Footer -->
+  <div class="footer">
+    <a href="{{ dashboard_url }}">대시보드 바로가기 →</a>
+    &nbsp;·&nbsp; SniperBoard Signal Dashboard
+  </div>
+
+</div>
+</body>
+</html>
