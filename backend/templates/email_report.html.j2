@@ -35,7 +35,7 @@
   .macro-name { color:#94a3b8; font-size:11px; font-weight:bold; flex-shrink:0; width:100px; }
   .macro-text { color:#64748b; font-size:11px; flex:1; line-height:1.4; }
   .bigpic-block { background:#1e293b; border-radius:6px; padding:10px 14px; margin-top:10px; }
-  .bigpic-title { color:#7c3aed; font-size:10px; font-weight:bold; letter-spacing:1px;
+  .bigpic-title { color:#7c3aed; font-size:12px; font-weight:bold; letter-spacing:1px;
                   text-transform:uppercase; margin:0 0 8px; }
   .bigpic-row { display:flex; gap:10px; padding:4px 0; border-bottom:1px solid #0f172a; }
   .bigpic-row:last-child { border-bottom:none; }
@@ -48,7 +48,7 @@
   .bar   { display:inline-block; height:8px; border-radius:2px; vertical-align:middle; }
   .bar-g { background:#22c55e; }
   .bar-e { background:#1e293b; }
-  .badge  { display:inline-block; border-radius:3px; padding:1px 5px; font-size:10px; font-weight:bold; }
+  .badge  { display:inline-block; border-radius:3px; padding:1px 5px; font-size:12px; font-weight:bold; }
   .b-vhigh { background:#14532d; color:#4ade80; }
   .b-high  { background:#0c4a6e; color:#38bdf8; }
   .b-mod   { background:#164e63; color:#67e8f9; }
@@ -61,14 +61,14 @@
   .sector-block { background:#1e293b; border-radius:6px; padding:10px 14px; margin-top:8px; }
   .sector-row { display:flex; gap:10px; padding:4px 0; border-bottom:1px solid #0f172a; }
   .sector-row:last-child { border-bottom:none; }
-  .sector-key { color:#7c3aed; font-size:10px; font-weight:bold; flex-shrink:0; width:56px; text-transform:uppercase; letter-spacing:.5px; }
+  .sector-key { color:#7c3aed; font-size:12px; font-weight:bold; flex-shrink:0; width:56px; text-transform:uppercase; letter-spacing:.5px; }
   .sector-val { color:#cbd5e1; font-size:11px; flex:1; line-height:1.4; }
   .spotlight-card { background:#1e293b; border-radius:6px; padding:12px 14px;
                     margin-bottom:8px; border-left:3px solid #7c3aed; }
   .spotlight-sym   { color:#e2e8f0; font-size:13px; font-weight:bold; margin:0 0 2px; }
-  .spotlight-co    { color:#64748b; font-size:10px; display:inline; font-weight:normal; margin-left:6px; }
+  .spotlight-co    { color:#64748b; font-size:12px; display:inline; font-weight:normal; margin-left:6px; }
   .spotlight-why   { color:#cbd5e1; font-size:11px; margin:6px 0 4px; line-height:1.5; }
-  .spotlight-watch { color:#f59e0b; font-size:10px; margin:0; }
+  .spotlight-watch { color:#f59e0b; font-size:12px; margin:0; }
   .wl-row { display:flex; align-items:flex-start; gap:8px; padding:7px 0;
             border-bottom:1px solid #0f172a; }
   .wl-row:last-child { border-bottom:none; }
@@ -99,7 +99,7 @@
     <p class="mood-text">{{ regime_label_display }}</p>
     <p class="mood-sub">Regime Score: {{ regime_score }}/100</p>
   </div>
-  <img class="chart-img" src="data:image/png;base64,{{ gauge_b64 }}" alt="Regime Gauge" width="300">
+  {% if gauge_b64 %}<img class="chart-img" src="data:image/png;base64,{{ gauge_b64 }}" alt="Regime Gauge" width="300">{% endif %}
   {% if mood_label or mood_explanation %}
   <div class="mood-row">
     <span class="mood-dot">{{ mood_dot }}</span>
@@ -114,7 +114,7 @@
 <!-- ③ 매크로 심층 분석 -->
 <div class="section">
   <p class="section-title">매크로 심층 분석 · Macro Deep Dive</p>
-  <img class="chart-img" src="data:image/png;base64,{{ macro_bar_b64 }}" alt="Macro Signals" width="460">
+  {% if macro_bar_b64 %}<img class="chart-img" src="data:image/png;base64,{{ macro_bar_b64 }}" alt="Macro Signals" width="460">{% endif %}
   {% if macro_groups_detail %}
   <div style="margin-top:10px;">
     {% for g in macro_groups_detail %}
@@ -222,7 +222,7 @@
     </tr>
     {% endfor %}
   </table>
-  <img class="chart-img" src="data:image/png;base64,{{ sparklines_b64 }}" alt="Sparklines" width="560">
+  {% if sparklines_b64 %}<img class="chart-img" src="data:image/png;base64,{{ sparklines_b64 }}" alt="Sparklines" width="560">{% endif %}
 </div>
 
 <!-- ⑥ 스포트라이트 & 종목별 분석 -->
