@@ -12,135 +12,253 @@
   .hd-sub { color:#94a3b8; font-size:12px; margin:4px 0 0; }
   .section { padding:16px 24px; border-bottom:1px solid #1e293b; }
   .section-title { color:#7c3aed; font-size:11px; font-weight:bold; letter-spacing:1px;
-                   text-transform:uppercase; margin:0 0 10px; }
-  .mood-banner { border-radius:6px; padding:12px 16px; margin-bottom:4px; }
-  .mood-risk-on  { background:#14532d; border-left:4px solid #22c55e; }
+                   text-transform:uppercase; margin:0 0 12px; }
+  .mood-banner { border-radius:6px; padding:12px 16px; margin-bottom:8px; }
+  .mood-risk-on    { background:#14532d; border-left:4px solid #22c55e; }
   .mood-constructive { background:#14532d; border-left:4px solid #4ade80; }
-  .mood-mixed    { background:#451a03; border-left:4px solid #f59e0b; }
-  .mood-defensive { background:#431407; border-left:4px solid #fb923c; }
-  .mood-risk-off { background:#450a0a; border-left:4px solid #ef4444; }
+  .mood-mixed      { background:#451a03; border-left:4px solid #f59e0b; }
+  .mood-defensive  { background:#431407; border-left:4px solid #fb923c; }
+  .mood-risk-off   { background:#450a0a; border-left:4px solid #ef4444; }
   .mood-text { color:#e2e8f0; font-size:15px; font-weight:bold; margin:0; }
-  .mood-sub { color:#94a3b8; font-size:11px; margin:4px 0 0; }
+  .mood-sub  { color:#94a3b8; font-size:11px; margin:4px 0 0; }
+  .mood-row  { display:flex; align-items:flex-start; gap:10px; background:#1e293b;
+               border-radius:6px; padding:10px 14px; margin-top:8px; }
+  .mood-dot  { font-size:18px; line-height:1.4; flex-shrink:0; }
+  .mood-label { color:#e2e8f0; font-size:12px; font-weight:bold; margin:0 0 3px; }
+  .mood-exp   { color:#94a3b8; font-size:11px; margin:0; line-height:1.5; }
   .chart-img { display:block; margin:8px auto; max-width:100%; }
+  .macro-group { display:flex; align-items:flex-start; gap:8px; padding:6px 0;
+                 border-bottom:1px solid #0f172a; }
+  .macro-group:last-child { border-bottom:none; }
+  .macro-sig  { font-size:14px; flex-shrink:0; width:20px; }
+  .macro-dir  { color:#64748b; font-size:12px; flex-shrink:0; width:18px; text-align:center; }
+  .macro-name { color:#94a3b8; font-size:11px; font-weight:bold; flex-shrink:0; width:100px; }
+  .macro-text { color:#64748b; font-size:11px; flex:1; line-height:1.4; }
+  .bigpic-block { background:#1e293b; border-radius:6px; padding:10px 14px; margin-top:10px; }
+  .bigpic-title { color:#7c3aed; font-size:10px; font-weight:bold; letter-spacing:1px;
+                  text-transform:uppercase; margin:0 0 8px; }
+  .bigpic-row { display:flex; gap:10px; padding:4px 0; border-bottom:1px solid #0f172a; }
+  .bigpic-row:last-child { border-bottom:none; }
+  .bigpic-label { color:#94a3b8; font-size:11px; font-weight:bold; flex-shrink:0; width:40px; }
+  .bigpic-note  { color:#cbd5e1; font-size:11px; flex:1; line-height:1.4; }
   table.wl { width:100%; border-collapse:collapse; font-size:12px; }
   table.wl th { color:#64748b; text-align:left; padding:4px 6px;
                 border-bottom:1px solid #1e293b; font-weight:normal; }
   table.wl td { color:#e2e8f0; padding:5px 6px; border-bottom:1px solid #0f172a; }
-  .badge { display:inline-block; border-radius:3px; padding:1px 5px; font-size:10px;
-           font-weight:bold; }
-  .b-vhigh { background:#14532d; color:#4ade80; }
-  .b-high   { background:#0c4a6e; color:#38bdf8; }
-  .b-mod    { background:#164e63; color:#67e8f9; }
-  .b-low    { background:#431407; color:#fb923c; }
-  .b-vlow   { background:#450a0a; color:#f87171; }
-  .bar { display:inline-block; height:8px; border-radius:2px; vertical-align:middle; }
+  .bar   { display:inline-block; height:8px; border-radius:2px; vertical-align:middle; }
   .bar-g { background:#22c55e; }
   .bar-e { background:#1e293b; }
-  ul.bullets { margin:6px 0 0; padding-left:18px; color:#cbd5e1; font-size:12px; line-height:1.7; }
+  .badge  { display:inline-block; border-radius:3px; padding:1px 5px; font-size:10px; font-weight:bold; }
+  .b-vhigh { background:#14532d; color:#4ade80; }
+  .b-high  { background:#0c4a6e; color:#38bdf8; }
+  .b-mod   { background:#164e63; color:#67e8f9; }
+  .b-low   { background:#431407; color:#fb923c; }
+  .b-vlow  { background:#450a0a; color:#f87171; }
+  .act-buy   { background:#14532d; color:#4ade80; }
+  .act-hold  { background:#0c4a6e; color:#38bdf8; }
+  .act-watch { background:#1e293b; color:#94a3b8; }
+  .act-avoid { background:#450a0a; color:#f87171; }
+  .sector-block { background:#1e293b; border-radius:6px; padding:10px 14px; margin-top:8px; }
+  .sector-row { display:flex; gap:10px; padding:4px 0; border-bottom:1px solid #0f172a; }
+  .sector-row:last-child { border-bottom:none; }
+  .sector-key { color:#7c3aed; font-size:10px; font-weight:bold; flex-shrink:0; width:56px; text-transform:uppercase; letter-spacing:.5px; }
+  .sector-val { color:#cbd5e1; font-size:11px; flex:1; line-height:1.4; }
+  .spotlight-card { background:#1e293b; border-radius:6px; padding:12px 14px;
+                    margin-bottom:8px; border-left:3px solid #7c3aed; }
+  .spotlight-sym   { color:#e2e8f0; font-size:13px; font-weight:bold; margin:0 0 2px; }
+  .spotlight-co    { color:#64748b; font-size:10px; display:inline; font-weight:normal; margin-left:6px; }
+  .spotlight-why   { color:#cbd5e1; font-size:11px; margin:6px 0 4px; line-height:1.5; }
+  .spotlight-watch { color:#f59e0b; font-size:10px; margin:0; }
+  .wl-row { display:flex; align-items:flex-start; gap:8px; padding:7px 0;
+            border-bottom:1px solid #0f172a; }
+  .wl-row:last-child { border-bottom:none; }
+  .wl-sym  { color:#e2e8f0; font-size:12px; font-weight:bold; flex-shrink:0; width:52px; }
+  .wl-act  { flex-shrink:0; }
+  .wl-mood { font-size:13px; flex-shrink:0; line-height:1.4; }
+  .wl-analysis { color:#94a3b8; font-size:11px; flex:1; line-height:1.5; }
+  ul.bullets  { margin:8px 0 0; padding-left:18px; color:#cbd5e1; font-size:12px; line-height:1.7; }
   .checkpoint { background:#1e293b; border-radius:4px; padding:10px 14px; margin-top:6px;
                 color:#e2e8f0; font-size:12px; line-height:1.8; }
   .footer { padding:14px 24px; text-align:center; color:#475569; font-size:11px; }
   .footer a { color:#7c3aed; text-decoration:none; }
-  .label-on  { color:#22c55e; font-weight:bold; }
-  .label-off { color:#ef4444; font-weight:bold; }
-  .label-mix { color:#f59e0b; font-weight:bold; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <!-- Header -->
-  <div class="hd">
-    <p class="hd-title">📊 SniperBoard Morning Brief</p>
-    <p class="hd-sub">{{ date_str }} &nbsp;·&nbsp; Generated {{ generated_kst }}</p>
-  </div>
-
-  <!-- Block 1: Regime -->
-  <div class="section">
-    <p class="section-title">시장 분위기 · Risk Regime</p>
-    <div class="mood-banner mood-{{ regime_class }}">
-      <p class="mood-text">{{ regime_label_display }}</p>
-      <p class="mood-sub">Regime Score: {{ regime_score }}/100</p>
-    </div>
-    <img class="chart-img" src="data:image/png;base64,{{ gauge_b64 }}" alt="Regime Gauge" width="320">
-  </div>
-
-  <!-- Block 2: Watchlist -->
-  <div class="section">
-    <p class="section-title">감시종목 현황 · Watchlist (Stage2 순)</p>
-    <table class="wl">
-      <tr>
-        <th>종목</th><th>가격</th><th>Stage2</th><th>RS</th><th>Conviction</th>
-      </tr>
-      {% for item in watchlist %}
-      <tr>
-        <td style="font-weight:bold">{{ item.symbol }}</td>
-        <td>${{ "%.2f"|format(item.price) }}</td>
-        <td>
-          <span class="bar bar-g" style="width:{{ (item.stage2_score / 7 * 42)|int }}px"></span>
-          <span class="bar bar-e" style="width:{{ ((7 - item.stage2_score) / 7 * 42)|int }}px"></span>
-          &nbsp;{{ item.stage2_score }}/7
-        </td>
-        <td>{{ item.rs_score if item.rs_score is not none else "—" }}</td>
-        <td>
-          <span class="badge {{ item.conviction_class }}">{{ item.conviction_label or "—" }}</span>
-        </td>
-      </tr>
-      {% endfor %}
-    </table>
-    <img class="chart-img" src="data:image/png;base64,{{ sparklines_b64 }}" alt="Sparklines" width="560">
-  </div>
-
-  <!-- Block 3: Macro -->
-  <div class="section">
-    <p class="section-title">매크로 신호 · Macro Signals</p>
-    <img class="chart-img" src="data:image/png;base64,{{ macro_bar_b64 }}" alt="Macro Signals" width="480">
-    {% if macro_summary %}
-    <p style="color:#94a3b8; font-size:12px; margin:8px 0 0; line-height:1.6;">{{ macro_summary }}</p>
-    {% endif %}
-    {% if macro_bullets %}
-    <ul class="bullets">
-      {% for b in macro_bullets %}<li>{{ b }}</li>{% endfor %}
-    </ul>
-    {% endif %}
-  </div>
-
-  <!-- Block 4: Morning Briefing -->
-  {% if briefing_available %}
-  <div class="section">
-    <p class="section-title">AI 브리핑 · Morning Briefing</p>
-    {% if headline %}
-    <p style="color:#e2e8f0; font-size:14px; font-weight:bold; margin:0 0 8px;">{{ headline }}</p>
-    {% endif %}
-    {% if executive_bullets %}
-    <ul class="bullets">
-      {% for b in executive_bullets[:5] %}<li>{{ b }}</li>{% endfor %}
-    </ul>
-    {% endif %}
-  </div>
-
-  {% if today_checkpoints %}
-  <div class="section">
-    <p class="section-title">오늘 체크포인트</p>
-    <div class="checkpoint">
-  {% for cp in today_checkpoints %}{{ cp }}{% if not loop.last %}<br>{% endif %}{% endfor %}
+<!-- ① Header -->
+<div class="hd">
+  <p class="hd-title">📊 SniperBoard Morning Brief</p>
+  <p class="hd-sub">{{ date_str }} &nbsp;·&nbsp; Generated {{ generated_kst }}</p>
 </div>
-  </div>
-  {% endif %}
 
-  {% if earnings_alert %}
-  <div class="section">
-    <p class="section-title">실적 알림 · Earnings Alert</p>
-    <p style="color:#fbbf24; font-size:12px; margin:0;">{{ earnings_alert }}</p>
+<!-- ② 시장 분위기 -->
+<div class="section">
+  <p class="section-title">시장 분위기 · Risk Regime</p>
+  <div class="mood-banner mood-{{ regime_class }}">
+    <p class="mood-text">{{ regime_label_display }}</p>
+    <p class="mood-sub">Regime Score: {{ regime_score }}/100</p>
+  </div>
+  <img class="chart-img" src="data:image/png;base64,{{ gauge_b64 }}" alt="Regime Gauge" width="300">
+  {% if mood_label or mood_explanation %}
+  <div class="mood-row">
+    <span class="mood-dot">{{ mood_dot }}</span>
+    <div>
+      {% if mood_label %}<p class="mood-label">{{ mood_label }}</p>{% endif %}
+      {% if mood_explanation %}<p class="mood-exp">{{ mood_explanation }}</p>{% endif %}
+    </div>
   </div>
   {% endif %}
-  {% endif %}
+</div>
 
-  <!-- Footer -->
-  <div class="footer">
-    <a href="{{ dashboard_url }}">대시보드 바로가기 →</a>
-    &nbsp;·&nbsp; SniperBoard Signal Dashboard
+<!-- ③ 매크로 심층 분석 -->
+<div class="section">
+  <p class="section-title">매크로 심층 분석 · Macro Deep Dive</p>
+  <img class="chart-img" src="data:image/png;base64,{{ macro_bar_b64 }}" alt="Macro Signals" width="460">
+  {% if macro_groups_detail %}
+  <div style="margin-top:10px;">
+    {% for g in macro_groups_detail %}
+    <div class="macro-group">
+      <span class="macro-sig">{{ g.signal_icon }}</span>
+      <span class="macro-dir">{{ g.direction }}</span>
+      <span class="macro-name">{{ g.name }}</span>
+      <span class="macro-text">{{ g.text }}</span>
+    </div>
+    {% endfor %}
   </div>
+  {% endif %}
+  {% if big_picture_items %}
+  <div class="bigpic-block">
+    <p class="bigpic-title">Big Picture</p>
+    {% for item in big_picture_items %}
+    <div class="bigpic-row">
+      <span class="bigpic-label">{{ item.label }}</span>
+      <span class="bigpic-note">{{ item.note }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if macro_summary %}
+  <p style="color:#94a3b8; font-size:11px; margin:10px 0 4px; line-height:1.6;">{{ macro_summary }}</p>
+  {% endif %}
+  {% if macro_bullets %}
+  <ul class="bullets">
+    {% for b in macro_bullets %}<li>{{ b }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+</div>
+
+<!-- ④ AI 브리핑 — 시장 전체 -->
+{% if briefing_available %}
+<div class="section">
+  <p class="section-title">AI 브리핑 · Market Overview</p>
+  {% if headline %}
+  <p style="color:#e2e8f0; font-size:14px; font-weight:bold; margin:0 0 8px; line-height:1.4;">{{ headline }}</p>
+  {% endif %}
+  {% if executive_bullets %}
+  <ul class="bullets">
+    {% for b in executive_bullets %}<li>{{ b }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+  {% if sector_leaders or sector_laggards or sector_rotation %}
+  <div class="sector-block">
+    {% if sector_leaders %}
+    <div class="sector-row">
+      <span class="sector-key">강세</span>
+      <span class="sector-val">{{ sector_leaders }}</span>
+    </div>
+    {% endif %}
+    {% if sector_laggards %}
+    <div class="sector-row">
+      <span class="sector-key">약세</span>
+      <span class="sector-val">{{ sector_laggards }}</span>
+    </div>
+    {% endif %}
+    {% if sector_rotation %}
+    <div class="sector-row">
+      <span class="sector-key">로테이션</span>
+      <span class="sector-val">{{ sector_rotation }}</span>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+{% if today_checkpoints %}
+<div class="section">
+  <p class="section-title">오늘 체크포인트</p>
+  <div class="checkpoint">
+    {% for cp in today_checkpoints %}{{ cp }}{% if not loop.last %}<br>{% endif %}{% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if earnings_alert %}
+<div class="section">
+  <p class="section-title">실적 알림 · Earnings Alert</p>
+  <p style="color:#fbbf24; font-size:12px; margin:0; line-height:1.5;">{{ earnings_alert }}</p>
+</div>
+{% endif %}
+{% endif %}
+
+<!-- ⑤ 감시종목 현황 -->
+<div class="section">
+  <p class="section-title">감시종목 현황 · Watchlist (Stage2 순)</p>
+  <table class="wl">
+    <tr>
+      <th>종목</th><th>가격</th><th>Stage2</th><th>RS</th><th>Conviction</th>
+    </tr>
+    {% for item in watchlist %}
+    <tr>
+      <td style="font-weight:bold">{{ item.symbol }}</td>
+      <td>${{ "%.2f"|format(item.price) }}</td>
+      <td>
+        <span class="bar bar-g" style="width:{{ (item.stage2_score / 7 * 42)|int }}px"></span>
+        <span class="bar bar-e" style="width:{{ ((7 - item.stage2_score) / 7 * 42)|int }}px"></span>
+        &nbsp;{{ item.stage2_score }}/7
+      </td>
+      <td>{{ item.rs_score if item.rs_score is not none else "—" }}</td>
+      <td><span class="badge {{ item.conviction_class }}">{{ item.conviction_label or "—" }}</span></td>
+    </tr>
+    {% endfor %}
+  </table>
+  <img class="chart-img" src="data:image/png;base64,{{ sparklines_b64 }}" alt="Sparklines" width="560">
+</div>
+
+<!-- ⑥ 스포트라이트 & 종목별 분석 -->
+{% if spotlight_items or morning_watchlist %}
+<div class="section">
+  {% if spotlight_items %}
+  <p class="section-title">스포트라이트 · Today's Focus</p>
+  {% for s in spotlight_items %}
+  <div class="spotlight-card">
+    <p class="spotlight-sym">{{ s.symbol }}<span class="spotlight-co">{{ s.company }}</span></p>
+    {% if s.why %}<p class="spotlight-why">{{ s.why }}</p>{% endif %}
+    {% if s.watch_level %}<p class="spotlight-watch">⚡ {{ s.watch_level }}</p>{% endif %}
+  </div>
+  {% endfor %}
+  {% endif %}
+  {% if morning_watchlist %}
+  <p class="section-title" {% if spotlight_items %}style="margin-top:16px;"{% endif %}>종목별 분석 · Per-Symbol Analysis</p>
+  <div>
+    {% for w in morning_watchlist %}
+    <div class="wl-row">
+      <span class="wl-sym">{{ w.symbol }}</span>
+      <span class="wl-act"><span class="badge {{ w.action_class }}">{{ w.action }}</span></span>
+      <span class="wl-mood">{{ w.sentiment_icon }}</span>
+      <span class="wl-analysis">{{ w.analysis }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Footer -->
+<div class="footer">
+  <a href="{{ dashboard_url }}">대시보드 바로가기 →</a>
+  &nbsp;·&nbsp; SniperBoard Signal Dashboard
+</div>
 
 </div>
 </body>
