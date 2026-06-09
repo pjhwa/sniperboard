@@ -491,109 +491,109 @@ async def get_macro_insight_endpoint():
         raise HTTPException(status_code=500, detail="Internal server error in macro insight")
 
 
+def build_watchlist_result() -> tuple[list[dict], str | None]:
+    """
+    워치리스트 계산 핵심 로직. /watchlist 엔드포인트와 스케줄러 둘 다 사용.
+    반환: (result_list, regime_label)
+    """
+    all_syms = WATCHLIST_SYMS + ["SPY", "RSP"]
+    dfs = get_multi_daily(all_syms, period="2y")
+    spy_df = dfs.get("SPY")
+    rsp_df = dfs.get("RSP")
+    spy_close = spy_df["close"] if spy_df is not None and not spy_df.empty else None
+    rsp_close = rsp_df["close"] if rsp_df is not None and not rsp_df.empty else None
+
+    result = []
+
+    try:
+        regime_dfs = get_multi_daily(["SPY", "RSP", "HYG", "IEF", "^VIX"], period="1y")
+        regime = compute_regime(regime_dfs)
+        regime_total = regime.get("total", 50.0) if regime else 50.0
+        regime_label = regime.get("regime") if regime else None
+    except Exception:
+        regime_total = 50.0
+        regime_label = None
+
+    try:
+        brief = fetch_brief()
+        if brief.get("available") and brief.get("context"):
+            ctx = brief.get("context", {})
+            market_sentiment = ctx.get("market_sentiment", {}).get("composite_score", 50.0)
+        else:
+            sent = fetch_latest()
+            market_sentiment = sent.get("market", {}).get("composite_score", 50.0) if sent else 50.0
+
+        symbol_sentiment_map = {}
+        sent = fetch_latest()
+        for s in sent.get("symbols", []) if sent else []:
+            sym_key = s.get("symbol")
+            if sym_key:
+                symbol_sentiment_map[sym_key] = s.get("composite_score", market_sentiment)
+    except Exception:
+        market_sentiment = 50.0
+        symbol_sentiment_map = {}
+
+    for sym in WATCHLIST_SYMS:
+        df = dfs.get(sym)
+        if df is None or df.empty:
+            continue
+        try:
+            df = add_daily_indicators(df)
+            stage2 = calculate_stage2_analysis(df, spy_close, rsp_close)
+            stage2_score = stage2.get("score", 0)
+
+            sym_sentiment = symbol_sentiment_map.get(sym, market_sentiment)
+
+            try:
+                conv = calculate_conviction(
+                    stage2_score=stage2_score,
+                    sentiment_composite=sym_sentiment,
+                    regime_total=regime_total,
+                    regime_label=regime_label,
+                )
+                c_score = conv["score"]
+                c_label = conv["label"]
+                c_rel   = conv.get("reliability", "medium")
+                c_notes = conv.get("notes", [])
+            except Exception as e:
+                logger.warning(f"Conviction calculation failed for {sym}: {e}")
+                c_score = None
+                c_label = None
+                c_rel   = "low"
+                c_notes = ["Conviction 계산 중 오류가 발생했습니다."]
+
+            result.append({
+                "symbol": sym,
+                "tier": SYMBOL_TIER.get(sym, 1),
+                "price": round(float(df["close"].iloc[-1]), 2),
+                "score": stage2_score,
+                "rs_score": stage2.get("rs_score", 50.0),
+                "pct_from_52w_high": stage2.get("pct_from_52w_high", 0.0),
+                "checks": stage2.get("checks", {}),
+                "entry": stage2.get("entry", 0.0),
+                "stop": stage2.get("stop", 0.0),
+                "target": stage2.get("target", 0.0),
+                "latest_atr": stage2.get("latest_atr", 0.0),
+                "pivot_high": stage2.get("pivot_high", 0.0),
+                "conviction_score": c_score,
+                "conviction_label": c_label,
+                "conviction_reliability": c_rel,
+                "conviction_notes": c_notes,
+                "monthly_phase": stage2.get("monthly_phase", "UNKNOWN"),
+                "monthly_uptrend_confirmed": stage2.get("monthly_uptrend_confirmed", False),
+            })
+        except Exception as e:
+            logger.error(f"Watchlist error for {sym}: {e}", exc_info=True)
+
+    result.sort(key=lambda x: x["score"], reverse=True)
+    return result, regime_label
+
+
 @router.get("/watchlist", response_model=WatchlistResponse)
 async def get_watchlist_endpoint():
     try:
-        all_syms = WATCHLIST_SYMS + ["SPY", "RSP"]
-        dfs = get_multi_daily(all_syms, period="2y")
-        spy_df = dfs.get("SPY")
-        rsp_df = dfs.get("RSP")
-        spy_close = spy_df["close"] if spy_df is not None and not spy_df.empty else None
-        rsp_close = rsp_df["close"] if rsp_df is not None and not rsp_df.empty else None
+        result, regime_label = build_watchlist_result()
 
-        result = []
-
-        # Phase 1: Conviction을 위해 regime와 market sentiment를 한 번만 가져옴
-        try:
-            regime_dfs = get_multi_daily(["SPY", "RSP", "HYG", "IEF", "^VIX"], period="1y")
-            regime = compute_regime(regime_dfs)
-            regime_total = regime.get("total", 50.0) if regime else 50.0
-            regime_label = regime.get("regime") if regime else None
-        except Exception:
-            regime_total = 50.0
-            regime_label = None
-
-        try:
-            # Task 4: Prefer the brief's context market_sentiment (tied to when the Brief was generated)
-            # for consistency between Conviction and the AI Brief.
-            brief = fetch_brief()
-            if brief.get("available") and brief.get("context"):
-                ctx = brief.get("context", {})
-                market_sentiment = ctx.get("market_sentiment", {}).get("composite_score", 50.0)
-            else:
-                sent = fetch_latest()
-                market_sentiment = sent.get("market", {}).get("composite_score", 50.0) if sent else 50.0
-
-            # Per-symbol sentiment still from sentiment service (more granular)
-            symbol_sentiment_map = {}
-            sent = fetch_latest()  # still needed for per-symbol
-            for s in sent.get("symbols", []) if sent else []:
-                sym_key = s.get("symbol")
-                if sym_key:
-                    symbol_sentiment_map[sym_key] = s.get("composite_score", market_sentiment)
-        except Exception:
-            market_sentiment = 50.0
-            symbol_sentiment_map = {}
-
-        for sym in WATCHLIST_SYMS:
-            df = dfs.get(sym)
-            if df is None or df.empty:
-                continue
-            try:
-                df = add_daily_indicators(df)
-                stage2 = calculate_stage2_analysis(df, spy_close, rsp_close)
-                stage2_score = stage2.get("score", 0)
-
-                # B: Prefer per-symbol sentiment, fallback to market
-                sym_sentiment = symbol_sentiment_map.get(sym, market_sentiment)
-
-                # Conviction 계산 — 에러가 나도 전체 watchlist가 깨지지 않도록 방어
-                try:
-                    conv = calculate_conviction(
-                        stage2_score=stage2_score,
-                        sentiment_composite=sym_sentiment,
-                        regime_total=regime_total,
-                        regime_label=regime_label,
-                    )
-                    c_score = conv["score"]
-                    c_label = conv["label"]
-                    c_rel   = conv.get("reliability", "medium")
-                    c_notes = conv.get("notes", [])
-                except Exception as e:
-                    logger.warning(f"Conviction calculation failed for {sym}: {e}")
-                    c_score = None
-                    c_label = None
-                    c_rel   = "low"
-                    c_notes = ["Conviction 계산 중 오류가 발생했습니다."]
-
-                result.append({
-                    "symbol": sym,
-                    "tier": SYMBOL_TIER.get(sym, 1),
-                    "price": round(float(df["close"].iloc[-1]), 2),
-                    "score": stage2_score,
-                    "rs_score": stage2.get("rs_score", 50.0),
-                    "pct_from_52w_high": stage2.get("pct_from_52w_high", 0.0),
-                    "checks": stage2.get("checks", {}),
-                    "entry": stage2.get("entry", 0.0),
-                    "stop": stage2.get("stop", 0.0),
-                    "target": stage2.get("target", 0.0),
-                    "latest_atr": stage2.get("latest_atr", 0.0),
-                    "pivot_high": stage2.get("pivot_high", 0.0),
-                    # Phase 1 Conviction (에러 시에도 안전하게 반환)
-                    "conviction_score": c_score,
-                    "conviction_label": c_label,
-                    "conviction_reliability": c_rel,
-                    "conviction_notes": c_notes,
-                    # 월봉 추세
-                    "monthly_phase": stage2.get("monthly_phase", "UNKNOWN"),
-                    "monthly_uptrend_confirmed": stage2.get("monthly_uptrend_confirmed", False),
-                })
-            except Exception as e:
-                logger.error(f"Watchlist error for {sym}: {e}", exc_info=True)
-
-        result.sort(key=lambda x: x["score"], reverse=True)
-
-        # 자동 신호 스캔 — 워치리스트 갱신 시마다 Stage2 >= 5 신호를 자동 기록
         try:
             scan_and_log(result, regime=regime_label)
         except Exception as e:
