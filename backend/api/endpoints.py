@@ -34,10 +34,10 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 # TIER1: 빅테크/대형주 — 개별 심층 분석, 백테스트 대상
-TIER1_SYMS = ["TSM", "NVDA", "META", "TSLA", "PLTR", "MU", "CRWD", "AMZN", "MSFT", "AAPL", "GOOGL"]
+TIER1_SYMS = ["TSM", "NVDA", "META", "TSLA", "PLTR", "MU", "CRWD", "AMZN", "MSFT", "AAPL", "GOOGL", "SPCX"]
 # TIER2: 모멘텀/테마주 — 배치 분석, 워치리스트 포함
 TIER2_SYMS = ["RKLB", "CEG", "VST", "ALAB", "OKLO", "APP", "ANET", "NVO", "QBTS", "SOFI"]
-WATCHLIST_SYMS = TIER1_SYMS + TIER2_SYMS  # 전체 21종목
+WATCHLIST_SYMS = TIER1_SYMS + TIER2_SYMS  # 전체 22종목
 SYMBOL_TIER: dict = {s: 1 for s in TIER1_SYMS} | {s: 2 for s in TIER2_SYMS}
 
 
