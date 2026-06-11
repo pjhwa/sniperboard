@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.executors.pool import ThreadPoolExecutor
 from api.endpoints import router, WATCHLIST_SYMS, build_watchlist_result
 from services.overnight_service import start_overnight_service
 from core.signal_tracker import init_db, scan_and_log, update_outcomes
@@ -13,7 +14,10 @@ logger = logging.getLogger(__name__)
 
 # SYMBOLS that need overnight price: watchlist + macro index ETFs shown in MarketStrip
 _OVERNIGHT_SYMBOLS = list(dict.fromkeys(WATCHLIST_SYMS + ["SPY", "QQQ", "IWM"]))
-_scheduler = AsyncIOScheduler(timezone="Asia/Seoul")
+_scheduler = AsyncIOScheduler(
+    timezone="Asia/Seoul",
+    executors={"threadpool": ThreadPoolExecutor(max_workers=2)},
+)
 
 
 def run_signal_scan():
