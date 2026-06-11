@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-06-04 usd-krw-exchange-rate)
+# SniperBoard — Project Context (UPDATED 2026-06-12 spcx-tier1)
 
 ## 0. Purpose of This Document
 
@@ -85,7 +85,7 @@ sniperboard/
 │   │   │   ├── DailyBoard.tsx    # Daily: DailyChart + Stage2 checklist + R:R panel. Stage2·R:R cards have info prop (t() applied to G.* entries). Earnings banner uses tField() for bilingual ai_summary/action_note fields (v2.0 _en/_ko pairs, v1.x fallback).
 │   │   │   ├── WatchlistBoard.tsx # Watchlist: Stage2-sorted table. Table headers (Stage2/RS/Conviction) have InfoPopovers (t() applied). Monthly phase bilingual.
 │   │   │   ├── MacroBoard.tsx    # Macro: overall RISK-ON/MIXED/RISK-OFF banner + sector rotation bar + 6 group cards. Each card: traffic light (🟢🟡🔴) · direction (↗↘) · AI interpretation text · freshness badge. useMacroInsight() combined. Graceful degrade when AI absent. Mobile: mob-order-1~3 (banner→groups→Sector), mob-macro-groups (display:contents desktop / flex-column mobile), bullets details.mob-collapse. Bilingual group labels and judgment text. Symbol names from MACRO_SYMBOL_NAMES BiLang map (not backend name field). AI text rendered via tField(text_en, text_ko, text, locale) for v2.0/v1.x compat; bullets via tField(bullets_en[i], bullets_ko[i], bullets[i], locale).
-│   │   │   └── SentimentBoard.tsx # Sentiment: market gauge + per-symbol cards TIER1/TIER2 구분 (2026-06-02). TIER1(11종목) 섹션(하늘색 헤더) + TIER2(10종목) 섹션(보라 헤더) + 기타 섹션 순서. 각 섹션별 grid 렌더링. TopNewsBox tField() 이중언어. Composite Score card info prop. Bottom: "Social Sentiment Data" explainer card.
+│   │   │   └── SentimentBoard.tsx # Sentiment: market gauge + per-symbol cards TIER1/TIER2 구분 (2026-06-02). TIER1(12종목) 섹션(하늘색 헤더) + TIER2(10종목) 섹션(보라 헤더) + 기타 섹션 순서. 각 섹션별 grid 렌더링. TopNewsBox tField() 이중언어. Composite Score card info prop. Bottom: "Social Sentiment Data" explainer card.
 │   │   │   └── BacktestBoard.tsx  # 백테스트 결과 화면 (2026-06-02). 방법론 배너(투명성) + KPI 4카드(총거래/승률/기대값/손익비) + IS vs OOS 비교 + Stage2 점수별 분해 + SVG 자산곡선 + 종목별 성과 테이블 + 실행 버튼. useBacktest() hook 사용. GET /api/backtest/result 조회, POST /api/backtest/run 실행.
 │   │   └── backtest_engine.py        # (unchanged)
 │   │   └── signal_tracker.py         # 실거래 신호 트래킹 (2026-06-02). SQLite persistence (backend/data/signal_log.db). init_db() → 앱 시작 시 호출. scan_and_log(watchlist_items, regime) → Stage2 >= 5 신호 자동 로깅 (UNIQUE on symbol+signal_date, OPEN 신호 중복 방지). update_outcomes() → PENDING/ACTIVE 신호를 최신 일봉으로 바 단위 시뮬레이션하여 WIN/LOSS/TIMEOUT/CANCELLED 갱신 (get_multi_daily period="6mo" 사용). compute_live_stats() → n_closed/win_rate/expectancy_r/profit_factor/mdd/equity_curve/regime_breakdown/pipeline + health{status/confidence/deltas} + backtest_baseline. BACKTEST_BASELINE = {expectancy_r:0.460, win_rate:0.386, profit_factor:1.917, n:145}. 헬스 판단: expectancy_r >= 0.7*baseline → ON_TRACK, >= 0.0 → WATCH, < 0 → UNDERPERFORMING, n < 10 → INSUFFICIENT_DATA.
@@ -133,7 +133,7 @@ Base URL: `http://<host>:4000/api` (via Next.js proxy) or `http://<host>:5001/ap
 | `GET /brief` | — | AI Daily Brief JSON (GitHub raw 30-min cache) + `meta: {fetched_at, age_minutes, source}` |
 | `GET /earnings` | — | Earnings Intelligence JSON (GitHub raw 60-min cache) + `meta: {fetched_at, age_minutes, source}` |
 | `GET /macro/insight` | — | 6 group traffic lights (signal/direction) + AI interpretation text (text/text_en/text_ko) + overall judgment + summary/summary_en/summary_ko + bullets/bullets_en/bullets_ko + ai_meta (age_minutes). Rule-based real-time + GitHub-cached AI overlay. |
-| `GET /morning-briefing` | — | 아침 브리핑 JSON (GitHub raw 10분 캐시). briefing/latest.json. 필드: headline/executive_bullets/market_mood/big_picture/sector_analysis/spotlight/watchlist(21종목 스퀴즈·조정)/today_checkpoints/earnings_alert. |
+| `GET /morning-briefing` | — | 아침 브리핑 JSON (GitHub raw 10분 캐시). briefing/latest.json. 필드: headline/executive_bullets/market_mood/big_picture/sector_analysis/spotlight/watchlist(22종목 스퀴즈·조정)/today_checkpoints/earnings_alert. |
 | `GET /backtest/result` | — | 캐시된 백테스트 결과 JSON. 없으면 404. 구조: generated_at/config(rs_threshold/use_spy_filter 포함)/methodology/aggregate(all/in_sample/out_of_sample)/breakdown_by_score/by_symbol. |
 | `POST /backtest/run` | `symbols[]` (optional), `threshold` (1-7, default 5), `rs_threshold` (0-100, default 70), `use_spy_filter` (bool, default true) | 백테스트 즉시 실행 + 캐시 저장 후 요약 반환. symbols 미지정 시 WATCHLIST_SYMS 전체. 수십 초 소요. |
 | `POST /backtest/sweep` | `symbols[]` (optional) | 8개 파라미터 조합 스윕 실행 + 비교 결과 반환. 수분 소요. |
@@ -252,11 +252,11 @@ OK(<4) / WARNING(4~5) / DANGER(≥6)
 ### 5-3. Type Definitions (`app/types.ts`) — Key Constants
 
 ```typescript
-export const TIER1_SYMBOLS = ['TSM','NVDA','META','TSLA','PLTR','MU','CRWD','AMZN','MSFT','AAPL','GOOGL'];
+export const TIER1_SYMBOLS = ['TSM','NVDA','META','TSLA','PLTR','MU','CRWD','AMZN','MSFT','AAPL','GOOGL','SPCX'];
 export const TIER2_SYMBOLS = ['RKLB','CEG','VST','ALAB','OKLO','APP','ANET','NVO','QBTS','SOFI'];
-export const ALL_SYMBOLS = [...TIER1_SYMBOLS, ...TIER2_SYMBOLS];  // 21개
+export const ALL_SYMBOLS = [...TIER1_SYMBOLS, ...TIER2_SYMBOLS];  // 22개
 export const SYMBOL_TIER: Record<string, 1|2> = { ...T1 map, ...T2 map };
-export const SYMBOL_NAMES: Record<string, BiLang> = { /* 21개 회사명 */ };
+export const SYMBOL_NAMES: Record<string, BiLang> = { /* 22개 회사명 */ };
 export const SYMBOLS = ALL_SYMBOLS;  // 하위 호환
 export const API_BASE = '';  // Empty string — all /api/* calls are relative, proxied by Next.js to BACKEND_URL
 
@@ -482,15 +482,15 @@ Docker Compose passes `BACKEND_URL=http://backend:8000` as both a build arg (for
 
 ## 8. Fixed Symbol Lists
 
-### Watchlist (`endpoints.py: WATCHLIST_SYMS` = TIER1 + TIER2, 21 total)
+### Watchlist (`endpoints.py: WATCHLIST_SYMS` = TIER1 + TIER2, 22 total)
 
 **TIER 1** (빅테크/대형주, 개별 심층 분석, 백테스트 포함):
-`["TSM", "NVDA", "META", "TSLA", "PLTR", "MU", "CRWD", "AMZN", "MSFT", "AAPL", "GOOGL"]`
+`["TSM", "NVDA", "META", "TSLA", "PLTR", "MU", "CRWD", "AMZN", "MSFT", "AAPL", "GOOGL", "SPCX"]`
 
 **TIER 2** (모멘텀/테마주, 배치 분석, 백테스트 제외):
 `["RKLB", "CEG", "VST", "ALAB", "OKLO", "APP", "ANET", "NVO", "QBTS", "SOFI"]`
 
-Note: Brief/Earnings 데이터는 TIER1 11종목 커버 (collect_brief.py, collect_earnings.py 업데이트 완료). 백테스트 기본값은 TIER1_SYMS. TIER2는 sentiment만 커버.
+Note: Brief/Earnings 데이터는 TIER1 12종목 커버 (collect_brief.py, collect_earnings.py 업데이트 완료). 백테스트 기본값은 TIER1_SYMS. TIER2는 sentiment만 커버.
 
 ### Macro Symbols (`endpoints.py: MACRO_SYMBOLS`) — 21 total
 | Category | Symbols |
