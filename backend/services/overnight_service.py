@@ -48,9 +48,17 @@ def _parse_protobuf(data: bytes) -> dict:
                         break
                 fields[field_num] = val
             elif wire_type == 2:  # length-delimited (string)
-                if i >= len(data):
+                # length 필드도 varint 인코딩 (protobuf 스펙)
+                length = 0
+                shift = 0
+                while i < len(data):
+                    b2 = data[i]; i += 1
+                    length |= (b2 & 0x7F) << shift
+                    shift += 7
+                    if not (b2 & 0x80):
+                        break
+                if i + length > len(data):
                     break
-                length = data[i]; i += 1
                 val = data[i:i + length]; i += length
                 try:
                     fields[field_num] = val.decode("utf-8")

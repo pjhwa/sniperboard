@@ -668,8 +668,10 @@ async def get_brief_endpoint():
         gen_at = data.get("generated_at") if isinstance(data, dict) else None
 
         # Phase 1 Context Attribution: GitHub JSON의 context를 응답 최상위로 승격 (api-spec 준수)
+        # 캐시 오염 방지: 원본 dict를 복사한 뒤 context를 꺼냄
         context = None
         if isinstance(data, dict):
+            data = dict(data)
             context = data.pop("context", None)
 
         return {
@@ -846,10 +848,8 @@ from fastapi.responses import HTMLResponse as _HTMLResponse
 @router.post("/email-report/send")
 async def trigger_email_report(background_tasks: BackgroundTasks):
     """Manually trigger the morning email report. Runs in background thread."""
-    import asyncio
     from services.email_report_service import run_morning_report
-    loop = asyncio.get_event_loop()
-    loop.run_in_executor(None, run_morning_report)
+    background_tasks.add_task(run_morning_report)
     return {"status": "queued", "message": "Morning report is being generated and sent."}
 
 
