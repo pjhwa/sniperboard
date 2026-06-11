@@ -262,10 +262,10 @@ Symbol selector buttons | Current price · RSI · EMA21 + intraday sparkline | S
 
 ![Watchlist](assets/images/screenshot-watchlist.png)
 
-- TSLA · AAPL · NVDA · META · AMZN · GOOGL · PLTR sorted descending by Stage 2 score
+- TIER1 (TSM · NVDA · META · TSLA · PLTR · MU · CRWD · AMZN · MSFT · AAPL · GOOGL · SPCX) + TIER2 (RKLB · CEG · VST · ALAB · OKLO · APP · ANET · NVO · QBTS · SOFI) sorted descending by Stage 2 score
 - Columns: Price · Stage 2 (out of 7) · RS Score · 52w high deviation · Entry · Stop · Target · Check indicators · Monthly phase · **Conviction** badge
 - Row click → switches to that symbol and navigates to Daily board
-- **RS Score ranking bar**: 6-symbol relative strength horizontal bar (≥70 green / 50-70 teal / <50 red)
+- **RS Score ranking bar**: Symbol relative strength horizontal bar (≥70 green / 50-70 teal / <50 red)
 - **Stage 2 check heatmap**: 7 symbols × 7 conditions matrix (met = green cell)
 - **Risk / Reward**: Left (risk, red) · Right (reward, green) symmetric bar centered on Entry + 1:N ratio
 

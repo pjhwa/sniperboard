@@ -1,6 +1,6 @@
 > English docs: [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md)
 
-# SniperBoard — Project Context (UPDATED 2026-05-31 i18n-fixes)
+# SniperBoard — Project Context (UPDATED 2026-06-12 spcx-tier1)
 
 ## 0. 이 문서의 목적
 
@@ -29,12 +29,14 @@ sniperboard/
 │   │   ├── endpoints.py          # 7개 REST 엔드포인트 (APIRouter prefix=/api)
 │   │   └── schemas.py            # Pydantic v2 요청/응답 모델 전체. TopNews(headline/summary/source) + SymbolSentiment.top_news/MarketSentiment.top_news Optional 추가 (2026-05-28)
 │   ├── core/
-│   │   ├── signal_engine.py      # 핵심: 모든 기술적 지표·신호 계산 (700+ lines). Phase 2: calculate_stage2_analysis detects 'adj_close' and uses adjusted (scaled high/low + adj_close series) for 52w/RS/ema200_slope/pullback/pivot/entry on split symbols. GC/intraday/raw unchanged.
+│   │   ├── signal_engine.py      # 핵심: 모든 기술적 지표·신호 계산 (700+ 줄). Phase 2: calculate_stage2_analysis는 'adj_close' 컬럼 감지 시 분할 종목의 52w/RS/ema200_slope/pullback/pivot/entry에 조정가(스케일된 고저가 + adj_close 시리즈) 사용. GC/intraday/raw는 변경 없음.
 │   │   ├── regime_engine.py      # Risk Regime 5요소 종합 점수 (0~100)
 │   │   ├── distribution_day.py   # O'Neil Distribution Day 카운트 (25거래일 기준)
-│   │   └── data_adapter.py       # SINGLE SOURCE OF TRUTH: yfinance MultiIndex 정규화 + fetch 전담 (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily). yf 1.3+ 대응. Task2: full delegation (data_service thin layer; endpoints daily paths direct import). test_data_adapter.py full coverage (incl get_multi_daily targeted post-review). Phase 2: adj_close preserved (no longer dropped) for daily paths → Stage2 long-term accuracy (adjusted on splits). Phase 5: centralization verified in full tests + manual endpoint checks.
-│   │   └── conviction_calculator.py  # Phase 1: Conviction Composite Score v1 (TDD). 40/30/30 weighted (Stage2 0-7 norm + Sentiment + Regime total). Pure function, regime=None → 50 neutral. Returns score+label+components. 12 tests. 레이블은 영어 반환: "Very High"(≥80) / "High"(≥65) / "Moderate"(≥50) / "Low"(≥35) / "Very Low"(<35). 프론트엔드가 CONVICTION_LABEL_META로 BiLang 변환.
+│   │   └── data_adapter.py       # 단일 진실 공급원(SSOT): yfinance MultiIndex 정규화 + fetch 전담 (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily). yf 1.3+ 대응. Phase 2: adj_close 일봉 경로에 보존 → 분할 종목 Stage2 장기 지표 정확도. Phase 5: 전체 테스트 + 수동 엔드포인트 검증 완료.
+│   │   └── conviction_calculator.py  # Phase 1: Conviction 종합 점수 v1 (TDD). 40/30/30 가중 (Stage2 0-7 정규화 + 심리 + 레짐 합산). 순수 함수, regime=None → 50 중립. score+label+components 반환. 12 테스트. 레이블 영어 반환: "Very High"(≥80) / "High"(≥65) / "Moderate"(≥50) / "Low"(≥35) / "Very Low"(<35). 프론트엔드가 CONVICTION_LABEL_META로 BiLang 변환.
 │   │   └── macro_rules.py            # Macro Insight 신호등 규칙 엔진. compute_macro_signals(items) → {overall:{judgment,green_count,red_count}, groups:{key:{signal,direction}}}. 6그룹(volatility/breadth/credit/rates/commodities/sectors) 각각 green/yellow/red 판정 + 종합 RISK_ON/MIXED/RISK_OFF. 순수 함수, dict 리스트 입력. TDD 20테스트. (2026-05-30)
+│   │   └── backtest_engine.py        # 백테스트 엔진 (2026-06-02). Stage2 신호 기반 일봉 백테스트. 주요 함수: fetch_backtest_data(symbols) / _compute_stage2_series(벡터 Stage2 7체크 + R:R 플랜, look-ahead 없음) / _simulate_trades(T-1 신호→T 체결, 갭 처리, 쿨다운, SPY>EMA200 시장필터) / compute_stats(win_rate/expectancy_r/profit_factor/mdd/equity_curve) / compute_monte_carlo(10,000 부트스트랩, ~0.1초) / run_full_backtest(IS/OOS 분리 + Stage2 점수별 분해 + 캐시) / run_parameter_sweep(8개 조합). 권장: rs_threshold=70, use_spy_filter=True (기대값 +0.460R, OOS +0.511R, MC 양수확률 99.8%). AMZN 구조적 부적합 확인. TDD 22테스트.
+│   │   └── signal_tracker.py         # 실거래 신호 트래커 (2026-06-02). SQLite 영속화 (backend/data/signal_log.db). scan_and_log(watchlist_items, regime) → Stage2 ≥ 5 신호 자동 로깅 (symbol+signal_date UNIQUE, OPEN 중복 방지). update_outcomes() → PENDING/ACTIVE 신호를 최신 일봉으로 바 단위 시뮬레이션 → WIN/LOSS/TIMEOUT/CANCELLED. compute_live_stats() → 성과 통계 + health{status/confidence/deltas} + BACKTEST_BASELINE={expectancy_r:0.460, win_rate:0.386, n:145}. 헬스 판정: ≥0.7×baseline→ON_TRACK, ≥0.0→WATCH, <0→UNDERPERFORMING, n<10→INSUFFICIENT_DATA.
 │   ├── services/
 │   │   ├── base.py               # BaseDataService 추상 클래스
 │   │   ├── data_service.py       # YFinanceDataService 구현체 + 모듈 레벨 헬퍼 함수
@@ -42,6 +44,7 @@ sniperboard/
 │   │   ├── earnings_service.py   # GitHub raw fetch + 60분 인메모리 캐시 (EARNINGS_DATA_URL)
 │   │   └── overnight_service.py  # Yahoo Finance WebSocket → Blue Ocean ATS overnight 가격 실시간 수신. asyncio 백그라운드 루프 + 자동 재연결. Protobuf base64 파싱(field2=price, field6=session(8=overnight), field12=chg_pct). FastAPI lifespan에서 start_overnight_service() 호출.
 │   │   └── macro_insight_service.py  # GitHub raw fetch + 30분 인메모리 캐시 (MACRO_INSIGHT_URL). fetch_macro_insight() → Optional[dict] (전체 AI JSON). get_ai_meta(raw) → {generated_at,age_minutes}. URL 미설정 시 None 반환(graceful). (2026-05-30)
+│   │   └── morning_briefing_service.py  # GitHub raw fetch + 10분 인메모리 캐시 (MORNING_BRIEFING_URL). fetch_morning_briefing() → {available, data}. KST 07:30 하루 1회 생성.
 │   └── tests/
 │       ├── test_data_adapter.py (29 tests total incl. adapter+signal_engine; Phase 5 full suite green)
 │       ├── test_signal_engine.py (incl. adjusted vs raw split symbol TDD)
@@ -82,7 +85,10 @@ sniperboard/
 │   │   │   ├── DailyBoard.tsx    # 일봉: DailyChart + Stage2 체크리스트 + R:R 패널. Stage2·R:R 카드에 info prop.
 │   │   │   ├── WatchlistBoard.tsx # 워치리스트: Stage2 정렬 테이블. 테이블 헤더(Stage2/RS/Conviction)에 InfoPopover.
 │   │   │   ├── MacroBoard.tsx    # 매크로: 종합 RISK-ON/MIXED/RISK-OFF 배너 + 섹터 로테이션 바 + 6그룹 카드. 각 카드: 신호등(🟢🟡🔴)·방향(↗↘)·AI 해석 텍스트·freshness badge. useMacroInsight() 결합. AI 없을 때 graceful degrade. (2026-05-30). 모바일: mob-order-1~3 재배치(배너→그룹→Sector), mob-macro-groups(display:contents 데스크톱/flex-column 모바일), bullets details.mob-collapse 접기.
-│   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드 (클릭 시 SentimentTrendChart 펼침). TopNewsBox 컴포넌트. Composite Score 카드에 info prop. 하단에 "소셜 심리 데이터란?" 상설 카드 추가(데이터 수집 방식·점수 범위 시각화·역발상 원리·활용법·주의사항 5섹션) (2026-05-29). 모바일: sym-sentiment-grid 1열, TopNews 카드외부 details.mob-collapse, 기존 TopNewsBox hide-on-mobile.
+│   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드 TIER1/TIER2 구분 (2026-06-02). TIER1(12종목) 섹션(하늘색 헤더) + TIER2(10종목) 섹션(보라 헤더) + 기타 섹션 순서. 섹션별 grid 렌더링. TopNewsBox tField() 이중언어. Composite Score 카드 info prop. 하단 "소셜 심리 데이터란?" 상설 카드.
+│   │   │   └── BacktestBoard.tsx  # 백테스트 결과 화면 (2026-06-02). 방법론 투명성 배너 + KPI 4카드(총거래/승률/기대값/손익비) + IS vs OOS 비교 + Stage2 점수별 분해 + SVG 자산곡선 + 종목별 성과 테이블 + 실행 버튼. useBacktest() 훅. GET /api/backtest/result, POST /api/backtest/run.
+│   │   │   └── TrackBoard.tsx     # 실거래 신호 추적 화면. 모델헬스 배너(ON_TRACK/WATCH/UNDERPERFORMING) + KPI 비교(라이브 vs 백테스트 기준) + SVG 누적R 곡선(라이브+기준선 오버레이) + 현재 파이프라인(PENDING/ACTIVE) + 레짐별 분해 + 신호 이력 테이블(상태 필터). useSignalLog/useSignalLogStats/useRefreshSignalLog 훅.
+│   │   │   └── MorningBriefingBoard.tsx  # 아침 브리핑 화면 (2026-06-02). 섹션: 헤드라인 배너 / 시장분위기(교통신호)+핵심요약 / 큰그림(VIX·금리·달러) / 섹터분석 / 스포트라이트(2-4종목) / 전체감시종목(22개 expandable 행) / 오늘체크포인트+실적알림. useMorningBriefing() 훅 → GET /api/morning-briefing (10분 staleTime).
 │   │   │   └── SentimentTrendChart.tsx # 심리 추이 차트: 주가 라인(좌축) + composite_score 오버레이(우축), 7/30일 토글
 │   │   ├── charts/               # 기존 lightweight-charts 컴포넌트 유지
 │   │   │   ├── IntradayChart.tsx
@@ -115,15 +121,22 @@ sniperboard/
 | `GET /latest-signal` | `symbol`, `tf`(기본 5m) | 최신 캔들 신호 요약 (active_signals, 가격/RSI/EMA) |
 | `GET /daily` | `symbol` | 252봉 일봉 + EMA8/21/50/200/ATR14/GC + Stage2 전체 |
 | `GET /macro` | — | 21개 매크로 심볼: 가격·1D/5D변화율·EMA8/21·시장구조·RSI14 |
-| `GET /watchlist` | — | WATCHLIST_SYMS 6종목 Stage2 점수 내림차순 |
+| `GET /watchlist` | — | WATCHLIST_SYMS 전 종목 Stage2 점수 내림차순 + Conviction Score |
 | `GET /regime` | — | Risk Regime 5요소 점수 + 종합 regime 문자열 |
 | `GET /distribution-days` | — | SPY·QQQ DD count/level/dates |
-| `GET /sentiment` | — | 소셜 심리 JSON (GitHub raw 30분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
+| `GET /sentiment` | — | 소셜 심리 JSON (GitHub raw 30분 캐시) + `meta: {fetched_at, age_minutes, source}` |
 | `GET /sentiment/history` | `symbol`(required), `days`(1-30, 기본 7) | N일치 pre_open/post_close 심리 포인트 배열. `symbol="MARKET"` 지원. 5분 TTL 캐시. |
 | `GET /prepost` | `symbol` | 프리/애프터마켓 가격·변화율·market_state (PRE/POST/REGULAR/CLOSED/OVERNIGHT). ticker.info 우선, PREPRE→OVERNIGHT 변환 + overnight_service WebSocket 캐시. |
-| `GET /brief` | — | AI Daily Brief JSON (GitHub raw 30분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
-| `GET /earnings` | — | Earnings Intelligence JSON (GitHub raw 60분 캐시) + `meta: {fetched_at, age_minutes, source}` (Task 3) |
-| `GET /macro/insight` | — | 6그룹 신호등(signal/direction) + AI 해석 텍스트(text) + 종합 판정(judgment) + ai_meta(age_minutes). 규칙 기반 실시간 + GitHub 캐시 AI 오버레이. |
+| `GET /brief` | — | AI Daily Brief JSON (GitHub raw 30분 캐시) + `meta: {fetched_at, age_minutes, source}` |
+| `GET /earnings` | — | Earnings Intelligence JSON (GitHub raw 60분 캐시) + `meta: {fetched_at, age_minutes, source}` |
+| `GET /macro/insight` | — | 6그룹 신호등(signal/direction) + AI 해석 텍스트(text/text_en/text_ko) + 종합 판정(judgment) + ai_meta(age_minutes). 규칙 기반 실시간 + GitHub 캐시 AI 오버레이. |
+| `GET /morning-briefing` | — | 아침 브리핑 JSON (GitHub raw 10분 캐시). 필드: headline/executive_bullets/market_mood/big_picture/sector_analysis/spotlight/watchlist(22종목 스퀴즈·조정)/today_checkpoints/earnings_alert. |
+| `GET /backtest/result` | — | 캐시된 백테스트 결과 JSON. 없으면 404. 구조: generated_at/config/methodology/aggregate(all/in_sample/out_of_sample)/breakdown_by_score/by_symbol. |
+| `POST /backtest/run` | `symbols[]`(선택), `threshold`(1-7), `rs_threshold`(0-100), `use_spy_filter`(bool) | 백테스트 즉시 실행 + 캐시 저장 후 요약 반환. symbols 미지정 시 WATCHLIST_SYMS 전체. 수십 초 소요. |
+| `POST /backtest/sweep` | `symbols[]`(선택) | 8개 파라미터 조합 스윕 실행 + 비교 결과 반환. 수분 소요. |
+| `GET /signal-log` | `symbol?`, `limit`(기본 200) | 신호 로그 조회 (최신순). 상태: PENDING/ACTIVE/WIN/LOSS/TIMEOUT/CANCELLED. |
+| `GET /signal-log/stats` | — | 라이브 성과 통계 + 백테스트 기준값(+0.460R) 비교. health.status: ON_TRACK/WATCH/UNDERPERFORMING/INSUFFICIENT_DATA. |
+| `POST /signal-log/refresh` | — | PENDING/ACTIVE 신호 결과를 최신 일봉으로 갱신 (백그라운드 실행). |
 
 ---
 
@@ -235,8 +248,13 @@ OK(<4) / WARNING(4~5) / DANGER(≥6)
 ### 5-3. 타입 정의 (`app/types.ts`) — 중요 상수
 
 ```typescript
-export const SYMBOLS = ['TSLA', 'AAPL', 'NVDA', 'META', 'AMZN', 'GOOGL', 'PLTR'];
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+export const TIER1_SYMBOLS = ['TSM','NVDA','META','TSLA','PLTR','MU','CRWD','AMZN','MSFT','AAPL','GOOGL','SPCX'];
+export const TIER2_SYMBOLS = ['RKLB','CEG','VST','ALAB','OKLO','APP','ANET','NVO','QBTS','SOFI'];
+export const ALL_SYMBOLS = [...TIER1_SYMBOLS, ...TIER2_SYMBOLS];  // 22개
+export const SYMBOL_TIER: Record<string, 1|2> = { ...T1 map, ...T2 map };
+export const SYMBOL_NAMES: Record<string, BiLang> = { /* 22개 회사명 */ };
+export const SYMBOLS = ALL_SYMBOLS;  // 하위 호환
+export const API_BASE = '';  // 빈 문자열 — /api/* 경로 모두 상대 URL, Next.js가 BACKEND_URL로 프록시
 export const SIGNAL_META = { sniper, vcp, pullback, strong_trend, overbought, downtrend }; // 색상·설명·액션
 export const STAGE2_META = { price_above_emas, ema200_rising, ... };
 export const REGIME_META = { RISK_ON, CONSTRUCTIVE, MIXED, DEFENSIVE, RISK_OFF, UNKNOWN };
@@ -420,8 +438,15 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 
 ## 8. 고정 심볼 목록
 
-### 워치리스트 (`endpoints.py: WATCHLIST_SYMS`)
-`["TSLA", "AAPL", "NVDA", "META", "AMZN", "GOOGL", "PLTR"]`
+### 워치리스트 (`endpoints.py: WATCHLIST_SYMS` = TIER1 + TIER2, 총 22종목)
+
+**TIER 1** (빅테크/대형주, 개별 심층 분석, 백테스트 포함):
+`["TSM", "NVDA", "META", "TSLA", "PLTR", "MU", "CRWD", "AMZN", "MSFT", "AAPL", "GOOGL", "SPCX"]`
+
+**TIER 2** (모멘텀/테마주, 배치 분석, 백테스트 제외):
+`["RKLB", "CEG", "VST", "ALAB", "OKLO", "APP", "ANET", "NVO", "QBTS", "SOFI"]`
+
+비고: Brief/Earnings 데이터는 TIER1 12종목 커버 (collect_brief.py, collect_earnings.py 업데이트 완료). 백테스트 기본값은 TIER1_SYMS. TIER2는 sentiment만 커버.
 
 ### 매크로 심볼 (`endpoints.py: MACRO_SYMBOLS`) — 21종
 | 카테고리 | 심볼 |
@@ -448,7 +473,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | CORS | 개발용 `allow_origins=["*"]` — 운영 시 변경 필요 |
 | API_BASE 재빌드 | `NEXT_PUBLIC_API_URL`은 빌드 시 번들되므로 런타임 변경 불가 |
 | 매크로 데이터 | 시장 마감 후에는 당일 데이터 미갱신 |
-| yfinance MultiIndex / accuracy | 멀티 종목 다운로드 시 컬럼 구조 주의. **data_adapter.py is the SINGLE SOURCE OF TRUTH for ALL yf data access (normalize + fetch)**: full delegation complete (Task 2: data_service thin wrapper only for intraday; endpoints daily paths direct import get_multi_daily). Phase 2: adj_close preserved in daily frames + used selectively in Stage2 long-horizon metrics (split symbols accurate 52w/RS etc while short-term/GC/raw paths unchanged for full backward compat). Task3: daily endpoints + meta on AI. Phase4/5: FE badges + full test+doc+manual verification green. Cross-repo: market-sentiment-data earnings collector hardening + linkage via GitHub raw + meta freshness. (Phase 5 2026-05-24) |
+| yfinance MultiIndex / 정확도 | 멀티 종목 다운로드 시 컬럼 구조 주의. **data_adapter.py가 모든 yf 데이터 접근의 단일 진실 공급원(normalize + fetch)**: 전체 위임 완료 (data_service는 intraday만 thin wrapper; 일봉 경로는 get_multi_daily 직접 임포트). Phase 2: 일봉 프레임에 adj_close 보존 + Stage2 장기 지표에만 선택적 조정가 사용 (단기/GC/raw 완전 역호환). Phase4/5: FE 배지 + 전체 테스트·문서·수동 검증 완료. 크로스-리포: market-sentiment-data 어닝 수집기 하드닝 + GitHub raw 연동 + meta freshness. (Phase 5 2026-05-24) |
 
 ---
 
@@ -498,13 +523,13 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | Stage2 체크리스트 기준 | `backend/core/signal_engine.py: calculate_stage2_analysis()` |
 | Regime 임계값 | `backend/core/regime_engine.py: TREND_LOW/HIGH, ...` 상수 |
 | DD 기준일 변경 | `backend/core/distribution_day.py: DD_LOOKBACK, DD_THRESHOLD_PCT` |
-| yfinance MultiIndex / daily+intraday data 정확도 | `backend/core/data_adapter.py` (SINGLE SOURCE OF TRUTH: normalize_yf_dataframe + get_* family) — full centralization+fetch. Task2 complete: full delegation (data_service thin; direct adapter in endpoints for daily paths) + extensive tests (get_multi_daily targeted + more). Task3: endpoints use hardened path + attach meta. Phase 2: adj_close preserve + selective adjusted in signal_engine.calculate_stage2_analysis (long-term only). Phase 4: types/hooks for meta + FE badges. Phase 5: full 29 tests green (adapter+signal_engine specific), manual verification (endpoints daily/AI meta, no-breakage non-split/intraday). Cross-repo linkage: market-sentiment-data earnings hardening reflected in collect_earnings.py + services. |
+| yfinance MultiIndex / 데이터 정확도 | `backend/core/data_adapter.py` (단일 진실 공급원: normalize_yf_dataframe + get_* 계열) — 전체 중앙화+fetch 완료. 일봉 경로에 adj_close 보존 + Stage2 장기 지표에만 선택적 조정가 사용. 29 테스트 그린 + 수동 검증 완료. 크로스-리포: market-sentiment-data 어닝 하드닝 반영. |
 | Conviction Composite Score v1 (Phase 1) | `backend/core/conviction_calculator.py` (TDD, 12 tests). 레이블 영어 반환. |
 | Conviction 표시 레이블 (BiLang) | `frontend/app/types.ts: CONVICTION_LABEL_META` — score → BiLang (Very High/High/Moderate/Low/Very Low ↔ 매우 강한 확신 등) |
 | 매크로 심볼 표시명 | `frontend/app/types.ts: MACRO_SYMBOL_NAMES` — 21개 BiLang. `backend/api/endpoints.py: MACRO_SYMBOLS` 영어 폴백. |
 | Watchlist / Daily 항목에 신규 필드 추가 | `backend/api/schemas.py` (WatchlistItemSchema, DailyResponse) + `endpoints.py` (get_watchlist_endpoint, get_daily_endpoint) |
-| Brief Context Attribution (Phase 1) | `backend/api/endpoints.py:get_brief_endpoint` + `schemas.BriefResponse` now surface top-level `context` (popped from GitHub raw). Pairs with market-sentiment-data collect_brief.py context builder. (2026-05-25) |
-| 워치리스트 종목 추가 | `backend/api/endpoints.py: WATCHLIST_SYMS` + `frontend/app/types.ts: SYMBOLS` |
+| Brief Context 표시 | `backend/api/endpoints.py: get_brief_endpoint` + `schemas.BriefResponse` — top-level `context` 필드 노출 (GitHub raw에서 추출). market-sentiment-data collect_brief.py context builder와 연동. |
+| 워치리스트 종목 추가 | `backend/api/endpoints.py: TIER1_SYMS / TIER2_SYMS` + `frontend/app/types.ts: TIER1_SYMBOLS / TIER2_SYMBOLS` |
 | 매크로 심볼 추가 | `backend/api/endpoints.py: MACRO_SYMBOLS` |
 | API 주소 변경 | `frontend/app/types.ts: API_BASE` + `docker-compose.yml: NEXT_PUBLIC_API_URL` |
 | 신호 메타데이터(색상·설명) | `frontend/app/types.ts: SIGNAL_META` |
@@ -518,6 +543,6 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | Brief/Earnings URL 변경 | `docker-compose.yml: BRIEF_DATA_URL / EARNINGS_DATA_URL` |
 | Brief 캐시 TTL 변경 | `backend/services/brief_service.py: CACHE_TTL` (현재 1800초) |
 | Earnings 캐시 TTL 변경 | `backend/services/earnings_service.py: CACHE_TTL` (현재 3600초) |
-| Brief 워치리스트 변경 | `collect/collect_brief.py: WATCHLIST` + `collect/collect_earnings.py: WATCHLIST` |
+| Brief 워치리스트 변경 | `collect/collect_brief.py: WATCHLIST` + `collect/collect_earnings.py: WATCHLIST` + `collect/collect_sentiment.py: TIER1_WATCHLIST` + `collect/verify_briefing.py: ALL_SYMBOLS` + `collect/collect_morning_briefing.py: ALL_SYMBOLS` |
 | Macro Insight 신호등 규칙 변경 | `backend/core/macro_rules.py` (compute_*_signal 함수들) |
 | Macro Insight AI 캐시 TTL/URL | `backend/services/macro_insight_service.py: CACHE_TTL / MACRO_INSIGHT_URL` |
