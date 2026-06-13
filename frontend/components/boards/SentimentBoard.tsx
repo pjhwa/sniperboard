@@ -214,9 +214,12 @@ export function SentimentBoard() {
   const market = latest.market;
   const symbols = latest.symbols ?? [];
 
-  // TIER1/TIER2 구분
-  const tier1Symbols = symbols.filter(s => TIER1_SYMBOLS.includes(s.symbol));
-  const tier2Symbols = symbols.filter(s => TIER2_SYMBOLS.includes(s.symbol));
+  // Build lookup map from API data
+  const symbolMap = Object.fromEntries(symbols.map(s => [s.symbol, s]));
+
+  // Always render ALL known TIER1/TIER2 symbols; show placeholder if no data yet
+  const tier1Symbols = TIER1_SYMBOLS.map(sym => symbolMap[sym] ?? null);
+  const tier2Symbols = TIER2_SYMBOLS.map(sym => symbolMap[sym] ?? null);
   const otherSymbols = symbols.filter(s => !TIER1_SYMBOLS.includes(s.symbol) && !TIER2_SYMBOLS.includes(s.symbol));
 
   const marketKeyReason = market
@@ -314,14 +317,40 @@ export function SentimentBoard() {
               <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(56,189,248,0.9)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 TIER 1 — {locale === 'ko' ? '핵심 대형주' : 'Core Holdings'}
               </span>
-              <span style={{ fontSize: 11, color: 'var(--em-500)' }}>{tier1Symbols.length}</span>
+              <span style={{ fontSize: 11, color: 'var(--em-500)' }}>{tier1Symbols.filter(Boolean).length} / {TIER1_SYMBOLS.length}</span>
             </div>
             <div className="sym-sentiment-grid" style={{
               display: 'grid',
               gridTemplateColumns: expandedSymbol ? '1fr' : 'repeat(3, 1fr)',
               gap: 10,
             }}>
-              {tier1Symbols.map(it => {
+              {tier1Symbols.map((it, idx) => {
+            const sym = TIER1_SYMBOLS[idx];
+            // Placeholder card when no sentiment data yet (e.g. new IPO)
+            if (!it) return (
+              <div key={sym} onClick={() => setSymbol(sym)} style={{
+                padding: 12, borderRadius: 'var(--r)',
+                border: '1px solid var(--border-soft)',
+                background: sym === symbol ? 'var(--em-soft)' : 'var(--bg-muted)',
+                cursor: 'pointer', opacity: 0.7,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                  <span className="sym-pill__badge" style={{ width: 22, height: 22, flexShrink: 0 }}>{sym[0]}</span>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ fontWeight: 700, fontSize: 14 }}>{sym}</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 3px', borderRadius: 2, background: 'rgba(56,189,248,0.15)', color: 'var(--sky, #38bdf8)' }}>T1</span>
+                    </div>
+                    {SYMBOL_NAMES[sym] && (
+                      <span style={{ fontSize: 11, color: 'var(--fg-muted)' }}>{SYMBOL_NAMES[sym][locale as 'en' | 'ko']}</span>
+                    )}
+                  </div>
+                </div>
+                <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>
+                  {locale === 'ko' ? '심리 데이터 수집 예정' : 'Sentiment data pending'}
+                </div>
+              </div>
+            );
             const score = it.composite_score ?? it.sentiment_score;
             const meta = SENTIMENT_META[it.sentiment];
             const trend = TREND_META[it.trend_vs_yesterday];
@@ -439,14 +468,40 @@ export function SentimentBoard() {
               <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(167,139,250,0.9)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 TIER 2 — {locale === 'ko' ? '모멘텀/테마주' : 'Momentum / Theme'}
               </span>
-              <span style={{ fontSize: 11, color: 'var(--em-500)' }}>{tier2Symbols.length}</span>
+              <span style={{ fontSize: 11, color: 'var(--em-500)' }}>{tier2Symbols.filter(Boolean).length} / {TIER2_SYMBOLS.length}</span>
             </div>
             <div className="sym-sentiment-grid" style={{
               display: 'grid',
               gridTemplateColumns: expandedSymbol ? '1fr' : 'repeat(3, 1fr)',
               gap: 10,
             }}>
-              {tier2Symbols.map(it => {
+              {tier2Symbols.map((it, idx) => {
+                const sym = TIER2_SYMBOLS[idx];
+                if (!it) return (
+                  <div key={sym} onClick={() => setSymbol(sym)} style={{
+                    padding: 12, borderRadius: 'var(--r)',
+                    border: '1px solid var(--border-soft)',
+                    background: sym === symbol ? 'var(--em-soft)' : 'var(--bg-muted)',
+                    cursor: 'pointer', opacity: 0.7,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                      <span className="sym-pill__badge" style={{ width: 22, height: 22, flexShrink: 0 }}>{sym[0]}</span>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <span style={{ fontWeight: 700, fontSize: 14 }}>{sym}</span>
+                          <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 3px', borderRadius: 2, background: 'rgba(167,139,250,0.15)', color: 'var(--purple, #a78bfa)' }}>T2</span>
+                        </div>
+                        {SYMBOL_NAMES[sym] && (
+                          <span style={{ fontSize: 11, color: 'var(--fg-muted)' }}>{SYMBOL_NAMES[sym][locale as 'en' | 'ko']}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>
+                      {locale === 'ko' ? '심리 데이터 수집 예정' : 'Sentiment data pending'}
+                    </div>
+                  </div>
+                );
+
                 const score = it.composite_score ?? it.sentiment_score;
                 const meta = SENTIMENT_META[it.sentiment];
                 const trend = TREND_META[it.trend_vs_yesterday];
