@@ -6,6 +6,7 @@ import { t } from '@/app/i18n';
 import type { BiLang } from '@/app/i18n';
 import { useSignalLog, useSignalLogStats, useRefreshSignalLog } from '@/hooks/useSignalLog';
 import type { SignalLogEntry, SignalLogStats } from '@/hooks/useSignalLog';
+import { TIER1_SYMBOLS, TIER2_SYMBOLS } from '@/app/types';
 
 // ── 정적 문자열 ──────────────────────────────────────────────────────────────
 const S: Record<string, BiLang> = {
@@ -61,6 +62,11 @@ const S: Record<string, BiLang> = {
   avgWin:        { en: 'Avg Win', ko: '평균 수익' },
   avgLoss:       { en: 'Avg Loss', ko: '평균 손실' },
   barsHeld:      { en: 'Bars', ko: '보유일' },
+  monitoring:    { en: 'Monitoring Pending', ko: '모니터링 대기' },
+  monitoringDesc:{ en: 'These symbols are on the watchlist but have not generated a Stage 2 signal yet (new IPO or score < 5).',
+                   ko: '워치리스트 포함 종목이나 아직 Stage2 신호가 발생하지 않았습니다 (신규 IPO 또는 점수 미달).' },
+  tier1:         { en: 'TIER 1', ko: 'TIER 1' },
+  tier2:         { en: 'TIER 2', ko: 'TIER 2' },
 };
 
 // ── 헬퍼 ─────────────────────────────────────────────────────────────────────
@@ -296,6 +302,15 @@ export function TrackBoard() {
 
   const pipeline = stats?.pipeline ?? [];
   const bsl      = stats?.backtest_baseline;
+
+  // 워치리스트 종목 중 signal_log DB에 한 번도 기록되지 않은 종목 계산
+  const trackedSymbols = new Set<string>([
+    ...allEntries.map(e => e.symbol),
+    ...pipeline.map(p => p.symbol),
+  ]);
+  const untrackedTier1 = TIER1_SYMBOLS.filter(s => !trackedSymbols.has(s));
+  const untrackedTier2 = TIER2_SYMBOLS.filter(s => !trackedSymbols.has(s));
+  const hasUntracked = untrackedTier1.length > 0 || untrackedTier2.length > 0;
 
   return (
     <div className="board-wrap">
@@ -605,6 +620,48 @@ export function TrackBoard() {
             </div>
           )}
         </div>
+
+        {/* ── 모니터링 대기 종목 ────────────────────────────────────────── */}
+        {hasUntracked && (
+          <div className="card">
+            <div className="card__hd" style={{ marginBottom: 8 }}>
+              <h3>{tl(S.monitoring)}</h3>
+              <small style={{ color: 'var(--fg-subtle)' }}>
+                {untrackedTier1.length + untrackedTier2.length}{lc === 'ko' ? '개 종목' : ' symbols'}
+              </small>
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginBottom: 12, lineHeight: 1.6 }}>
+              {tl(S.monitoringDesc)}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {[
+                { label: tl(S.tier1), syms: untrackedTier1 },
+                { label: tl(S.tier2), syms: untrackedTier2 },
+              ].filter(g => g.syms.length > 0).map(group => (
+                <div key={group.label} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
+                    color: group.label.includes('1') ? 'var(--info)' : 'var(--purple)',
+                    minWidth: 44,
+                  }}>
+                    {group.label}
+                  </span>
+                  {group.syms.map(sym => (
+                    <span key={sym} style={{
+                      fontSize: 12, fontWeight: 600,
+                      background: 'var(--border)',
+                      borderRadius: 6,
+                      padding: '3px 8px',
+                      color: 'var(--fg-subtle)',
+                    }}>
+                      {sym}
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
