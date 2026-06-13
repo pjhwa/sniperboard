@@ -262,6 +262,9 @@ async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주
         if df is None or df.empty:
             raise HTTPException(status_code=404, detail=f"No daily data found for {symbol}")
 
+        if len(df) < 20:
+            raise HTTPException(status_code=404, detail=f"Insufficient historical data for {symbol} (recent IPO — {len(df)} days available)")
+
         df = add_daily_indicators(df)
         df = df.iloc[-252:]  # 200EMA 워밍업 이후 1년분만 추출
 
@@ -536,6 +539,24 @@ def build_watchlist_result() -> tuple[list[dict], str | None]:
     for sym in WATCHLIST_SYMS:
         df = dfs.get(sym)
         if df is None or df.empty:
+            continue
+        # New IPO with insufficient history — include with price only
+        if len(df) < 20:
+            result.append({
+                "symbol": sym,
+                "tier": SYMBOL_TIER.get(sym, 1),
+                "price": round(float(df["close"].iloc[-1]), 2),
+                "score": 0,
+                "rs_score": 50.0,
+                "pct_from_52w_high": 0.0,
+                "checks": {k: False for k in ["price_above_emas", "ema200_rising", "near_52w_high", "above_52w_low", "pullback_shallow", "rs_strong", "volume_contracting"]},
+                "entry": 0.0, "stop": 0.0, "target": 0.0,
+                "latest_atr": 0.0, "pivot_high": 0.0,
+                "conviction_score": None, "conviction_label": None,
+                "conviction_reliability": "low",
+                "conviction_notes": ["Insufficient historical data (recent IPO)"],
+                "monthly_phase": "UNKNOWN", "monthly_uptrend_confirmed": False,
+            })
             continue
         try:
             df = add_daily_indicators(df)

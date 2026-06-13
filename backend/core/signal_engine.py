@@ -140,6 +140,9 @@ def gaussian_channel(close: pd.Series, high: pd.Series, low: pd.Series,
     weights /= weights.sum()
 
     def _gwma(arr: np.ndarray) -> np.ndarray:
+        n = len(arr)
+        if n < period:
+            return np.full(n, np.nan)
         valid = np.convolve(arr.astype(float), weights, mode='valid')
         return np.concatenate([np.full(period - 1, np.nan), valid])
 
