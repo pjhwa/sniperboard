@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-06-12 spcx-tier1)
+# SniperBoard — Project Context (UPDATED 2026-06-13 spcx-frontend-fix)
 
 ## 0. Purpose of This Document
 
@@ -251,7 +251,7 @@ OK(<4) / WARNING(4~5) / DANGER(≥6)
 ### 5-3. Type Definitions (`app/types.ts`) — Key Constants
 
 ```typescript
-export const TIER1_SYMBOLS = ['TSM','NVDA','META','TSLA','PLTR','MU','CRWD','AMZN','MSFT','AAPL','GOOGL','SPCX'];
+export const TIER1_SYMBOLS = ['TSM','NVDA','META','TSLA','PLTR','MU','CRWD','AMZN','MSFT','AAPL','GOOGL','SPCX'];  // frontend/app/types.ts (12개)
 export const TIER2_SYMBOLS = ['RKLB','CEG','VST','ALAB','OKLO','APP','ANET','NVO','QBTS','SOFI'];
 export const ALL_SYMBOLS = [...TIER1_SYMBOLS, ...TIER2_SYMBOLS];  // 22개
 export const SYMBOL_TIER: Record<string, 1|2> = { ...T1 map, ...T2 map };

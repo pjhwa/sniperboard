@@ -340,7 +340,7 @@ export const STAGE2_META: Record<keyof Stage2Checks, { label: string; desc: BiLa
 };
 
 // TIER1: 빅테크/대형주 — 개별 심층 분석, 백테스트 포함
-export const TIER1_SYMBOLS = ['TSM', 'NVDA', 'META', 'TSLA', 'PLTR', 'MU', 'CRWD', 'AMZN', 'MSFT', 'AAPL', 'GOOGL'];
+export const TIER1_SYMBOLS = ['TSM', 'NVDA', 'META', 'TSLA', 'PLTR', 'MU', 'CRWD', 'AMZN', 'MSFT', 'AAPL', 'GOOGL', 'SPCX'];
 // TIER2: 모멘텀/테마주 — 배치 분석
 export const TIER2_SYMBOLS = ['RKLB', 'CEG', 'VST', 'ALAB', 'OKLO', 'APP', 'ANET', 'NVO', 'QBTS', 'SOFI'];
 export const ALL_SYMBOLS = [...TIER1_SYMBOLS, ...TIER2_SYMBOLS];
@@ -362,6 +362,7 @@ export const SYMBOL_NAMES: Record<string, BiLang> = {
   MSFT: { en: 'Microsoft',           ko: '마이크로소프트' },
   AAPL: { en: 'Apple',               ko: '애플' },
   GOOGL:{ en: 'Alphabet / Google',   ko: '알파벳 / 구글' },
+  SPCX: { en: 'SpaceX',              ko: '스페이스X' },
   RKLB: { en: 'Rocket Lab',          ko: '로켓랩' },
   CEG:  { en: 'Constellation Energy',ko: '컨스텔레이션 에너지' },
   VST:  { en: 'Vistra Energy',       ko: '비스트라 에너지' },
