@@ -268,7 +268,8 @@ cp .env.example .env
 - **심리 추이 차트**: 카드 클릭 시 펼쳐지는 7일/30일 토글 차트 — 주가 라인(좌축) + composite_score 오버레이(우측 −2~+2)
 - **주요 뉴스**: 시장 전체 및 종목별 상위 뉴스 헤드라인·요약·출처 표시
 - **소셜 심리 데이터 이해 카드** (하단 상설): 데이터 수집 방식 · 복합점수 범위 시각화 · 역발상 전략 원리 · 올바른 활용법 · 주의사항 5섹션으로 구성
-- 소셜 데이터는 외부 cron(Mac Mini)이 하루 2회(06:00/22:00 UTC) 수집·갱신
+- 소셜 데이터는 외부 cron(Mac Mini)이 하루 2회(05:30/22:30 KST) 수집·갱신
+- 아직 수집되지 않은 종목(예: SPCX 등 신규 IPO)은 다음 수집 전까지 **"심리 데이터 수집 예정"** 플레이스홀더 카드 표시
 
 ---
 
@@ -370,17 +371,19 @@ Stage 2 점수(40%) + 소셜 심리(30%) + Risk Regime(30%)을 가중 평균한 
 Mac Mini cron이 하루 2회 외부 데이터를 생성해 GitHub에 푸시하며, 백엔드가 이를 30~60분 캐시로 서빙합니다.
 
 ```
-06:00/22:00 UTC: collect_sentiment.py → GitHub latest.json (소셜 심리)
-06:30/22:30 UTC: collect_brief.py
+05:30/22:30 KST: collect_sentiment.py → GitHub latest.json (소셜 심리, TIER1 개별+TIER2 배치)
+06:00/22:00 KST: collect_brief.py
     ├─ SniperBoard API (/regime, /daily, /watchlist)
     ├─ 소셜 심리 데이터
     └─ Grok/Hermes → 시장 내러티브 + 종목별 Brief → GitHub brief/latest.json
-06:30 UTC (1회/일): collect_earnings.py
-    ├─ yfinance 실적 데이터
-    └─ Grok → AI 요약 → GitHub earnings/latest.json
+06:15/22:15 KST: collect_macro_insight.py → GitHub macro/latest.json
+06:30 KST (1회/일): collect_earnings.py → GitHub earnings/latest.json
+06:45 KST (1회/일): collect_morning_briefing.py → GitHub briefing/latest.json
 ```
 
 각 응답에 `meta: {fetched_at, age_minutes, source}` 포함 — UI에서 ⏱ 신선도 배지로 표시.
+
+헬스 모니터(`market-sentiment-data/monitor/health_check.py`)가 2시간마다 cron 실행되며, 데이터 오래됨·Docker 중단·API 무응답 등 이상 감지 시 macOS 알림을 전송합니다.
 
 ---
 

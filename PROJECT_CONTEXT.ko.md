@@ -1,6 +1,6 @@
 > English docs: [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md)
 
-# SniperBoard — Project Context (UPDATED 2026-06-12 spcx-tier1)
+# SniperBoard — Project Context (UPDATED 2026-06-13 health-monitor)
 
 ## 0. 이 문서의 목적
 
@@ -85,7 +85,7 @@ sniperboard/
 │   │   │   ├── DailyBoard.tsx    # 일봉: DailyChart + Stage2 체크리스트 + R:R 패널. Stage2·R:R 카드에 info prop.
 │   │   │   ├── WatchlistBoard.tsx # 워치리스트: Stage2 정렬 테이블. 테이블 헤더(Stage2/RS/Conviction)에 InfoPopover.
 │   │   │   ├── MacroBoard.tsx    # 매크로: 종합 RISK-ON/MIXED/RISK-OFF 배너 + 섹터 로테이션 바 + 6그룹 카드. 각 카드: 신호등(🟢🟡🔴)·방향(↗↘)·AI 해석 텍스트·freshness badge. useMacroInsight() 결합. AI 없을 때 graceful degrade. (2026-05-30). 모바일: mob-order-1~3 재배치(배너→그룹→Sector), mob-macro-groups(display:contents 데스크톱/flex-column 모바일), bullets details.mob-collapse 접기.
-│   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드 TIER1/TIER2 구분 (2026-06-02). TIER1(12종목) 섹션(하늘색 헤더) + TIER2(10종목) 섹션(보라 헤더) + 기타 섹션 순서. 섹션별 grid 렌더링. TopNewsBox tField() 이중언어. Composite Score 카드 info prop. 하단 "소셜 심리 데이터란?" 상설 카드.
+│   │   │   └── SentimentBoard.tsx # 심리: 시장 게이지 + 종목별 카드 TIER1/TIER2 구분. TIER1(12종목, 하늘색 헤더) + TIER2(10종목, 보라 헤더). TIER1_SYMBOLS/TIER2_SYMBOLS 전체를 API 응답 유무와 무관하게 렌더링 — API에 없는 종목(신규 IPO, 미수집)은 플레이스홀더 카드("심리 데이터 수집 예정") 표시. 섹션 헤더는 "N collected / M total" 형식. TopNewsBox tField() 이중언어. 하단 "소셜 심리 데이터란?" 상설 카드.
 │   │   │   └── BacktestBoard.tsx  # 백테스트 결과 화면 (2026-06-02). 방법론 투명성 배너 + KPI 4카드(총거래/승률/기대값/손익비) + IS vs OOS 비교 + Stage2 점수별 분해 + SVG 자산곡선 + 종목별 성과 테이블 + 실행 버튼. useBacktest() 훅. GET /api/backtest/result, POST /api/backtest/run.
 │   │   │   └── TrackBoard.tsx     # 실거래 신호 추적 화면. 모델헬스 배너(ON_TRACK/WATCH/UNDERPERFORMING) + KPI 비교(라이브 vs 백테스트 기준) + SVG 누적R 곡선(라이브+기준선 오버레이) + 현재 파이프라인(PENDING/ACTIVE) + 레짐별 분해 + 신호 이력 테이블(상태 필터). useSignalLog/useSignalLogStats/useRefreshSignalLog 훅.
 │   │   │   └── MorningBriefingBoard.tsx  # 아침 브리핑 화면 (2026-06-02). 섹션: 헤드라인 배너 / 시장분위기(교통신호)+핵심요약 / 큰그림(VIX·금리·달러) / 섹터분석 / 스포트라이트(2-4종목) / 전체감시종목(22개 expandable 행) / 오늘체크포인트+실적알림. useMorningBriefing() 훅 → GET /api/morning-briefing (10분 staleTime).
@@ -119,7 +119,7 @@ sniperboard/
 |------|----------|------|
 | `GET /ohlcv` | `symbol`, `tf`(기본 5m) | OHLCV 캔들 + 6개 신호 불리언 배열 + ema21/50/rsi/atr |
 | `GET /latest-signal` | `symbol`, `tf`(기본 5m) | 최신 캔들 신호 요약 (active_signals, 가격/RSI/EMA) |
-| `GET /daily` | `symbol` | 252봉 일봉 + EMA8/21/50/200/ATR14/GC + Stage2 전체 |
+| `GET /daily` | `symbol` | 252봉 일봉 + EMA8/21/50/200/ATR14/GC + Stage2 전체. 데이터가 20봉 미만이면 **HTTP 404** 반환 (신규 IPO 종목 등). |
 | `GET /macro` | — | 21개 매크로 심볼: 가격·1D/5D변화율·EMA8/21·시장구조·RSI14 |
 | `GET /watchlist` | — | WATCHLIST_SYMS 전 종목 Stage2 점수 내림차순 + Conviction Score |
 | `GET /regime` | — | Risk Regime 5요소 점수 + 종합 regime 문자열 |
@@ -166,6 +166,7 @@ EMA8, EMA21, EMA50, EMA200, RSI14, ATR14, vol_avg20, Gaussian Channel(period=100
 - 인과 가우시안 커널 가중 이동평균 (look-ahead bias 없음)
 - center = (gc_high + gc_low) / 2, upper/lower = center ± half*mult
 - 상태: gc_above, gc_below, gc_breakout(당일 돌파), gc_retest(3% 이내 리테스트)
+- **단기 데이터 guard**: 입력 길이 `n < period`(100)이면 `_gwma()`가 길이 불일치 대신 `np.full(n, np.nan)` 반환. 최근 IPO 종목의 `ValueError` 방지.
 
 ### 4-5. Stage2 분석 (`signal_engine.py: calculate_stage2_analysis`)
 

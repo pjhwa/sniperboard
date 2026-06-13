@@ -246,7 +246,7 @@ Symbol selector buttons | Current price · RSI · EMA21 + intraday sparkline | S
 
 ![Daily](assets/images/screenshot-daily.png)
 
-- 252-candle (1-year) daily chart (EMA8·21·50·200 + Gaussian Channel + Entry/Stop lines)
+- 252-candle (1-year) daily chart (EMA8·21·50·200 + Gaussian Channel + Entry/Stop lines). **Requires 20+ trading days of history** — returns HTTP 404 for recent IPO stocks; the chart is hidden and a status message is shown instead.
 - **Minervini Stage 2 Checklist** (7 items): EMA alignment / EMA200 rising / Near 52w high / Above 52w low / Shallow pullback / RS Score / Volume contracting. Scored 0~7.
 - **Monthly Phase badge**: Daily data resampled to monthly candles, evaluated against 10-month EMA (Confirmed Uptrend · Weakening · Neutral · Downtrend)
 - **Market Structure detection**: HH·HL·LH·LL patterns (UPTREND / DOWNTREND / DISTRIBUTION / ACCUMULATION)
@@ -333,7 +333,8 @@ Auto-logging: every time `/watchlist` refreshes, Stage2 ≥ 5 signals are automa
 - **Sentiment trend chart**: expands on card click with 7d/30d toggle — stock price line (left axis) + composite_score overlay (right axis, −2~+2)
 - **Top News**: market-wide and per-symbol top news headline · summary · source
 - **Social Sentiment explainer card** (always visible at bottom): 5 sections — data collection method · composite score range visualization · contrarian strategy principle · correct usage · caveats
-- Social data is collected twice daily (06:00/22:00 UTC) by an external cron job on Mac Mini
+- Social data is collected twice daily (05:30/22:30 KST) by an external cron job on Mac Mini
+- Symbols not yet collected (e.g. new IPOs like SPCX) show a **"Sentiment data pending"** placeholder card until the next collection run includes them
 
 ---
 
@@ -400,15 +401,17 @@ Qty     = (Account × Risk%) ÷ (Entry − Stop)
 Mac Mini cron generates external data twice daily, pushes to GitHub, and the backend serves it with a 30–60 minute cache.
 
 ```
-06:00/22:00 UTC: collect_sentiment.py → GitHub latest.json (social sentiment)
-06:30/22:30 UTC: collect_brief.py
+05:30/22:30 KST: collect_sentiment.py → GitHub latest.json (social sentiment, TIER1 individual + TIER2 batch)
+06:00/22:00 KST: collect_brief.py
     ├─ SniperBoard API (/regime, /daily, /watchlist)
     ├─ Social sentiment data
     └─ Grok/Hermes → market narrative + per-symbol Brief → GitHub brief/latest.json
-06:30 UTC (once/day): collect_earnings.py
-    ├─ yfinance earnings data
-    └─ Grok → AI summary → GitHub earnings/latest.json
+06:15/22:15 KST: collect_macro_insight.py → GitHub macro/latest.json
+06:30 KST (once/day): collect_earnings.py → GitHub earnings/latest.json
+06:45 KST (once/day): collect_morning_briefing.py → GitHub briefing/latest.json
 ```
+
+A health monitor (`market-sentiment-data/monitor/health_check.py`) runs every 2 hours via cron and sends a macOS native notification if any issue is detected (data staleness, Docker container down, API unresponsive, etc.).
 
 Each response includes `meta: {fetched_at, age_minutes, source}` — displayed as ⏱ freshness badges in the UI.
 

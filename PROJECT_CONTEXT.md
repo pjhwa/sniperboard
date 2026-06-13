@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-06-13 spcx-ipo-full-fix)
+# SniperBoard — Project Context (UPDATED 2026-06-13 health-monitor)
 
 ## 0. Purpose of This Document
 
@@ -85,7 +85,7 @@ sniperboard/
 │   │   │   ├── DailyBoard.tsx    # Daily: DailyChart + Stage2 checklist + R:R panel. Stage2·R:R cards have info prop (t() applied to G.* entries). Earnings banner uses tField() for bilingual ai_summary/action_note fields (v2.0 _en/_ko pairs, v1.x fallback).
 │   │   │   ├── WatchlistBoard.tsx # Watchlist: Stage2-sorted table. Table headers (Stage2/RS/Conviction) have InfoPopovers (t() applied). Monthly phase bilingual.
 │   │   │   ├── MacroBoard.tsx    # Macro: overall RISK-ON/MIXED/RISK-OFF banner + sector rotation bar + 6 group cards. Each card: traffic light (🟢🟡🔴) · direction (↗↘) · AI interpretation text · freshness badge. useMacroInsight() combined. Graceful degrade when AI absent. Mobile: mob-order-1~3 (banner→groups→Sector), mob-macro-groups (display:contents desktop / flex-column mobile), bullets details.mob-collapse. Bilingual group labels and judgment text. Symbol names from MACRO_SYMBOL_NAMES BiLang map (not backend name field). AI text rendered via tField(text_en, text_ko, text, locale) for v2.0/v1.x compat; bullets via tField(bullets_en[i], bullets_ko[i], bullets[i], locale).
-│   │   │   └── SentimentBoard.tsx # Sentiment: market gauge + per-symbol cards with TIER1/TIER2 separation (2026-06-02). TIER1 (12 symbols, sky-blue header) + TIER2 (10 symbols, purple header) + other section in order. Per-section grid rendering. TopNewsBox tField() bilingual. Composite Score card info prop. Bottom: "Social Sentiment Data" explainer card.
+│   │   │   └── SentimentBoard.tsx # Sentiment: market gauge + per-symbol cards with TIER1/TIER2 separation. TIER1 (12 symbols, sky-blue header) + TIER2 (10 symbols, purple header). Renders ALL symbols from TIER1_SYMBOLS/TIER2_SYMBOLS regardless of API response — symbols missing from the API (e.g. new IPO, collection pending) show a placeholder card ("심리 데이터 수집 예정 / Sentiment data pending"). Section headers show "N collected / M total" format. TopNewsBox tField() bilingual. Composite Score card info prop. Bottom: "Social Sentiment Data" explainer card.
 │   │   │   └── BacktestBoard.tsx  # Backtest results board (2026-06-02). Methodology transparency banner + 4 KPI cards (total trades/win rate/expectancy/profit factor) + IS vs OOS comparison + Stage2 score breakdown + SVG equity curve + per-symbol performance table + run button. Uses useBacktest() hook. GET /api/backtest/result, POST /api/backtest/run.
 │   │   └── signal_tracker.py         # Live signal tracker (2026-06-02). SQLite persistence (backend/data/signal_log.db). init_db() → called at app startup. scan_and_log(watchlist_items, regime) → auto-logs Stage2 ≥ 5 signals (UNIQUE on symbol+signal_date, prevents duplicate OPEN signals). update_outcomes() → resolves PENDING/ACTIVE signals bar-by-bar against latest daily candles → WIN/LOSS/TIMEOUT/CANCELLED (uses get_multi_daily period="6mo"). compute_live_stats() → n_closed/win_rate/expectancy_r/profit_factor/mdd/equity_curve/regime_breakdown/pipeline + health{status/confidence/deltas} + backtest_baseline. BACKTEST_BASELINE = {expectancy_r:0.460, win_rate:0.386, profit_factor:1.917, n:145}. Health rules: expectancy_r >= 0.7*baseline → ON_TRACK, >= 0.0 → WATCH, < 0 → UNDERPERFORMING, n < 10 → INSUFFICIENT_DATA.
 │   │   │   └── TrackBoard.tsx     # Live signal tracking board. Model Health banner + KPI comparison (win rate/expectancy/profit factor vs. backtest baseline) + SVG cumulative R curve (live vs. baseline overlay) + current pipeline (PENDING/ACTIVE) + regime breakdown + signal history table with WIN/LOSS/TIMEOUT/CANCELLED filter. useSignalLog/useSignalLogStats/useRefreshSignalLog hooks.
@@ -121,9 +121,9 @@ Base URL: `http://<host>:4000/api` (via Next.js proxy) or `http://<host>:5001/ap
 |------|-----------|---------|
 | `GET /ohlcv` | `symbol`, `tf` (default 5m) | OHLCV candles + 6 signal boolean arrays + ema21/50/rsi/atr |
 | `GET /latest-signal` | `symbol`, `tf` (default 5m) | Latest candle signal summary (active_signals, price/RSI/EMA) |
-| `GET /daily` | `symbol` | 252-candle daily data + EMA8/21/50/200/ATR14/GC + full Stage2 |
+| `GET /daily` | `symbol` | 252-candle daily data + EMA8/21/50/200/ATR14/GC + full Stage2. Returns **HTTP 404** if fewer than 20 bars available (e.g., recent IPO stocks). |
 | `GET /macro` | — | 21 macro symbols: price · 1D/5D change · EMA8/21 · market structure · RSI14. Includes `KRW=X` (USD/KRW exchange rate). |
-| `GET /watchlist` | — | WATCHLIST_SYMS 6 symbols Stage2 score descending |
+| `GET /watchlist` | — | WATCHLIST_SYMS (22 symbols) Stage2 score descending. IPO stocks with < 20 bars return a minimal entry (score=0, all checks=False, conviction_notes=["Insufficient historical data (recent IPO)"]). |
 | `GET /regime` | — | Risk Regime 5-factor scores + regime string |
 | `GET /distribution-days` | — | SPY·QQQ DD count/level/dates |
 | `GET /sentiment` | — | Social sentiment JSON (GitHub raw 30-min cache) + `meta: {fetched_at, age_minutes, source}` |
@@ -168,6 +168,7 @@ EMA8, EMA21, EMA50, EMA200, RSI14, ATR14, vol_avg20, Gaussian Channel (period=10
 - Causal Gaussian kernel weighted moving average (no look-ahead bias)
 - center = (gc_high + gc_low) / 2, upper/lower = center ± half×mult
 - States: gc_above, gc_below, gc_breakout (breakout on that day), gc_retest (within 3% retest)
+- **Short-data guard**: when input length `n < period` (100), `_gwma()` returns `np.full(n, np.nan)` instead of mismatched-length output. Protects new IPO stocks from `ValueError` in DataFrame index alignment.
 
 ### 4-5. Stage2 Analysis (`signal_engine.py: calculate_stage2_analysis`)
 
