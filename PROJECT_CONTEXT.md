@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-06-13 spcx-frontend-fix)
+# SniperBoard — Project Context (UPDATED 2026-06-13 spcx-ipo-full-fix)
 
 ## 0. Purpose of This Document
 
