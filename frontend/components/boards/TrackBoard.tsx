@@ -6,7 +6,8 @@ import { t } from '@/app/i18n';
 import type { BiLang } from '@/app/i18n';
 import { useSignalLog, useSignalLogStats, useRefreshSignalLog } from '@/hooks/useSignalLog';
 import type { SignalLogEntry, SignalLogStats } from '@/hooks/useSignalLog';
-import { TIER1_SYMBOLS, TIER2_SYMBOLS } from '@/app/types';
+import { useWatchlist } from '@/hooks/useWatchlist';
+import type { WatchlistItem } from '@/app/types';
 
 // ── 정적 문자열 ──────────────────────────────────────────────────────────────
 const S: Record<string, BiLang> = {
@@ -41,8 +42,11 @@ const S: Record<string, BiLang> = {
   btLabel:       { en: 'Backtest baseline', ko: '백테스트 기준선' },
   pipeline:      { en: 'Current Pipeline', ko: '현재 파이프라인' },
   noPipeline:    { en: 'No active or pending signals', ko: '활성/대기 신호 없음' },
-  history:       { en: 'Signal History', ko: '신호 이력' },
-  noHistory:     { en: 'No closed trades yet', ko: '청산된 거래 없음' },
+  ipoRow:        { en: 'New IPO · Monitoring', ko: '신규 IPO · 모니터링' },
+  ipoNote:       { en: 'Insufficient history — signal tracking begins when data accumulates',
+                   ko: '데이터 부족 — 데이터 축적 후 신호 추적 시작' },
+  history:       { en: 'Full Signal Log', ko: '전체 신호 기록' },
+  noHistory:     { en: 'No signals yet', ko: '신호 없음' },
   symbol:        { en: 'Symbol', ko: '종목' },
   date:          { en: 'Date', ko: '날짜' },
   score:         { en: 'Score', ko: '점수' },
@@ -62,11 +66,6 @@ const S: Record<string, BiLang> = {
   avgWin:        { en: 'Avg Win', ko: '평균 수익' },
   avgLoss:       { en: 'Avg Loss', ko: '평균 손실' },
   barsHeld:      { en: 'Bars', ko: '보유일' },
-  monitoring:    { en: 'Monitoring Pending', ko: '모니터링 대기' },
-  monitoringDesc:{ en: 'These symbols are on the watchlist but have not generated a Stage 2 signal yet (new IPO or score < 5).',
-                   ko: '워치리스트 포함 종목이나 아직 Stage2 신호가 발생하지 않았습니다 (신규 IPO 또는 점수 미달).' },
-  tier1:         { en: 'TIER 1', ko: 'TIER 1' },
-  tier2:         { en: 'TIER 2', ko: 'TIER 2' },
 };
 
 // ── 헬퍼 ─────────────────────────────────────────────────────────────────────
@@ -200,69 +199,6 @@ function EquityCurveSVG({ stats, locale }: { stats: SignalLogStats; locale: stri
   );
 }
 
-// ── 파이프라인 카드 ───────────────────────────────────────────────────────────
-function PipelineCard({ item, locale }: { item: SignalLogEntry; locale: string }) {
-  const isActive = item.status === 'ACTIVE';
-  const riskAmt  = (item.entry - item.stop).toFixed(2);
-  const rewardAmt = (item.target - item.entry).toFixed(2);
-  const rr = item.entry > 0 ? ((item.target - item.entry) / (item.entry - item.stop)).toFixed(1) : '—';
-
-  const accentColor = isActive ? 'var(--teal)' : 'var(--info)';
-
-  return (
-    <div style={{
-      background: 'var(--card)',
-      border: '1px solid var(--border)',
-      borderLeft: `3px solid ${accentColor}`,
-      borderRadius: 8,
-      padding: '12px 14px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 8,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--fg)' }}>{item.symbol}</span>
-        <span className={`badge ${isActive ? 'teal' : 'info'}`} style={{ fontSize: 11 }}>
-          {isActive
-            ? (locale === 'ko' ? '활성' : 'ACTIVE')
-            : (locale === 'ko' ? '대기' : 'PENDING')}
-        </span>
-        <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--fg-subtle)' }}>
-          {item.signal_date} · {item.stage2_score}/7
-        </span>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, fontSize: 13 }}>
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '0.05em', color: 'var(--fg-subtle)', marginBottom: 2 }}>
-            {locale === 'ko' ? '진입' : 'Entry'}
-          </div>
-          <div style={{ fontWeight: 600, fontFamily: 'var(--font-mono)' }}>${item.entry.toFixed(2)}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '0.05em', color: 'var(--fg-subtle)', marginBottom: 2 }}>
-            {locale === 'ko' ? '손절' : 'Stop'}
-          </div>
-          <div style={{ fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--bear)' }}>${item.stop.toFixed(2)}</div>
-          <div style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>−${riskAmt}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '0.05em', color: 'var(--fg-subtle)', marginBottom: 2 }}>
-            {locale === 'ko' ? '목표' : 'Target'}
-          </div>
-          <div style={{ fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--bull)' }}>${item.target.toFixed(2)}</div>
-          <div style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>+${rewardAmt} · 1:{rr}R</div>
-        </div>
-      </div>
-      {isActive && item.entry_price && (
-        <div style={{ fontSize: 12, color: 'var(--fg-muted)', borderTop: '1px solid var(--border-soft)', paddingTop: 6 }}>
-          {locale === 'ko' ? '진입 완료' : 'Entered'}: ${item.entry_price.toFixed(2)}
-          {item.entry_date ? ` · ${item.entry_date}` : ''}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── 메인 보드 ─────────────────────────────────────────────────────────────────
 export function TrackBoard() {
   const { locale } = useStore();
@@ -271,6 +207,7 @@ export function TrackBoard() {
   const { data: logData,   isLoading: logLoading }   = useSignalLog();
   const { data: stats,     isLoading: statsLoading }  = useSignalLogStats();
   const { mutate: refresh, isPending: refreshing }    = useRefreshSignalLog();
+  const { watchlist: wlItems }                        = useWatchlist();
 
   const lc = locale === 'en' ? 'en' : 'ko';
   const tl = (b: BiLang) => t(b, lc);
@@ -291,26 +228,26 @@ export function TrackBoard() {
     HIGH:   tl(S.high),
   }[stats?.health?.confidence ?? 'LOW'] ?? tl(S.low);
 
-  // 신호 이력 필터
+  // 전체 엔트리 (DB 조회 결과)
   const allEntries = logData?.entries ?? [];
-  const closedEntries = allEntries.filter(e =>
-    ['WIN', 'LOSS', 'TIMEOUT', 'CANCELLED'].includes(e.status)
-  );
+
+  // 파이프라인: allEntries에서 PENDING/ACTIVE 필터 (stats.pipeline은 LIMIT 10이라 부족)
+  const pipelineEntries = allEntries
+    .filter(e => e.status === 'PENDING' || e.status === 'ACTIVE')
+    .sort((a, b) => b.stage2_score - a.stage2_score);
+
+  // 신규 IPO 심볼: 워치리스트에서 entry=0인 종목 (데이터 부족 종목)
+  const trackedSymbols = new Set(allEntries.map(e => e.symbol));
+  const ipoSymbols = (wlItems ?? [])
+    .filter((item: WatchlistItem) => item.entry === 0 && !trackedSymbols.has(item.symbol))
+    .map((item: WatchlistItem) => item.symbol);
+
+  // 전체 신호 기록 필터 (PENDING/ACTIVE 포함)
   const filteredEntries = statusFilter === 'ALL'
-    ? closedEntries
-    : closedEntries.filter(e => e.status === statusFilter);
+    ? allEntries
+    : allEntries.filter(e => e.status === statusFilter);
 
-  const pipeline = stats?.pipeline ?? [];
-  const bsl      = stats?.backtest_baseline;
-
-  // 워치리스트 종목 중 signal_log DB에 한 번도 기록되지 않은 종목 계산
-  const trackedSymbols = new Set<string>([
-    ...allEntries.map(e => e.symbol),
-    ...pipeline.map(p => p.symbol),
-  ]);
-  const untrackedTier1 = TIER1_SYMBOLS.filter(s => !trackedSymbols.has(s));
-  const untrackedTier2 = TIER2_SYMBOLS.filter(s => !trackedSymbols.has(s));
-  const hasUntracked = untrackedTier1.length > 0 || untrackedTier2.length > 0;
+  const bsl = stats?.backtest_baseline;
 
   return (
     <div className="board-wrap">
@@ -472,19 +409,71 @@ export function TrackBoard() {
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, alignItems: 'start' }}
              className="mob-wrap">
 
-          {/* 파이프라인 */}
+          {/* 파이프라인 — compact 테이블 */}
           <div className="card">
             <div className="card__hd" style={{ marginBottom: 8 }}>
               <h3>{tl(S.pipeline)}</h3>
-              <small>{pipeline.length} {lc === 'ko' ? '건' : 'signals'}</small>
+              <small>
+                {pipelineEntries.length}{lc === 'ko' ? '건' : ' signals'}
+                {ipoSymbols.length > 0 && (
+                  <span style={{ marginLeft: 6, color: 'var(--warn)' }}>
+                    + {ipoSymbols.length} IPO
+                  </span>
+                )}
+              </small>
             </div>
-            {pipeline.length === 0 ? (
+            {pipelineEntries.length === 0 && ipoSymbols.length === 0 ? (
               <div style={{ color: 'var(--fg-muted)', fontSize: 13, padding: '8px 0' }}>{tl(S.noPipeline)}</div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {pipeline.map(item => (
-                  <PipelineCard key={item.id} item={item} locale={lc} />
-                ))}
+              <div style={{ overflowX: 'auto' }}>
+                <table className="tbl" style={{ minWidth: 480 }}>
+                  <thead>
+                    <tr>
+                      <th>{tl(S.symbol)}</th>
+                      <th>{tl(S.score)}</th>
+                      <th>{tl(S.entryP)}</th>
+                      <th>{tl(S.stopP)}</th>
+                      <th>{tl(S.targetP)}</th>
+                      <th>{tl(S.statusL)}</th>
+                      <th>{tl(S.date)}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pipelineEntries.map(item => (
+                      <tr key={item.id}>
+                        <td style={{ fontWeight: 700 }}>{item.symbol}</td>
+                        <td style={{ textAlign: 'center' }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: item.stage2_score >= 6 ? 'var(--bull)' : 'var(--fg)' }}>
+                            {item.stage2_score}/7
+                          </span>
+                        </td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>${item.entry.toFixed(2)}</td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--bear)' }}>${item.stop.toFixed(2)}</td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--bull)' }}>${item.target.toFixed(2)}</td>
+                        <td>
+                          <span className={`badge ${item.status === 'ACTIVE' ? 'teal' : 'info'}`} style={{ fontSize: 10 }}>
+                            {item.status === 'ACTIVE' ? (lc === 'ko' ? '활성' : 'ACTIVE') : (lc === 'ko' ? '대기' : 'PENDING')}
+                          </span>
+                        </td>
+                        <td style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>{item.signal_date}</td>
+                      </tr>
+                    ))}
+                    {/* 신규 IPO 모니터링 행 */}
+                    {ipoSymbols.map((sym: string) => (
+                      <tr key={`ipo-${sym}`} style={{ opacity: 0.7 }}>
+                        <td style={{ fontWeight: 700 }}>{sym}</td>
+                        <td style={{ textAlign: 'center', fontSize: 11, color: 'var(--fg-subtle)' }}>—</td>
+                        <td colSpan={3} style={{ fontSize: 11, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>
+                          {tl(S.ipoNote)}
+                        </td>
+                        <td>
+                          <span className="badge warn" style={{ fontSize: 10 }}>IPO</span>
+                        </td>
+                        <td style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>—</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
@@ -510,7 +499,6 @@ export function TrackBoard() {
                       <div style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
                         {data.n}{tl(S.nTrades)} · {fmtPct(data.win_rate)}
                       </div>
-                      {/* 막대 */}
                       <div style={{ height: 4, background: 'var(--border)', borderRadius: 2, marginTop: 4 }}>
                         <div style={{
                           height: '100%', borderRadius: 2,
@@ -526,13 +514,14 @@ export function TrackBoard() {
           </div>
         </div>
 
-        {/* ── 신호 이력 테이블 ──────────────────────────────────────────── */}
+        {/* ── 전체 신호 기록 (PENDING 포함) ────────────────────────────── */}
         <div className="card">
           <div className="card__hd" style={{ marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
             <h3>{tl(S.history)}</h3>
+            <small style={{ color: 'var(--fg-subtle)' }}>{allEntries.length}{lc === 'ko' ? '건' : ' total'}</small>
             {/* 상태 필터 */}
             <div style={{ display: 'flex', gap: 4, marginLeft: 'auto', flexWrap: 'wrap' }}>
-              {(['ALL', 'WIN', 'LOSS', 'TIMEOUT', 'CANCELLED'] as const).map(s => (
+              {(['ALL', 'PENDING', 'ACTIVE', 'WIN', 'LOSS', 'TIMEOUT', 'CANCELLED'] as const).map(s => (
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
@@ -568,51 +557,39 @@ export function TrackBoard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredEntries.slice(0, 100).map(entry => (
+                  {filteredEntries.slice(0, 200).map(entry => (
                     <tr key={entry.id} style={{
-                      background: entry.status === 'WIN' ? 'color-mix(in srgb, var(--bull) 5%, transparent)'
+                      background: entry.status === 'WIN'  ? 'color-mix(in srgb, var(--bull) 5%, transparent)'
                                 : entry.status === 'LOSS' ? 'color-mix(in srgb, var(--bear) 5%, transparent)'
                                 : undefined
                     }}>
                       <td style={{ fontWeight: 700 }}>{entry.symbol}</td>
                       <td style={{ color: 'var(--fg-subtle)', fontSize: 12 }}>{entry.signal_date}</td>
                       <td style={{ textAlign: 'center' }}>
-                        <span style={{
-                          fontSize: 12, fontWeight: 700,
-                          color: entry.stage2_score >= 6 ? 'var(--bull)' : 'var(--fg)',
-                        }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: entry.stage2_score >= 6 ? 'var(--bull)' : 'var(--fg)' }}>
                           {entry.stage2_score}/7
                         </span>
                       </td>
-                      <td>${entry.entry.toFixed(2)}</td>
-                      <td style={{ color: 'var(--bear)' }}>${entry.stop.toFixed(2)}</td>
-                      <td style={{ color: 'var(--bull)' }}>${entry.target.toFixed(2)}</td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>${entry.entry.toFixed(2)}</td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--bear)' }}>${entry.stop.toFixed(2)}</td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--bull)' }}>${entry.target.toFixed(2)}</td>
                       <td>
-                        <span style={{
-                          fontSize: 12, fontWeight: 700,
-                          color: statusColor(entry.status),
-                        }}>
-                          {entry.status === 'WIN' ? '✓ WIN'
-                         : entry.status === 'LOSS' ? '✗ LOSS'
-                         : entry.status === 'TIMEOUT' ? '⏱ TIMEOUT'
+                        <span style={{ fontSize: 12, fontWeight: 700, color: statusColor(entry.status) }}>
+                          {entry.status === 'WIN'       ? '✓ WIN'
+                         : entry.status === 'LOSS'      ? '✗ LOSS'
+                         : entry.status === 'TIMEOUT'   ? '⏱ TIMEOUT'
                          : entry.status === 'CANCELLED' ? '✕ CANCEL'
-                         : entry.status}
+                         : entry.status === 'ACTIVE'    ? '● ACTIVE'
+                         : '○ PENDING'}
                         </span>
                         {entry.exit_date && (
                           <div style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>{entry.exit_date}</div>
                         )}
                       </td>
-                      <td style={{
-                        fontWeight: 700,
-                        color: (entry.r_multiple ?? 0) > 0 ? 'var(--bull)'
-                             : (entry.r_multiple ?? 0) < 0 ? 'var(--bear)'
-                             : 'var(--em-500)',
-                      }}>
+                      <td style={{ fontWeight: 700, color: (entry.r_multiple ?? 0) > 0 ? 'var(--bull)' : (entry.r_multiple ?? 0) < 0 ? 'var(--bear)' : 'var(--em-500)' }}>
                         {fmtR(entry.r_multiple)}
                       </td>
-                      <td style={{ fontSize: 11, color: 'var(--em-500)' }}>
-                        {entry.regime ?? '—'}
-                      </td>
+                      <td style={{ fontSize: 11, color: 'var(--em-500)' }}>{entry.regime ?? '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -620,48 +597,6 @@ export function TrackBoard() {
             </div>
           )}
         </div>
-
-        {/* ── 모니터링 대기 종목 ────────────────────────────────────────── */}
-        {hasUntracked && (
-          <div className="card">
-            <div className="card__hd" style={{ marginBottom: 8 }}>
-              <h3>{tl(S.monitoring)}</h3>
-              <small style={{ color: 'var(--fg-subtle)' }}>
-                {untrackedTier1.length + untrackedTier2.length}{lc === 'ko' ? '개 종목' : ' symbols'}
-              </small>
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginBottom: 12, lineHeight: 1.6 }}>
-              {tl(S.monitoringDesc)}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {[
-                { label: tl(S.tier1), syms: untrackedTier1 },
-                { label: tl(S.tier2), syms: untrackedTier2 },
-              ].filter(g => g.syms.length > 0).map(group => (
-                <div key={group.label} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
-                    color: group.label.includes('1') ? 'var(--info)' : 'var(--purple)',
-                    minWidth: 44,
-                  }}>
-                    {group.label}
-                  </span>
-                  {group.syms.map(sym => (
-                    <span key={sym} style={{
-                      fontSize: 12, fontWeight: 600,
-                      background: 'var(--border)',
-                      borderRadius: 6,
-                      padding: '3px 8px',
-                      color: 'var(--fg-subtle)',
-                    }}>
-                      {sym}
-                    </span>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
       </div>
     </div>
