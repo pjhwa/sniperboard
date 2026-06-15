@@ -23,6 +23,7 @@ CAP20_SYMBOLS = [
     "META", "TSLA", "BRK-B", "AVGO", "LLY",
     "TSM",  "JPM",  "V",    "WMT",  "XOM",
     "UNH",  "MA",   "HD",   "PLTR", "CRWD",
+    "SPCX",
 ]
 
 CAP20_COMPANY_NAMES: dict[str, str] = {
@@ -46,6 +47,7 @@ CAP20_COMPANY_NAMES: dict[str, str] = {
     "HD":    "Home Depot Inc.",
     "PLTR":  "Palantir Technologies",
     "CRWD":  "CrowdStrike Holdings",
+    "SPCX":  "SpaceX",
 }
 
 CACHE_TTL = 3600  # 1시간
