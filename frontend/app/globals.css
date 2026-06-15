@@ -1208,4 +1208,42 @@ body {
   }
   .mob-inner-stack > * { width: auto !important; min-width: 0 !important; }
 }
+
+/* ── DeepDive symbol info strip ────────────────────────────────────────── */
+.symbol-info-strip {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  font-size: 0.78rem;
+}
+.symbol-info-strip__item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 16px;
+  border-right: 1px solid var(--border);
+  flex: 1;
+  min-width: 0;
+}
+.symbol-info-strip__item:last-child {
+  border-right: none;
+}
+.symbol-info-strip__label {
+  font-size: 0.68rem;
+  color: var(--fg-faint);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.symbol-info-strip__value {
+  font-weight: 700;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 *::-webkit-scrollbar-track { background: transparent; }

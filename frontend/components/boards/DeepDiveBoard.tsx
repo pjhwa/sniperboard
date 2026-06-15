@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useStore } from '@/hooks/useStore';
+import { useSymbolInfo } from '@/hooks/useSymbolInfo';
 import { useIntraday } from '@/hooks/useIntraday';
 import { useDaily } from '@/hooks/useDaily';
 import { useSentiment } from '@/hooks/useSentiment';
@@ -137,6 +138,10 @@ const S = {
   biasHold:          { en: 'Hold',  ko: '보유' },
   biasWatch:         { en: 'Watch', ko: '관망' },
   biasAvoid:         { en: 'Avoid', ko: '회피' },
+  marketCap:    { en: 'Market Cap',  ko: '시가총액' },
+  week52High:   { en: '52W High',    ko: '52주 고가' },
+  week52Low:    { en: '52W Low',     ko: '52주 저가' },
+  sector:       { en: 'Sector',      ko: '섹터' },
 };
 
 // ─── 색상 헬퍼 ─────────────────────────────────────────────────────────────────
@@ -252,6 +257,7 @@ export function DeepDiveBoard() {
   const { earningsData }             = useEarnings();
   const { regimeData }               = useRegime();
   const { prePostData }              = usePrePost(symbol);
+  const { symbolInfo } = useSymbolInfo(symbol);
 
   // ── Intraday
   const candles    = ohlcvData?.candles ?? [];
@@ -562,6 +568,42 @@ export function DeepDiveBoard() {
               );
             })}
           </div>
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════════════════════
+          ROW 1.5 — Symbol Info Strip
+      ════════════════════════════════════════════════════════════════ */}
+      <div className="symbol-info-strip" style={{ gridColumn: 'span 2' }}>
+        <div className="symbol-info-strip__item">
+          <span className="symbol-info-strip__label">{t(S.marketCap, locale)}</span>
+          <span className="symbol-info-strip__value">
+            {symbolInfo?.market_cap != null
+              ? symbolInfo.market_cap >= 1e12
+                ? `$${(symbolInfo.market_cap / 1e12).toFixed(2)}T`
+                : symbolInfo.market_cap >= 1e9
+                ? `$${(symbolInfo.market_cap / 1e9).toFixed(1)}B`
+                : `$${(symbolInfo.market_cap / 1e6).toFixed(0)}M`
+              : '—'}
+          </span>
+        </div>
+        <div className="symbol-info-strip__item">
+          <span className="symbol-info-strip__label">{t(S.week52High, locale)}</span>
+          <span className="symbol-info-strip__value" style={{ color: 'var(--bull)' }}>
+            {symbolInfo?.week52_high != null ? `$${symbolInfo.week52_high.toFixed(2)}` : '—'}
+          </span>
+        </div>
+        <div className="symbol-info-strip__item">
+          <span className="symbol-info-strip__label">{t(S.week52Low, locale)}</span>
+          <span className="symbol-info-strip__value" style={{ color: 'var(--bear)' }}>
+            {symbolInfo?.week52_low != null ? `$${symbolInfo.week52_low.toFixed(2)}` : '—'}
+          </span>
+        </div>
+        <div className="symbol-info-strip__item">
+          <span className="symbol-info-strip__label">{t(S.sector, locale)}</span>
+          <span className="symbol-info-strip__value">
+            {symbolInfo?.sector ?? '—'}
+          </span>
         </div>
       </div>
 
