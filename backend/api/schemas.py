@@ -609,3 +609,32 @@ class MorningBriefingResponse(BaseModel):
 class SignalLogResponse(BaseModel):
     entries: List[SignalLogEntry]
     total: int
+
+
+class SymbolInfoResponse(BaseModel):
+    symbol: str
+    market_cap: Optional[float] = None
+    week52_high: Optional[float] = None
+    week52_low: Optional[float] = None
+    sector: Optional[str] = None
+    industry: Optional[str] = None
+
+
+class CapLeaderboardItem(BaseModel):
+    rank: int
+    symbol: str
+    company_name: str
+    market_cap: float
+    price: float
+    change_pct_1d: float
+    spark: List[float]
+    week52_high: float
+    week52_low: float
+    market_structure: str
+    rank_change: Optional[int] = None
+
+
+class CapLeaderboardResponse(BaseModel):
+    items: List[CapLeaderboardItem]
+    generated_at: str
+    cached: bool

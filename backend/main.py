@@ -7,7 +7,8 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.executors.pool import ThreadPoolExecutor
 from api.endpoints import router, WATCHLIST_SYMS, build_watchlist_result
 from services.overnight_service import start_overnight_service
-from core.signal_tracker import init_db, scan_and_log, update_outcomes
+from core.signal_tracker import init_db as init_signal_db, scan_and_log, update_outcomes
+from core.cap_rank_tracker import init_db as init_cap_db
 from services.email_report_service import run_morning_report
 
 logger = logging.getLogger(__name__)
@@ -41,7 +42,8 @@ def run_outcome_update():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_db()
+    init_signal_db()
+    init_cap_db()
     start_overnight_service(_OVERNIGHT_SYMBOLS)
 
     _scheduler.add_job(

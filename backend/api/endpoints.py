@@ -1,5 +1,6 @@
 import pandas as pd
 import logging
+import time
 import yfinance as yf
 from datetime import datetime, timezone
 from typing import Optional, List
@@ -16,6 +17,7 @@ from api.schemas import (
     RegimeResponse, DistributionDayResponse, SentimentResponse,
     BriefResponse, EarningsResponse, SentimentHistoryResponse, PrePostResponse,
     SignalLogResponse, SignalLogStats, MorningBriefingResponse,
+    SymbolInfoResponse, CapLeaderboardResponse,
 )
 from services.sentiment_service import fetch_latest, enrich_with_delta, fetch_today_slots, fetch_sentiment_history
 from services.overnight_service import get_overnight_price
@@ -39,6 +41,10 @@ TIER1_SYMS = ["TSM", "NVDA", "META", "TSLA", "PLTR", "MU", "CRWD", "AMZN", "MSFT
 TIER2_SYMS = ["RKLB", "CEG", "VST", "ALAB", "OKLO", "APP", "ANET", "NVO", "QBTS", "SOFI"]
 WATCHLIST_SYMS = TIER1_SYMS + TIER2_SYMS  # 전체 22종목
 SYMBOL_TIER: dict = {s: 1 for s in TIER1_SYMS} | {s: 2 for s in TIER2_SYMS}
+
+# symbol-info 1시간 캐시 {symbol: (data_dict, monotonic_ts)}
+_symbol_info_cache: dict[str, tuple[dict, float]] = {}
+_SYMBOL_INFO_TTL = 3600
 
 
 def _freshness_meta(generated_at: Optional[str] = None) -> dict:
@@ -895,3 +901,42 @@ async def preview_email_report():
 
     html = await loop.run_in_executor(None, _build)
     return _HTMLResponse(content=html)
+
+
+# ─── /symbol-info ──────────────────────────────────────────────────────────────
+
+def _fetch_symbol_info_data(symbol: str) -> dict:
+    now = time.monotonic()
+    if symbol in _symbol_info_cache:
+        data, ts = _symbol_info_cache[symbol]
+        if (now - ts) < _SYMBOL_INFO_TTL:
+            return data
+    try:
+        info = yf.Ticker(symbol).info or {}
+        data = {
+            "symbol":      symbol,
+            "market_cap":  info.get("marketCap"),
+            "week52_high": info.get("fiftyTwoWeekHigh"),
+            "week52_low":  info.get("fiftyTwoWeekLow"),
+            "sector":      info.get("sector"),
+            "industry":    info.get("industry"),
+        }
+    except Exception as exc:
+        logger.warning("symbol-info fetch failed for %s: %s", symbol, exc)
+        data = {"symbol": symbol, "market_cap": None, "week52_high": None,
+                "week52_low": None, "sector": None, "industry": None}
+    _symbol_info_cache[symbol] = (data, now)
+    return data
+
+
+@router.get("/symbol-info", response_model=SymbolInfoResponse)
+async def get_symbol_info(symbol: str = Query(..., min_length=1, max_length=10)):
+    return _fetch_symbol_info_data(symbol.strip().upper())
+
+
+# ─── /cap-leaderboard ──────────────────────────────────────────────────────────
+
+@router.get("/cap-leaderboard", response_model=CapLeaderboardResponse)
+async def get_cap_leaderboard():
+    from services.cap_leaderboard_service import fetch_leaderboard
+    return fetch_leaderboard()
