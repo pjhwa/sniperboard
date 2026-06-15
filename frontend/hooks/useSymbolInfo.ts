@@ -21,6 +21,7 @@ export function useSymbolInfo(symbol: string) {
     queryKey: ['symbol-info', symbol],
     queryFn: () => fetchSymbolInfo(symbol),
     staleTime: 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
     retry: 1,
   });
   return { symbolInfo: data, isLoading };

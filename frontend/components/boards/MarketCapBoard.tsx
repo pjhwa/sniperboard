@@ -22,6 +22,7 @@ const S = {
   change1d:       { en: '1D %',       ko: '등락' },
   trend:          { en: 'Trend',      ko: '트렌드' },
   week52pos:      { en: '52W Pos',    ko: '52W 위치' },
+  cached:         { en: ' (cached)',  ko: ' (캐시)' },
   guideTitle:     { en: 'Market Cap TOP 15 Guide', ko: '시총 TOP 15 가이드' },
   guide1Heading:  { en: 'This screen', ko: '이 화면은' },
   guide1Body:     { en: 'Shows the TOP 15 stocks by market cap from a pool of 20 large-cap stocks. Data is cached for 1 hour.', ko: '대형주 CAP20 풀에서 시가총액 상위 15개 종목을 보여줍니다. 데이터는 1시간 캐시됩니다.' },
@@ -122,7 +123,7 @@ export function MarketCapBoard() {
             {leaderboard && (
               <span style={{ fontSize: '0.7rem', color: 'var(--fg-faint)' }}>
                 {t(S.lastUpdated, locale)}: {new Date(leaderboard.generated_at).toLocaleTimeString()}
-                {leaderboard.cached && ' (캐시)'}
+                {leaderboard.cached && t(S.cached, locale)}
               </span>
             )}
             <button
