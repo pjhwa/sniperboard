@@ -5,6 +5,7 @@ pandas
 python-dotenv
 pytest
 requests
+beautifulsoup4
 jsonschema
 websockets
 matplotlib

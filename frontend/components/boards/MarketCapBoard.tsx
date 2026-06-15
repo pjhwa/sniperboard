@@ -9,7 +9,7 @@ import { t } from '@/app/i18n';
 
 const S = {
   title:          { en: 'Market Cap TOP 15', ko: '시총 TOP 15' },
-  subtitle:       { en: 'CAP20 pool · sorted by market cap', ko: 'CAP20 풀 기준 · 시가총액 순' },
+  subtitle:       { en: 'Global ranking · sorted by market cap', ko: '글로벌 랭킹 기준 · 시가총액 순' },
   lastUpdated:    { en: 'Updated', ko: '업데이트' },
   refresh:        { en: 'Refresh', ko: '새로고침' },
   loading:        { en: 'Loading leaderboard (first load ~20s)…', ko: '리더보드 로딩 중 (최초 로딩 ~20초)…' },
@@ -25,7 +25,7 @@ const S = {
   cached:         { en: ' (cached)',  ko: ' (캐시)' },
   guideTitle:     { en: 'Market Cap TOP 15 Guide', ko: '시총 TOP 15 가이드' },
   guide1Heading:  { en: 'This screen', ko: '이 화면은' },
-  guide1Body:     { en: 'Shows the TOP 15 stocks by market cap from a pool of 20 large-cap stocks. Data is cached for 1 hour.', ko: '대형주 CAP20 풀에서 시가총액 상위 15개 종목을 보여줍니다. 데이터는 1시간 캐시됩니다.' },
+  guide1Body:     { en: 'Shows the TOP 15 stocks by market cap from the companiesmarketcap.com global ranking. Data is cached for 1 hour.', ko: 'companiesmarketcap.com 글로벌 랭킹에서 시가총액 상위 15개 종목을 보여줍니다. 데이터는 1시간 캐시됩니다.' },
   guide2Heading:  { en: 'Rank change', ko: '순위변동' },
   guide2Body:     { en: "↑ / ↓ shows movement vs. the previous day's snapshot stored in SQLite. \"NEW\" means the symbol entered the TOP 15 for the first time.", ko: '↑ / ↓ 는 SQLite에 저장된 전일 스냅샷 대비 변동입니다. "NEW"는 처음 TOP 15 진입.' },
   guide3Heading:  { en: '52W Position bar', ko: '52W 위치 막대' },
