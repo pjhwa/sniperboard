@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useStore, Board } from '@/hooks/useStore';
-import { Crosshair, Activity, Candles, Eye, Globe, Heart, Bell, Layers, Flask, Target, Newspaper } from '@/components/ui/Icons';
+import { Crosshair, Activity, Candles, Eye, Globe, Heart, Bell, Layers, Flask, Target, Newspaper, Trophy } from '@/components/ui/Icons';
 import { t } from '@/app/i18n';
 
 const BOARDS: { id: Board; label: string; ko: string; Icon: () => React.ReactElement }[] = [
@@ -16,6 +16,7 @@ const BOARDS: { id: Board; label: string; ko: string; Icon: () => React.ReactEle
   { id: 'backtest',  label: 'Backtest',  ko: '백테스트',   Icon: Flask },
   { id: 'track',     label: 'Track',     ko: '트래킹',     Icon: Target },
   { id: 'briefing',  label: 'Briefing',  ko: '브리핑',     Icon: Newspaper },
+  { id: 'marketcap', label: 'Market Cap', ko: '시총 TOP 15', Icon: Trophy },
 ];
 
 export function Rail() {

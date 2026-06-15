@@ -17,6 +17,7 @@ import { DeepDiveBoard } from '@/components/boards/DeepDiveBoard';
 import { BacktestBoard } from '@/components/boards/BacktestBoard';
 import { TrackBoard } from '@/components/boards/TrackBoard';
 import { MorningBriefingBoard } from '@/components/boards/MorningBriefingBoard';
+import { MarketCapBoard } from '@/components/boards/MarketCapBoard';
 
 export default function Page() {
   const { board, theme, cmdOpen, setCmdOpen } = useStore();
@@ -54,6 +55,7 @@ export default function Page() {
         {board === 'backtest'  && <BacktestBoard />}
         {board === 'track'     && <TrackBoard />}
         {board === 'briefing'  && <MorningBriefingBoard />}
+        {board === 'marketcap' && <MarketCapBoard />}
       </main>
       <CommandPalette />
       <BottomTabs />
