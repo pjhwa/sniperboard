@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-06-13 health-monitor)
+# SniperBoard — Project Context (UPDATED 2026-06-16 symbol-info+marketcap-board)
 
 ## 0. Purpose of This Document
 
@@ -35,6 +35,7 @@ sniperboard/
 │   │   └── data_adapter.py       # SINGLE SOURCE OF TRUTH: yfinance MultiIndex normalization + fetch (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily). yf 1.3+ compatible. Phase 2: adj_close preserved for daily paths → Stage2 long-term accuracy on splits. Phase 5: centralization verified via full tests + manual endpoint checks.
 │   │   └── conviction_calculator.py  # Phase 1: Conviction Composite Score v1 (TDD). 40/30/30 weighted (Stage2 0-7 norm + Sentiment + Regime total). Pure function, regime=None → 50 neutral. Returns score+label+components. 12 tests. Labels are English: "Very High"(≥80) / "High"(≥65) / "Moderate"(≥50) / "Low"(≥35) / "Very Low"(<35). Notes also English. Frontend maps to BiLang via CONVICTION_LABEL_META.
 │   │   └── macro_rules.py            # Macro Insight traffic-light rule engine. compute_macro_signals(items) → {overall:{judgment,green_count,red_count}, groups:{key:{signal,direction}}}. 6 groups (volatility/breadth/credit/rates/commodities/sectors) each with green/yellow/red + overall RISK_ON/MIXED/RISK_OFF. Pure function, dict list input. TDD 20 tests.
+│   │   └── cap_rank_tracker.py       # CAP20 순위 SQLite 영속 (cap_ranks.db). init_db / save_ranks / get_previous_ranks / CapRankItem dataclass.
 │   │   └── backtest_engine.py        # Backtesting engine (2026-06-02). Daily bar backtest driven by Stage2 signals. Key functions: fetch_backtest_data(symbols) → yfinance download from 2019-01-01 / _compute_stage2_series(df, spy_df, rs_threshold=50, stop_atr_mult=2.0, rr_ratio=3.0) → vectorized Stage2 7-check + R:R plan (no look-ahead, rs_threshold parameterized) / _simulate_trades(symbol, df, signals, ..., spy_ema200_filter=None) → bar-by-bar simulation (T-1 signal → T fill, gap handling, cooldown, SPY>EMA200 market filter) / compute_stats(trades) → win_rate/expectancy_r/profit_factor/mdd/max_consecutive_loss/equity_curve / compute_monte_carlo(trades, n_simulations=10000) → bootstrap resampling confidence intervals (p5/p25/median/p75/p95 + prob_positive, fully vectorized, ~0.1s) / run_full_backtest(symbols, rs_threshold=70, use_spy_filter=True, ...) → aggregate all symbols + IS/OOS split + Stage2 score breakdown + monte_carlo + cache backtest_result.json / run_parameter_sweep(symbols, configs) → 8-config batch experiments. Best config: rs_threshold=70, use_spy_filter=True (expectancy +0.460R, OOS +0.511R, MC prob_positive 99.8%). AMZN structurally incompatible (21% win rate, no improvement across all configs). Settings: STAGE2_THRESHOLD=5, SLIPPAGE_PCT=0.0005, TIMEOUT_BARS=60, COOLDOWN_BARS=10, ENTRY_WINDOW_BARS=5, IN_SAMPLE_END=2023-12-31. TDD 22 tests.
 │   ├── services/
 │   │   ├── base.py               # BaseDataService abstract class
@@ -42,6 +43,7 @@ sniperboard/
 │   │   ├── brief_service.py      # GitHub raw fetch + 30-min in-memory cache (BRIEF_DATA_URL)
 │   │   ├── earnings_service.py   # GitHub raw fetch + 60-min in-memory cache (EARNINGS_DATA_URL)
 │   │   └── overnight_service.py  # Yahoo Finance WebSocket → Blue Ocean ATS overnight price stream. Runs in a dedicated daemon thread (asyncio.run in thread) — NOT in uvicorn's event loop, to avoid handshake timeouts caused by blocking yfinance I/O. Protobuf base64 parsing (field1=symbol, field2=price/float32, field6=session_hours/varint:8=overnight, field12=chg_pct). start_overnight_service() called in FastAPI lifespan; spawns threading.Thread(daemon=True).
+│   │   └── cap_leaderboard_service.py # CAP20 20종목 yfinance 병렬 패치 + 1h 인메모리 캐시 + rank_change 계산. fetch_leaderboard() → TOP 15 dict.
 │   │   └── macro_insight_service.py  # GitHub raw fetch + 30-min in-memory cache (MACRO_INSIGHT_URL). fetch_macro_insight() → Optional[dict]. get_ai_meta(raw) → {generated_at,age_minutes}. Returns None gracefully if URL not set.
 │   │   └── morning_briefing_service.py  # GitHub raw fetch + 10-min in-memory cache (MORNING_BRIEFING_URL). fetch_morning_briefing() → {available, data}. Generated once daily at KST 07:30.
 │   └── tests/
@@ -89,6 +91,7 @@ sniperboard/
 │   │   │   └── BacktestBoard.tsx  # Backtest results board (2026-06-02). Methodology transparency banner + 4 KPI cards (total trades/win rate/expectancy/profit factor) + IS vs OOS comparison + Stage2 score breakdown + SVG equity curve + per-symbol performance table + run button. Uses useBacktest() hook. GET /api/backtest/result, POST /api/backtest/run.
 │   │   └── signal_tracker.py         # Live signal tracker (2026-06-02). SQLite persistence (backend/data/signal_log.db). init_db() → called at app startup. scan_and_log(watchlist_items, regime) → auto-logs Stage2 ≥ 5 signals (UNIQUE on symbol+signal_date, prevents duplicate OPEN signals). update_outcomes() → resolves PENDING/ACTIVE signals bar-by-bar against latest daily candles → WIN/LOSS/TIMEOUT/CANCELLED (uses get_multi_daily period="6mo"). compute_live_stats() → n_closed/win_rate/expectancy_r/profit_factor/mdd/equity_curve/regime_breakdown/pipeline + health{status/confidence/deltas} + backtest_baseline. BACKTEST_BASELINE = {expectancy_r:0.460, win_rate:0.386, profit_factor:1.917, n:145}. Health rules: expectancy_r >= 0.7*baseline → ON_TRACK, >= 0.0 → WATCH, < 0 → UNDERPERFORMING, n < 10 → INSUFFICIENT_DATA.
 │   │   │   └── TrackBoard.tsx     # Live signal tracking board. Model Health banner + KPI comparison (win rate/expectancy/profit factor vs. backtest baseline) + SVG cumulative R curve (live vs. baseline overlay) + current pipeline (PENDING/ACTIVE) + regime breakdown + signal history table with WIN/LOSS/TIMEOUT/CANCELLED filter. useSignalLog/useSignalLogStats/useRefreshSignalLog hooks.
+│   │   │   └── MarketCapBoard.tsx    # 시총 TOP 15 보드 (board id: 'marketcap'). CAP20 풀 기준 테이블: rank·순위변동(↑/↓/NEW/—)·심볼·시총·현재가·등락·스파크라인+트렌드·52W 위치 막대. Trophy 아이콘.
 │   │   │   └── MorningBriefingBoard.tsx  # Morning briefing board (2026-06-02). Card layout. Sections: headline banner / market mood (traffic light) + key summary / big picture (VIX/rates/dollar) / sector analysis / spotlight (2-4 symbols) / full watchlist (22 expandable rows: squeeze potential + correction risk + price trend + current status) / today checkpoints + earnings alerts. useMorningBriefing() hook → GET /api/morning-briefing (10-min staleTime).
 │   │   │   └── SentimentTrendChart.tsx # Sentiment trend chart: stock price line (left axis) + composite_score overlay (right axis), 7/30d toggle
 │   │   ├── charts/               # lightweight-charts components
@@ -107,7 +110,9 @@ sniperboard/
 │       ├── usePrePost.ts         # GET /api/prepost (60-second polling). prePostData: { market_state, pre/post price+chg_pct, regular_close }
 │       ├── useEarnings.ts        # GET /api/earnings (60-min staleTime)
 │       ├── useDistributionDays.ts # GET /api/distribution-days
-│       └── useSignalLog.ts       # GET /api/signal-log, /api/signal-log/stats, POST /api/signal-log/refresh. Exports: useSignalLog(symbol?), useSignalLogStats(), useRefreshSignalLog(). Types: SignalLogEntry, SignalLogStats, SignalStatus.
+│       ├── useSignalLog.ts       # GET /api/signal-log, /api/signal-log/stats, POST /api/signal-log/refresh. Exports: useSignalLog(symbol?), useSignalLogStats(), useRefreshSignalLog(). Types: SignalLogEntry, SignalLogStats, SignalStatus.
+│       ├── useSymbolInfo.ts          # GET /api/symbol-info (1h staleTime). Returns { symbolInfo, isLoading }.
+│       └── useCapLeaderboard.ts      # GET /api/cap-leaderboard (1h staleTime, refetchOnWindowFocus:false). Returns { leaderboard, isLoading, isError, refetch }.
 └── docker-compose.yml            # backend 8000→5001, frontend 3000→4000. Frontend build arg+env: BACKEND_URL=http://backend:8000
 ```
 
@@ -138,6 +143,8 @@ Base URL: `http://<host>:4000/api` (via Next.js proxy) or `http://<host>:5001/ap
 | `POST /backtest/sweep` | `symbols[]` (optional) | Runs 8-config parameter sweep and returns comparison results. Takes several minutes. |
 | `GET /signal-log` | `symbol?`, `limit` (default 200) | Signal log query (most recent first). Includes status: PENDING/ACTIVE/WIN/LOSS/TIMEOUT/CANCELLED. |
 | `GET /signal-log/stats` | — | Live performance stats vs. backtest baseline (+0.460R). health.status: ON_TRACK/WATCH/UNDERPERFORMING/INSUFFICIENT_DATA. |
+| `GET /symbol-info` | `symbol` | 시가총액·52W High/Low·섹터·산업. 심볼별 1h 인메모리 캐시. SymbolInfoResponse. |
+| `GET /cap-leaderboard` | — | CAP20 풀 기준 시가총액 TOP 15. spark(30일 종가)·rank_change·market_structure 포함. 1h 인메모리 캐시 + SQLite 순위 스냅샷. |
 | `POST /signal-log/refresh` | — | Resolves PENDING/ACTIVE signal outcomes against latest daily candles (background task). |
 
 ---
@@ -230,7 +237,7 @@ OK(<4) / WARNING(4~5) / DANGER(≥6)
 |-------|---------|-------------|
 | `symbol` | `'TSLA'` | Selected symbol |
 | `timeframe` | `'5m'` | Intraday timeframe |
-| `board` | `'overview'` | Current board (overview/deepdive/intraday/daily/watchlist/macro/sentiment) |
+| `board` | `'overview'` | Current board (overview/deepdive/intraday/daily/watchlist/macro/sentiment/marketcap) |
 | `locale` | `'ko'` | UI language ('en' or 'ko'). Added 2026-05-31. Persisted to localStorage. |
 | `rrAccount` | `'100000'` | R:R calculator account size |
 | `rrRiskPct` | `'1'` | R:R calculator risk % |
@@ -333,6 +340,9 @@ Usage pattern in all components:
 
 **Row 1 (span 2): Symbol selector + price bar**
 SYMBOLS buttons | current price + RSI + EMA21 + sparkline(60 candles) + PRE/POST price·change(usePrePost, 60-sec polling) | right: Stage2 ScorePill · ConvictionBadge · monthly badge · market structure badge · active signal badges (max 2)
+
+**Row 1.5 (span 2): Symbol Info Strip**
+useSymbolInfo() 1h staleTime. 4 items: Market Cap (T/B/M format) | 52W High (green, $X.XX) | 52W Low (red, $X.XX) | Sector (영문). 각 항목 null 시 '—'.
 
 **Row 2: Daily Chart (3fr) + Stage2 Analysis (2fr)**
 - Left: `DailyChart` embedded (EMA8/21/50/200 + GC + Entry/Stop). min-height:440px.

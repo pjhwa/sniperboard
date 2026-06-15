@@ -211,6 +211,8 @@ All perspectives on one symbol in a single continuous flow. Switch the symbol di
 
 Symbol selector buttons | Current price · RSI · EMA21 + intraday sparkline | Stage2 score · Conviction badge · Monthly phase · Market structure · Active signal badges in one line. PRE/POST market price and change % in real time (outside regular hours).
 
+- **Symbol Info Strip** — 선택 종목의 시가총액·52W High/Low·섹터를 차트 위에 컴팩트하게 표시.
+
 **Row 2 — Technical Deep Dive (60% : 40%)**
 - **Daily Chart**: 1-year daily candles + EMA8/21/50/200 + Gaussian Channel (purple) + Entry·Stop lines
 - **Stage 2 Checklist**: 7 items in 2 columns + Monthly EMA10 banner + RS Score · 52w deviation · pullback depth · EMA200 slope — 4 KPIs
@@ -321,6 +323,12 @@ The accountability board that makes SniperBoard unique among signal tools.
 | **Signal history table** | All logged signals with outcomes. Filter by WIN / LOSS / TIMEOUT / CANCELLED. |
 
 Auto-logging: every time `/watchlist` refreshes, Stage2 ≥ 5 signals are automatically recorded. No manual input.
+
+---
+
+### Market Cap Board — TOP 15 by Market Cap
+
+- **시총 TOP 15 (Market Cap Board)** — CAP20 대형주 풀에서 시가총액 기준 상위 15개 종목 실시간 랭킹. 스파크라인(30일 가격 추이) + 전일 대비 순위변동(↑/↓/NEW/—) + 52W 위치 막대 + 트렌드 방향 표시. Rail에서 Trophy 아이콘으로 접근.
 
 ---
 
