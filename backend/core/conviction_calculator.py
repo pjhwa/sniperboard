@@ -9,6 +9,9 @@ v1 목표:
 초기 가중치 및 정규화:
 - Stage2: 40% (0-7 → 0-100 정규화: score / 7 * 100)
 - Sentiment: 30%
+  - market-sentiment-data composite_score는 −2.0~+2.0 → (x+2)/4*100 으로 0–100 매핑
+  - 이미 0–100 스케일(>2 또는 <−2 밖의 값)이면 그대로 clamp
+  - None → neutral 50
 - Regime: 30% (None → 50 neutral 폴백, v1)
 
 Regime-conditioned weight 조정 (RISK_ON / RISK_OFF) 은 Task 2에서 구현 완료.
@@ -24,14 +27,35 @@ market-sentiment-data의 sentiment composite를 준비해 전달.
 - docs/yf-accuracy-harden-api-spec.md
 """
 
-from typing import Optional, Dict, Any
-import math
+from typing import Optional, Dict, Any, Union
 
 
 def _normalize_stage2(stage2_score: float) -> float:
     """0-7 → 0-100 정규화 (음수/초과는 clamp)."""
     clamped = max(0.0, min(7.0, float(stage2_score)))
     return (clamped / 7.0) * 100.0
+
+
+def normalize_sentiment_composite(
+    sentiment_composite: Optional[Union[float, int]],
+) -> float:
+    """Producer composite (−2..+2) → 0–100 for conviction weighting.
+
+    - None → 50 (neutral)
+    - value in [-2, 2] inclusive → linear map (x+2)/4*100
+    - otherwise treat as already 0–100 and clamp
+
+    Golden: −2→0, 0→50, +2→100, +0.7→67.5
+    """
+    if sentiment_composite is None:
+        return 50.0
+    try:
+        v = float(sentiment_composite)
+    except (TypeError, ValueError):
+        return 50.0
+    if -2.0 <= v <= 2.0:
+        return max(0.0, min(100.0, (v + 2.0) / 4.0 * 100.0))
+    return max(0.0, min(100.0, v))
 
 
 def _fill_regime(regime_total: Optional[float]) -> float:
@@ -57,11 +81,16 @@ def _calculate_label(score: float) -> str:
 
 def calculate_conviction(
     stage2_score: float,
-    sentiment_composite: float,
+    sentiment_composite: Optional[float] = None,
     regime_total: Optional[float] = None,
     regime_label: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Conviction Composite Score v1 계산 (Regime-conditioned weights 지원).
+
+    sentiment_composite accepts:
+    - market-sentiment-data composite_score in −2..+2 (preferred)
+    - legacy 0–100 values (auto-detected when outside [−2, 2])
+    - None → neutral 50 after normalize
 
     Regime-conditioned weight adjustment (refined in Task 2):
     - RISK_ON / CONSTRUCTIVE : Sentiment weight ↑ (0.35), Regime weight ↓ (0.25)
@@ -78,7 +107,7 @@ def calculate_conviction(
     - notes: 주의사항 배열 (예: Regime 데이터 부족 시 경고)
     """
     stage2_norm = _normalize_stage2(stage2_score)
-    sentiment = max(0.0, min(100.0, float(sentiment_composite)))
+    sentiment = normalize_sentiment_composite(sentiment_composite)
     regime_filled = _fill_regime(regime_total)
 
     # Regime-conditioned weight adjustment (refined)
@@ -132,7 +161,8 @@ def calculate_conviction(
                 "weight": stage2_weight,
             },
             "sentiment": {
-                "raw": sentiment,
+                "raw": round(sentiment, 1),
+                "input": sentiment_composite,
                 "weight": round(s_weight, 2),
             },
             "regime": {

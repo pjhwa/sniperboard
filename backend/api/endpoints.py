@@ -42,6 +42,48 @@ TIER2_SYMS = ["RKLB", "CEG", "VST", "ALAB", "OKLO", "APP", "ANET", "NVO", "QBTS"
 WATCHLIST_SYMS = TIER1_SYMS + TIER2_SYMS  # 전체 22종목
 SYMBOL_TIER: dict = {s: 1 for s in TIER1_SYMS} | {s: 2 for s in TIER2_SYMS}
 
+
+def _load_sentiment_for_conviction() -> tuple[Optional[float], dict[str, float]]:
+    """Load market + per-symbol composite_score (−2..+2) for conviction.
+
+    Returns:
+        market_composite: Optional float (None → calculator uses neutral 50)
+        symbol_map: symbol → composite_score (−2..+2 producer scale)
+
+    Prefers brief.context.market_sentiment when present (correct nested path under data),
+    otherwise sentiment/latest market + symbols.
+    """
+    market_composite: Optional[float] = None
+    symbol_map: dict[str, float] = {}
+
+    try:
+        brief = fetch_brief()
+        if brief.get("available"):
+            data = brief.get("data") or {}
+            ctx = data.get("context") or {}
+            ms = (ctx.get("market_sentiment") or {}).get("composite_score")
+            if ms is not None:
+                market_composite = float(ms)
+    except Exception as e:
+        logger.debug(f"brief context sentiment unavailable: {e}")
+
+    try:
+        sent = fetch_latest()
+        if sent and sent.get("available") is not False:
+            if market_composite is None:
+                m = (sent.get("market") or {}).get("composite_score")
+                if m is not None:
+                    market_composite = float(m)
+            for s in sent.get("symbols") or []:
+                sym_key = s.get("symbol")
+                cs = s.get("composite_score")
+                if sym_key is not None and cs is not None:
+                    symbol_map[str(sym_key).upper()] = float(cs)
+    except Exception as e:
+        logger.warning(f"sentiment fetch for conviction failed: {e}")
+
+    return market_composite, symbol_map
+
 # symbol-info 1시간 캐시 {symbol: (data_dict, monotonic_ts)}
 _symbol_info_cache: dict[str, tuple[dict, float]] = {}
 _SYMBOL_INFO_TTL = 3600
@@ -313,17 +355,19 @@ async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주
             regime_total = 50.0
             regime_label = None
 
+        # P0-3: per-symbol composite when available (same as watchlist); market fallback
         try:
-            sent = fetch_latest()
-            market_sentiment = sent.get("market", {}).get("composite_score", 50.0) if sent else 50.0
+            market_cs, symbol_map = _load_sentiment_for_conviction()
+            sym_key = symbol.upper()
+            sym_sentiment = symbol_map.get(sym_key, market_cs)  # None → neutral inside calculator
         except Exception:
-            market_sentiment = 50.0
+            sym_sentiment = None
 
-        # Conviction 계산 — 에러 방어
+        # Conviction 계산 — 에러 방어 (sentiment −2..+2 normalized inside calculator)
         try:
             conv = calculate_conviction(
                 stage2_score=stage2.get("score", 0),
-                sentiment_composite=market_sentiment,
+                sentiment_composite=sym_sentiment,
                 regime_total=regime_total,
                 regime_label=regime_label,
             )
@@ -523,23 +567,11 @@ def build_watchlist_result() -> tuple[list[dict], str | None]:
         regime_total = 50.0
         regime_label = None
 
+    # P0-3: brief.context lives under data; prefer per-symbol composites
     try:
-        brief = fetch_brief()
-        if brief.get("available") and brief.get("context"):
-            ctx = brief.get("context", {})
-            market_sentiment = ctx.get("market_sentiment", {}).get("composite_score", 50.0)
-        else:
-            sent = fetch_latest()
-            market_sentiment = sent.get("market", {}).get("composite_score", 50.0) if sent else 50.0
-
-        symbol_sentiment_map = {}
-        sent = fetch_latest()
-        for s in sent.get("symbols", []) if sent else []:
-            sym_key = s.get("symbol")
-            if sym_key:
-                symbol_sentiment_map[sym_key] = s.get("composite_score", market_sentiment)
+        market_sentiment, symbol_sentiment_map = _load_sentiment_for_conviction()
     except Exception:
-        market_sentiment = 50.0
+        market_sentiment = None
         symbol_sentiment_map = {}
 
     for sym in WATCHLIST_SYMS:
@@ -569,6 +601,7 @@ def build_watchlist_result() -> tuple[list[dict], str | None]:
             stage2 = calculate_stage2_analysis(df, spy_close, rsp_close)
             stage2_score = stage2.get("score", 0)
 
+            # Producer scale −2..+2 (or None → neutral 50 after normalize)
             sym_sentiment = symbol_sentiment_map.get(sym, market_sentiment)
 
             try:

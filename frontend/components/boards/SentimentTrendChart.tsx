@@ -30,9 +30,11 @@ export function SentimentTrendChart({ symbol, locale = 'ko' }: Props) {
   const { dailyData, isLoading: priceLoading } = useDaily(symbol);
 
   const isLoading = histLoading || priceLoading;
+  const hasData = !!historyData && !!dailyData;
 
   useEffect(() => {
-    if (!chartContainerRef.current || isLoading || !historyData || !dailyData) return;
+    const el = chartContainerRef.current;
+    if (!el || isLoading || !historyData || !dailyData) return;
 
     // 기존 차트 정리
     if (chartRef.current) {
@@ -40,9 +42,12 @@ export function SentimentTrendChart({ symbol, locale = 'ko' }: Props) {
       chartRef.current = null;
     }
 
-    const chart = createChart(chartContainerRef.current, {
-      width: chartContainerRef.current.clientWidth,
-      height: 220,
+    const width = Math.max(el.clientWidth || 0, 1);
+    const height = 220;
+
+    const chart = createChart(el, {
+      width,
+      height,
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#71717a',
@@ -76,7 +81,6 @@ export function SentimentTrendChart({ symbol, locale = 'ko' }: Props) {
         lastValueVisible: true,
         title: symbol,
       });
-      // Fix 2: YYYY-MM-DD string → Unix epoch (seconds)
       priceSeries.setData(
         sliced.map((c) => ({
           time: (new Date(c.time).getTime() / 1000) as Time,
@@ -97,7 +101,6 @@ export function SentimentTrendChart({ symbol, locale = 'ko' }: Props) {
         title: '',
       });
 
-      // Fix 2: ISO 8601 → Unix epoch (seconds)
       sentimentSeries.setData(
         historyData.points.map((p) => ({
           time: (new Date(p.time).getTime() / 1000) as Time,
@@ -105,7 +108,6 @@ export function SentimentTrendChart({ symbol, locale = 'ko' }: Props) {
         }))
       );
 
-      // Fix 2 + Fix 3: pre_open / post_close 마커 — ISO 8601 → Unix epoch, sorted
       sentimentSeries.setMarkers(
         [...historyData.points]
           .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
@@ -135,7 +137,7 @@ export function SentimentTrendChart({ symbol, locale = 'ko' }: Props) {
         ]);
       }
 
-      // 중립선 (score=0) — 기준선 표시용 더미 시리즈
+      // 중립선 (score=0)
       const zeroSeries = chart.addLineSeries({
         priceScaleId: 'right',
         color: 'rgba(113,113,122,0.3)',
@@ -153,20 +155,39 @@ export function SentimentTrendChart({ symbol, locale = 'ko' }: Props) {
       }
     }
 
-    // 반응형 리사이즈
-    const observer = new ResizeObserver(() => {
-      if (chartContainerRef.current && chartRef.current) {
-        chartRef.current.applyOptions({ width: chartContainerRef.current.clientWidth });
+    // P0-2: fit series to full container width (matches Daily/Intraday)
+    chart.timeScale().fitContent();
+
+    const handleResize = () => {
+      if (!chartContainerRef.current || !chartRef.current) return;
+      const w = chartContainerRef.current.clientWidth;
+      const h = chartContainerRef.current.clientHeight || 220;
+      if (w > 0) {
+        chartRef.current.resize(w, h);
+        chartRef.current.timeScale().fitContent();
       }
+    };
+
+    // After layout settles (expand 3-col → 1-col), re-measure
+    const raf = requestAnimationFrame(() => {
+      handleResize();
     });
-    observer.observe(chartContainerRef.current);
+
+    const observer = new ResizeObserver(handleResize);
+    observer.observe(el);
 
     return () => {
+      cancelAnimationFrame(raf);
       observer.disconnect();
       chart.remove();
       chartRef.current = null;
     };
-  }, [historyData, dailyData, days, symbol]);  // Fix 1: isLoading 제거 — guard로만 사용
+  }, [historyData, dailyData, days, symbol, isLoading]);
+
+  const lastScore =
+    historyData?.points?.length
+      ? historyData.points[historyData.points.length - 1]?.score ?? 0
+      : 0;
 
   return (
     <div style={{ marginTop: 12, padding: '10px 0 0' }}>
@@ -175,6 +196,8 @@ export function SentimentTrendChart({ symbol, locale = 'ko' }: Props) {
         {([7, 30] as const).map((d) => (
           <button
             key={d}
+            type="button"
+            aria-pressed={days === d}
             onClick={(e) => { e.stopPropagation(); setDays(d); }}
             style={{
               fontSize: 11,
@@ -193,17 +216,43 @@ export function SentimentTrendChart({ symbol, locale = 'ko' }: Props) {
         ))}
       </div>
 
-      {isLoading ? (
-        <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-subtle)', fontSize: 12 }}>
-          {locale === 'en' ? 'Loading chart...' : '차트 로딩 중...'}
-        </div>
-      ) : (
-        <div ref={chartContainerRef} style={{ width: '100%', height: 220 }} />
-      )}
+      {/* P0-2: host DOM always mounted — loading overlay, never unmount ref host */}
+      <div
+        ref={chartContainerRef}
+        style={{
+          width: '100%',
+          height: 220,
+          minWidth: 0,
+          position: 'relative',
+        }}
+      >
+        {(isLoading || !hasData) && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--fg-subtle)',
+              fontSize: 12,
+              zIndex: 1,
+              background: 'transparent',
+              pointerEvents: 'none',
+            }}
+          >
+            {isLoading
+              ? (locale === 'en' ? 'Loading chart...' : '차트 로딩 중...')
+              : (locale === 'en' ? 'No chart data' : '차트 데이터 없음')}
+          </div>
+        )}
+      </div>
 
-      <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 10, color: 'var(--fg-subtle)' }}>
+      <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 10, color: 'var(--fg-subtle)', flexWrap: 'wrap' }}>
         <span>{locale === 'en' ? '── Price (left)' : '── 주가 (좌축)'}</span>
-        <span style={{ color: '#a78bfa' }}>{locale === 'en' ? '── Sentiment (right −2~+2)' : '── 심리점수 (우축 −2~+2)'}</span>
+        <span style={{ color: scoreColor(lastScore) }}>
+          {locale === 'en' ? '── Sentiment (right −2~+2)' : '── 심리점수 (우축 −2~+2)'}
+        </span>
         <span>▲ pre_open &nbsp; ● post_close</span>
       </div>
     </div>

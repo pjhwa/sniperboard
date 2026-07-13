@@ -29,6 +29,7 @@ from core.signal_engine import add_daily_indicators, calculate_stage2_analysis
 from core.conviction_calculator import calculate_conviction
 from services.morning_briefing_service import fetch_morning_briefing
 from services.macro_insight_service import fetch_macro_insight
+from services.sentiment_service import fetch_latest
 from services.charts import render_regime_gauge, render_watchlist_sparklines, render_macro_bar
 
 logger = logging.getLogger(__name__)
@@ -113,6 +114,23 @@ def collect_email_data() -> dict:
     watchlist_items = []
     sparkline_data = {}
 
+    # Live sentiment composites (−2..+2); None → calculator neutral
+    symbol_sentiment_map: dict[str, float] = {}
+    market_sentiment = None
+    try:
+        sent = fetch_latest()
+        if sent and sent.get("available") is not False:
+            m = (sent.get("market") or {}).get("composite_score")
+            if m is not None:
+                market_sentiment = float(m)
+            for s in sent.get("symbols") or []:
+                k = s.get("symbol")
+                cs = s.get("composite_score")
+                if k is not None and cs is not None:
+                    symbol_sentiment_map[str(k).upper()] = float(cs)
+    except Exception as e:
+        logger.warning(f"email report sentiment fetch failed: {e}")
+
     for sym in _WATCHLIST_SYMS:
         df = dfs.get(sym)
         if df is None or df.empty:
@@ -124,9 +142,10 @@ def collect_email_data() -> dict:
             rs_score = stage2.get("rs_score")
 
             try:
+                sym_sent = symbol_sentiment_map.get(sym, market_sentiment)
                 conv = calculate_conviction(
                     stage2_score=stage2_score,
-                    sentiment_composite=50.0,
+                    sentiment_composite=sym_sent,
                     regime_total=regime_total,
                     regime_label=regime_label,
                 )

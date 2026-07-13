@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-06-16 symbol-info+marketcap-board)
+# SniperBoard — Project Context (UPDATED 2026-07-13 P0-1/2/3 conviction-scale+chart-fit+sentiment-wiring)
 
 ## 0. Purpose of This Document
 
@@ -33,7 +33,7 @@ sniperboard/
 │   │   ├── regime_engine.py      # Risk Regime 5-factor composite score (0~100)
 │   │   ├── distribution_day.py   # O'Neil Distribution Day count (25 trading days)
 │   │   └── data_adapter.py       # SINGLE SOURCE OF TRUTH: yfinance MultiIndex normalization + fetch (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily). yf 1.3+ compatible. Phase 2: adj_close preserved for daily paths → Stage2 long-term accuracy on splits. Phase 5: centralization verified via full tests + manual endpoint checks.
-│   │   └── conviction_calculator.py  # Phase 1: Conviction Composite Score v1 (TDD). 40/30/30 weighted (Stage2 0-7 norm + Sentiment + Regime total). Pure function, regime=None → 50 neutral. Returns score+label+components. 12 tests. Labels are English: "Very High"(≥80) / "High"(≥65) / "Moderate"(≥50) / "Low"(≥35) / "Very Low"(<35). Notes also English. Frontend maps to BiLang via CONVICTION_LABEL_META.
+│   │   └── conviction_calculator.py  # Phase 1: Conviction Composite Score v1 (TDD). 40/30/30 weighted (Stage2 0-7 norm + Sentiment + Regime total). Pure function, regime=None → 50 neutral. P0-1 (2026-07-13): normalize_sentiment_composite() maps market-sentiment-data composite_score (−2..+2) → 0–100 via (x+2)/4*100; values outside [−2,2] treated as legacy 0–100; None→50. Returns score+label+components (sentiment.input preserves producer value). Labels English: "Very High"(≥80) / "High"(≥65) / "Moderate"(≥50) / "Low"(≥35) / "Very Low"(<35). Frontend maps via CONVICTION_LABEL_META.
 │   │   └── macro_rules.py            # Macro Insight traffic-light rule engine. compute_macro_signals(items) → {overall:{judgment,green_count,red_count}, groups:{key:{signal,direction}}}. 6 groups (volatility/breadth/credit/rates/commodities/sectors) each with green/yellow/red + overall RISK_ON/MIXED/RISK_OFF. Pure function, dict list input. TDD 20 tests.
 │   │   └── cap_rank_tracker.py       # 글로벌 시총 순위 SQLite 영속 (cap_ranks.db). init_db / save_ranks / get_previous_ranks / CapRankItem dataclass.
 │   │   └── backtest_engine.py        # Backtesting engine (2026-06-02). Daily bar backtest driven by Stage2 signals. Key functions: fetch_backtest_data(symbols) → yfinance download from 2019-01-01 / _compute_stage2_series(df, spy_df, rs_threshold=50, stop_atr_mult=2.0, rr_ratio=3.0) → vectorized Stage2 7-check + R:R plan (no look-ahead, rs_threshold parameterized) / _simulate_trades(symbol, df, signals, ..., spy_ema200_filter=None) → bar-by-bar simulation (T-1 signal → T fill, gap handling, cooldown, SPY>EMA200 market filter) / compute_stats(trades) → win_rate/expectancy_r/profit_factor/mdd/max_consecutive_loss/equity_curve / compute_monte_carlo(trades, n_simulations=10000) → bootstrap resampling confidence intervals (p5/p25/median/p75/p95 + prob_positive, fully vectorized, ~0.1s) / run_full_backtest(symbols, rs_threshold=70, use_spy_filter=True, ...) → aggregate all symbols + IS/OOS split + Stage2 score breakdown + monte_carlo + cache backtest_result.json / run_parameter_sweep(symbols, configs) → 8-config batch experiments. Best config: rs_threshold=70, use_spy_filter=True (expectancy +0.460R, OOS +0.511R, MC prob_positive 99.8%). AMZN structurally incompatible (21% win rate, no improvement across all configs). Settings: STAGE2_THRESHOLD=5, SLIPPAGE_PCT=0.0005, TIMEOUT_BARS=60, COOLDOWN_BARS=10, ENTRY_WINDOW_BARS=5, IN_SAMPLE_END=2023-12-31. TDD 22 tests.
@@ -49,7 +49,7 @@ sniperboard/
 │   └── tests/
 │       ├── test_data_adapter.py (29 tests — adapter + signal_engine; Phase 5 full suite green)
 │       ├── test_signal_engine.py (incl. adjusted vs raw split symbol TDD)
-│       ├── test_conviction_calculator.py (Phase 1 TDD: 3 tests for weighted Conviction v1)
+│       ├── test_conviction_calculator.py (Phase 1 TDD + P0-1 scale normalize + P0-3 helper path; 18+ tests)
 │       ├── test_backtest_engine.py (22 tests — Stage2 vectorized calc/look-ahead/liquidation priority/stats/MDD)
 │       └── (service tests: brief/earnings/sentiment — test_sentiment_service.py: fixtures updated with top_news)
 ├── frontend/
@@ -93,7 +93,7 @@ sniperboard/
 │   │   │   └── TrackBoard.tsx     # Live signal tracking board. Model Health banner + KPI comparison (win rate/expectancy/profit factor vs. backtest baseline) + SVG cumulative R curve (live vs. baseline overlay) + current pipeline (PENDING/ACTIVE) + regime breakdown + signal history table with WIN/LOSS/TIMEOUT/CANCELLED filter. useSignalLog/useSignalLogStats/useRefreshSignalLog hooks.
 │   │   │   └── MarketCapBoard.tsx    # 시총 TOP 15 보드 (board id: 'marketcap'). 글로벌 랭킹 기반 테이블: rank·순위변동(↑/↓/NEW/—)·심볼·시총·현재가·등락·스파크라인+트렌드·52W 위치 막대. Trophy 아이콘.
 │   │   │   └── MorningBriefingBoard.tsx  # Morning briefing board (2026-06-02). Card layout. Sections: headline banner / market mood (traffic light) + key summary / big picture (VIX/rates/dollar) / sector analysis / spotlight (2-4 symbols) / full watchlist (22 expandable rows: squeeze potential + correction risk + price trend + current status) / today checkpoints + earnings alerts. useMorningBriefing() hook → GET /api/morning-briefing (10-min staleTime).
-│   │   │   └── SentimentTrendChart.tsx # Sentiment trend chart: stock price line (left axis) + composite_score overlay (right axis), 7/30d toggle
+│   │   │   └── SentimentTrendChart.tsx # Sentiment trend chart: stock price line (left axis) + composite_score overlay (right axis), 7/30d toggle. P0-2 (2026-07-13): timeScale().fitContent() after setData; ResizeObserver uses chart.resize(w,h)+fitContent; host DOM always mounted (loading overlay, never unmount ref); rAF remeasure after layout.
 │   │   ├── charts/               # lightweight-charts components
 │   │   │   ├── IntradayChart.tsx
 │   │   │   └── DailyChart.tsx
@@ -578,7 +578,7 @@ Note: Brief/Earnings data covers TIER1 12 symbols (collect_brief.py, collect_ear
 | Regime thresholds | `backend/core/regime_engine.py: TREND_LOW/HIGH, ...` constants |
 | DD lookback period | `backend/core/distribution_day.py: DD_LOOKBACK, DD_THRESHOLD_PCT` |
 | yfinance data access | `backend/core/data_adapter.py` (SINGLE SOURCE OF TRUTH) |
-| Conviction Composite Score | `backend/core/conviction_calculator.py` (TDD, 12 tests). Labels: English enum strings. |
+| Conviction Composite Score | `backend/core/conviction_calculator.py` (TDD). P0-1: `normalize_sentiment_composite(−2..+2→0–100)`. `/daily`+`/watchlist` use `_load_sentiment_for_conviction()` (per-symbol composite, brief `data.context` path). Labels: English enum strings. |
 | Conviction display labels (BiLang) | `frontend/app/types.ts: CONVICTION_LABEL_META` — score thresholds → BiLang (Very High/High/Moderate/Low/Very Low ↔ 매우 강한 확신 etc.) |
 | Macro symbol display names | `frontend/app/types.ts: MACRO_SYMBOL_NAMES` — 21 BiLang entries. `backend/api/endpoints.py: MACRO_SYMBOLS` uses English fallback names. |
 | Add field to Watchlist/Daily | `backend/api/schemas.py` (WatchlistItemSchema, DailyResponse) + `endpoints.py` |
