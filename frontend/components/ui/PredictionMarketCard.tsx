@@ -1,6 +1,6 @@
-import React from 'react';
 'use client';
 
+import React from 'react';
 import { usePrediction } from '@/hooks/usePrediction';
 import type { Locale } from '@/app/i18n';
 
