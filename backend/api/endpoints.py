@@ -16,7 +16,7 @@ from api.schemas import (
     MacroResponse, MacroInsightResponse, MacroOverallInsight, MacroGroupInsight, MacroAiMeta,
     RegimeResponse, DistributionDayResponse, SentimentResponse,
     BriefResponse, EarningsResponse, SentimentHistoryResponse, PrePostResponse,
-    SignalLogResponse, SignalLogStats, MorningBriefingResponse,
+    SignalLogResponse, SignalLogStats, MorningBriefingResponse, PredictionResponse,
     SymbolInfoResponse, CapLeaderboardResponse,
 )
 from services.sentiment_service import fetch_latest, enrich_with_delta, fetch_today_slots, fetch_sentiment_history
@@ -24,6 +24,7 @@ from services.overnight_service import get_overnight_price
 from services.brief_service import fetch_brief
 from services.morning_briefing_service import fetch_morning_briefing
 from services.earnings_service import fetch_earnings
+from services.prediction_service import fetch_prediction
 from core.macro_rules import compute_macro_signals
 from services.macro_insight_service import fetch_macro_insight, get_ai_meta, get_cached_signals
 from core.distribution_day import count_distribution_days
@@ -773,6 +774,24 @@ async def get_earnings_endpoint():
     except Exception as e:
         logger.error(f"Error in /earnings endpoint: {e}", exc_info=True)
         return {"available": False, "error": "Earnings 데이터 처리 중 오류 발생"}
+
+
+@router.get("/prediction", response_model=PredictionResponse)
+async def get_prediction_endpoint():
+    """FOMC prediction-market odds (Polymarket reference). Soft-fail available:false.
+
+    usage is always reference_only — do not feed into Conviction weights.
+    """
+    try:
+        result = fetch_prediction()
+        if not result.get("available"):
+            return {"available": False, "error": result.get("error", "데이터 없음")}
+        data = result["data"]
+        gen_at = data.get("generated_at") if isinstance(data, dict) else None
+        return {"available": True, "data": data, "meta": _freshness_meta(gen_at)}
+    except Exception as e:
+        logger.error(f"Error in /prediction endpoint: {e}", exc_info=True)
+        return {"available": False, "error": "Prediction 데이터 처리 중 오류 발생"}
 
 
 @router.get("/backtest/result")

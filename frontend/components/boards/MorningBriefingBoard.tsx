@@ -5,6 +5,7 @@ import { useStore } from '@/hooks/useStore';
 import { useMorningBriefing, MorningWatchlistItem, MorningSpotlight, GlobalIssue, GlobalContext } from '@/hooks/useMorningBriefing';
 import { useRegime } from '@/hooks/useRegime';
 import { Card } from '@/components/ui/Card';
+import { PredictionMarketCard } from '@/components/ui/PredictionMarketCard';
 import { Sparkle } from '@/components/ui/Icons';
 import { tField } from '@/app/i18n';
 import type { Locale } from '@/app/i18n';
@@ -814,6 +815,11 @@ export function MorningBriefingBoard() {
             ))}
           </ul>
         </Card>
+      </div>
+
+      {/* P0-4: market-implied Fed odds (Polymarket reference) */}
+      <div style={{ gridColumn: 'span 4' }} className="mob-order-3">
+        <PredictionMarketCard locale={locale} />
       </div>
 
       {/* ── Row 3: 큰 그림(span 2) + 섹터(span 1) + 주의사항(span 1) ── */}

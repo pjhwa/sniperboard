@@ -5,6 +5,7 @@ import { useMacro } from '@/hooks/useMacro';
 import { useMacroInsight } from '@/hooks/useMacroInsight';
 import { useStore } from '@/hooks/useStore';
 import { Card } from '@/components/ui/Card';
+import { PredictionMarketCard } from '@/components/ui/PredictionMarketCard';
 import { MacroItem, MACRO_SYMBOL_NAMES } from '@/app/types';
 import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
 import { G } from '@/app/glossary';
@@ -176,6 +177,11 @@ export function MacroBoard() {
             </div>
           </div>
         )}
+
+        {/* P0-4: Polymarket FOMC odds — reference-only market-implied layer */}
+        <div style={{ gridColumn: 'span 3' }} className="mob-order-1">
+          <PredictionMarketCard locale={locale} />
+        </div>
 
         {/* Sector Rotation */}
         <div style={{ gridColumn: 'span 3' }} className="mob-order-3">

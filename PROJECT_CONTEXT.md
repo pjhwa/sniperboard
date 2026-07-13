@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-07-13 P0-6 earnings-revenue-guard)
+# SniperBoard — Project Context (UPDATED 2026-07-13 P0-4 polymarket-prediction-reference)
 
 ## 0. Purpose of This Document
 
@@ -42,6 +42,7 @@ sniperboard/
 │   │   ├── data_service.py       # YFinanceDataService implementation + module-level helpers
 │   │   ├── brief_service.py      # GitHub raw fetch + 30-min in-memory cache (BRIEF_DATA_URL)
 │   │   ├── earnings_service.py   # GitHub raw fetch + 5-min cache (EARNINGS_DATA_URL). P0-6: sanitize revenue_estimate_b — drop |v|>300 (TWD-as-USD unit bugs).
+│   │   ├── prediction_service.py # P0-4: GitHub raw prediction/latest.json (Polymarket FOMC odds). usage=reference_only — never feeds Conviction. 5-min cache.
 │   │   └── overnight_service.py  # Yahoo Finance WebSocket → Blue Ocean ATS overnight price stream. Runs in a dedicated daemon thread (asyncio.run in thread) — NOT in uvicorn's event loop, to avoid handshake timeouts caused by blocking yfinance I/O. Protobuf base64 parsing (field1=symbol, field2=price/float32, field6=session_hours/varint:8=overnight, field12=chg_pct). start_overnight_service() called in FastAPI lifespan; spawns threading.Thread(daemon=True).
 │   │   └── cap_leaderboard_service.py # companiesmarketcap.com 글로벌 랭킹 스크래핑 → yfinance 1y 히스토리로 spark·52W·market_structure 보완. 1h 인메모리 캐시 + stale fallback. fetch_leaderboard() → TOP 15 dict.
 │   │   └── macro_insight_service.py  # GitHub raw fetch + 30-min in-memory cache (MACRO_INSIGHT_URL). fetch_macro_insight() → Optional[dict]. get_ai_meta(raw) → {generated_at,age_minutes}. Returns None gracefully if URL not set.

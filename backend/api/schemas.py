@@ -606,6 +606,47 @@ class MorningBriefingResponse(BaseModel):
     meta: Optional[FreshnessMeta] = None
 
 
+# --- Prediction market (Polymarket reference odds, P0-4) ---
+
+class PredictionOutcome(BaseModel):
+    label: str
+    probability: float
+    question: Optional[str] = None
+    volume_usd: Optional[float] = None
+
+
+class NextFomcPrediction(BaseModel):
+    event_ticker: Optional[str] = None
+    event_title: Optional[str] = None
+    meeting_date: Optional[str] = None
+    as_of: Optional[str] = None
+    probabilities: Optional[dict] = None
+    outcomes: Optional[List[PredictionOutcome]] = None
+    dominant_outcome: Optional[str] = None
+    dominant_probability: Optional[float] = None
+    volume_usd: Optional[float] = None
+    liquidity_usd: Optional[float] = None
+    url: Optional[str] = None
+
+
+class PredictionData(BaseModel):
+    generated_at: Optional[str] = None
+    schema_version: Optional[str] = None
+    slot: Optional[str] = None
+    source: Optional[str] = None
+    usage: Optional[str] = None  # always reference_only for consumers
+    disclaimer_en: Optional[str] = None
+    disclaimer_ko: Optional[str] = None
+    next_fomc: Optional[NextFomcPrediction] = None
+
+
+class PredictionResponse(BaseModel):
+    available: bool
+    data: Optional[PredictionData] = None
+    error: Optional[str] = None
+    meta: Optional[FreshnessMeta] = None
+
+
 class SignalLogResponse(BaseModel):
     entries: List[SignalLogEntry]
     total: int
