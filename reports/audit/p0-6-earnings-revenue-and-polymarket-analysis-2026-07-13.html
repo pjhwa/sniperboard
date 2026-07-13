@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>P0-6 Earnings 매출 단위 수정 + Polymarket(P0-4) 분석 — 2026-07-13</title>
+<style>
+  :root {
+    --bg:#0b0f14; --bg2:#121821; --card:#151c27; --card2:#1a2332; --border:#273244;
+    --fg:#e8eef7; --muted:#9aabbf; --subtle:#6b7c90; --em:#34d399;
+    --em-soft:rgba(52,211,153,.12); --bear:#f87171; --warn:#fbbf24; --info:#60a5fa; --sky:#38bdf8;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  }
+  *{box-sizing:border-box} html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--sans);background:radial-gradient(1100px 500px at 10% -10%,#1a2a22,transparent 50%),var(--bg);color:var(--fg);line-height:1.65;font-size:15px}
+  a{color:var(--sky);text-decoration:none} a:hover{text-decoration:underline}
+  .wrap{max-width:1100px;margin:0 auto;padding:28px 20px 80px}
+  header.hero{background:linear-gradient(135deg,rgba(52,211,153,.14),rgba(96,165,250,.08));border:1px solid var(--border);border-radius:18px;padding:28px;margin-bottom:22px}
+  header.hero h1{margin:0 0 10px;font-size:24px;letter-spacing:-.02em;line-height:1.3}
+  .sub{color:var(--muted);margin:0 0 14px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px}
+  .pill{padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:var(--card);font-size:12px;color:var(--muted)}
+  .pill strong{color:var(--fg)}.pill.ok{color:var(--em);border-color:rgba(52,211,153,.4)}
+  .pill.warn{color:var(--warn);border-color:rgba(251,191,36,.4)}
+  nav.toc{position:sticky;top:0;z-index:10;background:rgba(11,15,20,.9);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:20px}
+  nav.toc summary{cursor:pointer;font-weight:700;list-style:none}
+  nav.toc .links{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px 12px;margin-top:10px}
+  nav.toc a{font-size:13px;color:var(--muted)}
+  section{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:18px}
+  h2{margin:0 0 8px;font-size:18px;display:flex;align-items:center;gap:10px}
+  h2 .num{width:28px;height:28px;border-radius:8px;background:var(--em-soft);color:var(--em);display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+  .lead{color:var(--muted);margin:0 0 14px}
+  h3{margin:18px 0 8px;font-size:15px} h4{margin:12px 0 6px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  p{margin:0 0 10px} ul,ol{margin:0 0 12px;padding-left:20px} li{margin:4px 0}
+  code{font-family:var(--mono);font-size:12.5px;background:var(--bg2);border:1px solid var(--border);padding:1px 6px;border-radius:5px}
+  pre{background:#080b10;border:1px solid var(--border);border-radius:10px;padding:14px;overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.5;color:#d1e0f0;margin:0 0 12px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:0 0 12px}
+  th,td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+  tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:800px){.grid2,.grid3{grid-template-columns:1fr}}
+  .kpi{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px}
+  .kpi .label{font-size:11px;color:var(--subtle);text-transform:uppercase}
+  .kpi .value{font-size:22px;font-weight:800;margin-top:4px}
+  .kpi .hint{font-size:12px;color:var(--muted);margin-top:4px}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700}
+  .badge.done{background:var(--em-soft);color:var(--em);border:1px solid rgba(52,211,153,.35)}
+  .badge.p0{background:rgba(248,113,113,.15);color:var(--bear);border:1px solid rgba(248,113,113,.35)}
+  .badge.warn{background:rgba(251,191,36,.12);color:var(--warn);border:1px solid rgba(251,191,36,.35)}
+  .badge.info{background:rgba(96,165,250,.12);color:var(--info);border:1px solid rgba(96,165,250,.35)}
+  .callout{border-left:3px solid var(--em);background:var(--em-soft);padding:12px 14px;border-radius:0 10px 10px 0;margin:0 0 12px}
+  .callout.danger{border-left-color:var(--bear);background:rgba(248,113,113,.1)}
+  .callout.warn{border-left-color:var(--warn);background:rgba(251,191,36,.1)}
+  .callout.info{border-left-color:var(--info);background:rgba(96,165,250,.1)}
+  .callout strong{display:block;margin-bottom:4px}
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+  @media(max-width:700px){.ba{grid-template-columns:1fr}}
+  .ba-box{border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--bg)}
+  .ba-box.before{border-color:rgba(248,113,113,.4)} .ba-box.after{border-color:rgba(52,211,153,.4)}
+  .ba-box .t{font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:6px}
+  .ba-box.before .t{color:var(--bear)} .ba-box.after .t{color:var(--em)}
+  .ba-box pre{margin:0;border:0;padding:0;background:transparent;font-size:11.5px}
+  .improve{border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px;background:var(--bg2)}
+  .improve .hd{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--card2)}
+  .improve .hd h3{margin:0;font-size:14px;flex:1}
+  .improve .bd{padding:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  @media(max-width:900px){.improve .bd{grid-template-columns:1fr}}
+  .improve .col h5{margin:0 0 6px;font-size:11px;text-transform:uppercase;color:var(--subtle);letter-spacing:.05em}
+  .improve .col p,.improve .col ul{margin:0;font-size:13px;color:var(--muted)}
+  footer{text-align:center;color:var(--subtle);font-size:12px;margin-top:16px}
+  .evidence{font-size:12px;color:var(--subtle);font-family:var(--mono)}
+  .verdict-box{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+  @media(max-width:700px){.verdict-box{grid-template-columns:1fr}}
+  .vcard{border-radius:12px;padding:16px;border:1px solid var(--border)}
+  .vcard.yes{border-color:rgba(52,211,153,.45);background:rgba(52,211,153,.08)}
+  .vcard.careful{border-color:rgba(251,191,36,.45);background:rgba(251,191,36,.08)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>P0-6 Earnings 매출 단위 수정 보고서<br/>&amp; P0-4 Polymarket 대안 분석</h1>
+  <p class="sub">
+    TSM <code>revenue_estimate_b=1263.57</code> 버그(TWD를 USD로 오인)를 수정·검증한 내용과,
+    한국에서 Kalshi API를 쓸 수 없을 때 <strong>Polymarket을 예측시장 데이터 소스로 쓸지</strong>에 대한 사실 기반 분석입니다.
+  </p>
+  <div class="meta">
+    <span class="pill"><strong>작성</strong> 2026-07-13</span>
+    <span class="pill ok"><strong>P0-6</strong> 구현·검증 완료</span>
+    <span class="pill ok"><strong>MSD tests</strong> 191 passed</span>
+    <span class="pill ok"><strong>SB tests</strong> 136 passed</span>
+    <span class="pill warn"><strong>P0-4</strong> 구현 보류 · 권고안 제시</span>
+  </div>
+</header>
+
+<details class="toc" open>
+  <summary>목차</summary>
+  <div class="links">
+    <a href="#s1">1. 요약</a>
+    <a href="#s2">2. P0-6 문제 재현 (증거)</a>
+    <a href="#s3">3. 근본 원인</a>
+    <a href="#s4">4. 구현 내용</a>
+    <a href="#s5">5. 검증 결과</a>
+    <a href="#s6">6. Before / After</a>
+    <a href="#s7">7. Polymarket vs Kalshi 분석</a>
+    <a href="#s8">8. 권고: Polymarket을 쓸 것인가</a>
+    <a href="#s9">9. 도입 시 설계 가이드</a>
+    <a href="#s10">10. 파일·커밋 인덱스</a>
+  </div>
+</details>
+
+<section id="s1">
+  <h2><span class="num">1</span> 요약</h2>
+  <div class="grid3">
+    <div class="kpi">
+      <div class="label">TSM revenue (Before)</div>
+      <div class="value" style="color:var(--bear)">1263.57B</div>
+      <div class="hint">불가능 — 분기 매출 “조 단위”</div>
+    </div>
+    <div class="kpi">
+      <div class="label">TSM revenue (After)</div>
+      <div class="value" style="color:var(--em)">39.28B</div>
+      <div class="hint">TWD→USD 변환 후 정상 범위</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Polymarket 권고</div>
+      <div class="value" style="color:var(--warn);font-size:18px">조건부 Yes</div>
+      <div class="hint">참고용 매크로 오버레이 · 라벨 필수</div>
+    </div>
+  </div>
+  <div class="callout">
+    <strong>한 줄</strong>
+    P0-6은 <em>financialCurrency(TWD) 무시 + 무조건 /1e9</em>가 원인이었고, FX 환산 + 상한 가드로 수정했다.
+    P0-4는 Kalshi 대신 Polymarket 공개 API를 <strong>참고용</strong>으로 쓰는 것이 타당하나, “규제 예측시장과 동일”로 취급하면 안 된다.
+  </div>
+</section>
+
+<section id="s2">
+  <h2><span class="num">2</span> P0-6 문제 재현 (실행 증거)</h2>
+  <p class="lead">2026-07-13 yfinance live 프로브 결과.</p>
+  <table>
+    <thead><tr><th>심볼</th><th>financialCurrency</th><th>Revenue Average (raw)</th><th>구 로직 /1e9</th><th>판정</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>TSM</strong></td>
+        <td><code>TWD</code></td>
+        <td>1,263,569,250,410</td>
+        <td><strong>1263.57</strong></td>
+        <td style="color:var(--bear)">버그 — 대만 달러 절대액을 USD 십억으로 오인</td>
+      </tr>
+      <tr>
+        <td>TSLA</td>
+        <td>USD</td>
+        <td>25,829,856,380</td>
+        <td>25.83</td>
+        <td style="color:var(--em)">정상</td>
+      </tr>
+      <tr>
+        <td>GOOGL</td>
+        <td>USD</td>
+        <td>116,841,971,700</td>
+        <td>116.84</td>
+        <td style="color:var(--em)">정상</td>
+      </tr>
+      <tr>
+        <td>AAPL</td>
+        <td>USD</td>
+        <td>108,900,122,530</td>
+        <td>108.90</td>
+        <td style="color:var(--em)">정상</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="evidence">yfinance Ticker("TSM").calendar + .info['financialCurrency'] == 'TWD' · TWD=X ≈ 32.17</p>
+  <div class="callout danger">
+    <strong>오염 경로</strong>
+    잘못된 1263.57B가 Grok 프롬프트에 들어가 AI 문장(“$25.83B”와 대비되는 비현실 규모)과 UI 숫자 모두를 오염시켰다.
+  </div>
+</section>
+
+<section id="s3">
+  <h2><span class="num">3</span> 근본 원인</h2>
+  <pre>// collect_earnings.py (수정 전)
+rev_estimate_b = round(float(cal[k].iloc[0]) / 1e9, 2)
+# 가정: raw 는 항상 USD 절대액
+# 실제 TSM: raw 는 TWD 절대액 → /1e9 만으로는 USD billions 가 아님</pre>
+  <ul>
+    <li><strong>통화 무시:</strong> <code>financialCurrency</code> / <code>currency</code>를 읽지 않음</li>
+    <li><strong>단위 가정 단일:</strong> 항상 absolute → /1e9</li>
+    <li><strong>사후 검증 없음:</strong> 분기 매출 상한(예: $300B) 초과 시에도 그대로 저장·프롬프트 주입</li>
+    <li><strong>소비자 무방비:</strong> SniperBoard가 이상치를 그대로 표시 가능</li>
+  </ul>
+</section>
+
+<section id="s4">
+  <h2><span class="num">4</span> 구현 내용</h2>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge done">DONE</span>
+      <h3>MSD — revenue_raw_to_billions_usd + FX</h3>
+    </div>
+    <div class="bd">
+      <div class="col">
+        <h5>구현 방법</h5>
+        <ul>
+          <li><code>get_financial_currency(ticker)</code></li>
+          <li><code>local_currency_units_per_usd()</code> — yfinance FX + fallback</li>
+          <li><code>revenue_raw_to_billions_usd(raw, ccy)</code></li>
+          <li>USD 변환 후 /1e9</li>
+          <li>상한 300B 초과 → <code>None</code> (드롭)</li>
+          <li>블라인드 /1e9 잔해(1263 TWD-B) 복구 경로</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h5>파일</h5>
+        <ul>
+          <li><code>collect/collect_earnings.py</code></li>
+          <li><code>collect/test_collect_earnings_revenue.py</code> (8 tests)</li>
+          <li><code>earnings/latest.json</code> TSM 패치 39.28</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h5>효과</h5>
+        <p>TSM 등 비USD 재무통화 종목의 매출 추정이 실제 달러 규모로 표시. AI 프롬프트 오염 차단.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge done">DONE</span>
+      <h3>SniperBoard — 소비자 가드</h3>
+    </div>
+    <div class="bd">
+      <div class="col">
+        <h5>구현 방법</h5>
+        <ul>
+          <li><code>_sanitize_revenue_estimate_b</code></li>
+          <li><code>_sanitize_earnings_payload</code></li>
+          <li>fetch 시 |rev| &gt; 300 → null</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h5>파일</h5>
+        <ul>
+          <li><code>backend/services/earnings_service.py</code></li>
+        </ul>
+      </div>
+      <div class="col">
+        <h5>효과</h5>
+        <p>수집 쪽 수정 전/캐시된 구 데이터에서도 UI에 1263B가 노출되지 않음.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>정규화 의사코드</h3>
+  <pre>financial_ccy = info.financialCurrency or info.currency or "USD"   # TSM → TWD
+fx = local_units_per_USD(financial_ccy)                            # TWD ≈ 32.17
+usd_absolute = raw / fx
+revenue_estimate_b = usd_absolute / 1e9
+if revenue_estimate_b &gt; 300 or revenue_estimate_b &lt; 0.01:
+    revenue_estimate_b = None   # drop — do not feed Grok/UI</pre>
+</section>
+
+<section id="s5">
+  <h2><span class="num">5</span> 검증 결과</h2>
+  <table>
+    <thead><tr><th>검증</th><th>결과</th></tr></thead>
+    <tbody>
+      <tr><td>pytest collect/test_collect_earnings_revenue.py + full collect/</td><td><strong>191 passed</strong></td></tr>
+      <tr><td>pytest sniperboard backend</td><td><strong>136 passed</strong></td></tr>
+      <tr><td>Live fetch TSM</td><td>raw 1.26e12 TWD → <strong>39.28B USD</strong></td></tr>
+      <tr><td>Live fetch TSLA / GOOGL / AAPL</td><td>25.83 / 116.84 / 108.9 (불변·정상)</td></tr>
+      <tr><td>earnings/latest.json TSM</td><td><strong>39.28</strong> (was 1263.57)</td></tr>
+      <tr><td>소비자 sanitize(1263.57)</td><td>→ null</td></tr>
+    </tbody>
+  </table>
+  <pre># 재현
+cd market-sentiment-data &amp;&amp; python3 -m pytest collect/test_collect_earnings_revenue.py -q
+python3 -c "from collect.collect_earnings import revenue_raw_to_billions_usd as f; print(f(1263569250410,'TWD'))"
+# → ~39.28</pre>
+</section>
+
+<section id="s6">
+  <h2><span class="num">6</span> Before / After</h2>
+  <div class="ba">
+    <div class="ba-box before">
+      <div class="t">Before</div>
+      <pre>TSM Revenue Average = 1_263_569_250_410  # TWD
+code: / 1e9
+→ revenue_estimate_b = 1263.57
+
+Grok prompt:
+  "revenue_estimate=1263.57B"
+UI / AI:
+  비현실적 조 단위 매출
+  실적 리스크 서술 왜곡</pre>
+    </div>
+    <div class="ba-box after">
+      <div class="t">After</div>
+      <pre>financialCurrency = TWD
+fx ≈ 32.17 TWD/USD
+USD = 1.263e12 / 32.17 ≈ 3.928e10
+→ revenue_estimate_b = 39.28
+
+Grok prompt:
+  "revenue_estimate=39.28B"
+UI:
+  합리적 분기 규모
+  SB guard: &gt;300B → null</pre>
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>심볼</th><th>Before B</th><th>After B</th></tr></thead>
+    <tbody>
+      <tr><td>TSM</td><td style="color:var(--bear)">1263.57</td><td style="color:var(--em)"><strong>39.28</strong></td></tr>
+      <tr><td>TSLA</td><td>25.83</td><td>25.83</td></tr>
+      <tr><td>GOOGL</td><td>116.84</td><td>116.84</td></tr>
+      <tr><td>META</td><td>60.23</td><td>60.23</td></tr>
+      <tr><td>AMZN</td><td>195.91</td><td>195.91</td></tr>
+      <tr><td>PLTR</td><td>1.81</td><td>1.81</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="s7">
+  <h2><span class="num">7</span> Polymarket vs Kalshi — P0-4 대안 분석</h2>
+  <p class="lead">한국에서 Kalshi API 키를 쓸 수 없을 때, Polymarket을 FOMC/매크로 확률 소스로 쓸 수 있는지 평가한다.</p>
+
+  <h3>7.1 요구 기능 (현재 prediction 파이프라인)</h3>
+  <ul>
+    <li>다음 FOMC 결정 확률 분포 (동결 / 25bp 인하 / 인상 등)</li>
+    <li>주기적 수집 → JSON → SniperBoard 표시</li>
+    <li>가능하면 API 키 없이 또는 한국에서 합법·기술적으로 접근 가능</li>
+  </ul>
+
+  <h3>7.2 비교표</h3>
+  <table>
+    <thead>
+      <tr><th>항목</th><th>Kalshi (현 설계)</th><th>Polymarket (후보)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>규제</td>
+        <td>미국 CFTC 규제 예측거래소</td>
+        <td>블록체인 기반, 관할·접근성이 다름 (지역 제한 변동 가능)</td>
+      </tr>
+      <tr>
+        <td>한국에서 API 키</td>
+        <td><strong>사용 불가/어려움</strong> (사용자 제약)</td>
+        <td>시장 읽기용 공개 HTTP API 존재 (이벤트/마켓 조회에 키 불필요 케이스 다수)</td>
+      </tr>
+      <tr>
+        <td>FOMC 유동성</td>
+        <td>설계상 적합 (이벤트 계약)</td>
+        <td>실거래 규모 큼 — 예: Fed decision 이벤트 수천만~억 달러 누적 볼륨 보도·집계 존재</td>
+      </tr>
+      <tr>
+        <td>참여자 구성</td>
+        <td>규제 시장 참여자</td>
+        <td>글로벌·크립토 자본 비중 큼 → <strong>편향 가능</strong></td>
+      </tr>
+      <tr>
+        <td>가격 의미</td>
+        <td>계약 가격 ≈ 확률</td>
+        <td>동일하게 mid/last ≈ 함의 확률 (단, 스프레드·유동성 구간 주의)</td>
+      </tr>
+      <tr>
+        <td>스키마 적합</td>
+        <td>기존 <code>prediction/latest.json</code> next_fomc</td>
+        <td>동일 스키마로 매핑 가능 (outcomes + probabilities)</td>
+      </tr>
+      <tr>
+        <td>운영 복잡도</td>
+        <td>API 키·시리즈 티커 유지</td>
+        <td>이벤트 슬러그 탐색·만료 마켓 교체 자동화 필요</td>
+      </tr>
+      <tr>
+        <td>SniperBoard 적합성</td>
+        <td>본래 의도</td>
+        <td><strong>참고용 매크로 카드</strong>로는 적합, “공식 확률” 표현은 부적합</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>7.3 Polymarket 데이터 “맞는가?” — 분석 기준</h3>
+  <table>
+    <thead><tr><th>기준</th><th>평가</th><th>설명</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>정보 가치</td>
+        <td><span class="badge done">높음</span></td>
+        <td>실시간 머니 배팅 확률은 서베이보다 빠른 경우가 많음. FOMC 전후 반응 관찰에 유용.</td>
+      </tr>
+      <tr>
+        <td>통계적 공정성</td>
+        <td><span class="badge warn">중간</span></td>
+        <td>참여자 ≠ 미국 채권/주식 기관 전체. 크립토 레짐 편향·헤지 수요 가능.</td>
+      </tr>
+      <tr>
+        <td>재현성·자동화</td>
+        <td><span class="badge done">가능</span></td>
+        <td>공개 REST(이벤트/마켓/가격)로 cron 수집 가능. 키 의존도 낮음.</td>
+      </tr>
+      <tr>
+        <td>법·접근 리스크</td>
+        <td><span class="badge warn">중간</span></td>
+        <td>지역별 접근 정책 변경 가능. <strong>읽기 전용 시세</strong>와 거래 참여를 분리해 설계할 것.</td>
+      </tr>
+      <tr>
+        <td>제품 메시지</td>
+        <td><span class="badge info">중요</span></td>
+        <td>“시장 함의 확률(Polymarket)” vs “연준 공식 전망”을 UI에서 명확히 구분해야 함.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout info">
+    <strong>사실 (공개 정보 기준)</strong>
+    Polymarket에는 Fed/FOMC 관련 고유동성 마켓이 반복적으로 형성되며, 공개 시세 집계·볼륨 보도가 존재한다.
+    이는 “데이터가 없다”가 아니라 “성격이 Kalshi와 다른 예측시장 데이터”임을 의미한다.
+  </div>
+</section>
+
+<section id="s8">
+  <h2><span class="num">8</span> 권고: Polymarket을 사용할 것인가?</h2>
+
+  <div class="verdict-box">
+    <div class="vcard yes">
+      <strong style="color:var(--em);font-size:16px">권고: 조건부 Yes (참고용)</strong>
+      <p style="margin:8px 0 0;color:var(--muted);font-size:13.5px">
+        Kalshi가 막힌 환경에서 FOMC 확률 공백(P0-4)을 메우는 <strong>1차 대안으로 Polymarket 공개 시세를 쓰는 것은 타당</strong>하다.
+        SniperBoard의 매크로/모닝 브리핑에 “시장 함의” 레이어로 붙이면 제품 가치가 있다.
+      </p>
+    </div>
+    <div class="vcard careful">
+      <strong style="color:var(--warn);font-size:16px">단, 이렇게는 쓰지 말 것</strong>
+      <ul style="margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:13.5px">
+        <li>Kalshi와 동일 신뢰도로 병합</li>
+        <li>“연준이 X% 확률”처럼 공식 톤 표기</li>
+        <li>Conviction/Stage2 가중치에 직접 편입 (현재 설계 범위 밖)</li>
+        <li>단일 thin 마켓을 검증 없이 채택</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>최종 판단 요약</h3>
+  <table>
+    <thead><tr><th>질문</th><th>답</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>이 데이터를 사용하는 게 맞나?</td>
+        <td><strong>맞다 — 단 ‘참고용 예측시장 확률’로 한정할 때.</strong> 거시 이벤트 전 포지션 경계·리스크 온/오프 해석에 유용하다.</td>
+      </tr>
+      <tr>
+        <td>Kalshi를 완전히 대체하나?</td>
+        <td><strong>기능 대체(확률 숫자 공급)는 가능, 의미 대체는 불완전.</strong> source 필드에 <code>polymarket</code>을 명시하고 UI에 출처 배지 필수.</td>
+      </tr>
+      <tr>
+        <td>지금 당장 구현해야 하나?</td>
+        <td>P0-6 완료 후 P0-4 구현 시, Kalshi 복구를 기다리지 말고 Polymarket 어댑터를 우선 구현하는 것을 권장.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="s9">
+  <h2><span class="num">9</span> Polymarket 도입 시 설계 가이드 (미구현 · 설계만)</h2>
+  <div class="improve">
+    <div class="hd">
+      <span class="badge info">DESIGN</span>
+      <h3>권장 아키텍처</h3>
+    </div>
+    <div class="bd">
+      <div class="col">
+        <h5>수집 (MSD)</h5>
+        <ul>
+          <li><code>collect_prediction.py</code>에 source 스위치: <code>PREDICTION_SOURCE=polymarket|kalshi</code></li>
+          <li>공개 Gamma/CLOB API로 active Fed/FOMC 이벤트 검색</li>
+          <li>outcome 라벨 정규화: no_change / cut_25 / hike_…</li>
+          <li>volume·스프레드 임계 미달 시 null + health alert</li>
+          <li><code>source: "polymarket"</code>, schema 유지</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h5>소비 (SB)</h5>
+        <ul>
+          <li><code>prediction_service</code> + <code>GET /api/prediction</code></li>
+          <li>Macro/Briefing 카드: “예측시장 함의 (Polymarket)”</li>
+          <li>disclaimer: 크립토 예측시장 · 참고용</li>
+          <li>Conviction 가중치에 넣지 않음 (v1)</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h5>품질 가드</h5>
+        <ul>
+          <li>최소 누적 볼륨 (예: $100k+)</li>
+          <li>마켓 endDate가 다음 FOMC 윈도우와 일치</li>
+          <li>확률 합 ≈ 1.0 (±0.05)</li>
+          <li>N회 연속 실패 시 health FAIL</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <pre>// prediction/latest.json (제안 형태 — 기존 스키마 호환)
+{
+  "schema_version": "1.1",
+  "source": "polymarket",
+  "generated_at": "...",
+  "next_fomc": {
+    "event_id": "...",
+    "event_title": "Fed decision in July?",
+    "resolve_window": "2026-07-28/29",
+    "outcomes": [
+      {"label": "no_change", "probability": 0.72},
+      {"label": "cut_25", "probability": 0.22},
+      {"label": "other", "probability": 0.06}
+    ],
+    "volume_usd": 1234567,
+    "disclaimer": "Crypto prediction market odds — reference only"
+  }
+}</pre>
+</section>
+
+<section id="s10">
+  <h2><span class="num">10</span> 파일·커밋 인덱스</h2>
+  <table>
+    <thead><tr><th>Repo</th><th>파일</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td>market-sentiment-data</td><td class="mono">collect/collect_earnings.py</td><td>FX 환산 + revenue_raw_to_billions_usd</td></tr>
+      <tr><td>market-sentiment-data</td><td class="mono">collect/test_collect_earnings_revenue.py</td><td>P0-6 단위 테스트</td></tr>
+      <tr><td>market-sentiment-data</td><td class="mono">earnings/latest.json</td><td>TSM 39.28 반영</td></tr>
+      <tr><td>sniperboard</td><td class="mono">backend/services/earnings_service.py</td><td>소비자 이상치 가드</td></tr>
+      <tr><td>sniperboard</td><td class="mono">reports/audit/본 문서</td><td>완료 보고 + Polymarket 분석</td></tr>
+    </tbody>
+  </table>
+  <p class="evidence">관련: dual-repo-full-audit · p0-improvements-and-next-roadmap</p>
+</section>
+
+<footer>
+  P0-6 complete + P0-4 Polymarket analysis · 2026-07-13 ·
+  reports/audit/p0-6-earnings-revenue-and-polymarket-analysis-2026-07-13.html
+</footer>
+
+</div>
+</body>
+</html>
