@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-07-13 P0-4 polymarket-prediction-reference)
+# SniperBoard — Project Context (UPDATED 2026-07-13 morning-email-redesign)
 
 ## 0. Purpose of This Document
 

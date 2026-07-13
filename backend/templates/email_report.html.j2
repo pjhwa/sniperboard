@@ -4,262 +4,427 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SniperBoard Morning Brief — {{ date_str }}</title>
-<style>
-  body { margin:0; padding:0; background:#0f0f1a; font-family:Arial,sans-serif; }
-  .wrap { max-width:620px; margin:0 auto; background:#0f0f1a; }
-  .hd { background:#1e1e3a; padding:20px 24px; border-bottom:2px solid #7c3aed; }
-  .hd-title { color:#e2e8f0; font-size:18px; font-weight:bold; margin:0; }
-  .hd-sub { color:#94a3b8; font-size:12px; margin:4px 0 0; }
-  .section { padding:16px 24px; border-bottom:1px solid #1e293b; }
-  .section-title { color:#7c3aed; font-size:11px; font-weight:bold; letter-spacing:1px;
-                   text-transform:uppercase; margin:0 0 12px; }
-  .mood-banner { border-radius:6px; padding:12px 16px; margin-bottom:8px; }
-  .mood-risk-on    { background:#14532d; border-left:4px solid #22c55e; }
-  .mood-constructive { background:#14532d; border-left:4px solid #4ade80; }
-  .mood-mixed      { background:#451a03; border-left:4px solid #f59e0b; }
-  .mood-defensive  { background:#431407; border-left:4px solid #fb923c; }
-  .mood-risk-off   { background:#450a0a; border-left:4px solid #ef4444; }
-  .mood-text { color:#e2e8f0; font-size:15px; font-weight:bold; margin:0; }
-  .mood-sub  { color:#94a3b8; font-size:11px; margin:4px 0 0; }
-  .mood-row  { display:flex; align-items:flex-start; gap:10px; background:#1e293b;
-               border-radius:6px; padding:10px 14px; margin-top:8px; }
-  .mood-dot  { font-size:18px; line-height:1.4; flex-shrink:0; }
-  .mood-label { color:#e2e8f0; font-size:12px; font-weight:bold; margin:0 0 3px; }
-  .mood-exp   { color:#94a3b8; font-size:11px; margin:0; line-height:1.5; }
-  .chart-img { display:block; margin:8px auto; max-width:100%; }
-  .macro-group { display:flex; align-items:flex-start; gap:8px; padding:6px 0;
-                 border-bottom:1px solid #0f172a; }
-  .macro-group:last-child { border-bottom:none; }
-  .macro-sig  { font-size:14px; flex-shrink:0; width:20px; }
-  .macro-dir  { color:#64748b; font-size:12px; flex-shrink:0; width:18px; text-align:center; }
-  .macro-name { color:#94a3b8; font-size:11px; font-weight:bold; flex-shrink:0; width:100px; }
-  .macro-text { color:#64748b; font-size:11px; flex:1; line-height:1.4; }
-  .bigpic-block { background:#1e293b; border-radius:6px; padding:10px 14px; margin-top:10px; }
-  .bigpic-title { color:#7c3aed; font-size:12px; font-weight:bold; letter-spacing:1px;
-                  text-transform:uppercase; margin:0 0 8px; }
-  .bigpic-row { display:flex; gap:10px; padding:4px 0; border-bottom:1px solid #0f172a; }
-  .bigpic-row:last-child { border-bottom:none; }
-  .bigpic-label { color:#94a3b8; font-size:11px; font-weight:bold; flex-shrink:0; width:40px; }
-  .bigpic-note  { color:#cbd5e1; font-size:11px; flex:1; line-height:1.4; }
-  table.wl { width:100%; border-collapse:collapse; font-size:12px; }
-  table.wl th { color:#64748b; text-align:left; padding:4px 6px;
-                border-bottom:1px solid #1e293b; font-weight:normal; }
-  table.wl td { color:#e2e8f0; padding:5px 6px; border-bottom:1px solid #0f172a; }
-  .bar   { display:inline-block; height:8px; border-radius:2px; vertical-align:middle; }
-  .bar-g { background:#22c55e; }
-  .bar-e { background:#1e293b; }
-  .badge  { display:inline-block; border-radius:3px; padding:1px 5px; font-size:12px; font-weight:bold; }
-  .b-vhigh { background:#14532d; color:#4ade80; }
-  .b-high  { background:#0c4a6e; color:#38bdf8; }
-  .b-mod   { background:#164e63; color:#67e8f9; }
-  .b-low   { background:#431407; color:#fb923c; }
-  .b-vlow  { background:#450a0a; color:#f87171; }
-  .act-buy   { background:#14532d; color:#4ade80; }
-  .act-hold  { background:#0c4a6e; color:#38bdf8; }
-  .act-watch { background:#1e293b; color:#94a3b8; }
-  .act-avoid { background:#450a0a; color:#f87171; }
-  .sector-block { background:#1e293b; border-radius:6px; padding:10px 14px; margin-top:8px; }
-  .sector-row { display:flex; gap:10px; padding:4px 0; border-bottom:1px solid #0f172a; }
-  .sector-row:last-child { border-bottom:none; }
-  .sector-key { color:#7c3aed; font-size:12px; font-weight:bold; flex-shrink:0; width:56px; text-transform:uppercase; letter-spacing:.5px; }
-  .sector-val { color:#cbd5e1; font-size:11px; flex:1; line-height:1.4; }
-  .spotlight-card { background:#1e293b; border-radius:6px; padding:12px 14px;
-                    margin-bottom:8px; border-left:3px solid #7c3aed; }
-  .spotlight-sym   { color:#e2e8f0; font-size:13px; font-weight:bold; margin:0 0 2px; }
-  .spotlight-co    { color:#64748b; font-size:12px; display:inline; font-weight:normal; margin-left:6px; }
-  .spotlight-why   { color:#cbd5e1; font-size:11px; margin:6px 0 4px; line-height:1.5; }
-  .spotlight-watch { color:#f59e0b; font-size:12px; margin:0; }
-  .wl-row { display:flex; align-items:flex-start; gap:8px; padding:7px 0;
-            border-bottom:1px solid #0f172a; }
-  .wl-row:last-child { border-bottom:none; }
-  .wl-sym  { color:#e2e8f0; font-size:12px; font-weight:bold; flex-shrink:0; width:52px; }
-  .wl-act  { flex-shrink:0; }
-  .wl-mood { font-size:13px; flex-shrink:0; line-height:1.4; }
-  .wl-analysis { color:#94a3b8; font-size:11px; flex:1; line-height:1.5; }
-  ul.bullets  { margin:8px 0 0; padding-left:18px; color:#cbd5e1; font-size:12px; line-height:1.7; }
-  .checkpoint { background:#1e293b; border-radius:4px; padding:10px 14px; margin-top:6px;
-                color:#e2e8f0; font-size:12px; line-height:1.8; }
-  .footer { padding:14px 24px; text-align:center; color:#475569; font-size:11px; }
-  .footer a { color:#7c3aed; text-decoration:none; }
+<!--
+  Email-safe design: table layout + inline-friendly CSS.
+  Palette: charcoal slate + warm gold accents (not pure white, not neon purple).
+-->
+<style type="text/css">
+  body { margin:0; padding:0; background:#0c0f14; font-family:Georgia,'Times New Roman',serif; -webkit-text-size-adjust:100%; }
+  table { border-collapse:collapse; }
+  img { border:0; display:block; max-width:100%; height:auto; }
+  a { color:#c9a227; text-decoration:none; }
+  .outer { width:100%; background:#0c0f14; padding:24px 12px; }
+  .shell { width:100%; max-width:640px; margin:0 auto; background:#141a22; border:1px solid #2a3340; border-radius:12px; overflow:hidden; }
+  .hd { background:linear-gradient(135deg,#1a222d 0%,#121820 60%,#1c1810 100%); padding:28px 28px 22px; border-bottom:1px solid #2a3340; }
+  .brand { font-family:Arial,Helvetica,sans-serif; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#c9a227; margin:0 0 8px; font-weight:700; }
+  .hd-title { font-family:Arial,Helvetica,sans-serif; color:#f3f0e8; font-size:22px; font-weight:700; margin:0; letter-spacing:-0.02em; line-height:1.25; }
+  .hd-sub { font-family:Arial,Helvetica,sans-serif; color:#8b95a5; font-size:12px; margin:8px 0 0; }
+  .accent-bar { height:3px; background:linear-gradient(90deg,#8a7020,#e8d48b 40%,#c9a227 70%,#5c4a18); }
+  .sec { padding:22px 28px; border-bottom:1px solid #1e2630; }
+  .sec-label { font-family:Arial,Helvetica,sans-serif; font-size:10px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:#c9a227; margin:0 0 14px; }
+  .text-primary { color:#ebe6dc; font-size:14px; line-height:1.65; margin:0; }
+  .text-muted { color:#9aa3b2; font-size:13px; line-height:1.65; margin:0; }
+  .text-soft { color:#7a8494; font-size:12px; line-height:1.55; margin:0; }
+  .headline { font-family:Arial,Helvetica,sans-serif; color:#f7f3ea; font-size:17px; font-weight:700; margin:0 0 12px; line-height:1.45; }
+  .card { background:#1a212b; border:1px solid #2a3340; border-radius:10px; padding:14px 16px; margin:0 0 10px; }
+  .card-gold { border-left:3px solid #c9a227; }
+  .card-teal { border-left:3px solid #3d9b8f; }
+  .card-rose { border-left:3px solid #c47a6a; }
+  .mood-banner { border-radius:10px; padding:14px 16px; margin:0 0 12px; }
+  .mood-risk-on, .mood-constructive { background:#13241c; border:1px solid #2a5a42; }
+  .mood-mixed { background:#2a2214; border:1px solid #6b5420; }
+  .mood-defensive, .mood-risk-off { background:#2a1616; border:1px solid #6b3030; }
+  .mood-text { font-family:Arial,Helvetica,sans-serif; color:#f3f0e8; font-size:16px; font-weight:700; margin:0; }
+  .mood-sub { font-family:Arial,Helvetica,sans-serif; color:#9aa3b2; font-size:12px; margin:6px 0 0; }
+  .pill { display:inline-block; font-family:Arial,Helvetica,sans-serif; font-size:11px; font-weight:700; border-radius:4px; padding:3px 8px; }
+  .b-vhigh { background:#1a3a2a; color:#7dcea0; }
+  .b-high  { background:#1a3040; color:#7eb8d4; }
+  .b-mod   { background:#2a2a20; color:#c9b87a; }
+  .b-low   { background:#3a2820; color:#d4a06a; }
+  .b-vlow  { background:#3a2020; color:#d48a8a; }
+  .act-buy   { background:#1a3a2a; color:#7dcea0; }
+  .act-hold  { background:#1a3040; color:#7eb8d4; }
+  .act-watch { background:#2a2a30; color:#9aa3b2; }
+  .act-avoid { background:#3a2020; color:#d48a8a; }
+  .ref-pill { background:#2a2618; color:#c9a227; border:1px solid #5c4a18; }
+  ul.bullets { margin:8px 0 0; padding:0 0 0 18px; color:#d5d0c6; font-size:13.5px; line-height:1.75; }
+  ul.bullets li { margin:0 0 8px; }
+  .row { width:100%; }
+  .kv-label { font-family:Arial,Helvetica,sans-serif; color:#c9a227; font-size:11px; font-weight:700; width:56px; vertical-align:top; padding:6px 8px 6px 0; }
+  .kv-val { color:#d5d0c6; font-size:13px; line-height:1.6; vertical-align:top; padding:6px 0; }
+  table.wl { width:100%; font-family:Arial,Helvetica,sans-serif; font-size:12px; }
+  table.wl th { color:#7a8494; text-align:left; padding:8px 6px; border-bottom:1px solid #2a3340; font-weight:600; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; }
+  table.wl td { color:#e8e4da; padding:9px 6px; border-bottom:1px solid #1e2630; vertical-align:middle; }
+  .bar-g { display:inline-block; height:7px; background:#3d9b8f; border-radius:2px; vertical-align:middle; }
+  .bar-e { display:inline-block; height:7px; background:#2a3340; border-radius:2px; vertical-align:middle; }
+  .sym { font-family:Arial,Helvetica,sans-serif; font-weight:700; color:#f3f0e8; }
+  .prob-row td { padding:5px 0; font-family:Arial,Helvetica,sans-serif; font-size:12px; color:#c8c2b6; }
+  .prob-bar-bg { background:#2a3340; border-radius:3px; height:8px; width:100%; }
+  .prob-bar-fill { height:8px; border-radius:3px; background:#c9a227; }
+  .footer { padding:20px 28px 28px; text-align:center; }
+  .footer p { font-family:Arial,Helvetica,sans-serif; color:#5c6573; font-size:11px; margin:0 0 8px; line-height:1.6; }
+  .footer a { color:#c9a227; }
+  .chart-wrap { text-align:center; margin:12px 0; }
+  .issue-title { font-family:Arial,Helvetica,sans-serif; color:#f3f0e8; font-size:13.5px; font-weight:700; margin:0 0 6px; line-height:1.4; }
+  .issue-meta { font-family:Arial,Helvetica,sans-serif; font-size:10px; color:#8b95a5; margin:0 0 8px; letter-spacing:0.04em; text-transform:uppercase; }
+  .divider { height:1px; background:#2a3340; margin:14px 0; }
+  .wl-block { margin:0 0 14px; padding:0 0 14px; border-bottom:1px solid #1e2630; }
+  .wl-block:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .analysis { color:#c8c2b6; font-size:13px; line-height:1.7; margin:8px 0 0; word-wrap:break-word; overflow-wrap:anywhere; white-space:normal; }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="outer">
+<table class="shell" role="presentation" cellpadding="0" cellspacing="0" width="100%">
+  <tr><td>
 
-<!-- ① Header -->
-<div class="hd">
-  <p class="hd-title">📊 SniperBoard Morning Brief</p>
-  <p class="hd-sub">{{ date_str }} &nbsp;·&nbsp; Generated {{ generated_kst }}</p>
-</div>
-
-<!-- ② 시장 분위기 -->
-<div class="section">
-  <p class="section-title">시장 분위기 · Risk Regime</p>
-  <div class="mood-banner mood-{{ regime_class }}">
-    <p class="mood-text">{{ regime_label_display }}</p>
-    <p class="mood-sub">Regime Score: {{ regime_score }}/100</p>
+  <!-- Header -->
+  <div class="hd">
+    <p class="brand">SniperBoard · Daily Intelligence</p>
+    <p class="hd-title">Morning Brief</p>
+    <p class="hd-sub">{{ date_str }} &nbsp;·&nbsp; Generated {{ generated_kst }}</p>
   </div>
-  {% if gauge_b64 %}<img class="chart-img" src="data:image/png;base64,{{ gauge_b64 }}" alt="Regime Gauge" width="300">{% endif %}
-  {% if mood_label or mood_explanation %}
-  <div class="mood-row">
-    <span class="mood-dot">{{ mood_dot }}</span>
-    <div>
-      {% if mood_label %}<p class="mood-label">{{ mood_label }}</p>{% endif %}
-      {% if mood_explanation %}<p class="mood-exp">{{ mood_explanation }}</p>{% endif %}
+  <div class="accent-bar"></div>
+
+  <!-- 1. Regime + Mood -->
+  <div class="sec">
+    <p class="sec-label">Market Regime</p>
+    <div class="mood-banner mood-{{ regime_class }}">
+      <p class="mood-text">{{ regime_label_display }}</p>
+      <p class="mood-sub">Composite score {{ regime_score }}/100
+        {% if market_sentiment is not none %}
+        &nbsp;·&nbsp; Social composite {{ market_sentiment_display }}
+        {% endif %}
+      </p>
+    </div>
+    {% if gauge_b64 %}
+    <div class="chart-wrap">
+      <img src="data:image/png;base64,{{ gauge_b64 }}" alt="Regime Gauge" width="300">
+    </div>
+    {% endif %}
+    {% if mood_label or mood_explanation %}
+    <div class="card card-gold">
+      <p class="text-primary" style="font-family:Arial,Helvetica,sans-serif;font-weight:700;margin:0 0 6px;">
+        {% if mood_dot %}{{ mood_dot }} {% endif %}{{ mood_label }}
+      </p>
+      {% if mood_explanation %}
+      <p class="analysis">{{ mood_explanation }}</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- 2. AI Headline + full bullets -->
+  {% if briefing_available %}
+  <div class="sec">
+    <p class="sec-label">AI Market Brief</p>
+    {% if headline %}
+    <p class="headline">{{ headline }}</p>
+    {% endif %}
+    {% if executive_bullets %}
+    <ul class="bullets">
+      {% for b in executive_bullets %}<li>{{ b }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- 3. Prediction market (reference) -->
+  {% if prediction and prediction.next_fomc %}
+  <div class="sec">
+    <p class="sec-label">Market-Implied Fed Odds · Reference</p>
+    <p style="margin:0 0 10px;">
+      <span class="pill ref-pill">REFERENCE ONLY</span>
+      <span class="text-soft" style="margin-left:8px;font-family:Arial,Helvetica,sans-serif;">
+        {{ prediction.source | upper }} · not Fed guidance · not used in Conviction
+      </span>
+    </p>
+    <div class="card card-gold">
+      <p class="text-primary" style="font-family:Arial,Helvetica,sans-serif;margin:0 0 4px;">
+        <strong>{{ prediction.next_fomc.event_title or prediction.next_fomc.event_ticker }}</strong>
+        {% if prediction.next_fomc.meeting_date %}
+        <span class="text-soft"> · {{ prediction.next_fomc.meeting_date }}</span>
+        {% endif %}
+      </p>
+      {% if prediction.next_fomc.dominant_outcome %}
+      <p class="text-muted" style="margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;">
+        Dominant: <strong style="color:#e8d48b;">{{ prediction_outcome_labels.get(prediction.next_fomc.dominant_outcome, prediction.next_fomc.dominant_outcome) }}</strong>
+        {% if prediction.next_fomc.dominant_probability is not none %}
+        {{ "%.1f"|format(prediction.next_fomc.dominant_probability * 100) }}%
+        {% endif %}
+        {% if prediction.next_fomc.volume_usd %}
+        &nbsp;·&nbsp; Vol ${{ "%.1f"|format(prediction.next_fomc.volume_usd / 1000000) }}M
+        {% endif %}
+      </p>
+      {% endif %}
+      <table class="row" width="100%" cellpadding="0" cellspacing="0">
+        {% for key, prob in prediction_probs %}
+        <tr class="prob-row">
+          <td width="100" style="color:#9aa3b2;">{{ prediction_outcome_labels.get(key, key) }}</td>
+          <td style="padding:5px 8px;">
+            <div class="prob-bar-bg">
+              <div class="prob-bar-fill" style="width:{{ (prob * 100)|int }}%;"></div>
+            </div>
+          </td>
+          <td width="52" align="right" style="color:#e8d48b;font-weight:700;">{{ "%.1f"|format(prob * 100) }}%</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% if prediction.disclaimer_ko or prediction.disclaimer_en %}
+      <p class="text-soft" style="margin:12px 0 0;font-family:Arial,Helvetica,sans-serif;">
+        {{ prediction.disclaimer_ko or prediction.disclaimer_en }}
+      </p>
+      {% endif %}
     </div>
   </div>
   {% endif %}
-</div>
 
-<!-- ③ 매크로 심층 분석 -->
-<div class="section">
-  <p class="section-title">매크로 심층 분석 · Macro Deep Dive</p>
-  {% if macro_bar_b64 %}<img class="chart-img" src="data:image/png;base64,{{ macro_bar_b64 }}" alt="Macro Signals" width="460">{% endif %}
-  {% if macro_groups_detail %}
-  <div style="margin-top:10px;">
-    {% for g in macro_groups_detail %}
-    <div class="macro-group">
-      <span class="macro-sig">{{ g.signal_icon }}</span>
-      <span class="macro-dir">{{ g.direction }}</span>
-      <span class="macro-name">{{ g.name }}</span>
-      <span class="macro-text">{{ g.text }}</span>
+  <!-- 4. Macro deep dive — full text -->
+  <div class="sec">
+    <p class="sec-label">Macro Deep Dive</p>
+    {% if macro_bar_b64 %}
+    <div class="chart-wrap">
+      <img src="data:image/png;base64,{{ macro_bar_b64 }}" alt="Macro Signals" width="520">
+    </div>
+    {% endif %}
+    {% if macro_summary %}
+    <p class="analysis" style="margin:0 0 12px;">{{ macro_summary }}</p>
+    {% endif %}
+    {% if macro_groups_detail %}
+      {% for g in macro_groups_detail %}
+      <div class="card" style="margin-bottom:8px;">
+        <p class="text-primary" style="font-family:Arial,Helvetica,sans-serif;margin:0 0 6px;font-size:13px;">
+          {{ g.signal_icon }} <strong>{{ g.name }}</strong>
+          {% if g.direction %}<span class="text-soft"> · {{ g.direction }}</span>{% endif %}
+        </p>
+        {% if g.text %}<p class="analysis">{{ g.text }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    {% endif %}
+    {% if macro_bullets %}
+    <ul class="bullets">
+      {% for b in macro_bullets %}<li>{{ b }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+    {% if big_picture_items %}
+    <div class="card card-teal" style="margin-top:12px;">
+      <p class="sec-label" style="margin-bottom:8px;">Big Picture</p>
+      {% if big_picture_summary %}
+      <p class="analysis" style="margin:0 0 10px;">{{ big_picture_summary }}</p>
+      {% endif %}
+      <table class="row" width="100%" cellpadding="0" cellspacing="0">
+        {% for item in big_picture_items %}
+        <tr>
+          <td class="kv-label">{{ item.label }}</td>
+          <td class="kv-val">{{ item.note }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- 5. Global context — full issue text -->
+  {% if global_issues %}
+  <div class="sec">
+    <p class="sec-label">Global Macro · Geopolitics</p>
+    {% if market_paradox %}
+    <div class="card card-rose" style="margin-bottom:12px;">
+      <p class="text-primary" style="font-family:Arial,Helvetica,sans-serif;font-weight:700;margin:0 0 6px;font-size:12px;color:#d4a06a;">Market Paradox</p>
+      <p class="analysis">{{ market_paradox }}</p>
+    </div>
+    {% endif %}
+    {% for issue in global_issues %}
+    <div class="card" style="margin-bottom:10px;">
+      <p class="issue-meta">
+        #{{ issue.rank }} · {{ issue.tier }} · {{ issue.category }}
+        {% if issue.direction %} · {{ issue.direction }}{% endif %}
+        {% if issue.impact_direction %} · impact: {{ issue.impact_direction }}{% endif %}
+      </p>
+      <p class="issue-title">{{ issue.title }}</p>
+      {% if issue.current_state %}
+      <p class="analysis" style="font-style:italic;margin:0 0 8px;">{{ issue.current_state }}</p>
+      {% endif %}
+      {% if issue.summary %}
+      <p class="analysis">{{ issue.summary }}</p>
+      {% endif %}
+      {% if issue.asymmetric_impact %}
+      <p class="analysis" style="margin-top:8px;"><strong style="color:#c9a227;">Asymmetric impact:</strong> {{ issue.asymmetric_impact }}</p>
+      {% endif %}
+      {% if issue.market_insight %}
+      <p class="analysis" style="margin-top:6px;"><strong style="color:#3d9b8f;">Investor action:</strong> {{ issue.market_insight }}</p>
+      {% endif %}
+      {% if issue.source_hint %}
+      <p class="text-soft" style="margin-top:8px;font-family:Arial,Helvetica,sans-serif;">Source: {{ issue.source_hint }}</p>
+      {% endif %}
     </div>
     {% endfor %}
+    {% if ongoing_no_update %}
+    <p class="text-soft" style="font-family:Arial,Helvetica,sans-serif;">No major update (48h): {{ ongoing_no_update | join(', ') }}</p>
+    {% endif %}
   </div>
   {% endif %}
-  {% if big_picture_items %}
-  <div class="bigpic-block">
-    <p class="bigpic-title">Big Picture</p>
-    {% for item in big_picture_items %}
-    <div class="bigpic-row">
-      <span class="bigpic-label">{{ item.label }}</span>
-      <span class="bigpic-note">{{ item.note }}</span>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-  {% if macro_summary %}
-  <p style="color:#94a3b8; font-size:11px; margin:10px 0 4px; line-height:1.6;">{{ macro_summary }}</p>
-  {% endif %}
-  {% if macro_bullets %}
-  <ul class="bullets">
-    {% for b in macro_bullets %}<li>{{ b }}</li>{% endfor %}
-  </ul>
-  {% endif %}
-</div>
 
-<!-- ④ AI 브리핑 — 시장 전체 -->
-{% if briefing_available %}
-<div class="section">
-  <p class="section-title">AI 브리핑 · Market Overview</p>
-  {% if headline %}
-  <p style="color:#e2e8f0; font-size:14px; font-weight:bold; margin:0 0 8px; line-height:1.4;">{{ headline }}</p>
-  {% endif %}
-  {% if executive_bullets %}
-  <ul class="bullets">
-    {% for b in executive_bullets %}<li>{{ b }}</li>{% endfor %}
-  </ul>
-  {% endif %}
+  <!-- 6. Sectors -->
   {% if sector_leaders or sector_laggards or sector_rotation %}
-  <div class="sector-block">
-    {% if sector_leaders %}
-    <div class="sector-row">
-      <span class="sector-key">강세</span>
-      <span class="sector-val">{{ sector_leaders }}</span>
-    </div>
-    {% endif %}
-    {% if sector_laggards %}
-    <div class="sector-row">
-      <span class="sector-key">약세</span>
-      <span class="sector-val">{{ sector_laggards }}</span>
-    </div>
-    {% endif %}
-    {% if sector_rotation %}
-    <div class="sector-row">
-      <span class="sector-key">로테이션</span>
-      <span class="sector-val">{{ sector_rotation }}</span>
-    </div>
-    {% endif %}
+  <div class="sec">
+    <p class="sec-label">Sector Flow</p>
+    <table class="row" width="100%" cellpadding="0" cellspacing="0">
+      {% if sector_leaders %}
+      <tr>
+        <td class="kv-label">Leaders</td>
+        <td class="kv-val">{{ sector_leaders }}</td>
+      </tr>
+      {% endif %}
+      {% if sector_laggards %}
+      <tr>
+        <td class="kv-label">Laggards</td>
+        <td class="kv-val">{{ sector_laggards }}</td>
+      </tr>
+      {% endif %}
+      {% if sector_rotation %}
+      <tr>
+        <td class="kv-label">Rotation</td>
+        <td class="kv-val">{{ sector_rotation }}</td>
+      </tr>
+      {% endif %}
+    </table>
   </div>
   {% endif %}
-</div>
 
-{% if today_checkpoints %}
-<div class="section">
-  <p class="section-title">오늘 체크포인트</p>
-  <div class="checkpoint">
-    {% for cp in today_checkpoints %}{{ cp }}{% if not loop.last %}<br>{% endif %}{% endfor %}
+  <!-- 7. Checkpoints + earnings — full text -->
+  {% if today_checkpoints %}
+  <div class="sec">
+    <p class="sec-label">Today's Checkpoints</p>
+    <div class="card card-gold">
+      {% for cp in today_checkpoints %}
+      <p class="analysis" style="margin:0 0 {% if not loop.last %}10px{% else %}0{% endif %};">• {{ cp }}</p>
+      {% endfor %}
+    </div>
   </div>
-</div>
-{% endif %}
+  {% endif %}
 
-{% if earnings_alert %}
-<div class="section">
-  <p class="section-title">실적 알림 · Earnings Alert</p>
-  <p style="color:#fbbf24; font-size:12px; margin:0; line-height:1.5;">{{ earnings_alert }}</p>
-</div>
-{% endif %}
-{% endif %}
+  {% if earnings_alert %}
+  <div class="sec">
+    <p class="sec-label">Earnings Alert</p>
+    <div class="card card-rose">
+      <p class="analysis">{{ earnings_alert }}</p>
+    </div>
+  </div>
+  {% endif %}
 
-<!-- ⑤ 감시종목 현황 -->
-<div class="section">
-  <p class="section-title">감시종목 현황 · Watchlist (Stage2 순)</p>
-  <table class="wl">
-    <tr>
-      <th>종목</th><th>가격</th><th>Stage2</th><th>RS</th><th>Conviction</th>
-    </tr>
-    {% for item in watchlist %}
-    <tr>
-      <td style="font-weight:bold">{{ item.symbol }}</td>
-      <td>${{ "%.2f"|format(item.price) }}</td>
-      <td>
-        <span class="bar bar-g" style="width:{{ (item.stage2_score / 7 * 42)|int }}px"></span>
-        <span class="bar bar-e" style="width:{{ ((7 - item.stage2_score) / 7 * 42)|int }}px"></span>
-        &nbsp;{{ item.stage2_score }}/7
-      </td>
-      <td>{{ item.rs_score if item.rs_score is not none else "—" }}</td>
-      <td><span class="badge {{ item.conviction_class }}">{{ item.conviction_label or "—" }}</span></td>
-    </tr>
+  {% if upcoming_earnings %}
+  <div class="sec">
+    <p class="sec-label">Upcoming Earnings (Watchlist)</p>
+    {% for e in upcoming_earnings %}
+    <div class="card" style="margin-bottom:8px;">
+      <p class="text-primary" style="font-family:Arial,Helvetica,sans-serif;margin:0 0 6px;">
+        <span class="sym">{{ e.symbol }}</span>
+        <span class="text-soft"> · {{ e.earnings_date }} · D-{{ e.days_until }} · {{ e.relevance_tier }}</span>
+      </p>
+      <p class="text-muted" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;margin:0 0 6px;">
+        {% if e.eps_estimate is not none %}EPS est {{ e.eps_estimate }}{% endif %}
+        {% if e.revenue_estimate_b is not none %} · Rev ${{ e.revenue_estimate_b }}B{% endif %}
+        {% if e.risk_level %} · risk {{ e.risk_level }}{% endif %}
+      </p>
+      {% if e.ai_summary %}<p class="analysis">{{ e.ai_summary }}</p>{% endif %}
+      {% if e.action_note %}<p class="analysis" style="margin-top:6px;color:#d4a06a;"><strong>Action:</strong> {{ e.action_note }}</p>{% endif %}
+    </div>
     {% endfor %}
-  </table>
-  {% if sparklines_b64 %}<img class="chart-img" src="data:image/png;base64,{{ sparklines_b64 }}" alt="Sparklines" width="560">{% endif %}
-</div>
+  </div>
+  {% endif %}
 
-<!-- ⑥ 스포트라이트 & 종목별 분석 -->
-{% if spotlight_items or morning_watchlist %}
-<div class="section">
+  <!-- 8. Watchlist Stage2 table -->
+  <div class="sec">
+    <p class="sec-label">Watchlist · Stage2 Ranked</p>
+    <table class="wl" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <th>Symbol</th>
+        <th>Price</th>
+        <th>Stage2</th>
+        <th>RS</th>
+        <th>Conv</th>
+      </tr>
+      {% for item in watchlist %}
+      <tr>
+        <td class="sym">{{ item.symbol }}</td>
+        <td>${{ "%.2f"|format(item.price) }}</td>
+        <td>
+          <span class="bar-g" style="width:{{ (item.stage2_score / 7 * 48)|int }}px"></span><span class="bar-e" style="width:{{ ((7 - item.stage2_score) / 7 * 48)|int }}px"></span>
+          &nbsp;{{ item.stage2_score }}/7
+        </td>
+        <td>{{ item.rs_score if item.rs_score is not none else "—" }}</td>
+        <td>
+          {% if item.conviction_score is not none %}
+          <span class="pill {{ item.conviction_class }}">{{ item.conviction_score }} · {{ item.conviction_label or "—" }}</span>
+          {% else %}
+          <span class="pill {{ item.conviction_class }}">{{ item.conviction_label or "—" }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% if sparklines_b64 %}
+    <div class="chart-wrap">
+      <img src="data:image/png;base64,{{ sparklines_b64 }}" alt="Watchlist Sparklines" width="560">
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- 9. Spotlight — full why + watch -->
   {% if spotlight_items %}
-  <p class="section-title">스포트라이트 · Today's Focus</p>
-  {% for s in spotlight_items %}
-  <div class="spotlight-card">
-    <p class="spotlight-sym">{{ s.symbol }}<span class="spotlight-co">{{ s.company }}</span></p>
-    {% if s.why %}<p class="spotlight-why">{{ s.why }}</p>{% endif %}
-    {% if s.watch_level %}<p class="spotlight-watch">⚡ {{ s.watch_level }}</p>{% endif %}
-  </div>
-  {% endfor %}
-  {% endif %}
-  {% if morning_watchlist %}
-  <p class="section-title" {% if spotlight_items %}style="margin-top:16px;"{% endif %}>종목별 분석 · Per-Symbol Analysis</p>
-  <div>
-    {% for w in morning_watchlist %}
-    <div class="wl-row">
-      <span class="wl-sym">{{ w.symbol }}</span>
-      <span class="wl-act"><span class="badge {{ w.action_class }}">{{ w.action }}</span></span>
-      <span class="wl-mood">{{ w.sentiment_icon }}</span>
-      <span class="wl-analysis">{{ w.analysis }}</span>
+  <div class="sec">
+    <p class="sec-label">Spotlight · Focus Names</p>
+    {% for s in spotlight_items %}
+    <div class="card card-gold" style="margin-bottom:10px;">
+      <p class="text-primary" style="font-family:Arial,Helvetica,sans-serif;margin:0 0 8px;">
+        <span class="sym" style="font-size:15px;">{{ s.symbol }}</span>
+        {% if s.company %}<span class="text-soft"> · {{ s.company }}</span>{% endif %}
+        {% if s.tier %}<span class="text-soft"> · T{{ s.tier }}</span>{% endif %}
+      </p>
+      {% if s.why %}<p class="analysis">{{ s.why }}</p>{% endif %}
+      {% if s.watch_level %}
+      <p class="analysis" style="margin-top:8px;color:#e8d48b;"><strong>Watch:</strong> {{ s.watch_level }}</p>
+      {% endif %}
     </div>
     {% endfor %}
   </div>
   {% endif %}
-</div>
-{% endif %}
 
-<!-- Footer -->
-<div class="footer">
-  <a href="{{ dashboard_url }}">대시보드 바로가기 →</a>
-  &nbsp;·&nbsp; SniperBoard Signal Dashboard
-</div>
+  <!-- 10. Per-symbol AI analysis — FULL text, no truncation -->
+  {% if morning_watchlist %}
+  <div class="sec">
+    <p class="sec-label">Per-Symbol Analysis · Full Notes</p>
+    {% for w in morning_watchlist %}
+    <div class="wl-block">
+      <table class="row" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="64" class="sym" style="font-size:14px;vertical-align:top;padding-top:2px;">{{ w.symbol }}</td>
+          <td style="vertical-align:top;">
+            <span class="pill {{ w.action_class }}">{{ w.action | upper }}</span>
+            <span style="margin-left:6px;">{{ w.sentiment_icon }}</span>
+            {% if w.company %}<span class="text-soft" style="margin-left:8px;font-family:Arial,Helvetica,sans-serif;font-size:11px;">{{ w.company }}</span>{% endif %}
+            {% if w.tier %}<span class="text-soft" style="margin-left:6px;font-family:Arial,Helvetica,sans-serif;font-size:11px;">T{{ w.tier }}</span>{% endif %}
+          </td>
+        </tr>
+      </table>
+      {% if w.analysis %}
+      <p class="analysis">{{ w.analysis }}</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 
+  <!-- Footer -->
+  <div class="footer">
+    <p><a href="{{ dashboard_url }}">Open SniperBoard Dashboard →</a></p>
+    <p>Automated morning intelligence · Livermore · O'Neil · Minervini signal stack<br>
+       Prediction-market odds are reference-only and never feed Conviction scores.</p>
+  </div>
+
+  </td></tr>
+</table>
 </div>
 </body>
 </html>

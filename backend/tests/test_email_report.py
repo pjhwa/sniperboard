@@ -24,6 +24,9 @@ def test_collect_email_data_returns_required_keys():
 
     with patch("services.email_report_service.fetch_morning_briefing", return_value=fake_briefing), \
          patch("services.email_report_service.fetch_macro_insight", return_value=fake_macro), \
+         patch("services.email_report_service.fetch_prediction", return_value={"available": False}), \
+         patch("services.email_report_service.fetch_earnings", return_value={"available": False}), \
+         patch("services.email_report_service.fetch_latest", return_value={"available": False}), \
          patch("services.email_report_service.get_multi_daily", return_value={}), \
          patch("services.email_report_service.compute_regime", return_value=fake_regime):
 
@@ -34,6 +37,8 @@ def test_collect_email_data_returns_required_keys():
     assert "watchlist" in result
     assert "sparkline_data" in result
     assert "macro" in result
+    assert "prediction" in result
+    assert "earnings" in result
     assert "generated_at" in result
     assert result["regime"]["total"] == 72.0
 
@@ -44,6 +49,9 @@ def test_collect_email_data_handles_briefing_unavailable():
     with patch("services.email_report_service.fetch_morning_briefing",
                return_value={"available": False}), \
          patch("services.email_report_service.fetch_macro_insight", return_value=None), \
+         patch("services.email_report_service.fetch_prediction", return_value={"available": False}), \
+         patch("services.email_report_service.fetch_earnings", return_value={"available": False}), \
+         patch("services.email_report_service.fetch_latest", return_value={"available": False}), \
          patch("services.email_report_service.get_multi_daily", return_value={}), \
          patch("services.email_report_service.compute_regime",
                return_value={"total": 50.0, "regime": "MIXED"}):
@@ -97,11 +105,32 @@ def test_render_html_returns_html_string_with_images():
                     {
                         "symbol": "NVDA",
                         "company": "NVIDIA Corp",
+                        "tier": 1,
                         "action": "buy",
                         "sentiment_mood": "optimistic",
-                        "analysis_ko": "Stage2 완성, 피벗 근처 매집 국면",
+                        # intentionally long — must NOT be truncated at 90 chars
+                        "analysis_ko": (
+                            "Stage2 완성, 피벗 근처 매집 국면. "
+                            "기관 매수 유입과 거래량 수축이 동시에 관찰되며, "
+                            "실적 직전 IV 확대를 감안해 분할 진입을 권고합니다. "
+                            "추가 문장으로 메일 잘림 방지를 검증합니다."
+                        ),
                     }
                 ],
+                "global_context": {
+                    "market_paradox_ko": "지정학 리스크와 위험 선호가 공존",
+                    "issues": [
+                        {
+                            "rank": 1,
+                            "tier": "ongoing",
+                            "category": "geopolitical",
+                            "title_ko": "중동 긴장 지속",
+                            "summary_ko": "유가 변동성 확대 가능. 에너지·방어 섹터 주시.",
+                            "market_insight_ko": "베타 축소 및 헤지 검토",
+                            "source_hint": "test",
+                        }
+                    ],
+                },
                 "today_checkpoints_ko": ["NVDA 피벗 확인", "SPY EMA200 유지 여부"],
                 "earnings_alert_ko": "이번 주 실적 없음",
             },
@@ -119,14 +148,34 @@ def test_render_html_returns_html_string_with_images():
             }
         ],
         "macro": {
-            "overall": {"judgment": "RISK_ON"},
+            "overall": {
+                "judgment": "RISK_ON",
+                "summary_ko": "전반적으로 위험 선호 국면",
+                "bullets_ko": ["VIX 낮음", "신용 스프레드 안정"],
+            },
             "groups": {
                 "volatility": {"signal": "GREEN", "direction": "↘", "text_ko": "VIX 낮아 안정적"},
                 "breadth": {"signal": "GREEN", "direction": "↗", "text_ko": "시장 폭 양호"},
             },
-            "summary_ko": "전반적으로 위험 선호 국면",
-            "bullets_ko": ["VIX 낮음", "신용 스프레드 안정"],
         },
+        "prediction": {
+            "available": True,
+            "data": {
+                "source": "polymarket",
+                "usage": "reference_only",
+                "disclaimer_ko": "참고용 예측시장",
+                "next_fomc": {
+                    "event_title": "Fed Decision in July?",
+                    "meeting_date": "2026-07-29",
+                    "dominant_outcome": "no_change",
+                    "dominant_probability": 0.625,
+                    "volume_usd": 50_000_000,
+                    "probabilities": {"no_change": 0.625, "hike_25bps": 0.35},
+                },
+            },
+        },
+        "earnings": {"available": False},
+        "market_sentiment": 0.3,
         "generated_at": "2026-06-05T07:30:00+00:00",
     }
 
@@ -152,9 +201,18 @@ def test_render_html_returns_html_string_with_images():
     assert "성장주로 자금 이동" in html, "sector rotation missing"
     assert "AI 수요 급증" in html, "spotlight why missing"
     assert "Stage2 완성" in html, "morning watchlist analysis missing"
-    assert "buy" in html, "action badge missing"
+    assert "buy" in html.lower() or "BUY" in html, "action badge missing"
     assert "NVDA 피벗 확인" in html, "today_checkpoints missing"
     assert "테스트 헤드라인" in html, "headline_ko missing"
+
+    # Full analysis — must not truncate mid-sentence
+    assert "추가 문장으로 메일 잘림 방지를 검증합니다" in html, "analysis was truncated"
+    assert "중동 긴장 지속" in html, "global issue missing"
+    assert "REFERENCE ONLY" in html, "prediction reference badge missing"
+    assert "동결" in html or "no_change" in html, "prediction odds missing"
+    # Design: refined palette (not pure white body)
+    assert "#0c0f14" in html or "#141a22" in html
+    assert "#ffffff" not in html.lower().replace("#ffffff00", "")
 
 
 # ── send_report_email ──────────────────────────────────────────────────────

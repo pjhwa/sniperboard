@@ -30,6 +30,8 @@ from core.conviction_calculator import calculate_conviction
 from services.morning_briefing_service import fetch_morning_briefing
 from services.macro_insight_service import fetch_macro_insight
 from services.sentiment_service import fetch_latest
+from services.prediction_service import fetch_prediction
+from services.earnings_service import fetch_earnings
 from services.charts import render_regime_gauge, render_watchlist_sparklines, render_macro_bar
 
 logger = logging.getLogger(__name__)
@@ -79,6 +81,14 @@ _MACRO_GROUP_KO = {
     "rates": "금리 (IEF)",
     "commodities": "원자재",
     "sectors": "섹터 로테이션",
+}
+
+_PREDICTION_OUTCOME_KO = {
+    "no_change": "동결",
+    "cut_25bps": "25bp 인하",
+    "cut_50bps": "50bp+ 인하",
+    "hike_25bps": "25bp 인상",
+    "hike_50bps": "50bp+ 인상",
 }
 
 
@@ -176,19 +186,37 @@ def collect_email_data() -> dict:
         logger.warning(f"Macro insight fetch failed: {e}")
         macro = None
 
+    try:
+        prediction = fetch_prediction()
+    except Exception as e:
+        logger.warning(f"Prediction fetch failed: {e}")
+        prediction = {"available": False}
+
+    try:
+        earnings = fetch_earnings()
+    except Exception as e:
+        logger.warning(f"Earnings fetch failed: {e}")
+        earnings = {"available": False}
+
     return {
         "briefing": briefing,
         "regime": regime or {"total": 50.0, "regime": "UNKNOWN"},
         "watchlist": watchlist_items,
         "sparkline_data": sparkline_data,
         "macro": macro,
+        "prediction": prediction,
+        "earnings": earnings,
+        "market_sentiment": market_sentiment,
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
 
 
 def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
                 macro_bar_png: bytes | None) -> str:
-    """Render Jinja2 template to HTML string with base64-embedded PNG images."""
+    """Render Jinja2 template to HTML string with base64-embedded PNG images.
+
+    Full briefing text is preserved (no analysis truncation).
+    """
     now_kst = datetime.now(_KST)
     date_str = now_kst.strftime("%Y-%m-%d (%a)")
     generated_kst = now_kst.strftime("%H:%M KST")
@@ -203,7 +231,7 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
     briefing_available = briefing_data.get("available", False)
     bdata = briefing_data.get("data", {}) if briefing_available else {}
 
-    # ── existing fields (ko/en priority) ────────────────────────────────────
+    # ── briefing fields (ko preferred, full lists — no caps) ───────────────
     headline = bdata.get("headline_ko") or bdata.get("headline_en") or bdata.get("headline", "")
     executive_bullets = (bdata.get("executive_bullets_ko")
                          or bdata.get("executive_bullets_en")
@@ -215,36 +243,47 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
                       or bdata.get("earnings_alert_en")
                       or bdata.get("earnings_alert", ""))
 
-    # ── ② Morning Mood ──────────────────────────────────────────────────────
+    # ── Morning Mood ───────────────────────────────────────────────────────
     mood_raw = bdata.get("market_mood") or {}
     mood_light = mood_raw.get("traffic_light", "yellow")
     mood_dot = _MOOD_DOT.get(mood_light, "🟡")
     mood_label = mood_raw.get("label_ko") or mood_raw.get("label_en", "")
     mood_explanation = mood_raw.get("explanation_ko") or mood_raw.get("explanation_en", "")
 
-    # ── ③ Macro ─────────────────────────────────────────────────────────────
+    # ── Macro (full bullets, full group text) ──────────────────────────────
     macro = data.get("macro") or {}
-    macro_summary = (macro.get("summary_ko") or macro.get("summary")
-                     or macro.get("summary_en", ""))
-    macro_bullets_raw = (macro.get("bullets_ko") or macro.get("bullets")
-                         or macro.get("bullets_en") or [])
-    macro_bullets = [b for b in macro_bullets_raw if b][:5]
+    if not isinstance(macro, dict):
+        macro = {}
+    # macro_insight_service may nest under overall
+    overall = macro.get("overall") if isinstance(macro.get("overall"), dict) else {}
+    macro_summary = (
+        overall.get("summary_ko") or overall.get("summary_en") or overall.get("summary")
+        or macro.get("summary_ko") or macro.get("summary") or macro.get("summary_en") or ""
+    )
+    macro_bullets_raw = (
+        overall.get("bullets_ko") or overall.get("bullets_en") or overall.get("bullets")
+        or macro.get("bullets_ko") or macro.get("bullets") or macro.get("bullets_en") or []
+    )
+    macro_bullets = [b for b in macro_bullets_raw if b]  # full list
     macro_bar_b64 = base64.b64encode(macro_bar_png).decode() if macro_bar_png else ""
 
     macro_groups_detail = []
-    for key, val in (macro.get("groups") or {}).items():
-        if not isinstance(val, dict):
-            continue
-        text = val.get("text_ko") or val.get("text_en") or val.get("text", "")
-        macro_groups_detail.append({
-            "name": _MACRO_GROUP_KO.get(key, key),
-            "signal_icon": _SIGNAL_ICON.get(val.get("signal", "YELLOW"), "🟡"),
-            "direction": val.get("direction", ""),
-            "text": text,
-        })
+    groups = macro.get("groups") or {}
+    if isinstance(groups, dict):
+        for key, val in groups.items():
+            if not isinstance(val, dict):
+                continue
+            text = val.get("text_ko") or val.get("text_en") or val.get("text", "")
+            macro_groups_detail.append({
+                "name": _MACRO_GROUP_KO.get(key, key),
+                "signal_icon": _SIGNAL_ICON.get(str(val.get("signal", "YELLOW")).upper(), "🟡"),
+                "direction": val.get("direction", ""),
+                "text": text,
+            })
 
-    # ── ③ Big Picture ───────────────────────────────────────────────────────
+    # ── Big Picture ────────────────────────────────────────────────────────
     bp = bdata.get("big_picture") or {}
+    big_picture_summary = bp.get("summary_ko") or bp.get("summary_en") or ""
     big_picture_items = []
     for label, key in [("VIX", "vix_note"), ("금리", "rates_note"),
                         ("달러", "dollar_note"), ("BTC", "btc_note")]:
@@ -252,13 +291,35 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
         if note:
             big_picture_items.append({"label": label, "note": note})
 
-    # ── ④ Sector Analysis ───────────────────────────────────────────────────
+    # ── Sector Analysis ────────────────────────────────────────────────────
     sa = bdata.get("sector_analysis") or {}
     sector_leaders = sa.get("leaders_ko") or sa.get("leaders_en", "")
     sector_laggards = sa.get("laggards_ko") or sa.get("laggards_en", "")
     sector_rotation = sa.get("rotation_signal_ko") or sa.get("rotation_signal_en", "")
 
-    # ── ⑥ Spotlight ─────────────────────────────────────────────────────────
+    # ── Global context (full issue bodies) ─────────────────────────────────
+    gc = bdata.get("global_context") or {}
+    market_paradox = gc.get("market_paradox_ko") or gc.get("market_paradox_en") or ""
+    ongoing_no_update = gc.get("ongoing_no_update") or []
+    global_issues = []
+    for issue in (gc.get("issues") or []):
+        if not isinstance(issue, dict):
+            continue
+        global_issues.append({
+            "rank": issue.get("rank", ""),
+            "tier": issue.get("tier", ""),
+            "category": issue.get("category", ""),
+            "direction": issue.get("direction", ""),
+            "impact_direction": issue.get("impact_direction", ""),
+            "title": issue.get("title_ko") or issue.get("title_en", ""),
+            "current_state": issue.get("current_state_ko") or issue.get("current_state_en", ""),
+            "summary": issue.get("summary_ko") or issue.get("summary_en", ""),
+            "asymmetric_impact": issue.get("asymmetric_impact_ko") or issue.get("asymmetric_impact_en", ""),
+            "market_insight": issue.get("market_insight_ko") or issue.get("market_insight_en", ""),
+            "source_hint": issue.get("source_hint", ""),
+        })
+
+    # ── Spotlight (full why / watch_level) ──────────────────────────────────
     spotlight_items = []
     for s in (bdata.get("spotlight") or []):
         if not isinstance(s, dict):
@@ -266,24 +327,65 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
         spotlight_items.append({
             "symbol": s.get("symbol", ""),
             "company": s.get("company", ""),
+            "tier": s.get("tier"),
             "why": s.get("why_ko") or s.get("why_en", ""),
             "watch_level": s.get("watch_level_ko") or s.get("watch_level_en", ""),
         })
 
-    # ── ⑥ Morning Watchlist (AI per-symbol analysis) ────────────────────────
+    # ── Morning Watchlist — FULL analysis (no truncation) ──────────────────
     morning_watchlist = []
     for w in (bdata.get("watchlist") or []):
         if not isinstance(w, dict):
             continue
         action = w.get("action", "watch")
-        analysis = w.get("analysis_ko") or w.get("analysis_en", "")
+        analysis = w.get("analysis_ko") or w.get("analysis_en") or ""
         morning_watchlist.append({
             "symbol": w.get("symbol", ""),
+            "company": w.get("company", ""),
+            "tier": w.get("tier"),
             "action": action,
             "action_class": _ACTION_CLASS.get(action, "act-watch"),
             "sentiment_icon": _SENTIMENT_ICON.get(w.get("sentiment_mood", ""), "😐"),
-            "analysis": analysis[:90] + "…" if len(analysis) > 90 else analysis,
+            "analysis": analysis,  # complete text
         })
+
+    # ── Prediction (reference-only) ────────────────────────────────────────
+    pred_wrap = data.get("prediction") or {}
+    prediction = None
+    prediction_probs: list[tuple[str, float]] = []
+    if pred_wrap.get("available") and isinstance(pred_wrap.get("data"), dict):
+        prediction = pred_wrap["data"]
+        nf = prediction.get("next_fomc") or {}
+        probs = nf.get("probabilities") or {}
+        if isinstance(probs, dict):
+            prediction_probs = sorted(
+                ((str(k), float(v)) for k, v in probs.items() if v is not None),
+                key=lambda x: -x[1],
+            )
+
+    # ── Earnings intelligence (upcoming, full AI text) ─────────────────────
+    earn_wrap = data.get("earnings") or {}
+    upcoming_earnings = []
+    if earn_wrap.get("available") and isinstance(earn_wrap.get("data"), dict):
+        for e in (earn_wrap["data"].get("upcoming_earnings") or []):
+            if not isinstance(e, dict):
+                continue
+            upcoming_earnings.append({
+                "symbol": e.get("symbol", ""),
+                "earnings_date": e.get("earnings_date", ""),
+                "days_until": e.get("days_until"),
+                "relevance_tier": e.get("relevance_tier", ""),
+                "eps_estimate": e.get("eps_estimate"),
+                "revenue_estimate_b": e.get("revenue_estimate_b"),
+                "risk_level": e.get("risk_level"),
+                "ai_summary": e.get("ai_summary_ko") or e.get("ai_summary_en") or "",
+                "action_note": e.get("action_note_ko") or e.get("action_note_en") or "",
+            })
+
+    market_sentiment = data.get("market_sentiment")
+    market_sentiment_display = (
+        f"{market_sentiment:+.1f}" if isinstance(market_sentiment, (int, float)) else None
+    )
 
     tmpl = _jinja_env.get_template("email_report.html.j2")
     return tmpl.render(
@@ -292,17 +394,20 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
         regime_class=regime_class,
         regime_label_display=regime_label_display,
         regime_score=regime_score,
-        gauge_b64=base64.b64encode(gauge_png).decode(),
-        watchlist=data["watchlist"],
-        sparklines_b64=base64.b64encode(sparklines_png).decode(),
+        market_sentiment=market_sentiment,
+        market_sentiment_display=market_sentiment_display,
+        gauge_b64=base64.b64encode(gauge_png).decode() if gauge_png else "",
+        watchlist=data.get("watchlist") or [],
+        sparklines_b64=base64.b64encode(sparklines_png).decode() if sparklines_png else "",
         macro_summary=macro_summary,
         macro_bullets=macro_bullets,
         macro_bar_b64=macro_bar_b64,
         macro_groups_detail=macro_groups_detail,
         big_picture_items=big_picture_items,
+        big_picture_summary=big_picture_summary,
         briefing_available=briefing_available,
         headline=headline,
-        executive_bullets=executive_bullets[:5],
+        executive_bullets=executive_bullets,
         today_checkpoints=today_checkpoints,
         earnings_alert=earnings_alert,
         mood_dot=mood_dot,
@@ -313,6 +418,13 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
         sector_rotation=sector_rotation,
         spotlight_items=spotlight_items,
         morning_watchlist=morning_watchlist,
+        global_issues=global_issues,
+        market_paradox=market_paradox,
+        ongoing_no_update=ongoing_no_update if isinstance(ongoing_no_update, list) else [],
+        prediction=prediction,
+        prediction_probs=prediction_probs,
+        prediction_outcome_labels=_PREDICTION_OUTCOME_KO,
+        upcoming_earnings=upcoming_earnings,
         dashboard_url=DASHBOARD_URL,
     )
 
