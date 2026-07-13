@@ -210,9 +210,9 @@ def test_render_html_returns_html_string_with_images():
     assert "중동 긴장 지속" in html, "global issue missing"
     assert "REFERENCE ONLY" in html, "prediction reference badge missing"
     assert "동결" in html or "no_change" in html, "prediction odds missing"
-    # Design: refined palette (not pure white body)
-    assert "#0c0f14" in html or "#141a22" in html
-    assert "#ffffff" not in html.lower().replace("#ffffff00", "")
+    # Design: refined light editorial palette (not dark mode)
+    assert "#e6e2db" in html or "#f7f5f1" in html
+    assert "#0c0f14" not in html and "#141a22" not in html
 
 
 # ── send_report_email ──────────────────────────────────────────────────────

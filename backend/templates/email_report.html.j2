@@ -6,71 +6,72 @@
 <title>SniperBoard Morning Brief — {{ date_str }}</title>
 <!--
   Email-safe design: table layout + inline-friendly CSS.
-  Palette: charcoal slate + warm gold accents (not pure white, not neon purple).
+  Palette: refined light editorial — warm parchment, stone borders, bronze gold.
+  (Not pure-white sterile light mode; not dark mode.)
 -->
 <style type="text/css">
-  body { margin:0; padding:0; background:#0c0f14; font-family:Georgia,'Times New Roman',serif; -webkit-text-size-adjust:100%; }
+  body { margin:0; padding:0; background:#e6e2db; font-family:Georgia,'Times New Roman',serif; -webkit-text-size-adjust:100%; }
   table { border-collapse:collapse; }
   img { border:0; display:block; max-width:100%; height:auto; }
-  a { color:#c9a227; text-decoration:none; }
-  .outer { width:100%; background:#0c0f14; padding:24px 12px; }
-  .shell { width:100%; max-width:640px; margin:0 auto; background:#141a22; border:1px solid #2a3340; border-radius:12px; overflow:hidden; }
-  .hd { background:linear-gradient(135deg,#1a222d 0%,#121820 60%,#1c1810 100%); padding:28px 28px 22px; border-bottom:1px solid #2a3340; }
-  .brand { font-family:Arial,Helvetica,sans-serif; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#c9a227; margin:0 0 8px; font-weight:700; }
-  .hd-title { font-family:Arial,Helvetica,sans-serif; color:#f3f0e8; font-size:22px; font-weight:700; margin:0; letter-spacing:-0.02em; line-height:1.25; }
-  .hd-sub { font-family:Arial,Helvetica,sans-serif; color:#8b95a5; font-size:12px; margin:8px 0 0; }
-  .accent-bar { height:3px; background:linear-gradient(90deg,#8a7020,#e8d48b 40%,#c9a227 70%,#5c4a18); }
-  .sec { padding:22px 28px; border-bottom:1px solid #1e2630; }
-  .sec-label { font-family:Arial,Helvetica,sans-serif; font-size:10px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:#c9a227; margin:0 0 14px; }
-  .text-primary { color:#ebe6dc; font-size:14px; line-height:1.65; margin:0; }
-  .text-muted { color:#9aa3b2; font-size:13px; line-height:1.65; margin:0; }
-  .text-soft { color:#7a8494; font-size:12px; line-height:1.55; margin:0; }
-  .headline { font-family:Arial,Helvetica,sans-serif; color:#f7f3ea; font-size:17px; font-weight:700; margin:0 0 12px; line-height:1.45; }
-  .card { background:#1a212b; border:1px solid #2a3340; border-radius:10px; padding:14px 16px; margin:0 0 10px; }
-  .card-gold { border-left:3px solid #c9a227; }
-  .card-teal { border-left:3px solid #3d9b8f; }
-  .card-rose { border-left:3px solid #c47a6a; }
+  a { color:#8b6914; text-decoration:none; }
+  .outer { width:100%; background:#e6e2db; padding:28px 12px; }
+  .shell { width:100%; max-width:640px; margin:0 auto; background:#f7f5f1; border:1px solid #d4cfc4; border-radius:14px; overflow:hidden; box-shadow:0 8px 28px rgba(40,36,28,0.08); }
+  .hd { background:linear-gradient(160deg,#faf8f4 0%,#f0ebe3 55%,#ebe4d6 100%); padding:28px 28px 22px; border-bottom:1px solid #ddd6c8; }
+  .brand { font-family:Arial,Helvetica,sans-serif; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#9a7b2f; margin:0 0 8px; font-weight:700; }
+  .hd-title { font-family:Arial,Helvetica,sans-serif; color:#1c1917; font-size:22px; font-weight:700; margin:0; letter-spacing:-0.02em; line-height:1.25; }
+  .hd-sub { font-family:Arial,Helvetica,sans-serif; color:#6b6560; font-size:12px; margin:8px 0 0; }
+  .accent-bar { height:3px; background:linear-gradient(90deg,#c4a35a,#e8d5a3 35%,#9a7b2f 70%,#d4c4a0); }
+  .sec { padding:22px 28px; border-bottom:1px solid #e4dfd5; background:#f7f5f1; }
+  .sec-label { font-family:Arial,Helvetica,sans-serif; font-size:10px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:#9a7b2f; margin:0 0 14px; }
+  .text-primary { color:#1c1917; font-size:14px; line-height:1.65; margin:0; }
+  .text-muted { color:#4a453f; font-size:13px; line-height:1.65; margin:0; }
+  .text-soft { color:#7a736c; font-size:12px; line-height:1.55; margin:0; }
+  .headline { font-family:Arial,Helvetica,sans-serif; color:#1c1917; font-size:17px; font-weight:700; margin:0 0 12px; line-height:1.45; }
+  .card { background:#ffffff; border:1px solid #e0dbd1; border-radius:10px; padding:14px 16px; margin:0 0 10px; }
+  .card-gold { border-left:3px solid #9a7b2f; }
+  .card-teal { border-left:3px solid #2f7a70; }
+  .card-rose { border-left:3px solid #b56b5c; }
   .mood-banner { border-radius:10px; padding:14px 16px; margin:0 0 12px; }
-  .mood-risk-on, .mood-constructive { background:#13241c; border:1px solid #2a5a42; }
-  .mood-mixed { background:#2a2214; border:1px solid #6b5420; }
-  .mood-defensive, .mood-risk-off { background:#2a1616; border:1px solid #6b3030; }
-  .mood-text { font-family:Arial,Helvetica,sans-serif; color:#f3f0e8; font-size:16px; font-weight:700; margin:0; }
-  .mood-sub { font-family:Arial,Helvetica,sans-serif; color:#9aa3b2; font-size:12px; margin:6px 0 0; }
+  .mood-risk-on, .mood-constructive { background:#eef6f1; border:1px solid #b7d4c4; }
+  .mood-mixed { background:#faf4e8; border:1px solid #e0cfa0; }
+  .mood-defensive, .mood-risk-off { background:#faf0ee; border:1px solid #e0b8b0; }
+  .mood-text { font-family:Arial,Helvetica,sans-serif; color:#1c1917; font-size:16px; font-weight:700; margin:0; }
+  .mood-sub { font-family:Arial,Helvetica,sans-serif; color:#6b6560; font-size:12px; margin:6px 0 0; }
   .pill { display:inline-block; font-family:Arial,Helvetica,sans-serif; font-size:11px; font-weight:700; border-radius:4px; padding:3px 8px; }
-  .b-vhigh { background:#1a3a2a; color:#7dcea0; }
-  .b-high  { background:#1a3040; color:#7eb8d4; }
-  .b-mod   { background:#2a2a20; color:#c9b87a; }
-  .b-low   { background:#3a2820; color:#d4a06a; }
-  .b-vlow  { background:#3a2020; color:#d48a8a; }
-  .act-buy   { background:#1a3a2a; color:#7dcea0; }
-  .act-hold  { background:#1a3040; color:#7eb8d4; }
-  .act-watch { background:#2a2a30; color:#9aa3b2; }
-  .act-avoid { background:#3a2020; color:#d48a8a; }
-  .ref-pill { background:#2a2618; color:#c9a227; border:1px solid #5c4a18; }
-  ul.bullets { margin:8px 0 0; padding:0 0 0 18px; color:#d5d0c6; font-size:13.5px; line-height:1.75; }
+  .b-vhigh { background:#e5f3eb; color:#1f6b45; }
+  .b-high  { background:#e5f0f7; color:#1e5f8a; }
+  .b-mod   { background:#f5f0e0; color:#7a6320; }
+  .b-low   { background:#f7ebe3; color:#9a5520; }
+  .b-vlow  { background:#f7e8e6; color:#9a3530; }
+  .act-buy   { background:#e5f3eb; color:#1f6b45; }
+  .act-hold  { background:#e5f0f7; color:#1e5f8a; }
+  .act-watch { background:#eeece8; color:#5c574f; }
+  .act-avoid { background:#f7e8e6; color:#9a3530; }
+  .ref-pill { background:#f5efe0; color:#7a6320; border:1px solid #d4c4a0; }
+  ul.bullets { margin:8px 0 0; padding:0 0 0 18px; color:#2c2824; font-size:13.5px; line-height:1.75; }
   ul.bullets li { margin:0 0 8px; }
   .row { width:100%; }
-  .kv-label { font-family:Arial,Helvetica,sans-serif; color:#c9a227; font-size:11px; font-weight:700; width:56px; vertical-align:top; padding:6px 8px 6px 0; }
-  .kv-val { color:#d5d0c6; font-size:13px; line-height:1.6; vertical-align:top; padding:6px 0; }
-  table.wl { width:100%; font-family:Arial,Helvetica,sans-serif; font-size:12px; }
-  table.wl th { color:#7a8494; text-align:left; padding:8px 6px; border-bottom:1px solid #2a3340; font-weight:600; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; }
-  table.wl td { color:#e8e4da; padding:9px 6px; border-bottom:1px solid #1e2630; vertical-align:middle; }
-  .bar-g { display:inline-block; height:7px; background:#3d9b8f; border-radius:2px; vertical-align:middle; }
-  .bar-e { display:inline-block; height:7px; background:#2a3340; border-radius:2px; vertical-align:middle; }
-  .sym { font-family:Arial,Helvetica,sans-serif; font-weight:700; color:#f3f0e8; }
-  .prob-row td { padding:5px 0; font-family:Arial,Helvetica,sans-serif; font-size:12px; color:#c8c2b6; }
-  .prob-bar-bg { background:#2a3340; border-radius:3px; height:8px; width:100%; }
-  .prob-bar-fill { height:8px; border-radius:3px; background:#c9a227; }
-  .footer { padding:20px 28px 28px; text-align:center; }
-  .footer p { font-family:Arial,Helvetica,sans-serif; color:#5c6573; font-size:11px; margin:0 0 8px; line-height:1.6; }
-  .footer a { color:#c9a227; }
-  .chart-wrap { text-align:center; margin:12px 0; }
-  .issue-title { font-family:Arial,Helvetica,sans-serif; color:#f3f0e8; font-size:13.5px; font-weight:700; margin:0 0 6px; line-height:1.4; }
-  .issue-meta { font-family:Arial,Helvetica,sans-serif; font-size:10px; color:#8b95a5; margin:0 0 8px; letter-spacing:0.04em; text-transform:uppercase; }
-  .divider { height:1px; background:#2a3340; margin:14px 0; }
-  .wl-block { margin:0 0 14px; padding:0 0 14px; border-bottom:1px solid #1e2630; }
+  .kv-label { font-family:Arial,Helvetica,sans-serif; color:#9a7b2f; font-size:11px; font-weight:700; width:64px; vertical-align:top; padding:6px 8px 6px 0; }
+  .kv-val { color:#2c2824; font-size:13px; line-height:1.65; vertical-align:top; padding:6px 0; }
+  table.wl { width:100%; font-family:Arial,Helvetica,sans-serif; font-size:12px; background:#ffffff; border:1px solid #e0dbd1; border-radius:8px; }
+  table.wl th { color:#7a736c; text-align:left; padding:10px 8px; border-bottom:1px solid #e0dbd1; font-weight:600; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; background:#f0ebe3; }
+  table.wl td { color:#1c1917; padding:10px 8px; border-bottom:1px solid #eeeae3; vertical-align:middle; }
+  .bar-g { display:inline-block; height:7px; background:#2f7a70; border-radius:2px; vertical-align:middle; }
+  .bar-e { display:inline-block; height:7px; background:#e0dbd1; border-radius:2px; vertical-align:middle; }
+  .sym { font-family:Arial,Helvetica,sans-serif; font-weight:700; color:#1c1917; }
+  .prob-row td { padding:6px 0; font-family:Arial,Helvetica,sans-serif; font-size:12px; color:#4a453f; }
+  .prob-bar-bg { background:#e8e2d6; border-radius:3px; height:8px; width:100%; }
+  .prob-bar-fill { height:8px; border-radius:3px; background:#9a7b2f; }
+  .footer { padding:22px 28px 28px; text-align:center; background:#f0ebe3; border-top:1px solid #ddd6c8; }
+  .footer p { font-family:Arial,Helvetica,sans-serif; color:#7a736c; font-size:11px; margin:0 0 8px; line-height:1.6; }
+  .footer a { color:#8b6914; font-weight:600; }
+  .chart-wrap { text-align:center; margin:12px 0; padding:12px; background:#ffffff; border:1px solid #e0dbd1; border-radius:10px; }
+  .issue-title { font-family:Arial,Helvetica,sans-serif; color:#1c1917; font-size:13.5px; font-weight:700; margin:0 0 6px; line-height:1.4; }
+  .issue-meta { font-family:Arial,Helvetica,sans-serif; font-size:10px; color:#7a736c; margin:0 0 8px; letter-spacing:0.04em; text-transform:uppercase; }
+  .divider { height:1px; background:#e0dbd1; margin:14px 0; }
+  .wl-block { margin:0 0 14px; padding:0 0 14px; border-bottom:1px solid #e4dfd5; }
   .wl-block:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
-  .analysis { color:#c8c2b6; font-size:13px; line-height:1.7; margin:8px 0 0; word-wrap:break-word; overflow-wrap:anywhere; white-space:normal; }
+  .analysis { color:#3d3833; font-size:13px; line-height:1.75; margin:8px 0 0; word-wrap:break-word; overflow-wrap:anywhere; white-space:normal; }
 </style>
 </head>
 <body>
@@ -148,7 +149,7 @@
       </p>
       {% if prediction.next_fomc.dominant_outcome %}
       <p class="text-muted" style="margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;">
-        Dominant: <strong style="color:#e8d48b;">{{ prediction_outcome_labels.get(prediction.next_fomc.dominant_outcome, prediction.next_fomc.dominant_outcome) }}</strong>
+        Dominant: <strong style="color:#8b6914;">{{ prediction_outcome_labels.get(prediction.next_fomc.dominant_outcome, prediction.next_fomc.dominant_outcome) }}</strong>
         {% if prediction.next_fomc.dominant_probability is not none %}
         {{ "%.1f"|format(prediction.next_fomc.dominant_probability * 100) }}%
         {% endif %}
@@ -160,13 +161,13 @@
       <table class="row" width="100%" cellpadding="0" cellspacing="0">
         {% for key, prob in prediction_probs %}
         <tr class="prob-row">
-          <td width="100" style="color:#9aa3b2;">{{ prediction_outcome_labels.get(key, key) }}</td>
+          <td width="100" style="color:#6b6560;">{{ prediction_outcome_labels.get(key, key) }}</td>
           <td style="padding:5px 8px;">
             <div class="prob-bar-bg">
               <div class="prob-bar-fill" style="width:{{ (prob * 100)|int }}%;"></div>
             </div>
           </td>
-          <td width="52" align="right" style="color:#e8d48b;font-weight:700;">{{ "%.1f"|format(prob * 100) }}%</td>
+          <td width="52" align="right" style="color:#8b6914;font-weight:700;">{{ "%.1f"|format(prob * 100) }}%</td>
         </tr>
         {% endfor %}
       </table>
@@ -230,7 +231,7 @@
     <p class="sec-label">Global Macro · Geopolitics</p>
     {% if market_paradox %}
     <div class="card card-rose" style="margin-bottom:12px;">
-      <p class="text-primary" style="font-family:Arial,Helvetica,sans-serif;font-weight:700;margin:0 0 6px;font-size:12px;color:#d4a06a;">Market Paradox</p>
+      <p class="text-primary" style="font-family:Arial,Helvetica,sans-serif;font-weight:700;margin:0 0 6px;font-size:12px;color:#9a5520;">Market Paradox</p>
       <p class="analysis">{{ market_paradox }}</p>
     </div>
     {% endif %}
@@ -249,10 +250,10 @@
       <p class="analysis">{{ issue.summary }}</p>
       {% endif %}
       {% if issue.asymmetric_impact %}
-      <p class="analysis" style="margin-top:8px;"><strong style="color:#c9a227;">Asymmetric impact:</strong> {{ issue.asymmetric_impact }}</p>
+      <p class="analysis" style="margin-top:8px;"><strong style="color:#8b6914;">Asymmetric impact:</strong> {{ issue.asymmetric_impact }}</p>
       {% endif %}
       {% if issue.market_insight %}
-      <p class="analysis" style="margin-top:6px;"><strong style="color:#3d9b8f;">Investor action:</strong> {{ issue.market_insight }}</p>
+      <p class="analysis" style="margin-top:6px;"><strong style="color:#2f7a70;">Investor action:</strong> {{ issue.market_insight }}</p>
       {% endif %}
       {% if issue.source_hint %}
       <p class="text-soft" style="margin-top:8px;font-family:Arial,Helvetica,sans-serif;">Source: {{ issue.source_hint }}</p>
@@ -328,7 +329,7 @@
         {% if e.risk_level %} · risk {{ e.risk_level }}{% endif %}
       </p>
       {% if e.ai_summary %}<p class="analysis">{{ e.ai_summary }}</p>{% endif %}
-      {% if e.action_note %}<p class="analysis" style="margin-top:6px;color:#d4a06a;"><strong>Action:</strong> {{ e.action_note }}</p>{% endif %}
+      {% if e.action_note %}<p class="analysis" style="margin-top:6px;color:#9a5520;"><strong>Action:</strong> {{ e.action_note }}</p>{% endif %}
     </div>
     {% endfor %}
   </div>
@@ -384,7 +385,7 @@
       </p>
       {% if s.why %}<p class="analysis">{{ s.why }}</p>{% endif %}
       {% if s.watch_level %}
-      <p class="analysis" style="margin-top:8px;color:#e8d48b;"><strong>Watch:</strong> {{ s.watch_level }}</p>
+      <p class="analysis" style="margin-top:8px;color:#8b6914;"><strong>Watch:</strong> {{ s.watch_level }}</p>
       {% endif %}
     </div>
     {% endfor %}
