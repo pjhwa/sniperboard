@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SniperBoard × market-sentiment-data — Full Dual-Repo Audit (2026-07-13)</title>
+<style>
+  :root {
+    --bg: #0b0f14;
+    --bg2: #121821;
+    --card: #151c27;
+    --card2: #1a2332;
+    --border: #273244;
+    --fg: #e8eef7;
+    --muted: #9aabbf;
+    --subtle: #6b7c90;
+    --em: #34d399;
+    --em-soft: rgba(52,211,153,.12);
+    --bull: #34d399;
+    --bear: #f87171;
+    --warn: #fbbf24;
+    --info: #60a5fa;
+    --purple: #a78bfa;
+    --sky: #38bdf8;
+    --p0: #f87171;
+    --p1: #fbbf24;
+    --p2: #60a5fa;
+    --p3: #94a3b8;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --r: 12px;
+    --shadow: 0 8px 30px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    background: radial-gradient(1200px 600px at 10% -10%, #1a2a22 0%, transparent 50%),
+                radial-gradient(900px 500px at 100% 0%, #1a2035 0%, transparent 45%),
+                var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  a { color: var(--sky); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 80px; }
+  header.hero {
+    background: linear-gradient(135deg, rgba(52,211,153,.12), rgba(96,165,250,.08));
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 32px 28px;
+    box-shadow: var(--shadow);
+    margin-bottom: 28px;
+  }
+  header.hero h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+  header.hero .sub { color: var(--muted); margin: 0 0 18px; max-width: 900px; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    font-size: 12px; color: var(--muted);
+  }
+  .pill strong { color: var(--fg); font-weight: 600; }
+  .pill.ok { border-color: rgba(52,211,153,.4); color: var(--em); }
+  .pill.bad { border-color: rgba(248,113,113,.45); color: var(--bear); }
+  .pill.warn { border-color: rgba(251,191,36,.4); color: var(--warn); }
+
+  nav.toc {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(11,15,20,.88);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 28px;
+  }
+  nav.toc summary {
+    cursor: pointer; font-weight: 700; color: var(--fg);
+    list-style: none;
+  }
+  nav.toc summary::-webkit-details-marker { display: none; }
+  nav.toc .links {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 6px 14px;
+    margin-top: 10px;
+  }
+  nav.toc a { font-size: 13px; color: var(--muted); }
+  nav.toc a:hover { color: var(--em); }
+
+  section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 22px;
+    margin-bottom: 22px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.2);
+  }
+  section h2 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 10px;
+  }
+  section h2 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--em-soft); color: var(--em);
+    font-size: 13px; font-weight: 800;
+  }
+  section .lead { color: var(--muted); margin: 0 0 18px; }
+  h3 { margin: 22px 0 10px; font-size: 16px; color: var(--fg); }
+  h4 { margin: 16px 0 8px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  p { margin: 0 0 12px; color: var(--fg); }
+  ul, ol { margin: 0 0 12px; padding-left: 20px; color: var(--fg); }
+  li { margin: 4px 0; }
+  code, .mono { font-family: var(--mono); font-size: 12.5px; }
+  code {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 5px;
+  }
+  pre {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.5;
+    color: #d1e0f0;
+    margin: 0 0 14px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 0 0 14px;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 9px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--bg2);
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  tr:nth-child(even) td { background: rgba(255,255,255,.015); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 900px) {
+    .grid2, .grid3, .grid4 { grid-template-columns: 1fr; }
+  }
+  .kpi {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .kpi .label { font-size: 11px; color: var(--subtle); text-transform: uppercase; letter-spacing: .06em; }
+  .kpi .value { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-top: 4px; }
+  .kpi .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .03em;
+  }
+  .badge.p0 { background: rgba(248,113,113,.15); color: var(--p0); border: 1px solid rgba(248,113,113,.35); }
+  .badge.p1 { background: rgba(251,191,36,.12); color: var(--p1); border: 1px solid rgba(251,191,36,.35); }
+  .badge.p2 { background: rgba(96,165,250,.12); color: var(--p2); border: 1px solid rgba(96,165,250,.35); }
+  .badge.pass { background: var(--em-soft); color: var(--em); border: 1px solid rgba(52,211,153,.35); }
+  .badge.fail { background: rgba(248,113,113,.15); color: var(--bear); border: 1px solid rgba(248,113,113,.35); }
+  .badge.mixed { background: rgba(251,191,36,.12); color: var(--warn); border: 1px solid rgba(251,191,36,.35); }
+  .callout {
+    border-left: 3px solid var(--em);
+    background: var(--em-soft);
+    padding: 12px 14px;
+    border-radius: 0 10px 10px 0;
+    margin: 0 0 14px;
+  }
+  .callout.danger { border-left-color: var(--bear); background: rgba(248,113,113,.1); }
+  .callout.warn { border-left-color: var(--warn); background: rgba(251,191,36,.1); }
+  .callout.info { border-left-color: var(--info); background: rgba(96,165,250,.1); }
+  .callout strong { display: block; margin-bottom: 4px; }
+  .arch {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 8px;
+    align-items: stretch;
+    margin: 12px 0 16px;
+  }
+  @media (max-width: 800px) {
+    .arch { grid-template-columns: 1fr; }
+    .arch .arrow { transform: rotate(90deg); text-align: center; }
+  }
+  .arch .box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .arch .box h4 { margin: 0 0 8px; color: var(--em); text-transform: none; letter-spacing: 0; font-size: 14px; }
+  .arch .box ul { margin: 0; padding-left: 16px; font-size: 12.5px; color: var(--muted); }
+  .arch .arrow { display: flex; align-items: center; color: var(--em); font-weight: 800; font-size: 20px; }
+  .improve {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    background: var(--bg2);
+  }
+  .improve .hd {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--card2);
+  }
+  .improve .hd h4 { margin: 0; flex: 1; min-width: 200px; text-transform: none; letter-spacing: 0; font-size: 14px; color: var(--fg); }
+  .improve .bd { padding: 14px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 900px) { .improve .bd { grid-template-columns: 1fr; } }
+  .improve .col h5 {
+    margin: 0 0 6px; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--subtle);
+  }
+  .improve .col p, .improve .col ul { font-size: 13px; margin: 0; color: var(--muted); }
+  .improve .col code { font-size: 11.5px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; font-size: 12.5px; }
+  .bar-row .name { width: 140px; color: var(--muted); flex-shrink: 0; }
+  .bar {
+    flex: 1; height: 10px; background: var(--bg); border-radius: 999px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .bar > i { display: block; height: 100%; border-radius: 999px; }
+  .bar > i.g { background: linear-gradient(90deg, #059669, #34d399); }
+  .bar > i.y { background: linear-gradient(90deg, #d97706, #fbbf24); }
+  .bar > i.r { background: linear-gradient(90deg, #b91c1c, #f87171); }
+  .bar-row .score { width: 48px; text-align: right; font-weight: 700; font-family: var(--mono); }
+  .diagram {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    white-space: pre;
+    overflow-x: auto;
+    background: #080b10;
+    color: #b7c9dc;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 16px;
+    line-height: 1.45;
+  }
+  .two-col-list { columns: 2; column-gap: 24px; }
+  @media (max-width: 700px) { .two-col-list { columns: 1; } }
+  footer {
+    text-align: center; color: var(--subtle); font-size: 12px; margin-top: 24px;
+  }
+  .evidence {
+    font-size: 12px; color: var(--subtle);
+    font-family: var(--mono);
+  }
+  .check-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+  }
+  .check-item {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    background: var(--bg2);
+  }
+  .check-item .t { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+  .check-item .d { font-size: 12.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>SniperBoard × market-sentiment-data<br/>이중 리포지토리 완전 감사 보고서</h1>
+  <p class="sub">
+    데이터 수집·분석 정확성, 아키텍처, 교차 리포 계약(contract), 대시보드 UI/UX(심리 7일/30일 그래프 폭 문제 포함),
+    디자인 통일성까지 코드·실행 데이터·단위테스트 증거 기반으로 검증한 결과입니다.
+    모든 개선안은 구현 방법과 기대 효과를 함께 기술합니다.
+  </p>
+  <div class="meta">
+    <span class="pill"><strong>감사일</strong> 2026-07-13 (UTC)</span>
+    <span class="pill"><strong>대상</strong> ~/dev/sniperboard · ~/dev/market-sentiment-data</span>
+    <span class="pill ok"><strong>SB tests</strong> 130 passed (PYTHONPATH=.)</span>
+    <span class="pill ok"><strong>MSD tests</strong> 183 unit tests reported</span>
+    <span class="pill bad"><strong>P0 결함</strong> 5+</span>
+    <span class="pill warn"><strong>판정</strong> 수집 파이프라인 양호 · Conviction 스케일 치명적 오류</span>
+  </div>
+</header>
+
+<details class="toc" open>
+  <summary>목차 (Table of Contents)</summary>
+  <div class="links">
+    <a href="#s1">1. 경영 요약 / Executive Summary</a>
+    <a href="#s2">2. 아키텍처 전체 구조</a>
+    <a href="#s3">3. 데이터 정확성 검증</a>
+    <a href="#s4">4. market-sentiment-data 수집기</a>
+    <a href="#s5">5. SniperBoard 백엔드 분석</a>
+    <a href="#s6">6. 프론트엔드 UI/UX 감사</a>
+    <a href="#s7">7. 심리 그래프 폭 문제 근본원인</a>
+    <a href="#s8">8. 교차 계약(Contract) 이슈</a>
+    <a href="#s9">9. 디자인·가독성·통일성</a>
+    <a href="#s10">10. 개선 로드맵 (구현+효과)</a>
+    <a href="#s11">11. 우선순위 매트릭스</a>
+    <a href="#s12">12. 증거 인덱스 / 검증 방법</a>
+    <a href="#s13">13. 최종 판정</a>
+  </div>
+</details>
+
+<!-- 1 -->
+<section id="s1">
+  <h2><span class="num">1</span> 경영 요약 / Executive Summary</h2>
+  <p class="lead">한 문장: <strong>소셜 심리 데이터는 규칙대로 잘 모이고 있으나, SniperBoard의 Conviction 점수는 스케일 불일치로 사실상 심리를 무시하고 있으며, 심리 추이 차트는 fitContent 미호출로 폭에 맞지 않게 그려진다.</strong></p>
+
+  <div class="grid4">
+    <div class="kpi">
+      <div class="label">Sentiment 수집</div>
+      <div class="value" style="color:var(--em)">양호</div>
+      <div class="hint">composite 0 mismatch · 22심볼 · 방화벽 실재</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Conviction 정확성</div>
+      <div class="value" style="color:var(--bear)">치명</div>
+      <div class="hint">−2~+2 를 0~100로 그대로 사용</div>
+    </div>
+    <div class="kpi">
+      <div class="label">심리 7d/30d 차트</div>
+      <div class="value" style="color:var(--warn)">버그</div>
+      <div class="hint">fitContent 없음 · resize 약함</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Prediction (Kalshi)</div>
+      <div class="value" style="color:var(--bear)">단절</div>
+      <div class="hint">next_fomc=null · SB 미연동</div>
+    </div>
+  </div>
+
+  <h3>핵심 판정 (반박 불가 사실)</h3>
+  <table>
+    <thead>
+      <tr><th>영역</th><th>판정</th><th>근거 요약</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>3-Layer 아키텍처 (Collect→GitHub→Consume)</td>
+        <td><span class="badge pass">PASS</span></td>
+        <td>느슨한 결합·이력 보존·LLM 비용 분리 설계가 코드와 일치</td>
+      </tr>
+      <tr>
+        <td>Contamination Firewall (가격 방향 → Grok 금지)</td>
+        <td><span class="badge pass">PASS</span></td>
+        <td><code>price_context._assert_no_direction</code> + <code>build_prompt</code> assert + 테스트 존재</td>
+      </tr>
+      <tr>
+        <td>composite_score 재계산 일치</td>
+        <td><span class="badge pass">PASS</span></td>
+        <td>2026-07-13 latest.json 전 심볼 재계산 시 mismatch = 0</td>
+      </tr>
+      <tr>
+        <td>Conviction 스케일 계약</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>생산자 −2~+2 / 소비자 0~100 가정. 심리 +0.7 → conviction 46.8, 정상 매핑 시 66.8</td>
+      </tr>
+      <tr>
+        <td>SentimentTrendChart 폭 맞춤</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td><code>timeScale().fitContent()</code> 미호출. Daily/Intraday와 불일치</td>
+      </tr>
+      <tr>
+        <td>Prediction 시장 데이터</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>latest.next_fomc = null (다수 일자), SniperBoard 엔드포인트 없음</td>
+      </tr>
+      <tr>
+        <td>Health monitor 신뢰성</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>VALID_SENTIMENTS에 <code>panic</code>(존재하지 않음), <code>very_fearful</code> 누락</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout danger">
+    <strong>가장 위험한 반직관 버그</strong>
+    심리 데이터가 <em>없을 때</em> fallback 50 → Conviction이 더 높게 나오고,
+    심리 데이터가 <em>있을 때</em>(−2~+2)는 0 근처로 clamp되어 심리가 사실상 꺼진다.
+    즉 “데이터가 있을수록 점수가 왜곡”된다.
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <h2><span class="num">2</span> 아키텍처 전체 구조</h2>
+  <p class="lead">두 리포는 “공유 스토리지(GitHub raw JSON)”로 느슨하게 결합된 3계층 파이프라인이다.</p>
+
+  <div class="arch">
+    <div class="box">
+      <h4>Layer 1 — Collect</h4>
+      <ul>
+        <li>collect_sentiment.py</li>
+        <li>collect_brief.py</li>
+        <li>collect_earnings.py</li>
+        <li>collect_macro_insight.py</li>
+        <li>collect_morning_briefing.py</li>
+        <li>collect_prediction.py (Kalshi)</li>
+        <li>price_context / grok_utils / git_utils</li>
+        <li>monitor/health_check.py</li>
+      </ul>
+    </div>
+    <div class="arrow">→</div>
+    <div class="box">
+      <h4>Layer 2 — Storage</h4>
+      <ul>
+        <li>sentiment/latest + history/</li>
+        <li>brief/, earnings/, macro/</li>
+        <li>briefing/, prediction/</li>
+        <li>schema.json (v2.0, 부분 정합)</li>
+        <li>git commit + push</li>
+      </ul>
+    </div>
+    <div class="arrow">→</div>
+    <div class="box">
+      <h4>Layer 3 — Consume</h4>
+      <ul>
+        <li>sentiment/brief/earnings services</li>
+        <li>macro_insight / morning_briefing</li>
+        <li>signal_engine · conviction</li>
+        <li>FastAPI /api/*</li>
+        <li>Next.js boards + charts</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="diagram">┌─────────────────────┐   git push    ┌──────────────────────┐   raw fetch   ┌─────────────────────┐
+│  Cron + Hermes/Grok │ ────────────▶ │  GitHub JSON repo    │ ────────────▶ │  SniperBoard API    │
+│  yfinance / Kalshi  │               │  latest + history    │               │  + Next.js boards   │
+└─────────────────────┘               └──────────────────────┘               └─────────────────────┘
+         │                                      │                                      │
+         │ price_context (방향 제거)             │ schema_version 2.0                   │ composite → conviction
+         │ divergence (사후 계산)                │ _en / _ko bilingual                  │ (현재 스케일 버그)
+</div>
+
+  <h3>설계 장점 (사실)</h3>
+  <ul>
+    <li><strong>장애 격리</strong>: SniperBoard 다운 ≠ 수집 중단</li>
+    <li><strong>재사용성</strong>: raw JSON이면 어떤 소비자도 사용 가능</li>
+    <li><strong>이력</strong>: 추세 차트는 히스토리 파일에서 재구성</li>
+    <li><strong>비용/지연 분리</strong>: LLM은 cron, API는 즉시 응답</li>
+  </ul>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <h2><span class="num">3</span> 데이터 정확성 검증 (실행 증거)</h2>
+  <p class="lead">2026-07-13 기준 로컬 클론의 <code>latest.json</code>과 히스토리 파일을 프로그램으로 검증했다.</p>
+
+  <h3>3.1 Freshness (생성 시각)</h3>
+  <table>
+    <thead><tr><th>제품</th><th>generated_at</th><th>대략 나이</th><th>상태</th></tr></thead>
+    <tbody>
+      <tr><td>sentiment</td><td>2026-07-13T20:30:00Z</td><td>&lt; 1h</td><td><span class="badge pass">신선</span></td></tr>
+      <tr><td>brief</td><td>2026-07-13T21:00:00Z</td><td>&lt; 1h</td><td><span class="badge pass">신선</span></td></tr>
+      <tr><td>prediction</td><td>2026-07-13T20:45:01Z</td><td>&lt; 1h</td><td><span class="badge fail">내용 null</span></td></tr>
+      <tr><td>macro</td><td>2026-07-13T13:15:00Z</td><td>~8h</td><td><span class="badge mixed">pre_open만 확인</span></td></tr>
+      <tr><td>briefing</td><td>2026-07-12T21:45:01Z</td><td>~23h</td><td><span class="badge pass">일 1회 정상 범위</span></td></tr>
+      <tr><td>earnings</td><td>2026-07-12T21:30:01Z</td><td>~24h</td><td><span class="badge pass">일 1회 정상 범위</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.2 Sentiment latest 품질</h3>
+  <div class="grid3">
+    <div class="kpi"><div class="label">심볼 수</div><div class="value">22</div><div class="hint">TIER1 12 + TIER2 10</div></div>
+    <div class="kpi"><div class="label">composite mismatch</div><div class="value" style="color:var(--em)">0</div><div class="hint">공식 재계산 완전 일치</div></div>
+    <div class="kpi"><div class="label">bilingual 누락</div><div class="value" style="color:var(--em)">0</div><div class="hint">key_reason_en/ko 모두 존재</div></div>
+  </div>
+
+  <h3>3.3 composite_score 공식 (검증됨)</h3>
+  <pre>score = sentiment_score × conf_mult × bot_mult × vol_mult
+      + div_adj + trend_adj + shift_adj
+clamp to [-2.0, +2.0], round 1 decimal
+
+conf: high=1.0 / med=0.85 / low=0.5
+bot:  no=1.0 / unclear=0.85 / yes=0.6
+vol:  low=0.7 / normal=1.0 / elevated=1.2 / surging=1.3
+div:  bullish_divergence=-0.5 / bearish_divergence=+0.5 / aligned|none=0
+trend: cooling=-0.3 / stable=0 / heating=+0.3
+shift: cooling=-0.2 / stable=0 / heating=+0.2</pre>
+  <p class="evidence">Evidence: market-sentiment-data/collect/collect_sentiment.py:249-275 · live recompute mismatch=0</p>
+
+  <h3>3.4 히스토리 공백</h3>
+  <table>
+    <thead><tr><th>유형</th><th>날짜</th><th>의미</th></tr></thead>
+    <tbody>
+      <tr><td>완전 누락</td><td>2026-06-06~08, 06-10~12</td><td>주중 포함 수집 공백 → 추세 차트 구멍</td></tr>
+      <tr><td>슬롯 부분</td><td>06-04 post only, 06-09 post only</td><td>pre_open 실패 가능</td></tr>
+      <tr><td>주말 수집</td><td>다수</td><td>소셜은 유효하나 price_context는 금요일 봉 잔향 → 노이즈</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.5 Divergence 분포 (2026-07-13 post_close)</h3>
+  <div class="bar-row"><span class="name">bullish_divergence</span><div class="bar"><i class="y" style="width:50%"></i></div><span class="score">11</span></div>
+  <div class="bar-row"><span class="name">aligned</span><div class="bar"><i class="g" style="width:41%"></i></div><span class="score">9</span></div>
+  <div class="bar-row"><span class="name">bearish_divergence</span><div class="bar"><i class="r" style="width:5%"></i></div><span class="score">1</span></div>
+  <div class="bar-row"><span class="name">none</span><div class="bar"><i class="g" style="width:5%"></i></div><span class="score">1</span></div>
+  <p>가격↓ + 심리↑ = bullish_divergence. 계산 로직은 정확하며, 당일 시장이 약세인데 종목 소셜은 낙관인 상황 반영.</p>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <h2><span class="num">4</span> market-sentiment-data 수집기 상세</h2>
+  <p class="lead">6개 수집기의 정확성 보증과 리스크를 분리해 평가한다.</p>
+
+  <table>
+    <thead>
+      <tr><th>수집기</th><th>입력</th><th>정확성 보증</th><th>주요 리스크</th><th>등급</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>sentiment</strong></td>
+        <td>Grok + 중립 price_context</td>
+        <td>enum 검증, 방화벽 assert, 결정론적 composite</td>
+        <td>pre_open이 latest를 12심볼로 덮어씀; TIER2는 post_close만</td>
+        <td><span class="badge pass">Strong</span></td>
+      </tr>
+      <tr>
+        <td><strong>brief</strong></td>
+        <td>SB API + sentiment + earnings</td>
+        <td>가격 바인딩 테이블, 품질 재시도</td>
+        <td><strong>pre_open이 sentiment보다 먼저 실행</strong>(13:00 vs 13:30) → 이전 슬롯 심리 사용; EMA 서술 환각 사례</td>
+        <td><span class="badge mixed">Mixed</span></td>
+      </tr>
+      <tr>
+        <td><strong>earnings</strong></td>
+        <td>yfinance 캘린더</td>
+        <td>날짜 윈도우·tier</td>
+        <td><strong>TSM revenue_estimate_b≈1263</strong> (통화/단위 오류); 테스트 없음</td>
+        <td><span class="badge fail">Weak</span></td>
+      </tr>
+      <tr>
+        <td><strong>macro_insight</strong></td>
+        <td>/api/macro/insight 신호 + Grok</td>
+        <td>그룹 신호 바인딩</td>
+        <td>방향 모순 검증이 soft WARN; 문서 자산 목록 구식</td>
+        <td><span class="badge mixed">OK</span></td>
+      </tr>
+      <tr>
+        <td><strong>morning_briefing</strong></td>
+        <td>2-stage Grok</td>
+        <td>schema 1.1, global_context</td>
+        <td>문서 필드명과 실데이터 불일치; 환각 잔존</td>
+        <td><span class="badge mixed">OK</span></td>
+      </tr>
+      <tr>
+        <td><strong>prediction</strong></td>
+        <td>Kalshi REST</td>
+        <td>단위 테스트 존재</td>
+        <td><strong>next_fomc null 지속</strong>, health 미감시, SB 미소비</td>
+        <td><span class="badge fail">Broken</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>4.1 Contamination Firewall — 실재하는가?</h3>
+  <div class="callout">
+    <strong>예. Sentiment 수집에 한해 기계적으로 강제된다.</strong>
+    허용: 변동 크기, volume Nx, near 52w high/low.<br/>
+    금지: up/down/bullish/급등/하락 등. 위반 시 AssertionError → 해당 심볼 스킵.
+  </div>
+  <table>
+    <thead><tr><th>통제</th><th>위치</th><th>강제?</th></tr></thead>
+    <tbody>
+      <tr><td>중립 price_context</td><td>price_context.py</td><td>Yes</td></tr>
+      <tr><td>_assert_no_direction</td><td>반환 dict 검사</td><td>Yes</td></tr>
+      <tr><td>prompt direction regex</td><td>build_prompt()</td><td>Yes</td></tr>
+      <tr><td>방향은 사후 divergence만</td><td>fetch_close_direction</td><td>Yes (메인 플로우)</td></tr>
+      <tr><td>brief/macro/briefing 프롬프트</td><td>의도적으로 가격 포함</td><td>방화벽 대상 아님</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.2 Health monitor 버그</h3>
+  <pre>// health_check.py (오류)
+VALID_SENTIMENTS = {..., "panic"}   // 실제 enum에는 없음
+
+// 실제 collector enum
+very_fearful | fearful | neutral | optimistic | euphoric</pre>
+  <p>결과: <code>very_fearful</code> 출현 시 오탐 FAIL, 존재하지 않는 <code>panic</code>은 통과 처리 가능. 또한 pre_open latest(12심볼)를 22 기대하면 ~7시간 동안 오탐.</p>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <h2><span class="num">5</span> SniperBoard 백엔드 분석</h2>
+  <p class="lead">가격 신호 엔진은 상대적으로 견고하나, AI 데이터 소비 계층에 스케일·계약 결함이 집중된다.</p>
+
+  <h3>5.1 서비스 캐시·에러 처리</h3>
+  <table>
+    <thead><tr><th>서비스</th><th>TTL 실측</th><th>문서 주장</th><th>실패 시</th><th>평가</th></tr></thead>
+    <tbody>
+      <tr><td>sentiment</td><td>5분</td><td>30분(구문서)</td><td>available:false, stale 없음</td><td>기능 OK / 문서 drift</td></tr>
+      <tr><td>brief / earnings</td><td>5분</td><td>30/60분</td><td>available:false, stale 없음</td><td>동일</td></tr>
+      <tr><td>macro_insight</td><td>30분</td><td>일치</td><td><strong>stale fallback</strong></td><td>모범 패턴</td></tr>
+      <tr><td>morning_briefing</td><td>10분</td><td>일치</td><td>available:false</td><td>OK</td></tr>
+      <tr><td>prediction</td><td>—</td><td>planned</td><td><strong>서비스 없음</strong></td><td>갭</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.2 P0 — Conviction 스케일 불일치 (정량 증거)</h3>
+  <p>생산자 <code>composite_score ∈ [-2, +2]</code>. 소비자 <code>calculate_conviction</code>은 <code>max(0, min(100, sentiment))</code>만 수행.</p>
+  <pre>조건: Stage2=5, Regime=60, MIXED
+
+입력 composite   →  정규화된 sentiment(현재)  →  Conviction  →  정상 매핑 시
++0.7 (낙관 약)   →  0.7                       →  46.8 (Low)  →  66.8 (High)
+-1.3 (공포)      →  0.0                       →  46.6        →  51.8
++1.8 (과열)      →  1.8                       →  47.1        →  75.1
+없음 fallback 50 →  50.0                      →  61.6        →  61.6</pre>
+  <div class="callout danger">
+    <strong>효과</strong>
+    심리가 있을수록 점수가 바닥권으로 수렴하고, 데이터 결측 시 오히려 더 좋게 나온다.
+    리더보드·Watchlist·Daily의 Conviction 배지가 체계적으로 왜곡된다.
+  </div>
+  <p class="evidence">backend/core/conviction_calculator.py:80-81 · backend/api/endpoints.py:316-328, 572-577 · 재현 스크립트 로컬 실행</p>
+
+  <h3>5.3 P0 — /daily vs /watchlist 심리 소스 불일치</h3>
+  <ul>
+    <li><code>/daily</code>: <strong>시장(market) composite만</strong> 사용 → 종목 보드도 시장 심리</li>
+    <li><code>/watchlist</code>: 종목별 composite 사용 (스케일 버그는 동일)</li>
+    <li>같은 심볼의 Conviction이 보드마다 달라질 수 있음</li>
+  </ul>
+
+  <h3>5.4 P0 — brief context 경로 데드 코드</h3>
+  <pre>// endpoints.py watchlist
+brief = fetch_brief()
+if brief.get("available") and brief.get("context"):  # context는 여기 없음
+    ...
+# 실제 구조: {"available": True, "data": { ..., "context": {...} }}</pre>
+  <p>조건이 항상 false → brief context 기반 시장 심리 경로는 사실상 미사용.</p>
+
+  <h3>5.5 Stage2 / Regime (요약 평가)</h3>
+  <div class="check-grid">
+    <div class="check-item">
+      <div class="t"><span class="badge pass">PASS</span> Stage2 7-check</div>
+      <div class="d">Minervini 체크리스트·entry/stop/target·adj_close 장기로직 존재</div>
+    </div>
+    <div class="check-item">
+      <div class="t"><span class="badge mixed">RISK</span> adj vs raw EMA</div>
+      <div class="d">price_above_emas가 adj 가격과 raw EMA를 혼합할 수 있음 (코멘트상 intentional)</div>
+    </div>
+    <div class="check-item">
+      <div class="t"><span class="badge pass">PASS</span> Regime 5-factor</div>
+      <div class="d">0~100, UNKNOWN 폴백, conviction reliability 연동</div>
+    </div>
+    <div class="check-item">
+      <div class="t"><span class="badge pass">PASS</span> 단위 테스트</div>
+      <div class="d">130 passed. 단, composite −2~+2 → conviction 통합 테스트 부재</div>
+    </div>
+  </div>
+
+  <h3>5.6 Sentiment history N+1</h3>
+  <p><code>fetch_sentiment_history(days=30)</code>는 날짜×슬롯 루프로 최대 ~60회 HTTP GET. 주말 404 포함. 5분 캐시는 있으나 첫 요청 지연·rate limit 위험.</p>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <h2><span class="num">6</span> 프론트엔드 UI/UX 감사</h2>
+  <p class="lead">보드·차트·셸·i18n·모바일 네비를 설계 토큰과 구현 일관성 기준으로 점검했다.</p>
+
+  <h3>6.1 심각도별 이슈</h3>
+  <table>
+    <thead><tr><th>ID</th><th>심각도</th><th>이슈</th><th>증거</th></tr></thead>
+    <tbody>
+      <tr><td>C1</td><td><span class="badge p0">P0</span></td><td>심리 7d/30d 그래프 폭 미맞춤</td><td>SentimentTrendChart fitContent 없음</td></tr>
+      <tr><td>C2</td><td><span class="badge p0">P0</span></td><td>resize가 applyOptions(width)만 사용</td><td>DailyChart는 chart.resize 사용</td></tr>
+      <tr><td>H1</td><td><span class="badge p1">P1</span></td><td>로딩 시 차트 host DOM unmount</td><td>isLoading 분기 ref 교체</td></tr>
+      <tr><td>H2</td><td><span class="badge p1">P1</span></td><td>이중 Y축 + lastValue로 좁은 열에서 플롯 압박</td><td>DeepDive 3분할 카드</td></tr>
+      <tr><td>H3</td><td><span class="badge p1">P1</span></td><td>Daily/Intraday 하드코딩 #0a0a0a</td><td>라이트 테마 차트 붕괴</td></tr>
+      <tr><td>H4</td><td><span class="badge p1">P1</span></td><td>--accent / --r-xs 미정의 토큰 사용</td><td>Topbar 선택 스타일 무력화</td></tr>
+      <tr><td>H5</td><td><span class="badge p1">P1</span></td><td>BottomTabs 5개 vs Rail 11개 보드</td><td>모바일에서 다수 보드 접근 불가</td></tr>
+      <tr><td>M1</td><td><span class="badge p2">P2</span></td><td>범례 pre_open/post_close 영문 고정·미랩</td><td>SentimentTrendChart legend</td></tr>
+      <tr><td>M2</td><td><span class="badge p2">P2</span></td><td>범례 색 #a78bfa ≠ 시리즈 scoreColor</td><td>디자인 불일치</td></tr>
+      <tr><td>M3</td><td><span class="badge p2">P2</span></td><td>expand 시 전체 그리드 1열 붕괴</td><td>다른 카드 리플로우·폭 레이스</td></tr>
+      <tr><td>M4</td><td><span class="badge p2">P2</span></td><td>TIER1/TIER2 카드 코드 중복 ~120줄</td><td>스타일 drift</td></tr>
+      <tr><td>M5</td><td><span class="badge p2">P2</span></td><td>history/daily 에러 UI 없음</td><td>실패 시 빈 화면처럼 보임</td></tr>
+      <tr><td>M6</td><td><span class="badge p2">P2</span></td><td>가격 N거래일 ≠ 심리 N달력일</td><td>시간축 정렬 왜곡</td></tr>
+      <tr><td>L4</td><td><span class="badge p2">P2</span></td><td>카드 onClick div, 키보드 미지원</td><td>a11y</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.2 인라인 스타일 밀도 (통일성 지표)</h3>
+  <table>
+    <thead><tr><th>파일</th><th>inline style</th><th>hex color</th><th>css var</th></tr></thead>
+    <tbody>
+      <tr><td>BacktestBoard.tsx</td><td>147</td><td>95</td><td>122</td></tr>
+      <tr><td>DeepDiveBoard.tsx</td><td>176</td><td>9</td><td>189</td></tr>
+      <tr><td>SentimentBoard.tsx</td><td>141</td><td>5</td><td>109</td></tr>
+      <tr><td>MorningBriefingBoard.tsx</td><td>129</td><td>0</td><td>99</td></tr>
+      <tr><td>SentimentTrendChart.tsx</td><td>7</td><td>11</td><td>7</td></tr>
+    </tbody>
+  </table>
+  <p>Backtest/TrendChart는 hex 의존도가 높아 테마·DS 토큰과 어긋난다.</p>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <h2><span class="num">7</span> 심리 그래프(7일/30일) 폭 문제 — 근본원인 분석</h2>
+  <p class="lead">사용자 보고: “심리 그래프가 폭에 맞지 않게 그려진다.” 코드 대조로 원인을 확정했다.</p>
+
+  <h3>7.1 1차 원인 — <code>fitContent()</code> 부재</h3>
+  <table>
+    <thead><tr><th>차트</th><th>fitContent</th><th>resize API</th></tr></thead>
+    <tbody>
+      <tr><td>DailyChart.tsx:224</td><td>✅</td><td>✅ chart.resize(w,h)</td></tr>
+      <tr><td>IntradayChart.tsx:144</td><td>✅</td><td>✅ chart.resize</td></tr>
+      <tr><td><strong>SentimentTrendChart.tsx</strong></td><td>❌ 없음</td><td>⚠️ applyOptions({width})만</td></tr>
+    </tbody>
+  </table>
+  <p>lightweight-charts 기본 bar spacing을 유지한 채 희소 포인트(7일 ≈ 7~14 포인트)를 그리면, 시리즈가 플롯 좌측·중앙 일부에만 몰리고 오른쪽이 비거나 스크롤 영역이 남는다. 30일도 동일 계열 버그.</p>
+
+  <h3>7.2 2차 원인 — 약한 리사이즈</h3>
+  <pre>// SentimentTrendChart — 불충분
+observer = new ResizeObserver(() => {
+  chartRef.current.applyOptions({ width: el.clientWidth });
+});
+
+// DailyChart — 올바름
+chart.resize(el.clientWidth, el.clientHeight || 480);</pre>
+  <p>SentimentBoard에서 카드 expand 시 3열→1열 리플로우, DeepDive 토글, 창 크기 변경 후 캔버스 픽셀이 컨테이너와 어긋날 수 있다.</p>
+
+  <h3>7.3 3차 원인 — 로딩 게이트가 host DOM을 제거</h3>
+  <pre>{isLoading ? (
+  &lt;div&gt;차트 로딩 중...&lt;/div&gt;   // ref 없음
+) : (
+  &lt;div ref={chartContainerRef} /&gt;
+)}</pre>
+  <p>7↔30 토글마다 host unmount/remount → 첫 <code>clientWidth</code> 측정 레이스.</p>
+
+  <h3>7.4 악화 요인</h3>
+  <ul>
+    <li>좌·우 이중 price scale + lastValueVisible + 심볼 title → 좁은 열에서 플롯 영역 축소</li>
+    <li>DeepDive Row4 3분할 중 1칸에 차트 삽입</li>
+    <li>가격: 최근 N <em>거래일</em> 봉 / 심리: 최근 N <em>달력일</em> 슬롯 → 시간축 불일치</li>
+    <li><code>.card { overflow: hidden }</code> 가 일부 오버레이 클리핑 유발 가능</li>
+  </ul>
+
+  <h3>7.5 최소 수정 (권장 순서)</h3>
+  <pre>// 1) 모든 setData 이후
+chart.timeScale().fitContent();
+
+// 2) ResizeObserver
+const { clientWidth, clientHeight } = el;
+chart.resize(clientWidth, clientHeight || 220);
+chart.timeScale().fitContent();
+
+// 3) host DOM 항상 유지 + 로딩 오버레이
+&lt;div ref={chartContainerRef} style={{width:'100%',height:220,minWidth:0,position:'relative'}}&gt;
+  {isLoading &amp;&amp; &lt;Overlay/&gt;}
+&lt;/div&gt;
+
+// 4) expand 시 해당 카드만 grid-column: 1 / -1 (전체 1열 붕괴 금지)</pre>
+  <div class="callout">
+    <strong>기대 효과</strong>
+    7일/30일 모두 컨테이너 전폭을 채우고, expand·리사이즈 후에도 유지되며, Daily/Intraday와 동작이 통일된다.
+  </div>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <h2><span class="num">8</span> 교차 계약(Contract) 이슈</h2>
+  <p class="lead">두 리포 사이 스키마·스케일·필드·일정 불일치가 정확성 버그의 구조적 원인이다.</p>
+
+  <table>
+    <thead><tr><th>계약 항목</th><th>생산자 (MSD)</th><th>소비자 (SB)</th><th>결과</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>composite_score 스케일</td>
+        <td>−2.0 ~ +2.0</td>
+        <td>0~100 가정</td>
+        <td><span class="badge fail">Conviction 붕괴</span></td>
+      </tr>
+      <tr>
+        <td>symbols.maxItems</td>
+        <td>schema 20 / live 22</td>
+        <td>22 기대</td>
+        <td>schema 자체 실패</td>
+      </tr>
+      <tr>
+        <td>tier / divergence / price_context</td>
+        <td>live에 존재</td>
+        <td>Pydantic 모델 미선언 → 스트립</td>
+        <td>UI에서 divergence 배지 불가</td>
+      </tr>
+      <tr>
+        <td>prediction/latest</td>
+        <td>수집·푸시</td>
+        <td>서비스/엔드포인트 없음</td>
+        <td>고아 파이프라인</td>
+      </tr>
+      <tr>
+        <td>brief pre_open 시각</td>
+        <td>13:00 UTC (sentiment 13:30)</td>
+        <td>최신 심리 기대</td>
+        <td>pre_open brief가 이전 슬롯 심리 사용</td>
+      </tr>
+      <tr>
+        <td>캐시 TTL 문서</td>
+        <td>—</td>
+        <td>코드 5분 vs 문서 30/60분</td>
+        <td>운영 혼선</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <h2><span class="num">9</span> 디자인·가독성·통일성</h2>
+  <div class="grid2">
+    <div>
+      <h3>잘 된 점</h3>
+      <ul>
+        <li>Plaid DS 기반 CSS 변수 (dark/light)</li>
+        <li>BiLang + tField v2.0 폴백</li>
+        <li>InfoPopover / Guide 패널 패턴</li>
+        <li>모바일 order·collapse 유틸 체계</li>
+      </ul>
+    </div>
+    <div>
+      <h3>통일성 위반</h3>
+      <ul>
+        <li>미정의 토큰: <code>--accent</code>, <code>--r-xs</code></li>
+        <li>차트 3종 서로 다른 리사이즈/fit 전략</li>
+        <li>hex vs CSS var 혼용 (특히 Backtest, TrendChart)</li>
+        <li>보드 라벨 Rail/Topbar/BottomTabs 불일치</li>
+        <li>Dead control: Rail Alerts (onClick 없음)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>가독성 이슈</h3>
+  <ul>
+    <li>3열 심리 카드 + 긴 한국어 스케일 라벨 (극도공포/도취)</li>
+    <li>Confidence / “Nm ago” / Top News summary 일부 EN 하드코딩</li>
+    <li>이중 축 차트에서 숫자 라벨 충돌</li>
+    <li>에러 상태가 로딩/빈 데이터와 구분되지 않음</li>
+  </ul>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <h2><span class="num">10</span> 개선 로드맵 — 구현 방법과 효과</h2>
+  <p class="lead">각 항목은 재현 가능한 구현 절차와 측정 가능한 효과를 포함한다.</p>
+
+  <!-- P0 items -->
+  <div class="improve">
+    <div class="hd">
+      <span class="badge p0">P0-1</span>
+      <h4>Conviction 스케일 정규화 (−2~+2 → 0~100)</h4>
+    </div>
+    <div class="bd">
+      <div class="col">
+        <h5>문제</h5>
+        <p>composite_score를 0~100로 오인. 심리 있을 때 점수≈바닥, 없을 때 fallback 50으로 오히려 상승.</p>
+      </div>
+      <div class="col">
+        <h5>구현 방법</h5>
+        <ul>
+          <li><code>normalize_sentiment_composite(x) = (x+2)/4*100</code></li>
+          <li>endpoints daily/watchlist/email에 적용</li>
+          <li>결측은 None → calculator 내부 50 중립</li>
+          <li>테스트: −2→0, 0→50, +2→100 골든값 + live fixture</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h5>기대 효과</h5>
+        <p>심리 가중치 30% 복원. 낙관/공포 시 Conviction 라벨이 High/Low로 정상 분기. 결측 편향 제거.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge p0">P0-2</span>
+      <h4>SentimentTrendChart 폭 맞춤 (fitContent + resize + stable host)</h4>
+    </div>
+    <div class="bd">
+      <div class="col">
+        <h5>문제</h5>
+        <p>7d/30d 차트가 컨테이너 폭을 채우지 않음. 사용자 체감 버그.</p>
+      </div>
+      <div class="col">
+        <h5>구현 방법</h5>
+        <ul>
+          <li><code>chart.timeScale().fitContent()</code> 추가</li>
+          <li><code>chart.resize(w,h)</code> 로 교체</li>
+          <li>host DOM 항상 유지, 로딩 오버레이</li>
+          <li>rAF 후 1회 재측정 (선택)</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h5>기대 효과</h5>
+        <p>시리즈가 전폭 사용. expand/윈도우 리사이즈 안정. Daily/Intraday와 일관 동작.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge p0">P0-3</span>
+      <h4>/daily 종목 심리 사용 + brief context 경로 수정</h4>
+    </div>
+    <div class="bd">
+      <div class="col">
+        <h5>문제</h5>
+        <p>Daily는 시장 심리만 사용. brief <code>context</code> 키가 data 하위에 있어 데드 코드.</p>
+      </div>
+      <div class="col">
+        <h5>구현 방법</h5>
+        <ul>
+          <li><code>brief.get("data", {}).get("context")</code></li>
+          <li>심볼별 map 우선, 없으면 market</li>
+          <li>daily·watchlist·email 동일 헬퍼</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h5>기대 효과</h5>
+        <p>보드 간 Conviction 일치. 의도한 context attribution 활성화.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge p0">P0-4</span>
+      <h4>Prediction(Kalshi) 복구 + health 알림</h4>
+    </div>
+    <div class="bd">
+      <div class="col">
+        <h5>문제</h5>
+        <p>next_fomc null 장기화. 수집은 “성공” 종료. SB 미연동.</p>
+      </div>
+      <div class="col">
+        <h5>구현 방법</h5>
+        <ul>
+          <li>Kalshi 라이브 프로브 (auth/series/date 필드)</li>
+          <li>N회 연속 null 시 cron non-zero exit</li>
+          <li>health_check DATA_FILES에 포함</li>
+          <li>SB: prediction_service + GET /api/prediction</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h5>기대 효과</h5>
+        <p>FOMC 확률 제품 복원. 무음 장애 제거. Macro 보드 보강.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge p0">P0-5</span>
+      <h4>schema.json + health enum 정합</h4>
+    </div>
+    <div class="bd">
+      <div class="col">
+        <h5>문제</h5>
+        <p>maxItems:20, tier 미정의, health <code>panic</code> 오표기.</p>
+      </div>
+      <div class="col">
+        <h5>구현 방법</h5>
+        <ul>
+          <li>schema: tier, maxItems≥22, title v2.0</li>
+          <li>VALID_SENTIMENTS = 실제 enum</li>
+          <li>pre_open 12 / post_close 22 슬롯 인식</li>
+          <li>CI: latest.json 검증 잡</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h5>기대 효과</h5>
+        <p>계약=실데이터. 헬스 오탐/미탐 제거.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge p0">P0-6</span>
+      <h4>Earnings revenue 단위 가드 (TSM 1263B 등)</h4>
+    </div>
+    <div class="bd">
+      <div class="col">
+        <h5>문제</h5>
+        <p>통화/스케일 무시 /1e9 → 비현실 매출. AI 텍스트 오염.</p>
+      </div>
+      <div class="col">
+        <h5>구현 방법</h5>
+        <ul>
+          <li>분기 매출 상한 클램프 또는 null</li>
+          <li>통화 필드 확인 후 변환</li>
+          <li>단위 테스트 추가</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h5>기대 효과</h5>
+        <p>Earnings Intelligence 숫자 신뢰 회복.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge p1">P1-1</span>
+      <h4>Brief pre_open 스케줄 정렬</h4>
+    </div>
+    <div class="bd">
+      <div class="col"><h5>문제</h5><p>brief 13:00 &lt; sentiment 13:30 → 이전 슬롯 심리.</p></div>
+      <div class="col"><h5>구현</h5><p>brief ≥14:00 UTC 또는 same-slot 파일 대기/재시도.</p></div>
+      <div class="col"><h5>효과</h5><p>pre_open brief가 당일 심리와 동기화.</p></div>
+    </div>
+  </div>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge p1">P1-2</span>
+      <h4>GitHub 소비자 stale-on-error 캐시</h4>
+    </div>
+    <div class="bd">
+      <div class="col"><h5>문제</h5><p>sentiment/brief 실패 시 패널 공백 + conviction 잘못된 fallback.</p></div>
+      <div class="col"><h5>구현</h5><p>macro_insight 패턴 복제: last-good + meta.stale.</p></div>
+      <div class="col"><h5>효과</h5><p>일시적 네트워크 장애에 UI 내성.</p></div>
+    </div>
+  </div>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge p1">P1-3</span>
+      <h4>SymbolSentiment 스키마 확장 (divergence/tier/price_context)</h4>
+    </div>
+    <div class="bd">
+      <div class="col"><h5>문제</h5><p>Pydantic이 유의미 필드를 스트립.</p></div>
+      <div class="col"><h5>구현</h5><p>schemas.py Optional 필드 추가 + FE 배지.</p></div>
+      <div class="col"><h5>효과</h5><p>다이버전스·티어 시각화, 분석 깊이 증가.</p></div>
+    </div>
+  </div>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge p1">P1-4</span>
+      <h4>디자인 토큰 보완 + 차트 테마 연동</h4>
+    </div>
+    <div class="bd">
+      <div class="col"><h5>문제</h5><p>--accent/--r-xs 미정의, Daily 차트 다크 고정.</p></div>
+      <div class="col"><h5>구현</h5><p>globals.css 토큰 정의; getComputedStyle로 차트 색 주입.</p></div>
+      <div class="col"><h5>효과</h5><p>라이트 모드·Topbar 선택 상태 정상화.</p></div>
+    </div>
+  </div>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge p1">P1-5</span>
+      <h4>모바일 네비 패리티 (BottomTabs)</h4>
+    </div>
+    <div class="bd">
+      <div class="col"><h5>문제</h5><p>11 보드 중 5개만 탭.</p></div>
+      <div class="col"><h5>구현</h5><p>More 시트 또는 그룹 탭.</p></div>
+      <div class="col"><h5>효과</h5><p>모바일 기능 패리티.</p></div>
+    </div>
+  </div>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge p1">P1-6</span>
+      <h4>expand 레이아웃: 카드만 full-span</h4>
+    </div>
+    <div class="bd">
+      <div class="col"><h5>문제</h5><p>전체 그리드 1열 붕괴 → 폭 레이스·UX 점프.</p></div>
+      <div class="col"><h5>구현</h5><p>유지 <code>repeat(3,1fr)</code> + expanded <code>grid-column:1/-1</code>.</p></div>
+      <div class="col"><h5>효과</h5><p>리플로우 최소화, 차트 폭 안정.</p></div>
+    </div>
+  </div>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge p1">P1-7</span>
+      <h4>Sentiment history 배치/인덱스화</h4>
+    </div>
+    <div class="bd">
+      <div class="col"><h5>문제</h5><p>30일 차트 = 최대 60 HTTP.</p></div>
+      <div class="col"><h5>구현</h5><p>생산자 측 일별 인덱스 또는 심볼별 series JSON; 거래일 캘린더.</p></div>
+      <div class="col"><h5>효과</h5><p>차트 첫 로드 지연·실패율 감소.</p></div>
+    </div>
+  </div>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge p1">P1-8</span>
+      <h4>pre_open latest 12심볼 덮어쓰기 완화</h4>
+    </div>
+    <div class="bd">
+      <div class="col"><h5>문제</h5><p>post_close TIER2가 pre_open에 사라짐.</p></div>
+      <div class="col"><h5>구현</h5><p>이전 TIER2를 <code>stale:true</code>로 병합 또는 슬롯별 latest 분리.</p></div>
+      <div class="col"><h5>효과</h5><p>장중에도 22카드 유지, health 오탐 감소.</p></div>
+    </div>
+  </div>
+
+  <div class="improve">
+    <div class="hd">
+      <span class="badge p2">P2</span>
+      <h4>추가 개선 묶음</h4>
+    </div>
+    <div class="bd">
+      <div class="col">
+        <h5>데이터</h5>
+        <ul>
+          <li>주말 price_context/divergence 스킵</li>
+          <li>fetch_market_context(VIX)를 MARKET 프롬프트에 주입</li>
+          <li>Brief 수치 사후검증 (below EMA 등)</li>
+          <li>Stage2 RS 날짜 정렬, adj EMA 정렬 체크</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h5>UI</h5>
+        <ul>
+          <li>범례 i18n + scoreColor 일치</li>
+          <li>SymbolSentimentCard 추출</li>
+          <li>에러/재시도 UI</li>
+          <li>가격-심리 시간창 정렬</li>
+          <li>키보드 a11y (role/button, aria-pressed)</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h5>문서/테스트</h5>
+        <ul>
+          <li>PROJECT_CONTEXT 스케줄·스키마 동기화</li>
+          <li>TTL 문서=코드</li>
+          <li>복합·divergence·health enum 테스트</li>
+          <li>earnings/macro 수집기 테스트</li>
+          <li>cross-repo contract 테스트</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="s11">
+  <h2><span class="num">11</span> 우선순위 매트릭스</h2>
+  <p class="lead">영향 × 긴급도 기준 실행 순서.</p>
+  <table>
+    <thead>
+      <tr><th>순서</th><th>ID</th><th>항목</th><th>영향</th><th>난이도</th><th>대상 리포</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>P0-1</td><td>Conviction 스케일</td><td>전사 신호 품질</td><td>낮음</td><td>sniperboard</td></tr>
+      <tr><td>2</td><td>P0-2</td><td>심리 차트 fit/resize</td><td>대시보드 체감</td><td>낮음</td><td>sniperboard</td></tr>
+      <tr><td>3</td><td>P0-3</td><td>daily 심리 소스 + brief path</td><td>보드 일관성</td><td>낮음</td><td>sniperboard</td></tr>
+      <tr><td>4</td><td>P0-5</td><td>schema/health enum</td><td>관측 신뢰</td><td>낮음</td><td>MSD</td></tr>
+      <tr><td>5</td><td>P0-6</td><td>earnings 단위</td><td>AI 텍스트 오염</td><td>중</td><td>MSD</td></tr>
+      <tr><td>6</td><td>P0-4</td><td>prediction 복구</td><td>제품 공백</td><td>중</td><td>양쪽</td></tr>
+      <tr><td>7</td><td>P1-1~8</td><td>스케줄·캐시·UI 토큰·모바일</td><td>안정성/UX</td><td>중</td><td>양쪽</td></tr>
+      <tr><td>8</td><td>P2</td><td>하드닝·문서·테스트</td><td>장기 품질</td><td>다양</td><td>양쪽</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout info">
+    <strong>권장 스프린트 1 (1~2일)</strong>
+    P0-1 + P0-2 + P0-3 + P0-5 만으로도 “숫자 정확성 + 차트 폭 + 관측”의 핵심 체감 품질이 크게 개선된다.
+  </div>
+</section>
+
+<!-- 12 -->
+<section id="s12">
+  <h2><span class="num">12</span> 증거 인덱스 &amp; 재현 방법</h2>
+  <h3>12.1 핵심 파일</h3>
+  <table>
+    <thead><tr><th>발견</th><th>경로</th></tr></thead>
+    <tbody>
+      <tr><td>Composite 공식</td><td><code>market-sentiment-data/collect/collect_sentiment.py</code> 249–275</td></tr>
+      <tr><td>방화벽</td><td><code>collect/price_context.py</code> 33–41, <code>build_prompt</code> 238–242</td></tr>
+      <tr><td>Live sentiment</td><td><code>sentiment/latest.json</code> (2026-07-13, 22 symbols)</td></tr>
+      <tr><td>Conviction clamp</td><td><code>sniperboard/backend/core/conviction_calculator.py</code> 80–81</td></tr>
+      <tr><td>Daily/Watchlist wiring</td><td><code>backend/api/endpoints.py</code> 316–328, 526–577</td></tr>
+      <tr><td>History N+1</td><td><code>backend/services/sentiment_service.py</code> 131–194</td></tr>
+      <tr><td>차트 폭 버그</td><td><code>frontend/components/boards/SentimentTrendChart.tsx</code> 전역</td></tr>
+      <tr><td>정상 차트 패턴</td><td><code>frontend/components/charts/DailyChart.tsx</code> 224–228</td></tr>
+      <tr><td>Health enum 오류</td><td><code>market-sentiment-data/monitor/health_check.py</code> VALID_SENTIMENTS</td></tr>
+      <tr><td>Prediction null</td><td><code>prediction/latest.json</code> next_fomc: null</td></tr>
+    </tbody>
+  </table>
+
+  <h3>12.2 재현 커맨드</h3>
+  <pre># SniperBoard tests
+cd ~/dev/sniperboard/backend && PYTHONPATH=. python3 -m pytest tests/ -q
+# → 130 passed
+
+# Composite recompute (MSD)
+python3 -c "from collect.collect_sentiment import compute_symbol_composite; ..."
+
+# Conviction scale demo
+PYTHONPATH=backend python3 -c "from core.conviction_calculator import calculate_conviction; print(calculate_conviction(5, 0.7, 60, 'MIXED'))"
+# → ~46.8  (정상 매핑 시 ~66.8)</pre>
+
+  <h3>12.3 영역별 등급 시각화</h3>
+  <div class="bar-row"><span class="name">3-Layer 아키텍처</span><div class="bar"><i class="g" style="width:92%"></i></div><span class="score">A</span></div>
+  <div class="bar-row"><span class="name">Sentiment 수집</span><div class="bar"><i class="g" style="width:88%"></i></div><span class="score">A-</span></div>
+  <div class="bar-row"><span class="name">Contamination FW</span><div class="bar"><i class="g" style="width:90%"></i></div><span class="score">A</span></div>
+  <div class="bar-row"><span class="name">Brief/Earnings</span><div class="bar"><i class="y" style="width:55%"></i></div><span class="score">C+</span></div>
+  <div class="bar-row"><span class="name">Prediction</span><div class="bar"><i class="r" style="width:20%"></i></div><span class="score">F</span></div>
+  <div class="bar-row"><span class="name">Conviction 통합</span><div class="bar"><i class="r" style="width:25%"></i></div><span class="score">F</span></div>
+  <div class="bar-row"><span class="name">신호 엔진 Stage2</span><div class="bar"><i class="g" style="width:82%"></i></div><span class="score">B+</span></div>
+  <div class="bar-row"><span class="name">심리 차트 UI</span><div class="bar"><i class="r" style="width:35%"></i></div><span class="score">D</span></div>
+  <div class="bar-row"><span class="name">디자인 시스템</span><div class="bar"><i class="y" style="width:65%"></i></div><span class="score">B-</span></div>
+  <div class="bar-row"><span class="name">문서/스키마 정합</span><div class="bar"><i class="y" style="width:45%"></i></div><span class="score">C</span></div>
+</section>
+
+<!-- 13 -->
+<section id="s13">
+  <h2><span class="num">13</span> 최종 판정</h2>
+  <div class="callout warn">
+    <strong>현재 시스템은 “수집은 정확에 가깝고, 소비·표시는 왜곡” 상태다.</strong>
+    Grok 방화벽과 composite 공식, 최신 22심볼 스냅샷은 신뢰할 수 있다.
+    그러나 Conviction 스케일 오류로 대시보드의 핵심 확신 지표가 체계적으로 틀리며,
+    심리 추이 차트는 폭 맞춤 결함으로 분석 UX를 해친다.
+    Prediction 파이프라인은 사실상 가동 중이 아니다.
+  </div>
+
+  <h3>질문에 대한 직접 답</h3>
+  <table>
+    <thead><tr><th>질문</th><th>답</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>현재 정확한 데이터를 수집하고 있는가?</td>
+        <td><strong>대체로 예</strong> — sentiment composite 결정론 일치, 방화벽 실재, freshness 양호. 단 earnings 단위·prediction null·일부 히스토리 공백 존재.</td>
+      </tr>
+      <tr>
+        <td>정확한 분석을 하고 있는가?</td>
+        <td><strong>아니오 (부분 실패)</strong> — Stage2/Regime은 양호하나 Conviction이 심리를 잘못 반영. /daily는 종목 심리 미사용.</td>
+      </tr>
+      <tr>
+        <td>대시보드 표시에 오류가 있는가?</td>
+        <td><strong>예</strong> — 심리 7d/30d 폭, 라이트 테마 차트, 미정의 토큰, 모바일 보드 접근 제한, 일부 i18n 누락.</td>
+      </tr>
+      <tr>
+        <td>개선점이 없는가?</td>
+        <td><strong>다수의 개선점 존재</strong> — 본 문서 §10에 구현 방법·효과 포함 전체 목록.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>다음 액션 (실행 권고)</h3>
+  <ol>
+    <li>즉시: P0-1 Conviction 정규화 + 테스트 교체</li>
+    <li>즉시: P0-2 SentimentTrendChart fit/resize/host 안정화</li>
+    <li>당일: P0-3 보드 간 심리 소스 통일</li>
+    <li>당일: P0-5 health/schema 정합</li>
+    <li>이번 주: earnings 단위, prediction 복구, brief 스케줄, UI 토큰/모바일</li>
+  </ol>
+</section>
+
+<footer>
+  Generated for SniperBoard dual-repo audit · 2026-07-13 ·
+  Evidence-based · No production source code modified for this report ·
+  File: reports/audit/dual-repo-full-audit-2026-07-13.html
+</footer>
+
+</div>
+</body>
+</html>
