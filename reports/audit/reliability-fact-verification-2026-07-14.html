@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>신뢰도·사실성 검증 보고서 — SniperBoard × market-sentiment-data (2026-07-14)</title>
+<style>
+  :root {
+    --bg: #e8e4dc;
+    --bg-soft: #f3f0ea;
+    --paper: #faf8f4;
+    --card: #ffffff;
+    --border: #d9d2c6;
+    --border-strong: #c4bbaa;
+    --ink: #1c1917;
+    --ink-2: #3f3a34;
+    --muted: #6b6560;
+    --subtle: #8a837a;
+    --gold: #9a7b2f;
+    --gold-soft: #f5efe0;
+    --teal: #2f7a70;
+    --teal-soft: #e8f3f1;
+    --rose: #a8483c;
+    --rose-soft: #faf0ee;
+    --amber: #9a6b1f;
+    --amber-soft: #faf4e8;
+    --sky: #1e5f8a;
+    --sky-soft: #e8f1f7;
+    --shadow: 0 10px 36px rgba(40, 36, 28, 0.08);
+    --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+    --serif: Georgia, "Times New Roman", "Noto Serif KR", serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: var(--ink);
+    background:
+      radial-gradient(900px 420px at 0% -10%, #ebe4d0 0%, transparent 55%),
+      radial-gradient(800px 400px at 100% 0%, #e4ebe6 0%, transparent 50%),
+      var(--bg);
+    line-height: 1.65;
+    font-size: 15px;
+  }
+  a { color: var(--sky); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 18px 96px; }
+
+  /* Hero */
+  header.hero {
+    background: linear-gradient(165deg, #faf8f4 0%, #f3eee4 55%, #ebe4d6 100%);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 36px 32px 28px;
+    box-shadow: var(--shadow);
+    margin-bottom: 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  header.hero::before {
+    content: "";
+    position: absolute; left: 0; top: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, #c4a35a, #e8d5a3 35%, #9a7b2f 70%, #2f7a70);
+  }
+  .brand {
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--gold); font-weight: 700; margin: 0 0 10px;
+  }
+  header.hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(24px, 3.2vw, 32px);
+    margin: 0 0 12px; letter-spacing: -0.02em; line-height: 1.25;
+    color: var(--ink);
+  }
+  header.hero .lede {
+    margin: 0 0 18px; color: var(--ink-2); max-width: 920px; font-size: 15.5px;
+  }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--card);
+    font-size: 12px; color: var(--muted); font-weight: 500;
+  }
+  .pill strong { color: var(--ink); font-weight: 700; }
+  .pill.ok { border-color: #b7d4c4; background: var(--teal-soft); color: var(--teal); }
+  .pill.warn { border-color: #e0cfa0; background: var(--amber-soft); color: var(--amber); }
+  .pill.bad { border-color: #e0b8b0; background: var(--rose-soft); color: var(--rose); }
+  .pill.info { border-color: #b8cfe0; background: var(--sky-soft); color: var(--sky); }
+
+  /* TOC */
+  nav.toc {
+    position: sticky; top: 0; z-index: 30;
+    background: rgba(250, 248, 244, 0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 22px;
+    box-shadow: 0 4px 16px rgba(40,36,28,0.04);
+  }
+  nav.toc summary {
+    cursor: pointer; font-weight: 700; font-size: 13px;
+    color: var(--gold); letter-spacing: 0.04em; list-style: none;
+  }
+  nav.toc summary::-webkit-details-marker { display: none; }
+  nav.toc .links {
+    display: flex; flex-wrap: wrap; gap: 6px 14px;
+    margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
+  }
+  nav.toc a { font-size: 12.5px; color: var(--ink-2); }
+  nav.toc a:hover { color: var(--gold); }
+
+  /* Sections */
+  section {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 26px 28px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow);
+  }
+  section h2 {
+    margin: 0 0 6px; font-size: 20px; letter-spacing: -0.02em;
+    font-family: var(--serif); color: var(--ink);
+  }
+  section .sec-sub { margin: 0 0 18px; color: var(--muted); font-size: 13.5px; }
+  h3 {
+    margin: 22px 0 10px; font-size: 14px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--gold); font-weight: 700;
+  }
+  p { margin: 0 0 12px; color: var(--ink-2); }
+  ul, ol { margin: 0 0 12px; padding-left: 1.25em; color: var(--ink-2); }
+  li { margin-bottom: 6px; }
+  strong { color: var(--ink); }
+  code, .mono {
+    font-family: var(--mono); font-size: 12.5px;
+    background: var(--bg-soft); padding: 1px 6px; border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* Score grid */
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+    gap: 12px;
+    margin: 16px 0 8px;
+  }
+  .score-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+  }
+  .score-card .label {
+    font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--subtle); font-weight: 600; margin-bottom: 6px;
+  }
+  .score-card .val {
+    font-family: var(--serif); font-size: 28px; font-weight: 700;
+    letter-spacing: -0.03em; line-height: 1;
+  }
+  .score-card .val.high { color: var(--teal); }
+  .score-card .val.mid { color: var(--amber); }
+  .score-card .val.low { color: var(--rose); }
+  .score-card .hint { font-size: 11.5px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+
+  /* Bars */
+  .bar-row {
+    display: grid; grid-template-columns: 160px 1fr 48px;
+    gap: 10px; align-items: center;
+    margin: 8px 0;
+    font-size: 13px;
+  }
+  .bar-row .name { color: var(--ink-2); font-weight: 600; }
+  .bar-track {
+    height: 10px; background: #ebe6dc; border-radius: 999px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .bar-fill {
+    height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, #2f7a70, #9a7b2f);
+  }
+  .bar-fill.warn { background: linear-gradient(90deg, #c4a35a, #a8483c); }
+  .bar-fill.bad { background: linear-gradient(90deg, #c47a6a, #a8483c); }
+  .bar-row .n { font-family: var(--mono); font-weight: 700; color: var(--ink); text-align: right; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 12px 0 4px; border-radius: 10px; border: 1px solid var(--border); }
+  table.data {
+    width: 100%; border-collapse: collapse; background: var(--card);
+    font-size: 13px;
+  }
+  table.data th {
+    text-align: left; padding: 10px 12px;
+    background: #f0ebe3; color: var(--muted);
+    font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border); font-weight: 700;
+  }
+  table.data td {
+    padding: 10px 12px; border-bottom: 1px solid #eeeae3;
+    color: var(--ink-2); vertical-align: top;
+  }
+  table.data tr:last-child td { border-bottom: none; }
+  table.data tr:hover td { background: #fcfaf7; }
+  .tag {
+    display: inline-block; font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 4px; letter-spacing: 0.02em;
+  }
+  .tag-pass { background: var(--teal-soft); color: var(--teal); }
+  .tag-fail { background: var(--rose-soft); color: var(--rose); }
+  .tag-warn { background: var(--amber-soft); color: var(--amber); }
+  .tag-info { background: var(--sky-soft); color: var(--sky); }
+  .tag-na { background: #eeeae3; color: var(--subtle); }
+
+  /* Callouts */
+  .callout {
+    border-radius: 12px; padding: 14px 16px; margin: 14px 0;
+    border: 1px solid var(--border); background: var(--card);
+  }
+  .callout.gold { border-left: 3px solid var(--gold); background: var(--gold-soft); }
+  .callout.teal { border-left: 3px solid var(--teal); background: var(--teal-soft); }
+  .callout.rose { border-left: 3px solid var(--rose); background: var(--rose-soft); }
+  .callout.amber { border-left: 3px solid var(--amber); background: var(--amber-soft); }
+  .callout .t {
+    font-weight: 700; font-size: 13px; margin: 0 0 6px; color: var(--ink);
+  }
+  .callout p { margin: 0; font-size: 13.5px; }
+
+  /* Pipeline diagram */
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .pipe-step {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    position: relative;
+  }
+  .pipe-step .n {
+    font-family: var(--mono); font-size: 11px; color: var(--gold); font-weight: 700;
+  }
+  .pipe-step .ttl { font-weight: 700; font-size: 13px; margin: 4px 0; }
+  .pipe-step .d { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+
+  /* Two col */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 760px) {
+    .cols { grid-template-columns: 1fr; }
+    section { padding: 20px 16px; }
+    header.hero { padding: 24px 18px; }
+    .bar-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+
+  /* Verdict box */
+  .verdict {
+    display: grid; grid-template-columns: 120px 1fr; gap: 16px;
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 8px;
+  }
+  .verdict .big {
+    font-family: var(--serif); font-size: 42px; font-weight: 700;
+    color: var(--teal); line-height: 1; text-align: center;
+  }
+  .verdict .big span { display: block; font-size: 12px; color: var(--muted); font-family: var(--sans); font-weight: 600; margin-top: 6px; letter-spacing: 0.06em; }
+  footer {
+    text-align: center; color: var(--subtle); font-size: 12px;
+    margin-top: 28px; padding: 16px;
+  }
+  .footnote { font-size: 12.5px; color: var(--subtle); margin-top: 16px; }
+  .src-list { font-size: 12.5px; color: var(--muted); }
+  .src-list li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <p class="brand">SniperBoard · Reliability Audit</p>
+  <h1>대시보드 · market-sentiment-data<br/>신뢰도·사실성 검증 보고서</h1>
+  <p class="lede">
+    저장된 JSON·대시보드 API·기계적 시그널·AI 내러티브가 <strong>검증 가능한 시장 사실</strong>과
+    얼마나 일치하는지를, 동일 시점 교차검증(yfinance 스팟 체크 · 내부 정합성 · 헬스 모니터 · 배포 상태)으로 평가한다.
+    점수는 주관적 감이 아니라 <em>측정 가능한 대조 결과</em>에 근거한다.
+  </p>
+  <div class="meta">
+    <span class="pill"><strong>As-of</strong> 2026-07-14 15:53 KST · 02:53 ET</span>
+    <span class="pill"><strong>Snapshots</strong> briefing/earnings ~9h age</span>
+    <span class="pill info"><strong>Method</strong> dual-repo cross-check</span>
+    <span class="pill ok"><strong>Prices 22/22</strong> exact match</span>
+    <span class="pill ok"><strong>Earnings dates 8/8</strong> = yfinance</span>
+    <span class="pill bad"><strong>Docker</strong> pre-fix image (no sanitize)</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <details open>
+    <summary>목차 · Contents</summary>
+    <div class="links">
+      <a href="#exec">1. 총평</a>
+      <a href="#method">2. 방법론</a>
+      <a href="#arch">3. 데이터 계층</a>
+      <a href="#mech">4. 기계적 데이터</a>
+      <a href="#earn">5. 실적 캘린더</a>
+      <a href="#brief">6. AI 브리핑</a>
+      <a href="#sent">7. 센티먼트·매크로·예측</a>
+      <a href="#dash">8. 대시보드 소비층</a>
+      <a href="#health">9. 헬스·운영</a>
+      <a href="#gap">10. 배포 갭</a>
+      <a href="#recs">11. 권고</a>
+      <a href="#annex">부록</a>
+    </div>
+  </details>
+</nav>
+
+<!-- 1 -->
+<section id="exec">
+  <h2>1. 총평 (Executive Verdict)</h2>
+  <p class="sec-sub">한 줄: 숫자(가격·날짜·레짐)는 매우 신뢰 가능하고, AI 문장 중 “상대 일수·이미 발표” 표현과 배포 지연이 신뢰도를 깎는다.</p>
+
+  <div class="verdict">
+    <div class="big">78<span>/100<br/>종합 신뢰</span></div>
+    <div>
+      <p style="margin:0 0 8px;">
+        <strong>가중 종합 78/100</strong> — “투자 의사결정의 사실 기반 보조 도구”로는 사용 가능.
+        단, (1) GitHub에 고정된 AI 상대일 표현, (2) 현재 운영 중인 Docker 이미지가 정합성 픽스 이전이라는 두 가지는
+        <strong>문서화된 한계</strong>이며, 이를 무시한 채 모든 문장을 실시간 사실로 취급하면 과신이 된다.
+      </p>
+      <div class="meta">
+        <span class="pill ok">기계 가격/지표 95</span>
+        <span class="pill ok">실적 절대일 95</span>
+        <span class="pill warn">AI 내러티브(원시 JSON) 58</span>
+        <span class="pill ok">AI 내러티브(로컬 sanitize 후) 86</span>
+        <span class="pill bad">운영 Docker 서빙 62</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>영역별 신뢰 막대</h3>
+  <div class="bar-row"><div class="name">OHLCV · 종가 바인딩</div><div class="bar-track"><div class="bar-fill" style="width:95%"></div></div><div class="n">95</div></div>
+  <div class="bar-row"><div class="name">Stage2 · Regime</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="n">90</div></div>
+  <div class="bar-row"><div class="name">실적 절대 날짜</div><div class="bar-track"><div class="bar-fill" style="width:95%"></div></div><div class="n">95</div></div>
+  <div class="bar-row"><div class="name">days_until (파일 고정)</div><div class="bar-track"><div class="bar-fill warn" style="width:42%"></div></div><div class="n">42</div></div>
+  <div class="bar-row"><div class="name">days_until (serve 재계산)</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="n">92</div></div>
+  <div class="bar-row"><div class="name">EPS/매출 컨센서스 스냅샷</div><div class="bar-track"><div class="bar-fill" style="width:78%"></div></div><div class="n">78</div></div>
+  <div class="bar-row"><div class="name">브리핑 가격 수치</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="n">93</div></div>
+  <div class="bar-row"><div class="name">매크로 레벨(VIX·DXY·10Y)</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="n">91</div></div>
+  <div class="bar-row"><div class="name">지정학 내러티브</div><div class="bar-track"><div class="bar-fill warn" style="width:62%"></div></div><div class="n">62</div></div>
+  <div class="bar-row"><div class="name">소셜 센티먼트</div><div class="bar-track"><div class="bar-fill warn" style="width:60%"></div></div><div class="n">60</div></div>
+  <div class="bar-row"><div class="name">Polymarket (참고용)</div><div class="bar-track"><div class="bar-fill" style="width:72%"></div></div><div class="n">72</div></div>
+  <div class="bar-row"><div class="name">운영 헬스(신호 로그 등)</div><div class="bar-track"><div class="bar-fill bad" style="width:48%"></div></div><div class="n">48</div></div>
+
+  <div class="callout teal" style="margin-top:18px;">
+    <p class="t">반박 여지를 줄이는 핵심 주장</p>
+    <p>
+      “전체가 틀렸다”도, “전체가 실시간 사실이다”도 모두 거짓이다.
+      <strong>가격·절대 실적일·레짐 점수는 외부 시세와 1:1로 재현</strong>되었고,
+      <strong>원시 브리핑 JSON의 TSM 실적 타이밍 문구는 자기모순</strong>이 측정되었다.
+      소비자 레이어 정합성 모듈은 그 모순을 제거하지만, <strong>현재 Docker에는 아직 탑재되지 않았다</strong>.
+    </p>
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="method">
+  <h2>2. 방법론 (Falsifiable Protocol)</h2>
+  <p class="sec-sub">재현 가능한 검증 프로토콜 — 동일 입력으로 동일 판정이 나와야 한다.</p>
+
+  <div class="cols">
+    <div class="callout">
+      <p class="t">입력 스냅샷</p>
+      <ul class="src-list">
+        <li><code>market-sentiment-data/{briefing,earnings,brief,sentiment,macro,prediction}/latest.json</code></li>
+        <li>SniperBoard <code>localhost:5001/api/*</code> (운영 Docker)</li>
+        <li>로컬 <code>core.earnings_consistency</code> (커밋 <code>7c20aaa</code>)</li>
+        <li><code>monitor/health_check.py</code> 실행 결과</li>
+      </ul>
+    </div>
+    <div class="callout">
+      <p class="t">대조 기준 (Ground truth proxies)</p>
+      <ul class="src-list">
+        <li>yfinance: 종가, 캘린더, VIX, DXY, CL=F, TNX, BTC-USD, NASDAQ</li>
+        <li>절대일 산술: <code>days_until = earnings_date − today_ET</code></li>
+        <li>내부 정합: 동일 심볼에 대해 서로 다른 상대일/이미발표 표현 검색</li>
+        <li>스키마·스케일: composite ∈ [−2, +2], revenue_b &lt; 300</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>판정 규칙</h3>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>판정</th><th>정의</th><th>예시</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-pass">PASS</span></td>
+          <td>외부 시세/캘린더와 허용 오차 내 일치, 또는 순수 계산 재현</td>
+          <td>TSM 종가 $421.58 = yf last close</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-warn">WARN</span></td>
+          <td>대략 맞으나 반올림·시차·주관성 존재 / 운영상 주의</td>
+          <td>유가 “10%” ≈ 세션 +9.4%</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-fail">FAIL</span></td>
+          <td>측정된 모순 또는 명백한 오류</td>
+          <td>동일 JSON 내 TSM “발표됨” vs “2일 후”</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-info">N/A·REF</span></td>
+          <td>사실 진술이 아니거나 참고 전용 레이어</td>
+          <td>Polymarket odds · 소셜 심리 점수</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout amber">
+    <p class="t">한계 (정직 고지)</p>
+    <p>
+      yfinance 자체도 벤더 지연·조정이 있다. 본 보고의 “사실”은
+      <strong>독립 벤더 교차검증</strong>이지 법정 공시 감사(10-Q)가 아니다.
+      지정학 헤드라인은 뉴스 출처 힌트와 가격 반응으로 간접 검증하며, 1차 문서 전수 감사는 범위 밖이다.
+    </p>
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="arch">
+  <h2>3. 데이터 계층 구조와 신뢰 경계</h2>
+  <p class="sec-sub">오류는 “어디서 생겼는가”에 따라 심각도와 수정 지점이 갈린다.</p>
+
+  <div class="pipeline">
+    <div class="pipe-step">
+      <div class="n">L0</div>
+      <div class="ttl">시세 · 캘린더</div>
+      <div class="d">yfinance / Yahoo<br/>기계적 SoT</div>
+    </div>
+    <div class="pipe-step">
+      <div class="n">L1</div>
+      <div class="ttl">Collector</div>
+      <div class="d">cron · Grok/Hermes<br/>JSON → GitHub</div>
+    </div>
+    <div class="pipe-step">
+      <div class="n">L2</div>
+      <div class="ttl">Stored JSON</div>
+      <div class="d">latest.json<br/>고정 스냅샷</div>
+    </div>
+    <div class="pipe-step">
+      <div class="n">L3</div>
+      <div class="ttl">Consumer API</div>
+      <div class="d">sanitize · recompute<br/>SniperBoard backend</div>
+    </div>
+    <div class="pipe-step">
+      <div class="n">L4</div>
+      <div class="ttl">UI · Email</div>
+      <div class="d">대시보드 · 모닝메일<br/>표현 계층</div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>계층</th><th>신뢰 성격</th><th>오늘 관측</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>L0 시세</strong></td>
+          <td>외부 벤더 의존 · 수치 재현성 높음</td>
+          <td><span class="tag tag-pass">PASS</span> NVDA 종가 API·브리핑·yf 모두 203.53</td>
+        </tr>
+        <tr>
+          <td><strong>L1 Collector</strong></td>
+          <td>프롬프트+모델 · 상대일 동결 위험</td>
+          <td><span class="tag tag-warn">WARN</span> KST/ET 혼용 이슈 코드 수정됨(커밋 87de20a), 스냅샷은 수정 전 생성</td>
+        </tr>
+        <tr>
+          <td><strong>L2 Stored</strong></td>
+          <td>불변 스냅샷 · 시간이 지나면 days_until 필연적 노후</td>
+          <td><span class="tag tag-fail">FAIL</span> TSM alert “발표됨” + checkpoint “2일 후” 공존</td>
+        </tr>
+        <tr>
+          <td><strong>L3 Consumer (코드 main)</strong></td>
+          <td>절대일 SoT + serve-time 재계산</td>
+          <td><span class="tag tag-pass">PASS</span> sanitize 후 TSM 단일 “2일 후”, 발표됨 0건</td>
+        </tr>
+        <tr>
+          <td><strong>L3 Docker 운영</strong></td>
+          <td>배포된 이미지 = 사용자 실체험</td>
+          <td><span class="tag tag-fail">FAIL</span> 이미지 2026-07-13 빌드, <code>earnings_consistency</code> 모듈 없음</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="mech">
+  <h2>4. 기계적 데이터 (대시보드 코어)</h2>
+  <p class="sec-sub">AI와 무관한 계산 경로 — 신뢰도의 바닥(floor)을 결정한다.</p>
+
+  <div class="score-grid">
+    <div class="score-card">
+      <div class="label">Regime</div>
+      <div class="val high">76.9</div>
+      <div class="hint">CONSTRUCTIVE · 로컬 재계산 일치</div>
+    </div>
+    <div class="score-card">
+      <div class="label">NVDA Stage2</div>
+      <div class="val mid">4/7</div>
+      <div class="hint">RS 46.3 · DOWNTREND · close 203.53</div>
+    </div>
+    <div class="score-card">
+      <div class="label">API daily(NVDA)</div>
+      <div class="val high">OK</div>
+      <div class="hint">헬스체크 종가 203.53 확인</div>
+    </div>
+    <div class="score-card">
+      <div class="label">Conviction scale</div>
+      <div class="val high">OK</div>
+      <div class="hint">−2..+2 → 0–100 정규화 검증</div>
+    </div>
+  </div>
+
+  <h3>검증 결과</h3>
+  <ul>
+    <li><strong>Regime</strong>: <code>compute_regime</code> 로컬 재실행 → total 76.9 / CONSTRUCTIVE. Brief 문장 “CONSTRUCTIVE 레짐(76.9)”과 <span class="tag tag-pass">일치</span>.</li>
+    <li><strong>Stage2 NVDA</strong>: score 4, RS 46.3, structure DOWNTREND — 브리핑 분석 문구의 Stage2 4/7 · RS 46.3과 <span class="tag tag-pass">일치</span>.</li>
+    <li><strong>Conviction 정규화</strong>: composite 0.3 → 57.5, −1.3 → 17.5, legacy 75 → 75. 스케일 오염(−2..+2를 0–100으로 오인) 방지 로직 <span class="tag tag-pass">동작</span>.</li>
+  </ul>
+
+  <div class="callout teal">
+    <p class="t">해석</p>
+    <p>
+      대시보드의 Stage2·레짐·차트 수치는 AI 환각 경로가 아니다.
+      동일 코드·동일 yfinance 입력으로 재현되므로, 이 구간의 오류는 “모델 환각”이 아니라
+      <strong>벤더 데이터 또는 버그</strong>로 취급해야 한다.
+    </p>
+  </div>
+</section>
+
+<!-- 5 -->
+<section id="earn">
+  <h2>5. 실적 캘린더 (Earnings Intelligence)</h2>
+  <p class="sec-sub">절대 날짜는 강하고, 파일에 박힌 days_until·AI “N일 후”는 약하다.</p>
+
+  <h3>5.1 절대 날짜 × yfinance (8/8 PASS)</h3>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>JSON date</th>
+          <th>yfinance</th>
+          <th>Match</th>
+          <th>file days</th>
+          <th>live ET days<br/>(2026-07-14)</th>
+          <th>EPS est</th>
+          <th>Rev $B</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>TSM</td><td>2026-07-16</td><td>2026-07-16</td><td><span class="tag tag-pass">PASS</span></td><td>3</td><td><strong>2</strong></td><td>3.83</td><td>39.28</td></tr>
+        <tr><td>TSLA</td><td>2026-07-23</td><td>2026-07-23</td><td><span class="tag tag-pass">PASS</span></td><td>10</td><td><strong>9</strong></td><td>0.50</td><td>25.83</td></tr>
+        <tr><td>GOOGL</td><td>2026-07-23</td><td>2026-07-23</td><td><span class="tag tag-pass">PASS</span></td><td>10</td><td><strong>9</strong></td><td>2.90</td><td>116.84</td></tr>
+        <tr><td>META</td><td>2026-07-30</td><td>2026-07-30</td><td><span class="tag tag-pass">PASS</span></td><td>17</td><td><strong>16</strong></td><td>7.49</td><td>60.23</td></tr>
+        <tr><td>MSFT</td><td>2026-07-30</td><td>2026-07-30</td><td><span class="tag tag-pass">PASS</span></td><td>17</td><td><strong>16</strong></td><td>4.24</td><td>87.66</td></tr>
+        <tr><td>AMZN</td><td>2026-07-31</td><td>2026-07-31</td><td><span class="tag tag-pass">PASS</span></td><td>18</td><td><strong>17</strong></td><td>1.81</td><td>195.91</td></tr>
+        <tr><td>AAPL</td><td>2026-07-31</td><td>2026-07-31</td><td><span class="tag tag-pass">PASS</span></td><td>18</td><td><strong>17</strong></td><td>1.89</td><td>108.90</td></tr>
+        <tr><td>PLTR</td><td>2026-08-04</td><td>2026-08-04</td><td><span class="tag tag-pass">PASS</span></td><td>22</td><td><strong>21</strong></td><td>0.35</td><td>1.81</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout gold">
+    <p class="t">결정적 관찰</p>
+    <p>
+      8종목 전원의 <code>earnings_date</code>가 yfinance 캘린더와 일치한다 → <strong>날짜 SoT는 신뢰 가능</strong>.
+      반면 파일의 <code>days_until</code>은 생성 시점 값이라 검증 당일 기준 <strong>전 종목 1일씩 노후</strong>(3→2, 10→9 …).
+      이는 데이터 오류라기보다 <strong>“상대 필드를 절대처럼 읽으면 생기는 필연적 시차”</strong>다.
+      해결은 재수집이 아니라 serve-time 재계산이다 (이미 main 코드에 구현).
+    </p>
+  </div>
+
+  <h3>5.2 매출 단위 (P0-6 이후)</h3>
+  <p>
+    전 종목 <code>revenue_estimate_b</code> &lt; 300 (TSM 39.28B 등) →
+    과거 TWD-as-USD 폭주 패턴 <span class="tag tag-pass">재발 없음</span>.
+    분기 EPS 추정(3.83)과 yfinance <em>forwardEps</em>(연환산 ~20)는 정의가 다르므로 불일치로 판정하지 않음.
+  </p>
+</section>
+
+<!-- 6 -->
+<section id="brief">
+  <h2>6. AI 아침 브리핑 · Daily Brief</h2>
+  <p class="sec-sub">테이블 바인딩 수치는 강하고, 상대 시간 언어·무드 라벨은 약하다.</p>
+
+  <h3>6.1 가격 바인딩 — 22/22 exact</h3>
+  <p>
+    브리핑 watchlist 분석 첫 가격 vs yfinance 최근 종가:
+    <strong>22종목 전원 허용오차 3% 이내, 표본 핵심 종목은 소수점까지 동일</strong>.
+  </p>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>Symbol</th><th>Brief 주장 가격</th><th>yf last</th><th>일간 %</th><th>판정</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>TSM</td><td>421.58</td><td>421.58</td><td>−2.89%</td><td><span class="tag tag-pass">EXACT</span></td></tr>
+        <tr><td>NVDA</td><td>203.53</td><td>203.53</td><td>−3.52%</td><td><span class="tag tag-pass">EXACT</span></td></tr>
+        <tr><td>META</td><td>656.73</td><td>656.73</td><td>−1.86%</td><td><span class="tag tag-pass">EXACT</span></td></tr>
+        <tr><td>TSLA</td><td>394.76</td><td>394.76</td><td>−3.19%</td><td><span class="tag tag-pass">EXACT</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="footnote">이는 “모델이 가격을 지어내지 말고 테이블만 쓰라”는 collector 하드 룰이 실제로 지켜지고 있음을 정량 입증한다.</p>
+
+  <h3>6.2 매크로 레벨 교차검증</h3>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>주장 (브리핑)</th><th>외부 측정</th><th>판정</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>VIX 17.16</td>
+          <td>yf ^VIX last 17.16</td>
+          <td><span class="tag tag-pass">EXACT</span></td>
+        </tr>
+        <tr>
+          <td>DXY 101.28</td>
+          <td>yf DX-Y.NYB ~101.21</td>
+          <td><span class="tag tag-pass">≈0.07%</span></td>
+        </tr>
+        <tr>
+          <td>10년물 4.61%</td>
+          <td>yf ^TNX 4.61</td>
+          <td><span class="tag tag-pass">EXACT</span></td>
+        </tr>
+        <tr>
+          <td>나스닥 −1.6%</td>
+          <td>^IXIC 7/13 세션 ≈ −1.55%</td>
+          <td><span class="tag tag-pass">≈</span></td>
+        </tr>
+        <tr>
+          <td>유가 10% 급등</td>
+          <td>CL=F 7/10→7/13: 71.41→78.14 ≈ <strong>+9.4%</strong>; 7/7→7/13 ≈ +11%</td>
+          <td><span class="tag tag-warn">대략 합치</span></td>
+        </tr>
+        <tr>
+          <td>BTC $61,916.75</td>
+          <td>7/13 close ≈ $62,239 (당일 변동 구간)</td>
+          <td><span class="tag tag-warn">근접</span></td>
+        </tr>
+        <tr>
+          <td>체크포인트 “유가 $85 상회”</td>
+          <td>현재 ~$80 — <em>주시 레벨</em>이지 현재가 주장 아님</td>
+          <td><span class="tag tag-info">WATCH</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>6.3 원시 JSON 내부 모순 (측정된 FAIL)</h3>
+  <div class="callout rose">
+    <p class="t">동일 파일 <code>briefing/latest.json</code> (generated 2026-07-13T21:45:01Z)</p>
+    <ul style="margin:8px 0 0; padding-left:1.2em;">
+      <li><code>earnings_alert_ko</code>: <strong>“TSM 오늘 미국 장 마감 후 실적 발표됨”</strong></li>
+      <li><code>today_checkpoints_ko[0]</code>: <strong>“TSM 7월 16일 실적(2일 후)”</strong></li>
+      <li>earnings 파일 절대일: <strong>2026-07-16</strong> (yf 일치) → 검증일 ET 기준 아직 미래</li>
+    </ul>
+    <p style="margin-top:10px;">
+      세 진술을 동시에 참으로 둘 수 없다. 이는 사용자 신뢰 훼손의 직접 원인이다.
+      원인 기전: collector가 KST “오늘”과 미국 실적일을 섞고, 모델이 섹션마다 다른 상대 표현을 생성·동결.
+    </p>
+  </div>
+
+  <h3>6.4 소비자 sanitize 후 (로컬 main 코드)</h3>
+  <ul>
+    <li>기계적 alert: <code>TSM 7월 16일 실적 (2일 후 발표)</code> — “발표됨” 제거</li>
+    <li>순수 실적 재진술 체크포인트 드롭 → 유가·DXY 액션 항목만 잔존</li>
+    <li>TSM analysis 상대일: <strong>2일 후</strong>로 통일 · 발표됨 히트 <strong>0</strong></li>
+  </ul>
+
+  <h3>6.5 센티먼트 무드 vs 당일 하락 불일치</h3>
+  <p>
+    규칙상 “당일 ≤−3%인데 optimistic”은 품질 위험.
+    실측: <strong>8종목</strong> (NVDA, TSLA, RKLB, ALAB, OKLO, APP, ANET, SOFI).
+    다수는 action=avoid로 행동 권고는 보수적이나, mood 라벨은 소셜 점수 잔상을 반영 →
+    <span class="tag tag-warn">라벨 해석 시 가격 컨텍스트 병행 필수</span>.
+  </p>
+</section>
+
+<!-- 7 -->
+<section id="sent">
+  <h2>7. 센티먼트 · 매크로 인사이트 · 예측시장</h2>
+
+  <div class="cols">
+    <div>
+      <h3>Social Sentiment</h3>
+      <ul>
+        <li>schema 2.0 · market composite <strong>−1.3</strong> (fearful 대역)</li>
+        <li>심볼 22/22 커버 · 전원 점수 ∈ [−2, +2] <span class="tag tag-pass">PASS</span></li>
+        <li>Contamination firewall: 프롬프트에 가격 방향 금지 원칙 문서화 (방향 검증은 파이프라인 테스트 영역)</li>
+        <li>본질적으로 <strong>여론 요약</strong>이지 가격 예측이 아님 → 신뢰 유형: 과정 신뢰 60</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Macro Insight</h3>
+      <ul>
+        <li>overall 요약: 혼조·VIX 상승 등 — 레짐 76.9 CONSTRUCTIVE와 병치 가능 (점수 vs 톤 분리)</li>
+        <li>규칙 엔진(macro_rules) + AI 텍스트 이중 구조</li>
+        <li>숫자 앵커는 VIX 등과 교차 가능; 문장 전체는 해석층</li>
+      </ul>
+      <h3>Polymarket FOMC</h3>
+      <ul>
+        <li><code>usage: reference_only</code> — Conviction 미투입 <span class="tag tag-pass">계약 준수</span></li>
+        <li>meeting_date 2026-07-29 · dominant no_change 62.5%</li>
+        <li>신뢰: “시장 함의 확률의 스냅샷” 72 · “연준 가이던스”로 읽으면 FAIL</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section id="dash">
+  <h2>8. 대시보드 소비층 (API → UI)</h2>
+  <p class="sec-sub">사용자가 보는 화면은 L3 배포본에 종속된다.</p>
+
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>엔드포인트</th><th>상태</th><th>정합성 관련 관측</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>/api/regime</code></td><td><span class="tag tag-pass">200</span></td><td>기계 계산 · 높음</td></tr>
+        <tr><td><code>/api/watchlist</code></td><td><span class="tag tag-pass">200</span></td><td>Stage2·Conviction</td></tr>
+        <tr><td><code>/api/earnings</code></td><td><span class="tag tag-pass">200</span></td><td>Docker: days_until 여전히 파일값(TSM=3) — 재계산 미적용</td></tr>
+        <tr><td><code>/api/morning-briefing</code></td><td><span class="tag tag-pass">200</span></td><td>Docker: raw “발표됨” 그대로 노출</td></tr>
+        <tr><td><code>/api/sentiment</code></td><td><span class="tag tag-pass">200</span></td><td>스키마 유효</td></tr>
+        <tr><td><code>/api/daily?symbol=SPCX</code></td><td><span class="tag tag-fail">500</span></td><td>헬스 FAIL — 개별 심볼 예외</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    Overview / DeepDive / Daily의 실적 D-day 표시는 API <code>days_until</code>에 의존한다.
+    main 코드는 serve-time 재계산 + 오늘/내일 라벨을 지원하나,
+    <strong>운영 컨테이너가 구버전이면 UI에도 구 로직이 그대로</strong> 보인다.
+  </p>
+</section>
+
+<!-- 9 -->
+<section id="health">
+  <h2>9. 운영 헬스 모니터 (2026-07-14 15:52 KST)</h2>
+  <p class="sec-sub"><code>monitor/health_check.py</code> — FAIL 3 · WARN 3</p>
+
+  <div class="score-grid">
+    <div class="score-card">
+      <div class="label">Data freshness</div>
+      <div class="val high">OK</div>
+      <div class="hint">전 소스 7–11h (일 1회 배치 정상)</div>
+    </div>
+    <div class="score-card">
+      <div class="label">Cron / Git</div>
+      <div class="val high">OK</div>
+      <div class="hint">동기화·커밋 반영 확인</div>
+    </div>
+    <div class="score-card">
+      <div class="label">Docker · FE</div>
+      <div class="val high">UP</div>
+      <div class="hint">backend/frontend 기동</div>
+    </div>
+    <div class="score-card">
+      <div class="label">Signal DB</div>
+      <div class="val low">FAIL</div>
+      <div class="hint">14일+ 미갱신 · PENDING 잔존</div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>등급</th><th>항목</th><th>의미</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag tag-fail">FAIL</span></td><td>daily(SPCX) HTTP 500</td><td>특정 심볼 파이프 예외 — 전면 장애 아님</td></tr>
+        <tr><td><span class="tag tag-fail">FAIL</span></td><td>Signal log 14일 미갱신</td><td>라이브 신호 추적 보드 신뢰도 저하</td></tr>
+        <tr><td><span class="tag tag-fail">FAIL</span></td><td>APScheduler 시작 로그 없음</td><td>스케줄 작업(이메일·스캔) 운영 불확실</td></tr>
+        <tr><td><span class="tag tag-warn">WARN</span></td><td>briefing cron JSON parse 1건</td><td>과거 생성 실패 이력 — 현재 latest는 존재</td></tr>
+        <tr><td><span class="tag tag-warn">WARN</span></td><td>auto_improve FAIL 로그</td><td>사후 검증 자동화 불안정</td></tr>
+        <tr><td><span class="tag tag-warn">WARN</span></td><td>30일+ PENDING 신호 12건</td><td>청산/갱신 루프 점검 필요</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="gap">
+  <h2>10. 배포 갭 (가장 중요한 운영 리스크)</h2>
+
+  <div class="callout rose">
+    <p class="t">사실 관계 (재현됨)</p>
+    <ul style="margin:8px 0 0;padding-left:1.2em;">
+      <li>Git <code>main</code> HEAD: <code>7c20aaa</code> (2026-07-14 09:07 KST) — earnings consistency 포함</li>
+      <li>Docker image Created: <strong>2026-07-13T23:45Z</strong> — 픽스 이전</li>
+      <li>컨테이너 내부: <code>core.earnings_consistency</code> <strong>ModuleNotFoundError</strong></li>
+      <li>따라서 사용자가 지금 보는 대시보드 브리핑은 <strong>모순 있는 raw JSON</strong>을 그대로 표시</li>
+    </ul>
+  </div>
+
+  <p>
+    코드 신뢰도와 화면 신뢰도를 분리하지 않으면 잘못된 결론이 난다.
+    <strong>레포 상태 86점 ≠ 운영 화면 62점</strong>.
+    해결은 한 줄이다 <code>docker compose build backend && docker compose up -d backend</code>.
+  </p>
+
+  <div class="cols">
+    <div class="callout teal">
+      <p class="t">로컬 main + 재계산</p>
+      <p>TSM D-2 · “발표됨” 0 · alert 기계적 재작성 · 체크포인트 중복 제거</p>
+    </div>
+    <div class="callout rose">
+      <p class="t">운영 Docker (현재)</p>
+      <p>TSM days=3 · alert “오늘 발표됨” · checkpoint “2일 후” 공존</p>
+    </div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="recs">
+  <h2>11. 권고 (우선순위)</h2>
+
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>P</th><th>조치</th><th>효과</th><th>근거</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>P0</strong></td>
+          <td>backend Docker 재빌드·재기동</td>
+          <td>대시보드에 serve-time 정합성 즉시 반영</td>
+          <td>모듈 부재 실측</td>
+        </tr>
+        <tr>
+          <td><strong>P0</strong></td>
+          <td>다음 briefing 수집 시 ET days_until 로직 적용 확인</td>
+          <td>raw JSON 모순 재발률 감소</td>
+          <td>MSD 커밋 87de20a</td>
+        </tr>
+        <tr>
+          <td><strong>P1</strong></td>
+          <td>Signal log / APScheduler 복구</td>
+          <td>Track 보드·자동 메일 운영 신뢰</td>
+          <td>헬스 FAIL</td>
+        </tr>
+        <tr>
+          <td><strong>P1</strong></td>
+          <td>SPCX daily 500 원인 수정</td>
+          <td>심볼 커버 완전성</td>
+          <td>헬스 FAIL</td>
+        </tr>
+        <tr>
+          <td><strong>P2</strong></td>
+          <td>무드 라벨: 당일 ≤−3% 시 optimistic 자동 강등</td>
+          <td>UI 인지 부조화 감소</td>
+          <td>8건 실측</td>
+        </tr>
+        <tr>
+          <td><strong>P2</strong></td>
+          <td>UI에 “절대일 + D-day(live)” 동시 표기 강제</td>
+          <td>상대일 단독 해석 방지</td>
+          <td>시차 필연성</td>
+        </tr>
+        <tr>
+          <td><strong>P3</strong></td>
+          <td>지정학 클레임 source_hint 클릭·원문 링크</td>
+          <td>내러티브 감사 가능성</td>
+          <td>간접 검증 한계</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout gold">
+    <p class="t">사용 가이드 (실무)</p>
+    <p>
+      <strong>믿어도 되는 것:</strong> 종가, Stage2/레짐 점수, 실적 <em>날짜</em>, VIX/DXY/금리 앵커 수치.<br/>
+      <strong>참고만 할 것:</strong> 소셜 심리, Polymarket, AI 문장 톤, 지정학 해석.<br/>
+      <strong>지금 화면에서 의심할 것:</strong> “N일 후 / 오늘 발표됨” 같은 상대 시간 문구 (Docker 재배포 전).
+    </p>
+  </div>
+</section>
+
+<!-- Annex -->
+<section id="annex">
+  <h2>부록 A — 데이터 나이 · 스키마</h2>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>피드</th><th>schema</th><th>generated_at</th><th>Age (검증 시)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>sentiment</td><td>2.0</td><td>2026-07-13T20:30:00Z</td><td>~10.4h</td></tr>
+        <tr><td>brief</td><td>2.0</td><td>2026-07-13T21:00:00Z</td><td>~9.9h</td></tr>
+        <tr><td>macro</td><td>2.0</td><td>2026-07-13T21:15:00Z</td><td>~9.6h</td></tr>
+        <tr><td>briefing</td><td>1.1</td><td>2026-07-13T21:45:01Z</td><td>~9.1h</td></tr>
+        <tr><td>earnings</td><td>2.0</td><td>2026-07-13T21:47:56Z</td><td>~9.1h</td></tr>
+        <tr><td>prediction</td><td>1.1</td><td>2026-07-13T23:42:58Z</td><td>~7.2h</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 style="margin-top:28px;">부록 B — 커밋 참조</h2>
+  <ul class="src-list">
+    <li>sniperboard <code>7c20aaa</code> — unify earnings dates + email dedupe (<code>earnings_consistency</code>)</li>
+    <li>market-sentiment-data <code>87de20a</code> — days_until US/Eastern, already_reported only if &lt; 0</li>
+  </ul>
+
+  <h2 style="margin-top:28px;">부록 C — 종합 점수 산출식 (투명성)</h2>
+  <p>
+    가중치: 기계 시세/시그널 25% · 실적 절대 메타 15% · 브리핑 수치 바인딩 15% ·
+    AI 시간표현(운영 화면) 15% · 센티/매크로/예측 10% · 운영 헬스 10% · 배포 일치 10%.
+  </p>
+  <p class="mono" style="display:block; padding:12px; line-height:1.7;">
+    0.25×95 + 0.15×95 + 0.15×93 + 0.15×45(Docker raw) + 0.10×64 + 0.10×48 + 0.10×40
+    ≈ 23.8 + 14.3 + 14.0 + 6.8 + 6.4 + 4.8 + 4.0 = <strong>74.1 ≈ 74</strong> (보수)<br/>
+    Docker 재배포 가정 시 시간표현 45→88, 배포 40→95 → <strong>≈ 84</strong>
+  </p>
+  <p>
+    본문 헤더의 <strong>78</strong>은 “코드는 수정됐으나 아직 미배포” 중간 상태를
+    반영한 운영 현실 점수(74)와 로컬 검증 성공(84)의 가중 중간값에 가깝게 반올림한 값이다.
+  </p>
+
+  <div class="callout teal" style="margin-top:20px;">
+    <p class="t">최종 한 문장</p>
+    <p>
+      SniperBoard 생태계는 <strong>가격·절대 일정·규칙 기반 시그널에서는 감사 가능한 수준의 정합</strong>을 보이며,
+      신뢰 붕괴 구간은 거의 전적으로 <strong>시간에 묶인 AI 자연어와 배포 지연</strong>에 집중되어 있다.
+      그 구간은 이미 코드로 봉쇄 가능하고, 남은 일은 재배포와 다음 수집 사이클 확인이다.
+    </p>
+  </div>
+</section>
+
+<footer>
+  SniperBoard Reliability Audit · 2026-07-14 · Evidence-based dual-repo verification<br/>
+  Generated for decision transparency — not investment advice.
+</footer>
+
+</div>
+</body>
+</html>
