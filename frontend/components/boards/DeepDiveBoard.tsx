@@ -1014,7 +1014,13 @@ export function DeepDiveBoard() {
                   </div>
                   <div style={{ padding: '7px 10px', borderRadius: 8, background: symEarning.days_until <= 7 ? 'var(--bear-soft)' : 'var(--warn-soft)' }}>
                     <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.dDay, locale)}</div>
-                    <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: symEarning.days_until <= 7 ? 'var(--bear)' : 'var(--warn)' }}>{symEarning.days_until}{locale === 'ko' ? '일 후' : 'd'}</div>
+                    <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: symEarning.days_until <= 7 ? 'var(--bear)' : 'var(--warn)' }}>
+                      {symEarning.days_until === 0
+                        ? (locale === 'ko' ? '오늘' : 'today')
+                        : symEarning.days_until === 1
+                          ? (locale === 'ko' ? '내일' : 'tmr')
+                          : `${symEarning.days_until}${locale === 'ko' ? '일 후' : 'd'}`}
+                    </div>
                   </div>
                   {symEarning.eps_estimate != null && (
                     <div style={{ padding: '7px 10px', borderRadius: 8, background: 'var(--card-elev)' }}>

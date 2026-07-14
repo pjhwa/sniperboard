@@ -349,7 +349,11 @@ export function OverviewBoard() {
                     <div key={e.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
                       <span style={{ fontWeight: 600, width: 40, fontFamily: 'var(--mono)' }}>{e.symbol}</span>
                       <span style={{ color: 'var(--fg-muted)', flex: 1 }}>
-                        {e.earnings_date.slice(5)} · {e.days_until}{locale === 'ko' ? '일 후' : 'd'}
+                        {e.earnings_date.slice(5)} · {e.days_until === 0
+                          ? (locale === 'ko' ? '오늘' : 'today')
+                          : e.days_until === 1
+                            ? (locale === 'ko' ? '내일' : 'tomorrow')
+                            : `${e.days_until}${locale === 'ko' ? '일 후' : 'd'}`}
                       </span>
                       {e.eps_estimate == null && (
                         <span style={{ fontSize: 10.5, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>{t(S.estimateNA, locale)}</span>

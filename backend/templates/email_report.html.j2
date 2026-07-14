@@ -305,7 +305,8 @@
   </div>
   {% endif %}
 
-  {% if earnings_alert %}
+  {# Free-text earnings_alert only when structured calendar is empty (no date conflicts) #}
+  {% if earnings_alert and not upcoming_earnings %}
   <div class="sec">
     <p class="sec-label">Earnings Alert</p>
     <div class="card card-rose">
@@ -316,12 +317,12 @@
 
   {% if upcoming_earnings %}
   <div class="sec">
-    <p class="sec-label">Upcoming Earnings (Watchlist)</p>
+    <p class="sec-label">Upcoming Earnings · Live Calendar</p>
     {% for e in upcoming_earnings %}
     <div class="card" style="margin-bottom:8px;">
       <p class="text-primary" style="font-family:Arial,Helvetica,sans-serif;margin:0 0 6px;">
         <span class="sym">{{ e.symbol }}</span>
-        <span class="text-soft"> · {{ e.earnings_date }} · D-{{ e.days_until }} · {{ e.relevance_tier }}</span>
+        <span class="text-soft"> · {{ e.earnings_date }} · {% if e.days_until == 0 %}D-Day{% else %}D-{{ e.days_until }}{% endif %}{% if e.relevance_tier %} · {{ e.relevance_tier }}{% endif %}</span>
       </p>
       <p class="text-muted" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;margin:0 0 6px;">
         {% if e.eps_estimate is not none %}EPS est {{ e.eps_estimate }}{% endif %}

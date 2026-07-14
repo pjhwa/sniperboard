@@ -27,6 +27,7 @@ from core.data_adapter import get_multi_daily
 from core.regime_engine import compute_regime
 from core.signal_engine import add_daily_indicators, calculate_stage2_analysis
 from core.conviction_calculator import calculate_conviction
+from core.earnings_consistency import prepare_email_sections, dedupe_strings
 from services.morning_briefing_service import fetch_morning_briefing
 from services.macro_insight_service import fetch_macro_insight
 from services.sentiment_service import fetch_latest
@@ -90,6 +91,12 @@ _PREDICTION_OUTCOME_KO = {
     "hike_25bps": "25bp 인상",
     "hike_50bps": "50bp+ 인상",
 }
+
+
+def _email_text_overlaps(a: str, b: str, *, min_len: int = 24) -> bool:
+    """Local wrapper — keeps render_html free of circular import noise."""
+    from core.earnings_consistency import text_overlaps
+    return text_overlaps(a, b, min_len=min_len)
 
 
 def collect_email_data() -> dict:
@@ -229,19 +236,46 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
 
     briefing_data = data.get("briefing", {})
     briefing_available = briefing_data.get("available", False)
-    bdata = briefing_data.get("data", {}) if briefing_available else {}
+    bdata_raw = briefing_data.get("data", {}) if briefing_available else {}
 
-    # ── briefing fields (ko preferred, full lists — no caps) ───────────────
+    # ── Earnings calendar first (absolute date SoT) ─────────────────────────
+    earn_wrap = data.get("earnings") or {}
+    earn_upcoming_raw: list = []
+    if earn_wrap.get("available") and isinstance(earn_wrap.get("data"), dict):
+        earn_upcoming_raw = earn_wrap["data"].get("upcoming_earnings") or []
+
+    # Live consistency + cross-section dedupe (no conflicting TSM dates / no restatement)
+    bdata = (
+        prepare_email_sections(bdata_raw, earn_upcoming_raw, locale="ko")
+        if briefing_available and bdata_raw
+        else {}
+    )
+    # Prefer calendar attached by prepare_email_sections (already live-refreshed)
+    earn_upcoming = bdata.get("_earnings_calendar") or earn_upcoming_raw
+
+    # ── briefing fields (ko preferred; lists already deduped) ───────────────
     headline = bdata.get("headline_ko") or bdata.get("headline_en") or bdata.get("headline", "")
-    executive_bullets = (bdata.get("executive_bullets_ko")
-                         or bdata.get("executive_bullets_en")
-                         or bdata.get("executive_bullets") or [])
-    today_checkpoints = (bdata.get("today_checkpoints_ko")
-                         or bdata.get("today_checkpoints_en")
-                         or bdata.get("today_checkpoints") or [])
-    earnings_alert = (bdata.get("earnings_alert_ko")
-                      or bdata.get("earnings_alert_en")
-                      or bdata.get("earnings_alert", ""))
+    executive_bullets = dedupe_strings(
+        bdata.get("executive_bullets_ko")
+        or bdata.get("executive_bullets_en")
+        or bdata.get("executive_bullets")
+        or []
+    )
+    today_checkpoints = (
+        bdata.get("today_checkpoints_ko")
+        or bdata.get("today_checkpoints_en")
+        or bdata.get("today_checkpoints")
+        or []
+    )
+    # Free-text alert only when structured calendar is empty
+    earnings_alert = ""
+    if not earn_upcoming:
+        earnings_alert = (
+            bdata.get("earnings_alert_ko")
+            or bdata.get("earnings_alert_en")
+            or bdata.get("earnings_alert")
+            or ""
+        )
 
     # ── Morning Mood ───────────────────────────────────────────────────────
     mood_raw = bdata.get("market_mood") or {}
@@ -264,7 +298,13 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
         overall.get("bullets_ko") or overall.get("bullets_en") or overall.get("bullets")
         or macro.get("bullets_ko") or macro.get("bullets") or macro.get("bullets_en") or []
     )
-    macro_bullets = [b for b in macro_bullets_raw if b]  # full list
+    macro_bullets = dedupe_strings([b for b in macro_bullets_raw if b])
+    # Drop macro bullets that restate overall summary
+    if macro_summary:
+        macro_bullets = [
+            b for b in macro_bullets
+            if not _email_text_overlaps(b, macro_summary)
+        ]
     macro_bar_b64 = base64.b64encode(macro_bar_png).decode() if macro_bar_png else ""
 
     macro_groups_detail = []
@@ -281,14 +321,16 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
                 "text": text,
             })
 
-    # ── Big Picture ────────────────────────────────────────────────────────
+    # ── Big Picture (skip notes that only restate macro summary) ───────────
     bp = bdata.get("big_picture") or {}
     big_picture_summary = bp.get("summary_ko") or bp.get("summary_en") or ""
+    if big_picture_summary and macro_summary and _email_text_overlaps(big_picture_summary, macro_summary):
+        big_picture_summary = ""  # avoid dual walls of the same thesis
     big_picture_items = []
     for label, key in [("VIX", "vix_note"), ("금리", "rates_note"),
                         ("달러", "dollar_note"), ("BTC", "btc_note")]:
         note = bp.get(f"{key}_ko") or bp.get(f"{key}_en", "")
-        if note:
+        if note and not (macro_summary and _email_text_overlaps(note, macro_summary, min_len=30)):
             big_picture_items.append({"label": label, "note": note})
 
     # ── Sector Analysis ────────────────────────────────────────────────────
@@ -319,26 +361,39 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
             "source_hint": issue.get("source_hint", ""),
         })
 
-    # ── Spotlight (full why / watch_level) ──────────────────────────────────
+    # ── Spotlight (full why / watch_level; empty why dropped by prepare) ───
     spotlight_items = []
     for s in (bdata.get("spotlight") or []):
         if not isinstance(s, dict):
+            continue
+        why = s.get("why_ko") or s.get("why_en") or ""
+        watch_level = s.get("watch_level_ko") or s.get("watch_level_en") or ""
+        if not why and not watch_level:
             continue
         spotlight_items.append({
             "symbol": s.get("symbol", ""),
             "company": s.get("company", ""),
             "tier": s.get("tier"),
-            "why": s.get("why_ko") or s.get("why_en", ""),
-            "watch_level": s.get("watch_level_ko") or s.get("watch_level_en", ""),
+            "why": why,
+            "watch_level": watch_level,
         })
 
     # ── Morning Watchlist — FULL analysis (no truncation) ──────────────────
     morning_watchlist = []
+    spotlight_syms = {s["symbol"].upper() for s in spotlight_items if s.get("symbol")}
     for w in (bdata.get("watchlist") or []):
         if not isinstance(w, dict):
             continue
         action = w.get("action", "watch")
         analysis = w.get("analysis_ko") or w.get("analysis_en") or ""
+        # If spotlight already covers this symbol with the same thesis, skip duplicate body
+        sym_u = str(w.get("symbol") or "").upper()
+        if sym_u in spotlight_syms and analysis:
+            sp = next((x for x in spotlight_items if x["symbol"].upper() == sym_u), None)
+            if sp and sp.get("why") and _email_text_overlaps(analysis, sp["why"], min_len=40):
+                # Keep watchlist row but only if analysis adds action/levels beyond spotlight
+                if len(analysis) < len(sp["why"]) + 30:
+                    analysis = ""  # spotlight already said it
         morning_watchlist.append({
             "symbol": w.get("symbol", ""),
             "company": w.get("company", ""),
@@ -346,7 +401,7 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
             "action": action,
             "action_class": _ACTION_CLASS.get(action, "act-watch"),
             "sentiment_icon": _SENTIMENT_ICON.get(w.get("sentiment_mood", ""), "😐"),
-            "analysis": analysis,  # complete text
+            "analysis": analysis,
         })
 
     # ── Prediction (reference-only) ────────────────────────────────────────
@@ -363,24 +418,22 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
                 key=lambda x: -x[1],
             )
 
-    # ── Earnings intelligence (upcoming, full AI text) ─────────────────────
-    earn_wrap = data.get("earnings") or {}
+    # ── Earnings intelligence (live days_until, sanitized AI text) ─────────
     upcoming_earnings = []
-    if earn_wrap.get("available") and isinstance(earn_wrap.get("data"), dict):
-        for e in (earn_wrap["data"].get("upcoming_earnings") or []):
-            if not isinstance(e, dict):
-                continue
-            upcoming_earnings.append({
-                "symbol": e.get("symbol", ""),
-                "earnings_date": e.get("earnings_date", ""),
-                "days_until": e.get("days_until"),
-                "relevance_tier": e.get("relevance_tier", ""),
-                "eps_estimate": e.get("eps_estimate"),
-                "revenue_estimate_b": e.get("revenue_estimate_b"),
-                "risk_level": e.get("risk_level"),
-                "ai_summary": e.get("ai_summary_ko") or e.get("ai_summary_en") or "",
-                "action_note": e.get("action_note_ko") or e.get("action_note_en") or "",
-            })
+    for e in earn_upcoming or []:
+        if not isinstance(e, dict):
+            continue
+        upcoming_earnings.append({
+            "symbol": e.get("symbol", ""),
+            "earnings_date": e.get("earnings_date", ""),
+            "days_until": e.get("days_until"),
+            "relevance_tier": e.get("relevance_tier", ""),
+            "eps_estimate": e.get("eps_estimate"),
+            "revenue_estimate_b": e.get("revenue_estimate_b"),
+            "risk_level": e.get("risk_level"),
+            "ai_summary": e.get("ai_summary_ko") or e.get("ai_summary_en") or "",
+            "action_note": e.get("action_note_ko") or e.get("action_note_en") or "",
+        })
 
     market_sentiment = data.get("market_sentiment")
     market_sentiment_display = (

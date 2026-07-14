@@ -10,14 +10,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import services.earnings_service as svc
 
 
+# Use far-future dates so live days_until refresh never drops the fixture as past
 SAMPLE_EARNINGS = {
-    "generated_at": "2026-05-24T13:00:00Z",
+    "generated_at": "2026-07-10T13:00:00Z",
     "schema_version": "1.0",
     "upcoming_earnings": [
         {
             "symbol": "NVDA",
-            "earnings_date": "2026-05-28",
-            "days_until": 4,
+            "earnings_date": "2026-08-20",
+            "days_until": 4,  # stale; recomputed at serve time
             "eps_estimate": 0.89,
             "revenue_estimate_b": 43.1,
             "historical_beat_rate": 0.92,
@@ -72,12 +73,38 @@ class TestFetchEarnings(unittest.TestCase):
 
     def test_cache_hit_skips_request(self):
         import time
-        svc._cache["data"] = {"available": True, "data": SAMPLE_EARNINGS}
+        # Cache stores raw GitHub payload; serve path always re-sanitizes
+        svc._cache["data"] = SAMPLE_EARNINGS
         svc._cache["ts"] = time.monotonic()
         with patch("requests.get") as mock_get:
             result = svc.fetch_earnings()
         mock_get.assert_not_called()
         self.assertTrue(result["available"])
+
+    def test_days_until_recomputed_live(self):
+        from datetime import date
+        payload = {
+            **SAMPLE_EARNINGS,
+            "upcoming_earnings": [
+                {
+                    "symbol": "NVDA",
+                    "earnings_date": "2026-05-28",
+                    "days_until": 99,  # stale
+                    "eps_estimate": 0.89,
+                    "revenue_estimate_b": 43.1,
+                    "risk_level": "high",
+                }
+            ],
+        }
+        svc._cache["data"] = None
+        svc._cache["ts"] = 0.0
+        with patch.object(svc, "EARNINGS_DATA_URL", "http://fake.url"), \
+             patch("requests.get", return_value=_make_resp(payload)), \
+             patch("core.earnings_consistency.today_in_tz", return_value=date(2026, 5, 24)):
+            result = svc.fetch_earnings()
+        self.assertTrue(result["available"])
+        row = result["data"]["upcoming_earnings"][0]
+        self.assertEqual(row["days_until"], 4)  # May 28 - May 24
 
     def test_returns_unavailable_for_placeholder_json(self):
         placeholder = {"generated_at": None, "schema_version": "1.0",

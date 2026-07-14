@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-07-13 morning-email-redesign)
+# SniperBoard — Project Context (UPDATED 2026-07-14 earnings-consistency)
 
 ## 0. Purpose of This Document
 
@@ -32,21 +32,23 @@ sniperboard/
 │   │   ├── signal_engine.py      # Core: all technical indicator and signal calculations (700+ lines). Phase 2: calculate_stage2_analysis detects 'adj_close' and uses adjusted (scaled high/low + adj_close series) for 52w/RS/ema200_slope/pullback/pivot/entry on split symbols. GC/intraday/raw unchanged.
 │   │   ├── regime_engine.py      # Risk Regime 5-factor composite score (0~100)
 │   │   ├── distribution_day.py   # O'Neil Distribution Day count (25 trading days)
-│   │   └── data_adapter.py       # SINGLE SOURCE OF TRUTH: yfinance MultiIndex normalization + fetch (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily). yf 1.3+ compatible. Phase 2: adj_close preserved for daily paths → Stage2 long-term accuracy on splits. Phase 5: centralization verified via full tests + manual endpoint checks.
-│   │   └── conviction_calculator.py  # Phase 1: Conviction Composite Score v1 (TDD). 40/30/30 weighted (Stage2 0-7 norm + Sentiment + Regime total). Pure function, regime=None → 50 neutral. P0-1 (2026-07-13): normalize_sentiment_composite() maps market-sentiment-data composite_score (−2..+2) → 0–100 via (x+2)/4*100; values outside [−2,2] treated as legacy 0–100; None→50. Returns score+label+components (sentiment.input preserves producer value). Labels English: "Very High"(≥80) / "High"(≥65) / "Moderate"(≥50) / "Low"(≥35) / "Very Low"(<35). Frontend maps via CONVICTION_LABEL_META.
-│   │   └── macro_rules.py            # Macro Insight traffic-light rule engine. compute_macro_signals(items) → {overall:{judgment,green_count,red_count}, groups:{key:{signal,direction}}}. 6 groups (volatility/breadth/credit/rates/commodities/sectors) each with green/yellow/red + overall RISK_ON/MIXED/RISK_OFF. Pure function, dict list input. TDD 20 tests.
-│   │   └── cap_rank_tracker.py       # 글로벌 시총 순위 SQLite 영속 (cap_ranks.db). init_db / save_ranks / get_previous_ranks / CapRankItem dataclass.
-│   │   └── backtest_engine.py        # Backtesting engine (2026-06-02). Daily bar backtest driven by Stage2 signals. Key functions: fetch_backtest_data(symbols) → yfinance download from 2019-01-01 / _compute_stage2_series(df, spy_df, rs_threshold=50, stop_atr_mult=2.0, rr_ratio=3.0) → vectorized Stage2 7-check + R:R plan (no look-ahead, rs_threshold parameterized) / _simulate_trades(symbol, df, signals, ..., spy_ema200_filter=None) → bar-by-bar simulation (T-1 signal → T fill, gap handling, cooldown, SPY>EMA200 market filter) / compute_stats(trades) → win_rate/expectancy_r/profit_factor/mdd/max_consecutive_loss/equity_curve / compute_monte_carlo(trades, n_simulations=10000) → bootstrap resampling confidence intervals (p5/p25/median/p75/p95 + prob_positive, fully vectorized, ~0.1s) / run_full_backtest(symbols, rs_threshold=70, use_spy_filter=True, ...) → aggregate all symbols + IS/OOS split + Stage2 score breakdown + monte_carlo + cache backtest_result.json / run_parameter_sweep(symbols, configs) → 8-config batch experiments. Best config: rs_threshold=70, use_spy_filter=True (expectancy +0.460R, OOS +0.511R, MC prob_positive 99.8%). AMZN structurally incompatible (21% win rate, no improvement across all configs). Settings: STAGE2_THRESHOLD=5, SLIPPAGE_PCT=0.0005, TIMEOUT_BARS=60, COOLDOWN_BARS=10, ENTRY_WINDOW_BARS=5, IN_SAMPLE_END=2023-12-31. TDD 22 tests.
+│   │   ├── data_adapter.py       # SINGLE SOURCE OF TRUTH: yfinance MultiIndex normalization + fetch (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily). yf 1.3+ compatible. Phase 2: adj_close preserved for daily paths → Stage2 long-term accuracy on splits. Phase 5: centralization verified via full tests + manual endpoint checks.
+│   │   ├── conviction_calculator.py  # Phase 1: Conviction Composite Score v1 (TDD). 40/30/30 weighted (Stage2 0-7 norm + Sentiment + Regime total). Pure function, regime=None → 50 neutral. P0-1 (2026-07-13): normalize_sentiment_composite() maps market-sentiment-data composite_score (−2..+2) → 0–100 via (x+2)/4*100; values outside [−2,2] treated as legacy 0–100; None→50. Returns score+label+components (sentiment.input preserves producer value). Labels English: "Very High"(≥80) / "High"(≥65) / "Moderate"(≥50) / "Low"(≥35) / "Very Low"(<35). Frontend maps via CONVICTION_LABEL_META.
+│   │   ├── macro_rules.py            # Macro Insight traffic-light rule engine. compute_macro_signals(items) → {overall:{judgment,green_count,red_count}, groups:{key:{signal,direction}}}. 6 groups (volatility/breadth/credit/rates/commodities/sectors) each with green/yellow/red + overall RISK_ON/MIXED/RISK_OFF. Pure function, dict list input. TDD 20 tests.
+│   │   ├── cap_rank_tracker.py       # 글로벌 시총 순위 SQLite 영속 (cap_ranks.db). init_db / save_ranks / get_previous_ranks / CapRankItem dataclass.
+│   │   ├── backtest_engine.py        # Backtesting engine (2026-06-02). Daily bar backtest driven by Stage2 signals.
+│   │   └── earnings_consistency.py   # (2026-07-14) Single SoT for earnings relative-day language. Absolute earnings_date authoritative; days_until always recomputed US/Eastern at serve time; sanitize AI free-text ("N일 후", "already reported"); rebuild mechanical earnings_alert; prepare_email_sections cross-dedupe for morning email. Used by earnings_service, morning_briefing_service, email_report_service.
 │   ├── services/
 │   │   ├── base.py               # BaseDataService abstract class
 │   │   ├── data_service.py       # YFinanceDataService implementation + module-level helpers
 │   │   ├── brief_service.py      # GitHub raw fetch + 30-min in-memory cache (BRIEF_DATA_URL)
-│   │   ├── earnings_service.py   # GitHub raw fetch + 5-min cache (EARNINGS_DATA_URL). P0-6: sanitize revenue_estimate_b — drop |v|>300 (TWD-as-USD unit bugs).
+│   │   ├── earnings_service.py   # GitHub raw fetch + 5-min raw cache (EARNINGS_DATA_URL). P0-6: sanitize revenue_estimate_b — drop |v|>300. P0-consistency (2026-07-14): every serve recomputes days_until via core.earnings_consistency.refresh_upcoming_earnings (US/Eastern absolute date SoT); past events dropped from upcoming; AI relative-day phrases scrubbed.
 │   │   ├── prediction_service.py # P0-4: GitHub raw prediction/latest.json (Polymarket FOMC odds). usage=reference_only — never feeds Conviction. 5-min cache.
 │   │   └── overnight_service.py  # Yahoo Finance WebSocket → Blue Ocean ATS overnight price stream. Runs in a dedicated daemon thread (asyncio.run in thread) — NOT in uvicorn's event loop, to avoid handshake timeouts caused by blocking yfinance I/O. Protobuf base64 parsing (field1=symbol, field2=price/float32, field6=session_hours/varint:8=overnight, field12=chg_pct). start_overnight_service() called in FastAPI lifespan; spawns threading.Thread(daemon=True).
 │   │   └── cap_leaderboard_service.py # companiesmarketcap.com 글로벌 랭킹 스크래핑 → yfinance 1y 히스토리로 spark·52W·market_structure 보완. 1h 인메모리 캐시 + stale fallback. fetch_leaderboard() → TOP 15 dict.
 │   │   └── macro_insight_service.py  # GitHub raw fetch + 30-min in-memory cache (MACRO_INSIGHT_URL). fetch_macro_insight() → Optional[dict]. get_ai_meta(raw) → {generated_at,age_minutes}. Returns None gracefully if URL not set.
-│   │   └── morning_briefing_service.py  # GitHub raw fetch + 10-min in-memory cache (MORNING_BRIEFING_URL). fetch_morning_briefing() → {available, data}. Generated once daily at KST 07:30.
+│   │   └── morning_briefing_service.py  # GitHub raw fetch + 10-min raw cache (MORNING_BRIEFING_URL). On every serve: sanitize_briefing_payload against live earnings calendar (rewrites frozen "N일 후"/"already reported" AI text). Generated once daily at KST 07:30.
+│   │   └── email_report_service.py  # Morning email: collect + charts + Jinja2. prepare_email_sections() dedupes cross-section restatements; structured earnings calendar is SoT (free-text earnings_alert omitted when calendar present).
 │   └── tests/
 │       ├── test_data_adapter.py (29 tests — adapter + signal_engine; Phase 5 full suite green)
 │       ├── test_signal_engine.py (incl. adjusted vs raw split symbol TDD)
@@ -597,7 +599,8 @@ Note: Brief/Earnings data covers TIER1 12 symbols (collect_brief.py, collect_ear
 | Polling interval | `frontend/hooks/useIntraday.ts` (currently 30 seconds) |
 | Brief/Earnings URL | `docker-compose.yml: BRIEF_DATA_URL / EARNINGS_DATA_URL` |
 | Brief cache TTL | `backend/services/brief_service.py: CACHE_TTL` (currently 1800s) |
-| Earnings cache TTL | `backend/services/earnings_service.py: CACHE_TTL` (currently 3600s) |
+| Earnings cache TTL | `backend/services/earnings_service.py: CACHE_TTL` (300s raw; days_until recomputed every serve) |
+| Earnings relative-day consistency | `backend/core/earnings_consistency.py` — absolute date SoT, ET recompute, AI text sanitize, email dedupe |
 | Brief watchlist | `collect/collect_brief.py: WATCHLIST` + `collect/collect_earnings.py: WATCHLIST` |
 | Macro Insight traffic light rules | `backend/core/macro_rules.py` (compute_*_signal functions) |
 | Macro Insight AI cache TTL/URL | `backend/services/macro_insight_service.py: CACHE_TTL / MACRO_INSIGHT_URL` |

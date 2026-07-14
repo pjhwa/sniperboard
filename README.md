@@ -188,7 +188,7 @@ The main board showing the full market picture in one view. 11 cards.
 | Card | Content |
 |------|---------|
 | **AI Market Snapshot** | Grok AI-generated market narrative (tone · key_themes · watch_points) + per-symbol AI analysis (Setup Quality A+~D · Action Bias · one-line summary). Falls back to Regime text when briefData is unavailable. ⏱ Freshness badge. |
-| **Earnings Calendar** | Upcoming earnings within 30 days for watchlist symbols. Risk tier (high/med/low) + imminent/approaching/watching tier. ⏱ Freshness badge. |
+| **Earnings Calendar** | Upcoming earnings within 30 days for watchlist symbols. Absolute `earnings_date` is source of truth; `days_until` is recomputed live (US/Eastern) on every API serve so frozen AI text cannot show conflicting "2일 후 / 오늘 발표됨 / 3일 후". Risk tier (high/med/low) + imminent/approaching/watching. ⏱ Freshness badge. |
 | **Risk Regime** | Macro environment score 0~100 (5 factors: Trend · Breadth · Credit · Volatility · Momentum + raw values). RadialGauge visualization. |
 | **Distribution Days** | SPY·QQQ institutional selling day count (O'Neil, 25 trading days). OK / WARNING / DANGER levels. |
 | **Market Breadth** | SPY · RSP · MAGS · IWM 5-day return comparison. Auto-warns on narrow Mag7-led rallies. |
@@ -422,6 +422,8 @@ Mac Mini cron generates external data twice daily, pushes to GitHub, and the bac
 A health monitor (`market-sentiment-data/monitor/health_check.py`) runs every 2 hours via cron and sends a macOS native notification if any issue is detected (data staleness, Docker container down, API unresponsive, etc.).
 
 Each response includes `meta: {fetched_at, age_minutes, source}` — displayed as ⏱ freshness badges in the UI.
+
+**Earnings / briefing consistency (2026-07-14):** Collectors may freeze relative phrases ("3일 후", "already reported") into AI text. SniperBoard recomputes `days_until` from absolute `earnings_date` in **US/Eastern** on every `/api/earnings` and `/api/morning-briefing` serve, scrubs conflicting free text, and for morning email drops free-text earnings alerts when the structured calendar is present (plus cross-section dedupe of restated bullets).
 
 ---
 

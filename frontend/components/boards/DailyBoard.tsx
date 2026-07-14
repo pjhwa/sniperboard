@@ -151,7 +151,12 @@ export function DailyBoard() {
               opacity: 0.9,
             }}>
               <span style={{ fontWeight: 700 }}>
-                {symbolEarning.relevance_tier === 'imminent' ? '⚡' : '📅'} EARNINGS IN {symbolEarning.days_until}D
+                {symbolEarning.relevance_tier === 'imminent' ? '⚡' : '📅'}{' '}
+                {symbolEarning.days_until === 0
+                  ? 'EARNINGS TODAY'
+                  : symbolEarning.days_until === 1
+                    ? 'EARNINGS TOMORROW'
+                    : `EARNINGS IN ${symbolEarning.days_until}D`}
               </span>
               <span style={{ opacity: 0.8 }}>{tField(symbolEarning.action_note_en, symbolEarning.action_note_ko, symbolEarning.action_note, locale)}</span>
             </div>
