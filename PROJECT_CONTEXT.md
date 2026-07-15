@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-07-15 reliability-p1)
+# SniperBoard — Project Context (UPDATED 2026-07-15 phase-A)
 
 ## 0. Purpose of This Document
 
@@ -37,7 +37,8 @@ sniperboard/
 │   │   ├── macro_rules.py            # Macro Insight traffic-light rule engine. compute_macro_signals(items) → {overall:{judgment,green_count,red_count}, groups:{key:{signal,direction}}}. 6 groups (volatility/breadth/credit/rates/commodities/sectors) each with green/yellow/red + overall RISK_ON/MIXED/RISK_OFF. Pure function, dict list input. TDD 20 tests.
 │   │   ├── cap_rank_tracker.py       # 글로벌 시총 순위 SQLite 영속 (cap_ranks.db). init_db / save_ranks / get_previous_ranks / CapRankItem dataclass.
 │   │   ├── backtest_engine.py        # Backtesting engine (2026-06-02). Daily bar backtest driven by Stage2 signals.
-│   │   └── earnings_consistency.py   # (2026-07-14/15) Earnings relative-day SoT + email dedupe. 2026-07-15: reconcile_sentiment_mood_with_session() downgrades optimistic/euphoric when analysis reports ≤−3% session drop (display coherence; not fed to Grok).
+│   │   ├── earnings_consistency.py   # Earnings relative-day SoT + email dedupe + mood/session coherence.
+│   │   └── github_payload_cache.py   # Phase A3: LastGoodCache + stale-on-error + brief/sentiment slot_mismatch helpers.
 │   ├── services/
 │   │   ├── base.py               # BaseDataService abstract class
 │   │   ├── data_service.py       # YFinanceDataService implementation + module-level helpers

@@ -1,23 +1,20 @@
-"""아침 브리핑 서비스 — GitHub raw URL fetch + 인메모리 캐시.
-
-Free-text relative earnings language is sanitized against the live earnings
-calendar (core.earnings_consistency) so dashboard and email never disagree.
-"""
+"""아침 브리핑 서비스 — GitHub raw URL fetch + last-good + earnings consistency."""
 
 import logging
 import os
-import time
 from typing import Any
 
 import requests
+
+from core.github_payload_cache import LastGoodCache, mark_stale_result
 
 logger = logging.getLogger(__name__)
 
 MORNING_BRIEFING_URL = os.environ.get("MORNING_BRIEFING_URL", "")
 SENTIMENT_DATA_TOKEN = os.environ.get("SENTIMENT_DATA_TOKEN", "")
 
-CACHE_TTL = 600  # 10분 — 하루 1회 갱신, 빠른 반영을 위해 짧게 유지
-_cache: dict[str, Any] = {"data": None, "ts": 0.0}
+CACHE_TTL = 600
+_cache = LastGoodCache(ttl_seconds=CACHE_TTL)
 
 
 def _auth_headers() -> dict:
@@ -27,7 +24,6 @@ def _auth_headers() -> dict:
 
 
 def _apply_earnings_consistency(data: dict) -> dict:
-    """Recompute relative-day language against live earnings calendar."""
     try:
         from core.earnings_consistency import sanitize_briefing_payload
         from services.earnings_service import fetch_earnings
@@ -42,34 +38,46 @@ def _apply_earnings_consistency(data: dict) -> dict:
         return data
 
 
+def _success(raw: dict, *, stale: bool = False, reason: str = "") -> dict:
+    sanitized = _apply_earnings_consistency(dict(raw))
+    out: dict[str, Any] = {
+        "available": True,
+        "data": sanitized,
+        "stale": stale,
+        "from_cache": stale,
+    }
+    if stale:
+        out = mark_stale_result(out, reason=reason or "fetch_failed")
+        out["data"] = sanitized
+    return out
+
+
 def fetch_morning_briefing() -> dict:
-    """briefing/latest.json 반환. raw 캐시 + 매 요청 live earnings sanitize."""
-    now = time.monotonic()
-    raw = None
-    if _cache["data"] is not None and (now - _cache["ts"]) < CACHE_TTL:
-        raw = _cache["data"]
-    else:
-        if not MORNING_BRIEFING_URL:
-            return {"available": False, "error": "MORNING_BRIEFING_URL 환경변수가 설정되지 않았습니다."}
+    """briefing/latest.json — last-good on error + live earnings sanitize."""
+    if not MORNING_BRIEFING_URL:
+        if _cache.has_last_good:
+            return _success(_cache.get_last_good(), stale=True, reason="url_not_configured")
+        return {"available": False, "error": "MORNING_BRIEFING_URL 환경변수가 설정되지 않았습니다."}
 
-        try:
-            headers = {**_auth_headers(), "Cache-Control": "no-cache", "Pragma": "no-cache"}
-            resp = requests.get(MORNING_BRIEFING_URL, headers=headers, timeout=10)
-            resp.raise_for_status()
-            data = resp.json()
-        except Exception as e:
-            logger.warning(f"morning briefing fetch 실패: {e}")
-            return {"available": False, "error": f"GitHub raw fetch 실패: {e}"}
+    fresh = _cache.get_fresh()
+    if fresh is not None:
+        return _success(fresh, stale=False)
 
-        if data.get("generated_at") is None:
-            return {"available": False, "error": "브리핑 데이터가 아직 생성되지 않았습니다."}
+    try:
+        headers = {**_auth_headers(), "Cache-Control": "no-cache", "Pragma": "no-cache"}
+        resp = requests.get(MORNING_BRIEFING_URL, headers=headers, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception as e:
+        logger.warning(f"morning briefing fetch 실패: {e}")
+        if _cache.has_last_good:
+            return _success(_cache.get_last_good(), stale=True, reason=f"fetch_failed:{e}")
+        return {"available": False, "error": f"GitHub raw fetch 실패: {e}"}
 
-        _cache["data"] = data
-        _cache["ts"] = now
-        raw = data
-
-    if not isinstance(raw, dict) or raw.get("generated_at") is None:
+    if data.get("generated_at") is None:
+        if _cache.has_last_good:
+            return _success(_cache.get_last_good(), stale=True, reason="placeholder_json")
         return {"available": False, "error": "브리핑 데이터가 아직 생성되지 않았습니다."}
 
-    sanitized = _apply_earnings_consistency(dict(raw))
-    return {"available": True, "data": sanitized}
+    _cache.set_success(data)
+    return _success(data, stale=False)

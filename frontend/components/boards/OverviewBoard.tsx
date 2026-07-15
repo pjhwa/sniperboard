@@ -16,6 +16,7 @@ import { G } from '@/app/glossary';
 import { useBrief } from '@/hooks/useBrief';
 import { useEarnings } from '@/hooks/useEarnings';
 import { t, tField } from '@/app/i18n';
+import { formatEarningsLabel } from '@/app/earningsFormat';
 
 // Static bilingual strings
 const S = {
@@ -102,7 +103,9 @@ function FreshnessBadge({ meta }: { meta?: FreshnessMeta | null }) {
   if (!meta || typeof meta.age_minutes !== 'number') return null;
   const mins = meta.age_minutes;
   const ageStr = mins < 1 ? 'now' : `${Math.round(mins)}m ago`;
-  const stale = mins > 90;
+  const ageStale = mins > 90;
+  const cacheStale = Boolean(meta.stale || meta.from_cache);
+  const stale = ageStale || cacheStale;
   return (
     <span
       style={{
@@ -113,9 +116,9 @@ function FreshnessBadge({ meta }: { meta?: FreshnessMeta | null }) {
         fontFamily: 'var(--font-mono, monospace)',
         whiteSpace: 'nowrap',
       }}
-      title={`source: ${meta.source || 'github_raw'}`}
+      title={`source: ${meta.source || 'github_raw'}${cacheStale ? ' (last-good cache)' : ''}`}
     >
-      ⏱ {ageStr}
+      ⏱ {ageStr}{cacheStale ? ' · cached' : ''}
     </span>
   );
 }
@@ -349,14 +352,7 @@ export function OverviewBoard() {
                     <div key={e.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
                       <span style={{ fontWeight: 600, width: 40, fontFamily: 'var(--mono)' }}>{e.symbol}</span>
                       <span style={{ color: 'var(--fg-muted)', flex: 1 }}>
-                        {/* Absolute date is SoT; relative is live recompute from API */}
-                        {e.earnings_date}
-                        {' · '}
-                        {e.days_until === 0
-                          ? (locale === 'ko' ? '오늘 발표' : 'reports today')
-                          : e.days_until === 1
-                            ? (locale === 'ko' ? '내일 발표' : 'tomorrow')
-                            : (locale === 'ko' ? `D-${e.days_until}` : `D-${e.days_until}`)}
+                        {formatEarningsLabel(e.earnings_date, e.days_until, locale)}
                       </span>
                       {e.eps_estimate == null && (
                         <span style={{ fontSize: 10.5, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>{t(S.estimateNA, locale)}</span>

@@ -1,0 +1,43 @@
+# Phase A1: on main pushes that touch backend, build the Docker image so
+# regressions in Dockerfile/requirements fail CI. Local runtime contract is
+# scripts/deploy_verify_backend.sh (rebuild + container import checks).
+name: backend-image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "docker-compose.yml"
+      - "scripts/deploy_verify_backend.sh"
+      - ".github/workflows/backend-image.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "docker-compose.yml"
+      - "scripts/deploy_verify_backend.sh"
+      - ".github/workflows/backend-image.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build backend image
+        run: docker compose build backend
+      - name: Import smoke (no full stack)
+        run: |
+          docker compose build backend
+          # Run a one-shot container to import reliability modules from the built image
+          docker compose run --rm --no-deps backend python -c "
+          import core.earnings_consistency as ec
+          from core.github_payload_cache import slots_compatible
+          from api.endpoints import _MIN_STAGE2_BARS
+          assert hasattr(ec, 'reconcile_sentiment_mood_with_session')
+          assert _MIN_STAGE2_BARS == 200
+          assert slots_compatible('pre_open', 'pre_open')
+          print('CI import OK')
+          "

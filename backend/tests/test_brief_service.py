@@ -42,8 +42,7 @@ def _make_resp(data: dict):
 
 class TestFetchBrief(unittest.TestCase):
     def setUp(self):
-        svc._cache["data"] = None
-        svc._cache["ts"] = 0.0
+        svc._cache.clear()
 
     def test_returns_unavailable_when_no_url(self):
         with patch.object(svc, "BRIEF_DATA_URL", ""):
@@ -53,7 +52,8 @@ class TestFetchBrief(unittest.TestCase):
 
     def test_returns_data_on_success(self):
         with patch.object(svc, "BRIEF_DATA_URL", "http://fake.url"), \
-             patch("requests.get", return_value=_make_resp(SAMPLE_BRIEF)):
+             patch("requests.get", return_value=_make_resp(SAMPLE_BRIEF)), \
+             patch("services.sentiment_service.fetch_latest", return_value={"available": True, "slot": "pre_open"}):
             result = svc.fetch_brief()
         self.assertTrue(result["available"])
         self.assertEqual(result["data"]["slot"], "pre_open")
@@ -67,9 +67,7 @@ class TestFetchBrief(unittest.TestCase):
         self.assertIn("fetch 실패", result["error"])
 
     def test_cache_hit_skips_request(self):
-        import time
-        svc._cache["data"] = {"available": True, "data": SAMPLE_BRIEF}
-        svc._cache["ts"] = time.monotonic()
+        svc._cache.set_success(SAMPLE_BRIEF)
         with patch("requests.get") as mock_get:
             result = svc.fetch_brief()
         mock_get.assert_not_called()

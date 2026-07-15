@@ -427,6 +427,13 @@ Each response includes `meta: {fetched_at, age_minutes, source}` — displayed a
 
 **Reliability P1 (2026-07-15):** `/api/daily` returns **404** (not 500) when history is too short for Stage2/EMA200 (e.g. recent IPO like SPCX). Watchlist stubs thin names with price-only rows. Serve-time mood coherence: `optimistic`/`euphoric` auto-downgraded when the same analysis reports ≤−3% session move. Signal outcome refresh runs on backend startup; `backend/data` is volume-mounted for persistent `signal_log.db`.
 
+**Phase A reliability defenses (2026-07-15):**
+- **A1** `scripts/deploy_verify_backend.sh` + `.github/workflows/backend-image.yml` — rebuild/verify backend image so code≠screen cannot silently return.
+- **A2** Brief waits for same-slot sentiment (`load_sentiment_for_slot`); consumer annotates `slot_mismatch`.
+- **A3** sentiment/brief/earnings/morning-briefing serve **last-good** on fetch failure with `meta.stale` / `from_cache`.
+- **A4** Health monitor `SNIPERBOARD_SIGNAL_DB` defaults to compose volume path.
+- **A5** Shared `frontend/app/earningsFormat.ts` for absolute date + D-n on Overview/Daily/DeepDive.
+
 ---
 
 ## API Endpoints

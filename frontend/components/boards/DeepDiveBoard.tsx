@@ -25,6 +25,7 @@ import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
 import { InfoPopover } from '@/components/ui/InfoPopover';
 import { G } from '@/app/glossary';
 import { t, tField } from '@/app/i18n';
+import { formatEarningsRelative } from '@/app/earningsFormat';
 
 // ─── Static bilingual strings ───────────────────────────────────────────────
 
@@ -1010,16 +1011,12 @@ export function DeepDiveBoard() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                   <div style={{ padding: '7px 10px', borderRadius: 8, background: 'var(--card-elev)' }}>
                     <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.earningsDate, locale)}</div>
-                    <div className="mono" style={{ fontSize: 15, fontWeight: 700 }}>{symEarning.earnings_date.slice(5)}</div>
+                    <div className="mono" style={{ fontSize: 15, fontWeight: 700 }}>{symEarning.earnings_date}</div>
                   </div>
                   <div style={{ padding: '7px 10px', borderRadius: 8, background: symEarning.days_until <= 7 ? 'var(--bear-soft)' : 'var(--warn-soft)' }}>
                     <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.dDay, locale)}</div>
                     <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: symEarning.days_until <= 7 ? 'var(--bear)' : 'var(--warn)' }}>
-                      {symEarning.days_until === 0
-                        ? (locale === 'ko' ? '오늘' : 'today')
-                        : symEarning.days_until === 1
-                          ? (locale === 'ko' ? '내일' : 'tmr')
-                          : `${symEarning.days_until}${locale === 'ko' ? '일 후' : 'd'}`}
+                      {formatEarningsRelative(symEarning.days_until, locale)}
                     </div>
                   </div>
                   {symEarning.eps_estimate != null && (

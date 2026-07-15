@@ -17,6 +17,7 @@ import { InfoPopover } from '@/components/ui/InfoPopover';
 import { HeatStrip } from '@/components/ui/HeatStrip';
 import { t, tField } from '@/app/i18n';
 import type { BiLang } from '@/app/i18n';
+import { formatEarningsBanner } from '@/app/earningsFormat';
 
 const S: Record<string, BiLang> = {
   guideTitle:    { en: 'Daily Guide', ko: 'Daily 가이드' },
@@ -152,11 +153,7 @@ export function DailyBoard() {
             }}>
               <span style={{ fontWeight: 700 }}>
                 {symbolEarning.relevance_tier === 'imminent' ? '⚡' : '📅'}{' '}
-                {symbolEarning.days_until === 0
-                  ? 'EARNINGS TODAY'
-                  : symbolEarning.days_until === 1
-                    ? 'EARNINGS TOMORROW'
-                    : `EARNINGS IN ${symbolEarning.days_until}D`}
+                {symbolEarning.earnings_date} · {formatEarningsBanner(symbolEarning.days_until, locale)}
               </span>
               <span style={{ opacity: 0.8 }}>{tField(symbolEarning.action_note_en, symbolEarning.action_note_ko, symbolEarning.action_note, locale)}</span>
             </div>

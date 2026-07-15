@@ -90,17 +90,22 @@ _symbol_info_cache: dict[str, tuple[dict, float]] = {}
 _SYMBOL_INFO_TTL = 3600
 
 
-def _freshness_meta(generated_at: Optional[str] = None) -> dict:
+def _freshness_meta(
+    generated_at: Optional[str] = None,
+    *,
+    stale: bool = False,
+    from_cache: bool = False,
+    source: str = "github_raw",
+) -> dict:
     """Return freshness meta for AI endpoints (fetched_at, age_minutes, source).
-    Uses generated_at from upstream payload (cron-generated) when available to compute age.
-    Falls back to now with age=0. Source indicates origin (github raw cache).
+
+    Phase A3: include stale/from_cache when last-good snapshot is served after fetch failure.
     """
     now = datetime.now(timezone.utc)
     fetched_at = generated_at or now.isoformat()
     age_minutes = 0.0
     if generated_at:
         try:
-            # Support 'Z' suffix and naive datetimes (assume UTC)
             s = generated_at.replace("Z", "+00:00")
             dt = datetime.fromisoformat(s)
             if dt.tzinfo is None:
@@ -109,10 +114,15 @@ def _freshness_meta(generated_at: Optional[str] = None) -> dict:
             age_minutes = round(delta, 1)
         except Exception:
             age_minutes = 0.0
+    src = source
+    if from_cache or stale:
+        src = "github_raw_last_good"
     return {
         "fetched_at": fetched_at,
         "age_minutes": age_minutes,
-        "source": "github_raw",
+        "source": src,
+        "stale": bool(stale or from_cache),
+        "from_cache": bool(from_cache or stale),
     }
 
 
@@ -734,7 +744,8 @@ async def get_sentiment_endpoint():
         today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         today_slots = fetch_today_slots(today_str)
 
-        latest_data = {k: v for k, v in snapshot.items() if k != "available"}
+        skip = {"available", "stale", "from_cache", "stale_reason", "warning", "error"}
+        latest_data = {k: v for k, v in snapshot.items() if k not in skip}
         gen_at = latest_data.get("generated_at") if isinstance(latest_data, dict) else None
         return {
             "available": True,
@@ -743,7 +754,11 @@ async def get_sentiment_endpoint():
                 "pre_open": today_slots["pre_open"],
                 "post_close": today_slots["post_close"],
             },
-            "meta": _freshness_meta(gen_at),
+            "meta": _freshness_meta(
+                gen_at,
+                stale=bool(snapshot.get("stale")),
+                from_cache=bool(snapshot.get("from_cache")),
+            ),
         }
     except Exception as e:
         logger.error(f"Error in /sentiment endpoint: {e}", exc_info=True)
@@ -783,7 +798,11 @@ async def get_brief_endpoint():
         return {
             "available": True,
             "data": data,
-            "meta": _freshness_meta(gen_at),
+            "meta": _freshness_meta(
+                gen_at,
+                stale=bool(result.get("stale")),
+                from_cache=bool(result.get("from_cache")),
+            ),
             "context": context,
         }
     except Exception as e:
@@ -800,7 +819,15 @@ async def get_morning_briefing_endpoint():
             return {"available": False, "error": result.get("error", "데이터 없음")}
         data = result["data"]
         gen_at = data.get("generated_at") if isinstance(data, dict) else None
-        return {"available": True, "data": data, "meta": _freshness_meta(gen_at)}
+        return {
+            "available": True,
+            "data": data,
+            "meta": _freshness_meta(
+                gen_at,
+                stale=bool(result.get("stale")),
+                from_cache=bool(result.get("from_cache")),
+            ),
+        }
     except Exception as e:
         logger.error(f"Error in /morning-briefing endpoint: {e}", exc_info=True)
         return {"available": False, "error": "브리핑 데이터 처리 중 오류 발생"}
@@ -815,7 +842,15 @@ async def get_earnings_endpoint():
             return {"available": False, "error": result.get("error", "데이터 없음")}
         data = result["data"]
         gen_at = data.get("generated_at") if isinstance(data, dict) else None
-        return {"available": True, "data": data, "meta": _freshness_meta(gen_at)}
+        return {
+            "available": True,
+            "data": data,
+            "meta": _freshness_meta(
+                gen_at,
+                stale=bool(result.get("stale")),
+                from_cache=bool(result.get("from_cache")),
+            ),
+        }
     except Exception as e:
         logger.error(f"Error in /earnings endpoint: {e}", exc_info=True)
         return {"available": False, "error": "Earnings 데이터 처리 중 오류 발생"}

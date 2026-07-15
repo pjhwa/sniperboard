@@ -227,11 +227,13 @@ class DistributionDayResponse(BaseModel):
 
 class FreshnessMeta(BaseModel):
     """Freshness metadata for externally-sourced AI data (sentiment/brief/earnings).
-    Added in Task 3 for yfinance accuracy hardening follow-up.
+    Phase A3: stale/from_cache when last-good snapshot is served after fetch failure.
     """
     fetched_at: str
     age_minutes: float
     source: str
+    stale: bool = False
+    from_cache: bool = False
 
 
 class TopNews(BaseModel):

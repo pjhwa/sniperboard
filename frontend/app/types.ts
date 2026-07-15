@@ -649,4 +649,7 @@ export interface FreshnessMeta {
   fetched_at: string;
   age_minutes: number;
   source: string;
+  /** Phase A3: true when last-good snapshot served after fetch failure */
+  stale?: boolean;
+  from_cache?: boolean;
 }
