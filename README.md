@@ -434,6 +434,13 @@ Each response includes `meta: {fetched_at, age_minutes, source}` — displayed a
 - **A4** Health monitor `SNIPERBOARD_SIGNAL_DB` defaults to compose volume path.
 - **A5** Shared `frontend/app/earningsFormat.ts` for absolute date + D-n on Overview/Daily/DeepDive.
 
+**Phase B interpretation quality (2026-07-15):**
+- **B1** Mechanical briefing integrity (`briefing_verify`) on serve + MSD `verify_briefing` / `phase_b_integrity` (relative day, mood vs drop, price binding).
+- **B2** Global issue cards: confidence tier + clickable `source_urls` / URL-shaped `source_hint`.
+- **B3** Earnings `estimate_as_of` / `estimate_provider` (null-safe UI).
+- **B4** `GET /api/divergence` + Sentiment board list (not used in Conviction).
+- **B5** Morning email Digest mode: `EMAIL_DIGEST=1` or `render_html(..., digest=True)`.
+
 ---
 
 ## API Endpoints

@@ -1023,6 +1023,12 @@ export function DeepDiveBoard() {
                     <div style={{ padding: '7px 10px', borderRadius: 8, background: 'var(--card-elev)' }}>
                       <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.epsEstimate, locale)}</div>
                       <div className="mono" style={{ fontSize: 15, fontWeight: 700 }}>${symEarning.eps_estimate.toFixed(2)}</div>
+                      {symEarning.estimate_as_of && (
+                        <div style={{ fontSize: 9.5, color: 'var(--fg-subtle)', marginTop: 3, fontFamily: 'var(--mono)' }}>
+                          {locale === 'ko' ? '기준' : 'as of'} {String(symEarning.estimate_as_of).slice(0, 10)}
+                          {symEarning.estimate_provider ? ` · ${symEarning.estimate_provider}` : ''}
+                        </div>
+                      )}
                     </div>
                   )}
                   {symEarning.historical_beat_rate != null && (

@@ -317,11 +317,12 @@
     다음에 무엇을 고치면 신뢰가 가장 크게 오르는지를 순위화하는 것이다.
   </p>
   <div class="meta">
-    <span class="pill"><strong>As-of</strong> 2026-07-15 · Phase A shipped</span>
-    <span class="pill ok"><strong>종합 신뢰</strong> ~90 / 100</span>
-    <span class="pill info"><strong>Δ since 7/14</strong> +12pt (P1 + Phase A)</span>
+    <span class="pill"><strong>As-of</strong> 2026-07-15 · Phase A+B shipped</span>
+    <span class="pill ok"><strong>종합 신뢰</strong> ~92 / 100</span>
+    <span class="pill info"><strong>Δ since 7/14</strong> +14pt</span>
     <span class="pill ok"><strong>Phase A</strong> A1–A5 완료</span>
-    <span class="pill warn"><strong>잔여</strong> Phase B/C · AI 해석층 · Track 희소</span>
+    <span class="pill ok"><strong>Phase B</strong> B1–B5 완료</span>
+    <span class="pill warn"><strong>잔여</strong> Phase C · AI 해석 깊이</span>
   </div>
 </header>
 
@@ -447,12 +448,12 @@
   <p class="sec-sub">7/14 사실성 보고서 가중 모델을 유지하되, 배포·P1 반영 후 재산정.</p>
 
   <div class="verdict">
-    <div class="big">90<span>/100<br/>종합 신뢰</span></div>
+    <div class="big">92<span>/100<br/>종합 신뢰</span></div>
     <div>
       <p style="margin:0 0 10px;">
-        <span class="delta">▲ +12 vs 7/14 (78)</span>
-        &nbsp; Phase A 방어막 반영: 배포 검증 스크립트·CI, last-good stale-on-error,
-        brief/sentiment same-slot, signal_log 경로 단일화, 전 보드 실적 절대일+D-n.
+        <span class="delta">▲ +14 vs 7/14 (78)</span>
+        &nbsp; Phase A 방어 + Phase B 해석 품질: B1 integrity gate, B2 source trust UI,
+        B3 estimate provenance, B4 divergence list, B5 email digest.
         투자 참고용으로는 여전히 <strong>“수치 앵커는 신뢰, 내러티브는 2차 확인”</strong>.
       </p>
       <div class="meta">
@@ -741,44 +742,54 @@
   </div>
 
   <div class="roadmap-phase">
-    <div class="ph">Phase B · 2–6주 · 해석 품질 (P1–P2)</div>
+    <div class="ph">Phase B · 해석 품질 — <span class="tag tag-done">완료 2026-07-15</span></div>
     <h4>AI를 줄이지 말고 “검증 가능하게” 만들기</h4>
     <div class="table-wrap">
       <table class="data">
-        <thead><tr><th>ID</th><th>항목</th><th>기대 효과</th><th>완료 정의</th></tr></thead>
+        <thead><tr><th>ID</th><th>항목</th><th>구현 결과</th><th>상태</th></tr></thead>
         <tbody>
           <tr>
-            <td><span class="tag tag-p1">B1</span></td>
-            <td>브리핑 verify 강화: 상대일·무드·가격 자동 재검</td>
-            <td>raw JSON 단계 모순 감소 (소비자 부담 ↓)</td>
-            <td>verify 실패 시 GitHub push 차단 또는 quarantine</td>
+            <td><span class="tag tag-done">B1</span></td>
+            <td>브리핑 기계 검증</td>
+            <td><code>core/briefing_verify.py</code> + MSD <code>phase_b_integrity</code> in verify_briefing ·
+              consumer attaches <code>_integrity</code> · bad fixtures fail unit tests ·
+              promotion gate = <code>passed</code> (cron exit non-zero when verify fails)</td>
+            <td><span class="tag tag-pass">DONE</span></td>
           </tr>
           <tr>
-            <td><span class="tag tag-p2">B2</span></td>
-            <td>지정학 이슈: source URL 배열 + 신뢰 티어 UI</td>
-            <td>내러티브 62 → ~75 목표</td>
-            <td>이슈 카드에서 원문 1클릭 · unverified 시각 구분</td>
+            <td><span class="tag tag-done">B2</span></td>
+            <td>지정학 source / trust UI</td>
+            <td>MorningBriefing issue cards: confidence tier badge + clickable
+              <code>source_urls</code> or URL-shaped <code>source_hint</code> (no invented URLs)</td>
+            <td><span class="tag tag-pass">DONE</span></td>
           </tr>
           <tr>
-            <td><span class="tag tag-p2">B3</span></td>
-            <td>EPS/매출 “컨센서스 시점” 메타 노출</td>
-            <td>추정치 오해 감소</td>
-            <td>as_of · provider · null 시 숨김 정책 문서화</td>
+            <td><span class="tag tag-done">B3</span></td>
+            <td>컨센서스 추정 메타</td>
+            <td><code>estimate_as_of</code> / <code>estimate_provider</code> on earnings rows · Overview/DeepDive null-safe</td>
+            <td><span class="tag tag-pass">DONE</span></td>
           </tr>
           <tr>
-            <td><span class="tag tag-p2">B4</span></td>
-            <td>Divergence 보드: 소셜 vs 가격 괴리 전용 뷰</td>
-            <td>심리 60점을 “쓸모”로 전환</td>
-            <td>정렬/역발산 종목 리스트 + 규칙 설명</td>
+            <td><span class="tag tag-done">B4</span></td>
+            <td>소셜↔가격 괴리</td>
+            <td><code>GET /api/divergence</code> + Sentiment board list + rule caption · not in Conviction</td>
+            <td><span class="tag tag-pass">DONE</span></td>
           </tr>
           <tr>
-            <td><span class="tag tag-p2">B5</span></td>
-            <td>모닝메일 섹션 토글/요약 모드</td>
-            <td>중언부언 체감 추가 감소</td>
-            <td>Full / Digest 2모드 · Digest ≤ N자</td>
+            <td><span class="tag tag-done">B5</span></td>
+            <td>메일 Digest 모드</td>
+            <td><code>EMAIL_DIGEST=1</code> / <code>render_html(..., digest=True)</code> length caps · unit test digest shorter than full</td>
+            <td><span class="tag tag-pass">DONE</span></td>
           </tr>
         </tbody>
       </table>
+    </div>
+    <div class="callout teal" style="margin-top:12px;">
+      <p class="t">Phase B 잔여</p>
+      <p>
+        수집기 verify 실패 시 GitHub push 차단은 cron 래퍼 정책에 의존 — 로컬 verify CLI는 non-zero exit.
+        소비자 쪽은 integrity 메타로 투명하게 표시하며, serve-time sanitize는 계속 상대일을 교정한다.
+      </p>
     </div>
   </div>
 

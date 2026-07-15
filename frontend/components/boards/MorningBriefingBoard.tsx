@@ -439,11 +439,54 @@ function GlobalIssueCard({ issue, locale }: { issue: GlobalIssue; locale: Locale
             <span style={{ color: 'var(--fg)' }}>{insight}</span>
           </div>
         )}
-        {issue.source_hint && (
-          <div style={{ marginTop: 6, fontSize: 10, color: 'var(--fg-faint)', fontFamily: 'var(--font-mono)' }}>
-            {t(S.sourceLabel, locale)}: {issue.source_hint}
+        {/* Phase B2: trust tier already on badges; surface clickable sources without inventing URLs */}
+        <div style={{ marginTop: 8, borderTop: '1px solid var(--border-soft)', paddingTop: 6 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+            <span
+              className={`badge ${
+                issue.confidence === 'confirmed' ? 'bull'
+                  : issue.confidence === 'developing' ? 'warn'
+                  : issue.confidence === 'unverified' ? 'bear' : 'neutral'
+              }`}
+              style={{ fontSize: 10 }}
+            >
+              {issue.confidence === 'confirmed'
+                ? (locale === 'ko' ? '확인됨' : 'confirmed')
+                : issue.confidence === 'developing'
+                  ? t(S.developing, locale)
+                  : issue.confidence === 'unverified'
+                    ? t(S.unverified, locale)
+                    : (locale === 'ko' ? '출처' : 'source')}
+            </span>
+            {Array.isArray(issue.source_urls) && issue.source_urls.filter(Boolean).map((url, i) => (
+              <a
+                key={i}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: 10, color: 'var(--em-500)', fontFamily: 'var(--font-mono)' }}
+              >
+                {url.replace(/^https?:\/\//, '').slice(0, 42)}{url.length > 48 ? '…' : ''}
+              </a>
+            ))}
+            {issue.source_hint && !(issue.source_urls && issue.source_urls.length) && (
+              /^https?:\/\//i.test(issue.source_hint.trim()) ? (
+                <a
+                  href={issue.source_hint.trim()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: 10, color: 'var(--em-500)', fontFamily: 'var(--font-mono)' }}
+                >
+                  {issue.source_hint.trim().replace(/^https?:\/\//, '').slice(0, 48)}
+                </a>
+              ) : (
+                <span style={{ fontSize: 10, color: 'var(--fg-faint)', fontFamily: 'var(--font-mono)' }}>
+                  {t(S.sourceLabel, locale)} {issue.source_hint}
+                </span>
+              )
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -711,12 +754,20 @@ export function MorningBriefingBoard() {
     );
   }
 
-  const d = briefingData;
+  const d = briefingData as typeof briefingData & {
+    _integrity_passed?: boolean;
+    integrity_passed?: boolean;
+    _integrity?: { fail_count?: number; issues?: { code: string; message: string }[] };
+    integrity?: { fail_count?: number; issues?: { code: string; message: string }[] };
+  };
   const mood  = d.market_mood;
   const bp    = d.big_picture;
   const sa    = d.sector_analysis;
   const tier1 = d.watchlist.filter(w => w.tier === 1);
   const tier2 = d.watchlist.filter(w => w.tier === 2);
+  const integrityPassed = d.integrity_passed ?? d._integrity_passed;
+  const integrityFails = (d.integrity ?? d._integrity)?.fail_count ?? 0;
+  const integrityIssues = (d.integrity ?? d._integrity)?.issues || [];
   const shareText = buildShareText(d, locale);
   const dateStr = d.generated_at
     ? new Date(d.generated_at).toLocaleDateString(locale === 'ko' ? 'ko-KR' : 'en-US', {
@@ -766,6 +817,14 @@ export function MorningBriefingBoard() {
             <h3>{t(S.headline, locale)}</h3>
             <small>{dateStr}</small>
             {briefingMeta && <AgeBadge minutes={briefingMeta.age_minutes} />}
+            {integrityPassed === true && (
+              <span className="badge bull" style={{ fontSize: 10 }}>{locale === 'ko' ? '정합 OK' : 'integrity OK'}</span>
+            )}
+            {integrityPassed === false && (
+              <span className="badge bear" style={{ fontSize: 10 }} title={integrityIssues.map(i => i.message).join('; ')}>
+                {locale === 'ko' ? `정합 경고 ${integrityFails}` : `integrity fail ${integrityFails}`}
+              </span>
+            )}
           </div>
           <div className="ai-card__body">
             {tField(d.headline_en, d.headline_ko, '', locale)}

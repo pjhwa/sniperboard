@@ -14,6 +14,7 @@ import { formatDateTime } from '@/lib/formatDateTime';
 import { SentimentTrendChart } from './SentimentTrendChart';
 import { t, tField } from '@/app/i18n';
 import type { BiLang } from '@/app/i18n';
+import { API_BASE } from '@/app/types';
 
 const S: Record<string, BiLang> = {
   guideTitle:    { en: 'Sentiment Guide', ko: 'Sentiment 가이드' },
@@ -120,15 +121,34 @@ function ScoreBar({ score }: { score: number }) {
   );
 }
 
+type DivergenceItem = {
+  symbol: string;
+  composite_score?: number | null;
+  change_pct?: number | null;
+  divergence: string;
+  sentiment?: string | null;
+};
+
 export function SentimentBoard() {
   const { symbol, setSymbol, locale } = useStore();
   const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [divergence, setDivergence] = useState<DivergenceItem[]>([]);
 
   useEffect(() => {
     const handler = () => setGuideOpen(true);
     document.addEventListener('guide:open', handler);
     return () => document.removeEventListener('guide:open', handler);
+  }, []);
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_BASE}/api/divergence`)
+      .then(r => r.json())
+      .then(d => {
+        if (!cancelled && d?.available && Array.isArray(d.items)) setDivergence(d.items);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
   }, []);
   const { data: sentimentData, isLoading } = useSentiment();
   const { briefData } = useBrief();
@@ -230,6 +250,43 @@ export function SentimentBoard() {
     <div className="board-wrap">
       <BoardGuidePanel title={t(S.guideTitle, locale)} sections={SENTIMENT_GUIDE()} isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <div className="board fade-in" style={{ gridTemplateColumns: '380px 1fr', alignContent: 'start' }}>
+      {/* Phase B4 — social vs price divergence */}
+      {divergence.length > 0 && (
+        <Card
+          title={locale === 'ko' ? '소셜↔가격 괴리' : 'Social vs Price Divergence'}
+          className="mob-order-0"
+          action={locale === 'ko' ? '해석 보조 · Conviction 미반영' : 'Reference only · not in Conviction'}
+          style={{ gridColumn: '1 / -1' }}
+        >
+          <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)', marginBottom: 8, lineHeight: 1.5 }}>
+            {locale === 'ko'
+              ? '복합심리 ≥ +0.5 인데 당일 ≤ −1.5% → bullish_divergence / 심리 ≤ −0.5 인데 당일 ≥ +1.5% → bearish_divergence'
+              : 'composite ≥ +0.5 with day ≤ −1.5% → bullish_divergence; composite ≤ −0.5 with day ≥ +1.5% → bearish_divergence'}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {divergence.map(row => (
+              <div key={row.symbol} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
+                <button
+                  type="button"
+                  onClick={() => setSymbol(row.symbol)}
+                  className="mono"
+                  style={{ fontWeight: 700, width: 48, textAlign: 'left', background: 'none', border: 0, color: 'var(--fg)', cursor: 'pointer' }}
+                >
+                  {row.symbol}
+                </button>
+                <span className={`badge ${row.divergence.includes('bullish') ? 'bull' : 'bear'}`} style={{ fontSize: 10 }}>
+                  {row.divergence}
+                </span>
+                <span className="mono" style={{ color: 'var(--fg-muted)', flex: 1 }}>
+                  {row.composite_score != null ? Number(row.composite_score).toFixed(1) : '—'}
+                  {' · '}
+                  {row.change_pct != null ? `${row.change_pct > 0 ? '+' : ''}${row.change_pct}%` : '—'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
       {/* Market-wide sentiment */}
       <Card title={t(S.marketSentTitle, locale)} className="mob-order-1" action={formatDateTime(market?.as_of)} info={{ term: t(G.composite_score.term, locale), body: t(G.composite_score.body, locale) }}>
         {market ? (

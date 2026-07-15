@@ -357,6 +357,14 @@ export function OverviewBoard() {
                       {e.eps_estimate == null && (
                         <span style={{ fontSize: 10.5, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>{t(S.estimateNA, locale)}</span>
                       )}
+                      {e.eps_estimate != null && e.estimate_as_of && (
+                        <span
+                          style={{ fontSize: 10, color: 'var(--fg-subtle)', fontFamily: 'var(--mono)' }}
+                          title={e.estimate_provider || 'consensus_snapshot'}
+                        >
+                          {locale === 'ko' ? '추정' : 'est'} {String(e.estimate_as_of).slice(0, 10)}
+                        </span>
+                      )}
                       <span style={{ fontSize: 10.5, color: tierColor, fontWeight: 600 }}>{tierLabel}</span>
                       <span className={`badge ${rm.color}`} style={{ fontSize: 11 }}>
                         {rm.dot} {e.risk_level.toUpperCase()}

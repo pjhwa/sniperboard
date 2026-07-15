@@ -366,6 +366,9 @@ class UpcomingEarning(BaseModel):
     action_note: Optional[str] = None
     action_note_en: Optional[str] = None
     action_note_ko: Optional[str] = None
+    # Phase B3 — consensus provenance (null-safe; UI hides when estimate missing)
+    estimate_as_of: Optional[str] = None
+    estimate_provider: Optional[str] = None
 
 class RecentResult(BaseModel):
     symbol: str
@@ -376,6 +379,8 @@ class RecentResult(BaseModel):
     ai_reaction: Optional[str] = None
     ai_reaction_en: Optional[str] = None
     ai_reaction_ko: Optional[str] = None
+    estimate_as_of: Optional[str] = None
+    estimate_provider: Optional[str] = None
 
 class EarningsData(BaseModel):
     generated_at: Optional[str] = None
@@ -583,6 +588,8 @@ class GlobalContext(BaseModel):
     fallback: Optional[bool] = None
 
 class MorningBriefingData(BaseModel):
+    model_config = {"extra": "allow"}  # Phase B1: allow _integrity* / _earnings_calendar
+
     generated_at: Optional[str] = None
     schema_version: Optional[str] = None
     slot: Optional[str] = None
@@ -600,6 +607,9 @@ class MorningBriefingData(BaseModel):
     today_checkpoints_ko: List[str] = []
     earnings_alert_en: Optional[str] = None
     earnings_alert_ko: Optional[str] = None
+    # Phase B1 mechanical integrity (consumer-attached)
+    integrity_passed: Optional[bool] = None
+    integrity: Optional[dict] = None
 
 class MorningBriefingResponse(BaseModel):
     available: bool

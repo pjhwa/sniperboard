@@ -44,6 +44,8 @@ export interface GlobalIssue {
   summary_en?: string;
   summary_ko?: string;
   source_hint?: string;
+  /** Phase B2: optional explicit URLs (never invent if absent) */
+  source_urls?: string[] | null;
   confidence?: 'confirmed' | 'developing' | 'unverified';
   asymmetric_impact_en?: string;
   asymmetric_impact_ko?: string;

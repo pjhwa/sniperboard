@@ -592,6 +592,9 @@ export interface UpcomingEarning {
   symbol: string;
   earnings_date: string;
   days_until: number;
+  /** Phase B3 — when estimate was snapshotted; null-safe hide in UI */
+  estimate_as_of?: string | null;
+  estimate_provider?: string | null;
   relevance_tier?: 'imminent' | 'approaching' | 'watching' | null;
   eps_estimate?: number | null;
   revenue_estimate_b?: number | null;

@@ -38,8 +38,36 @@ def _apply_earnings_consistency(data: dict) -> dict:
         return data
 
 
+def _attach_integrity_verify(data: dict) -> dict:
+    """Phase B1: run mechanical verify; attach report (promotion gate metadata)."""
+    try:
+        from core.briefing_verify import verify_briefing_integrity
+
+        upcoming = data.get("_earnings_calendar") or []
+        # Price table from analysis is not re-fetched here; relative/mood rules always run
+        result = verify_briefing_integrity(data, upcoming_earnings=upcoming)
+        data = dict(data)
+        rep = result.as_dict()
+        # Underscore keys may be stripped by some serializers; expose public aliases too
+        data["_integrity"] = rep
+        data["_integrity_passed"] = result.passed
+        data["integrity"] = rep
+        data["integrity_passed"] = result.passed
+        if not result.passed:
+            logger.warning(
+                "briefing integrity FAIL fail=%s issues=%s",
+                rep.get("fail_count"),
+                [i["code"] for i in rep.get("issues", [])],
+            )
+        return data
+    except Exception as e:
+        logger.warning(f"briefing integrity verify skipped: {e}")
+        return data
+
+
 def _success(raw: dict, *, stale: bool = False, reason: str = "") -> dict:
     sanitized = _apply_earnings_consistency(dict(raw))
+    sanitized = _attach_integrity_verify(sanitized)
     out: dict[str, Any] = {
         "available": True,
         "data": sanitized,

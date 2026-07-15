@@ -65,8 +65,41 @@ def _sanitize_earnings_payload(data: dict) -> dict:
     return {**data, "upcoming_earnings": cleaned}
 
 
+def _attach_estimate_provenance(data: dict) -> dict:
+    """Phase B3: null-safe consensus provenance for UI (as_of / provider)."""
+    if not isinstance(data, dict):
+        return data
+    out = dict(data)
+    as_of = out.get("generated_at") or out.get("as_of")
+    provider = out.get("estimate_provider") or "consensus_snapshot"
+    for key in ("upcoming_earnings", "recent_results"):
+        rows = out.get(key)
+        if not isinstance(rows, list):
+            continue
+        cleaned = []
+        for row in rows:
+            if not isinstance(row, dict):
+                cleaned.append(row)
+                continue
+            r = dict(row)
+            if r.get("estimate_as_of") is None and as_of:
+                r["estimate_as_of"] = as_of
+            if r.get("estimate_provider") is None:
+                # Only label when an estimate exists; otherwise leave null (UI hides)
+                if r.get("eps_estimate") is not None or r.get("revenue_estimate_b") is not None:
+                    r["estimate_provider"] = provider
+            cleaned.append(r)
+        out[key] = cleaned
+    if out.get("estimate_as_of") is None and as_of:
+        out["estimate_as_of"] = as_of
+    if out.get("estimate_provider") is None:
+        out["estimate_provider"] = provider
+    return out
+
+
 def _success(raw: dict, *, stale: bool = False, reason: str = "") -> dict:
     data = _sanitize_earnings_payload(dict(raw))
+    data = _attach_estimate_provenance(data)
     out: dict[str, Any] = {
         "available": True,
         "data": data,

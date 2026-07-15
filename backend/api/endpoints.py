@@ -856,6 +856,53 @@ async def get_earnings_endpoint():
         return {"available": False, "error": "Earnings 데이터 처리 중 오류 발생"}
 
 
+@router.get("/divergence")
+async def get_divergence_endpoint(
+    only_divergences: bool = Query(True, description="Only bullish/bearish divergence rows"),
+):
+    """Phase B4: social composite vs 1d price change divergence list.
+
+    Not an investment signal — interpretation aid. Does not feed Conviction.
+    """
+    try:
+        from core.divergence import build_divergence_list
+        from core.data_adapter import get_multi_daily
+
+        sent = fetch_latest()
+        if not sent.get("available"):
+            return {"available": False, "error": sent.get("error", "sentiment unavailable"), "items": []}
+
+        symbols = sent.get("symbols") or []
+        syms = [str(s.get("symbol") or "").upper() for s in symbols if s.get("symbol")]
+        price_changes: dict[str, float] = {}
+        if syms:
+            try:
+                dfs = get_multi_daily(syms, period="5d")
+                for sym, df in (dfs or {}).items():
+                    if df is None or df.empty or len(df) < 2:
+                        continue
+                    prev = float(df["close"].iloc[-2])
+                    last = float(df["close"].iloc[-1])
+                    if prev:
+                        price_changes[str(sym).upper()] = round((last / prev - 1) * 100, 2)
+            except Exception as e:
+                logger.warning(f"divergence price fetch failed: {e}")
+
+        items = build_divergence_list(symbols, price_changes, only_divergences=only_divergences)
+        return {
+            "available": True,
+            "items": items,
+            "rule": {
+                "bullish_divergence": "composite ≥ +0.5 and day change ≤ −1.5%",
+                "bearish_divergence": "composite ≤ −0.5 and day change ≥ +1.5%",
+            },
+            "meta": _freshness_meta(sent.get("generated_at")),
+        }
+    except Exception as e:
+        logger.error(f"Error in /divergence: {e}", exc_info=True)
+        return {"available": False, "error": str(e), "items": []}
+
+
 @router.get("/prediction", response_model=PredictionResponse)
 async def get_prediction_endpoint():
     """FOMC prediction-market odds (Polymarket reference). Soft-fail available:false.

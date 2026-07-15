@@ -64,6 +64,47 @@ def test_collect_email_data_handles_briefing_unavailable():
 
 # ── render_html ────────────────────────────────────────────────────────────
 
+def test_digest_cap_truncates():
+    from services.email_report_service import _digest_cap
+    long = "단어 " * 100
+    out = _digest_cap(long, 40)
+    assert len(out) <= 42
+    assert out.endswith("…")
+
+
+def test_render_html_digest_mode_shorter_than_full():
+    from services.email_report_service import render_html
+    import base64
+
+    dummy_png = b'\x89PNG\r\n\x1a\n' + b'\x00' * 100
+    long_analysis = "실적 직전 변동성 확대. " * 40
+    data = {
+        "briefing": {
+            "available": True,
+            "data": {
+                "headline_ko": "테스트",
+                "executive_bullets_ko": ["A"],
+                "market_mood": {"traffic_light": "green", "label_ko": "강세", "explanation_ko": "설명"},
+                "watchlist": [
+                    {"symbol": "NVDA", "action": "watch", "analysis_ko": long_analysis},
+                ],
+                "today_checkpoints_ko": [],
+            },
+        },
+        "regime": {"total": 70.0, "regime": "CONSTRUCTIVE"},
+        "watchlist": [],
+        "macro": {},
+        "prediction": {"available": False},
+        "earnings": {"available": False},
+        "market_sentiment": None,
+        "generated_at": "2026-07-15T00:00:00Z",
+    }
+    full = render_html(data, dummy_png, dummy_png, None, digest=False)
+    dig = render_html(data, dummy_png, dummy_png, None, digest=True)
+    assert len(dig) < len(full)
+    assert "NVDA" in dig
+
+
 def test_render_html_returns_html_string_with_images():
     from services.email_report_service import render_html
     import base64

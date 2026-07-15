@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-07-15 phase-A)
+# SniperBoard — Project Context (UPDATED 2026-07-15 phase-B)
 
 ## 0. Purpose of This Document
 
@@ -38,7 +38,9 @@ sniperboard/
 │   │   ├── cap_rank_tracker.py       # 글로벌 시총 순위 SQLite 영속 (cap_ranks.db). init_db / save_ranks / get_previous_ranks / CapRankItem dataclass.
 │   │   ├── backtest_engine.py        # Backtesting engine (2026-06-02). Daily bar backtest driven by Stage2 signals.
 │   │   ├── earnings_consistency.py   # Earnings relative-day SoT + email dedupe + mood/session coherence.
-│   │   └── github_payload_cache.py   # Phase A3: LastGoodCache + stale-on-error + brief/sentiment slot_mismatch helpers.
+│   │   ├── github_payload_cache.py   # Phase A3: LastGoodCache + stale-on-error + slot_mismatch helpers.
+│   │   ├── briefing_verify.py        # Phase B1: mechanical integrity (relative day / mood / price binding).
+│   │   └── divergence.py             # Phase B4: social composite vs day-change divergence labels.
 │   ├── services/
 │   │   ├── base.py               # BaseDataService abstract class
 │   │   ├── data_service.py       # YFinanceDataService implementation + module-level helpers

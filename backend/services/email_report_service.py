@@ -218,12 +218,26 @@ def collect_email_data() -> dict:
     }
 
 
+def _digest_cap(text: str, max_chars: int = 280) -> str:
+    """Phase B5: length-cap free text for digest mode (no mid-word cut when possible)."""
+    s = " ".join(str(text or "").split())
+    if len(s) <= max_chars:
+        return s
+    cut = s[: max_chars - 1]
+    if " " in cut:
+        cut = cut.rsplit(" ", 1)[0]
+    return cut.rstrip(".,;:") + "…"
+
+
 def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
-                macro_bar_png: bytes | None) -> str:
+                macro_bar_png: bytes | None, *, digest: bool | None = None) -> str:
     """Render Jinja2 template to HTML string with base64-embedded PNG images.
 
-    Full briefing text is preserved (no analysis truncation).
+    Full briefing text is preserved unless digest=True (or EMAIL_DIGEST=1).
+    Phase B5: Digest mode caps analysis/issue bodies and drops redundant global issue walls.
     """
+    if digest is None:
+        digest = os.environ.get("EMAIL_DIGEST", "").strip().lower() in ("1", "true", "yes", "digest")
     now_kst = datetime.now(_KST)
     date_str = now_kst.strftime("%Y-%m-%d (%a)")
     generated_kst = now_kst.strftime("%H:%M KST")
@@ -347,6 +361,15 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
     for issue in (gc.get("issues") or []):
         if not isinstance(issue, dict):
             continue
+        summary = issue.get("summary_ko") or issue.get("summary_en", "")
+        insight = issue.get("market_insight_ko") or issue.get("market_insight_en", "")
+        impact = issue.get("asymmetric_impact_ko") or issue.get("asymmetric_impact_en", "")
+        state = issue.get("current_state_ko") or issue.get("current_state_en", "")
+        if digest:
+            summary = _digest_cap(summary, 220)
+            insight = _digest_cap(insight, 160)
+            impact = _digest_cap(impact, 160)
+            state = _digest_cap(state, 120)
         global_issues.append({
             "rank": issue.get("rank", ""),
             "tier": issue.get("tier", ""),
@@ -354,12 +377,15 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
             "direction": issue.get("direction", ""),
             "impact_direction": issue.get("impact_direction", ""),
             "title": issue.get("title_ko") or issue.get("title_en", ""),
-            "current_state": issue.get("current_state_ko") or issue.get("current_state_en", ""),
-            "summary": issue.get("summary_ko") or issue.get("summary_en", ""),
-            "asymmetric_impact": issue.get("asymmetric_impact_ko") or issue.get("asymmetric_impact_en", ""),
-            "market_insight": issue.get("market_insight_ko") or issue.get("market_insight_en", ""),
+            "current_state": state,
+            "summary": summary,
+            "asymmetric_impact": impact,
+            "market_insight": insight,
             "source_hint": issue.get("source_hint", ""),
         })
+    if digest:
+        # Digest: keep top 3 global issues only
+        global_issues = global_issues[:3]
 
     # ── Spotlight (full why / watch_level; empty why dropped by prepare) ───
     spotlight_items = []
@@ -394,6 +420,8 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
                 # Keep watchlist row but only if analysis adds action/levels beyond spotlight
                 if len(analysis) < len(sp["why"]) + 30:
                     analysis = ""  # spotlight already said it
+        if digest and analysis:
+            analysis = _digest_cap(analysis, 320)
         morning_watchlist.append({
             "symbol": w.get("symbol", ""),
             "company": w.get("company", ""),
@@ -403,6 +431,12 @@ def render_html(data: dict, gauge_png: bytes, sparklines_png: bytes,
             "sentiment_icon": _SENTIMENT_ICON.get(w.get("sentiment_mood", ""), "😐"),
             "analysis": analysis,
         })
+    if digest:
+        # Digest: tier-1 style cap — keep first 8 analyses
+        morning_watchlist = morning_watchlist[:8]
+        for s in spotlight_items:
+            if s.get("why"):
+                s["why"] = _digest_cap(s["why"], 220)
 
     # ── Prediction (reference-only) ────────────────────────────────────────
     pred_wrap = data.get("prediction") or {}
