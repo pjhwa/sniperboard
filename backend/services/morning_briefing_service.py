@@ -38,14 +38,53 @@ def _apply_earnings_consistency(data: dict) -> dict:
         return data
 
 
+def _price_table_for_verify(data: dict) -> dict[str, float]:
+    """Build symbol→last close table for B1 price-binding checks.
+
+    Prefer structured watchlist.price when present; fill gaps with live daily closes
+    so production integrity_passed can fail on $ analysis vs market table mismatches.
+    """
+    prices: dict[str, float] = {}
+    syms: list[str] = []
+    for w in data.get("watchlist") or []:
+        if not isinstance(w, dict):
+            continue
+        sym = str(w.get("symbol") or "").upper()
+        if not sym:
+            continue
+        syms.append(sym)
+        p = w.get("price")
+        if p is not None:
+            try:
+                prices[sym] = float(p)
+            except (TypeError, ValueError):
+                pass
+    missing = [s for s in syms if s not in prices]
+    if missing:
+        try:
+            from core.data_adapter import get_multi_daily
+            dfs = get_multi_daily(missing, period="5d")
+            for sym, df in (dfs or {}).items():
+                if df is None or df.empty:
+                    continue
+                prices[str(sym).upper()] = float(df["close"].iloc[-1])
+        except Exception as e:
+            logger.debug("price_table live fetch partial: %s", e)
+    return prices
+
+
 def _attach_integrity_verify(data: dict) -> dict:
     """Phase B1: run mechanical verify; attach report (promotion gate metadata)."""
     try:
         from core.briefing_verify import verify_briefing_integrity
 
         upcoming = data.get("_earnings_calendar") or []
-        # Price table from analysis is not re-fetched here; relative/mood rules always run
-        result = verify_briefing_integrity(data, upcoming_earnings=upcoming)
+        price_table = _price_table_for_verify(data)
+        result = verify_briefing_integrity(
+            data,
+            upcoming_earnings=upcoming,
+            price_table=price_table or None,
+        )
         data = dict(data)
         rep = result.as_dict()
         # Underscore keys may be stripped by some serializers; expose public aliases too
@@ -53,6 +92,7 @@ def _attach_integrity_verify(data: dict) -> dict:
         data["_integrity_passed"] = result.passed
         data["integrity"] = rep
         data["integrity_passed"] = result.passed
+        data["_price_table_size"] = len(price_table)
         if not result.passed:
             logger.warning(
                 "briefing integrity FAIL fail=%s issues=%s",

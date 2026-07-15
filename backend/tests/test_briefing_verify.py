@@ -110,3 +110,26 @@ def test_price_binding_within_tolerance_passes():
     )
     # 205 vs 203.53 ~0.7% < 3%
     assert r.passed is True
+
+
+def test_serve_path_uses_watchlist_price_table():
+    """Shipped morning_briefing_service._price_table_for_verify must feed B1 price binding."""
+    from services.morning_briefing_service import _attach_integrity_verify, _price_table_for_verify
+
+    data = {
+        "watchlist": [
+            {
+                "symbol": "NVDA",
+                "price": 200.0,
+                "sentiment_mood": "neutral",
+                "analysis_ko": "NVDA $999.00 돌파",
+            }
+        ],
+        "_earnings_calendar": [],
+    }
+    table = _price_table_for_verify(data)
+    assert table.get("NVDA") == 200.0
+    out = _attach_integrity_verify(data)
+    assert out.get("integrity_passed") is False
+    codes = [i["code"] for i in (out.get("integrity") or {}).get("issues") or []]
+    assert "B1-price-bind" in codes
