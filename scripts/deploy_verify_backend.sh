@@ -21,16 +21,18 @@ for i in $(seq 1 30); do
 done
 
 echo "==> Verifying modules inside container"
-docker exec sniperboard-backend python - <<'PY'
+# Must use python -c (or docker exec -i with a pipe). Bare `docker exec ... python - <<EOF`
+# never feeds stdin to the container process — asserts would be skipped.
+docker exec sniperboard-backend python -c "
 import core.earnings_consistency as ec
-from core.github_payload_cache import LastGoodCache, slots_compatible
+from core.github_payload_cache import slots_compatible
 from api.endpoints import _MIN_STAGE2_BARS
-assert hasattr(ec, "reconcile_sentiment_mood_with_session")
-assert hasattr(ec, "sanitize_briefing_payload")
-assert _MIN_STAGE2_BARS == 200
-assert slots_compatible("pre_open", "pre_open")
-print("OK: earnings_consistency + github_payload_cache + MIN_STAGE2=200")
-PY
+assert hasattr(ec, 'reconcile_sentiment_mood_with_session'), 'missing mood reconcile'
+assert hasattr(ec, 'sanitize_briefing_payload'), 'missing sanitize_briefing_payload'
+assert _MIN_STAGE2_BARS == 200, _MIN_STAGE2_BARS
+assert slots_compatible('pre_open', 'pre_open')
+print('OK: earnings_consistency + github_payload_cache + MIN_STAGE2=200')
+"
 
 echo "==> Soft-fail smoke: SPCX must not be 500"
 code=$(curl -sS -o /dev/null -w "%{http_code}" 'http://localhost:5001/api/daily?symbol=SPCX' || true)
