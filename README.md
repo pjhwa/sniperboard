@@ -425,6 +425,8 @@ Each response includes `meta: {fetched_at, age_minutes, source}` — displayed a
 
 **Earnings / briefing consistency (2026-07-14):** Collectors may freeze relative phrases ("3일 후", "already reported") into AI text. SniperBoard recomputes `days_until` from absolute `earnings_date` in **US/Eastern** on every `/api/earnings` and `/api/morning-briefing` serve, scrubs conflicting free text, and for morning email drops free-text earnings alerts when the structured calendar is present (plus cross-section dedupe of restated bullets).
 
+**Reliability P1 (2026-07-15):** `/api/daily` returns **404** (not 500) when history is too short for Stage2/EMA200 (e.g. recent IPO like SPCX). Watchlist stubs thin names with price-only rows. Serve-time mood coherence: `optimistic`/`euphoric` auto-downgraded when the same analysis reports ≤−3% session move. Signal outcome refresh runs on backend startup; `backend/data` is volume-mounted for persistent `signal_log.db`.
+
 ---
 
 ## API Endpoints

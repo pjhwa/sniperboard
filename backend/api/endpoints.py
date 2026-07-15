@@ -300,6 +300,10 @@ async def get_latest_signal(
         raise HTTPException(status_code=500, detail="Internal server error while processing latest signal")
 
 
+# Stage2 needs EMA200 — add_daily_indicators dropna() wipes shorter histories
+_MIN_STAGE2_BARS = 200
+
+
 @router.get("/daily", response_model=DailyResponse)
 async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주식 심볼")):
     try:
@@ -311,15 +315,33 @@ async def get_daily_endpoint(symbol: str = Query(..., description="조회할 주
         if df is None or df.empty:
             raise HTTPException(status_code=404, detail=f"No daily data found for {symbol}")
 
-        if len(df) < 20:
-            raise HTTPException(status_code=404, detail=f"Insufficient historical data for {symbol} (recent IPO — {len(df)} days available)")
+        if len(df) < _MIN_STAGE2_BARS:
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    f"Insufficient historical data for {symbol} "
+                    f"({len(df)} trading days; Stage2 needs ~{_MIN_STAGE2_BARS} for EMA200)"
+                ),
+            )
 
         df = add_daily_indicators(df)
+        if df is None or df.empty:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Insufficient history after indicator warm-up for {symbol}",
+            )
         df = df.iloc[-252:]  # 200EMA 워밍업 이후 1년분만 추출
+        if df.empty:
+            raise HTTPException(status_code=404, detail=f"No usable daily bars for {symbol}")
 
         spy_close = spy_df["close"] if spy_df is not None and not spy_df.empty else None
         rsp_close = rsp_df["close"] if rsp_df is not None and not rsp_df.empty else None
         stage2 = calculate_stage2_analysis(df, spy_close, rsp_close)
+        if not stage2 or "score" not in stage2:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Stage2 analysis unavailable for {symbol} (insufficient clean history)",
+            )
 
         candles = []
         for i in range(len(df)):
@@ -575,31 +597,54 @@ def build_watchlist_result() -> tuple[list[dict], str | None]:
         market_sentiment = None
         symbol_sentiment_map = {}
 
+    def _thin_history_item(sym: str, price: float, note: str) -> dict:
+        return {
+            "symbol": sym,
+            "tier": SYMBOL_TIER.get(sym, 1),
+            "price": round(price, 2),
+            "score": 0,
+            "rs_score": 50.0,
+            "pct_from_52w_high": 0.0,
+            "checks": {k: False for k in [
+                "price_above_emas", "ema200_rising", "near_52w_high", "above_52w_low",
+                "pullback_shallow", "rs_strong", "volume_contracting",
+            ]},
+            "entry": 0.0, "stop": 0.0, "target": 0.0,
+            "latest_atr": 0.0, "pivot_high": 0.0,
+            "conviction_score": None, "conviction_label": None,
+            "conviction_reliability": "low",
+            "conviction_notes": [note],
+            "monthly_phase": "UNKNOWN", "monthly_uptrend_confirmed": False,
+        }
+
     for sym in WATCHLIST_SYMS:
         df = dfs.get(sym)
         if df is None or df.empty:
             continue
-        # New IPO with insufficient history — include with price only
-        if len(df) < 20:
-            result.append({
-                "symbol": sym,
-                "tier": SYMBOL_TIER.get(sym, 1),
-                "price": round(float(df["close"].iloc[-1]), 2),
-                "score": 0,
-                "rs_score": 50.0,
-                "pct_from_52w_high": 0.0,
-                "checks": {k: False for k in ["price_above_emas", "ema200_rising", "near_52w_high", "above_52w_low", "pullback_shallow", "rs_strong", "volume_contracting"]},
-                "entry": 0.0, "stop": 0.0, "target": 0.0,
-                "latest_atr": 0.0, "pivot_high": 0.0,
-                "conviction_score": None, "conviction_label": None,
-                "conviction_reliability": "low",
-                "conviction_notes": ["Insufficient historical data (recent IPO)"],
-                "monthly_phase": "UNKNOWN", "monthly_uptrend_confirmed": False,
-            })
+        try:
+            last_price = float(df["close"].iloc[-1])
+        except Exception:
+            continue
+        # New IPO / short history — Stage2 needs ~200 bars (EMA200); avoid 500/empty dropna
+        if len(df) < _MIN_STAGE2_BARS:
+            result.append(_thin_history_item(
+                sym, last_price,
+                f"Insufficient historical data ({len(df)} days; Stage2 needs ~{_MIN_STAGE2_BARS})",
+            ))
             continue
         try:
             df = add_daily_indicators(df)
+            if df is None or df.empty:
+                result.append(_thin_history_item(
+                    sym, last_price, "Insufficient history after indicator warm-up",
+                ))
+                continue
             stage2 = calculate_stage2_analysis(df, spy_close, rsp_close)
+            if not stage2 or "score" not in stage2:
+                result.append(_thin_history_item(
+                    sym, last_price, "Stage2 unavailable (insufficient clean history)",
+                ))
+                continue
             stage2_score = stage2.get("score", 0)
 
             # Producer scale −2..+2 (or None → neutral 50 after normalize)

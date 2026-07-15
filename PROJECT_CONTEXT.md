@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-07-14 earnings-consistency)
+# SniperBoard — Project Context (UPDATED 2026-07-15 reliability-p1)
 
 ## 0. Purpose of This Document
 
@@ -37,7 +37,7 @@ sniperboard/
 │   │   ├── macro_rules.py            # Macro Insight traffic-light rule engine. compute_macro_signals(items) → {overall:{judgment,green_count,red_count}, groups:{key:{signal,direction}}}. 6 groups (volatility/breadth/credit/rates/commodities/sectors) each with green/yellow/red + overall RISK_ON/MIXED/RISK_OFF. Pure function, dict list input. TDD 20 tests.
 │   │   ├── cap_rank_tracker.py       # 글로벌 시총 순위 SQLite 영속 (cap_ranks.db). init_db / save_ranks / get_previous_ranks / CapRankItem dataclass.
 │   │   ├── backtest_engine.py        # Backtesting engine (2026-06-02). Daily bar backtest driven by Stage2 signals.
-│   │   └── earnings_consistency.py   # (2026-07-14) Single SoT for earnings relative-day language. Absolute earnings_date authoritative; days_until always recomputed US/Eastern at serve time; sanitize AI free-text ("N일 후", "already reported"); rebuild mechanical earnings_alert; prepare_email_sections cross-dedupe for morning email. Used by earnings_service, morning_briefing_service, email_report_service.
+│   │   └── earnings_consistency.py   # (2026-07-14/15) Earnings relative-day SoT + email dedupe. 2026-07-15: reconcile_sentiment_mood_with_session() downgrades optimistic/euphoric when analysis reports ≤−3% session drop (display coherence; not fed to Grok).
 │   ├── services/
 │   │   ├── base.py               # BaseDataService abstract class
 │   │   ├── data_service.py       # YFinanceDataService implementation + module-level helpers
@@ -47,7 +47,7 @@ sniperboard/
 │   │   └── overnight_service.py  # Yahoo Finance WebSocket → Blue Ocean ATS overnight price stream. Runs in a dedicated daemon thread (asyncio.run in thread) — NOT in uvicorn's event loop, to avoid handshake timeouts caused by blocking yfinance I/O. Protobuf base64 parsing (field1=symbol, field2=price/float32, field6=session_hours/varint:8=overnight, field12=chg_pct). start_overnight_service() called in FastAPI lifespan; spawns threading.Thread(daemon=True).
 │   │   └── cap_leaderboard_service.py # companiesmarketcap.com 글로벌 랭킹 스크래핑 → yfinance 1y 히스토리로 spark·52W·market_structure 보완. 1h 인메모리 캐시 + stale fallback. fetch_leaderboard() → TOP 15 dict.
 │   │   └── macro_insight_service.py  # GitHub raw fetch + 30-min in-memory cache (MACRO_INSIGHT_URL). fetch_macro_insight() → Optional[dict]. get_ai_meta(raw) → {generated_at,age_minutes}. Returns None gracefully if URL not set.
-│   │   └── morning_briefing_service.py  # GitHub raw fetch + 10-min raw cache (MORNING_BRIEFING_URL). On every serve: sanitize_briefing_payload against live earnings calendar (rewrites frozen "N일 후"/"already reported" AI text). Generated once daily at KST 07:30.
+│   │   └── morning_briefing_service.py  # GitHub raw fetch + 10-min raw cache (MORNING_BRIEFING_URL). On every serve: sanitize_briefing_payload (earnings dates + mood/session coherence). Generated once daily at KST 07:30.
 │   │   └── email_report_service.py  # Morning email: collect + charts + Jinja2. prepare_email_sections() dedupes cross-section restatements; structured earnings calendar is SoT (free-text earnings_alert omitted when calendar present).
 │   └── tests/
 │       ├── test_data_adapter.py (29 tests — adapter + signal_engine; Phase 5 full suite green)

@@ -470,6 +470,7 @@ def sanitize_briefing_payload(
                 else:
                     # No earnings in calendar within window — strip false earnings timing claims
                     w[k] = _strip_unscheduled_earnings_claims(str(w[k]), sym)
+        reconcile_sentiment_mood_with_session(w)
 
     for s in data.get("spotlight") or []:
         if not isinstance(s, dict):
@@ -482,10 +483,50 @@ def sanitize_briefing_payload(
                 loc = "ko" if k.endswith("_ko") else "en"
                 if ed:
                     s[k] = sanitize_text_for_symbol(str(s[k]), symbol=sym, earnings_date=ed, days=d, locale=loc)
+        reconcile_sentiment_mood_with_session(s)
 
     # Attach live calendar for consumers that want structured data
     data["_earnings_calendar"] = refreshed
     return data
+
+
+def _parse_session_change_pct(text: str) -> Optional[float]:
+    """Extract first signed session % move from analysis prose (e.g. -3.52%)."""
+    if not text:
+        return None
+    m = re.search(r"(?<![A-Za-z0-9])([+-]?\d+(?:\.\d+)?)\s*%", text)
+    if not m:
+        return None
+    try:
+        return float(m.group(1))
+    except ValueError:
+        return None
+
+
+def reconcile_sentiment_mood_with_session(item: dict, *, hard_drop: float = -3.0) -> dict:
+    """Downgrade bullish social mood labels when the same text reports a sharp session decline.
+
+    Does NOT feed price direction into Grok (post-hoc display coherence only).
+    Reliability audit 2026-07-14: 8 names showed optimistic mood with ≤−3% day.
+    """
+    if not isinstance(item, dict):
+        return item
+    mood = str(item.get("sentiment_mood") or "").lower().strip()
+    if mood not in ("optimistic", "euphoric"):
+        return item
+    blob = " ".join(
+        str(item.get(k) or "")
+        for k in ("analysis_ko", "analysis_en", "analysis", "why_ko", "why_en")
+    )
+    chg = _parse_session_change_pct(blob)
+    if chg is None or chg > hard_drop:
+        return item
+    # Sharp down day: social residue must not read as risk-on
+    new_mood = "fearful" if chg <= -8.0 else "cautious"
+    item["sentiment_mood"] = new_mood
+    item["sentiment_mood_adjusted"] = True
+    item["sentiment_mood_prev"] = mood
+    return item
 
 
 def _strip_unscheduled_earnings_claims(text: str, symbol: str) -> str:

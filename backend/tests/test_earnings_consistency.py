@@ -142,3 +142,34 @@ def test_format_relative_ko():
     assert format_relative(3, "ko") == "3일 후 발표"
     assert format_relative(0, "ko") == "오늘 발표"
     assert format_relative(-2, "ko") == "2일 전 발표"
+
+
+def test_reconcile_sentiment_mood_downgrades_on_hard_drop():
+    from core.earnings_consistency import reconcile_sentiment_mood_with_session
+
+    item = {
+        "symbol": "NVDA",
+        "sentiment_mood": "optimistic",
+        "analysis_ko": "$203.53에서 -3.52% 하락 후 개장 전 보합.",
+        "action": "avoid",
+    }
+    out = reconcile_sentiment_mood_with_session(item)
+    assert out["sentiment_mood"] == "cautious"
+    assert out.get("sentiment_mood_adjusted") is True
+    assert out.get("sentiment_mood_prev") == "optimistic"
+
+    mild = {
+        "symbol": "AAPL",
+        "sentiment_mood": "optimistic",
+        "analysis_en": "closed -1.2% on light volume",
+    }
+    out2 = reconcile_sentiment_mood_with_session(mild)
+    assert out2["sentiment_mood"] == "optimistic"
+
+    crash = {
+        "symbol": "APP",
+        "sentiment_mood": "euphoric",
+        "analysis_ko": "세션 -12.65% 급락",
+    }
+    out3 = reconcile_sentiment_mood_with_session(crash)
+    assert out3["sentiment_mood"] == "fearful"

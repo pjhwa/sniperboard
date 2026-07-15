@@ -1,4 +1,5 @@
 import logging
+import sys
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +12,13 @@ from core.signal_tracker import init_db as init_signal_db, scan_and_log, update_
 from core.cap_rank_tracker import init_db as init_cap_db
 from services.email_report_service import run_morning_report
 
+# Ensure lifespan / APScheduler lines appear in `docker logs` (uvicorn default config)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s:%(name)s:%(message)s",
+    stream=sys.stdout,
+    force=True,
+)
 logger = logging.getLogger(__name__)
 
 # SYMBOLS that need overnight price: watchlist + macro index ETFs shown in MarketStrip
@@ -45,6 +53,13 @@ async def lifespan(app: FastAPI):
     init_signal_db()
     init_cap_db()
     start_overnight_service(_OVERNIGHT_SYMBOLS)
+
+    # Clear stale PENDING/ACTIVE on boot so Track board and health stay trustworthy
+    try:
+        boot_summary = update_outcomes()
+        logger.info("Startup outcome update complete — %s", boot_summary)
+    except Exception as e:
+        logger.error("Startup outcome update failed: %s", e, exc_info=True)
 
     _scheduler.add_job(
         run_morning_report,

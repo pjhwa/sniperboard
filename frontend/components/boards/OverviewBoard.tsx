@@ -349,11 +349,14 @@ export function OverviewBoard() {
                     <div key={e.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
                       <span style={{ fontWeight: 600, width: 40, fontFamily: 'var(--mono)' }}>{e.symbol}</span>
                       <span style={{ color: 'var(--fg-muted)', flex: 1 }}>
-                        {e.earnings_date.slice(5)} · {e.days_until === 0
-                          ? (locale === 'ko' ? '오늘' : 'today')
+                        {/* Absolute date is SoT; relative is live recompute from API */}
+                        {e.earnings_date}
+                        {' · '}
+                        {e.days_until === 0
+                          ? (locale === 'ko' ? '오늘 발표' : 'reports today')
                           : e.days_until === 1
-                            ? (locale === 'ko' ? '내일' : 'tomorrow')
-                            : `${e.days_until}${locale === 'ko' ? '일 후' : 'd'}`}
+                            ? (locale === 'ko' ? '내일 발표' : 'tomorrow')
+                            : (locale === 'ko' ? `D-${e.days_until}` : `D-${e.days_until}`)}
                       </span>
                       {e.eps_estimate == null && (
                         <span style={{ fontSize: 10.5, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>{t(S.estimateNA, locale)}</span>

@@ -189,6 +189,24 @@ def update_outcomes() -> dict:
                     risk = actual_entry * 0.03
 
             if bars.empty:
+                # No bars after signal_date yet (same-day signal) → wait.
+                # Orphan PENDING (no future bars for many calendar days) → cancel so
+                # Track board / health do not show multi-week zombie signals.
+                try:
+                    age_days = (date.today() - date.fromisoformat(str(row["signal_date"])[:10])).days
+                except Exception:
+                    age_days = 0
+                if row["status"] == STATUS_PENDING and age_days > max(ENTRY_WINDOW_BARS + 5, 10):
+                    c.execute(
+                        """
+                        UPDATE signal_log SET
+                            status=?, updated_at=strftime('%Y-%m-%dT%H:%M:%SZ','now')
+                        WHERE id=?
+                        """,
+                        (STATUS_CANCELLED, row["id"]),
+                    )
+                    summary["updated"] += 1
+                    summary["cancelled"] += 1
                 continue
 
             new_status = status

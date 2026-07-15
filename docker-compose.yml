@@ -27,6 +27,9 @@ services:
       GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD:-}
       REPORT_TO: ${REPORT_TO:-}
       DASHBOARD_URL: ${DASHBOARD_URL:-http://localhost:4000}
+    volumes:
+      # Persist signal_log / cap_ranks so health monitor + host tools share the same DB
+      - ./backend/data:/app/data
     restart: unless-stopped
 
   frontend:
