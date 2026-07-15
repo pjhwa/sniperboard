@@ -315,14 +315,16 @@ The accountability board that makes SniperBoard unique among signal tools.
 
 | Section | Content |
 |---------|---------|
-| **Model Health banner** | ON_TRACK / WATCH / UNDERPERFORMING vs. +0.460R backtest baseline. Confidence: LOW (<30 trades) → MEDIUM → HIGH (80+). |
+| **Scan methodology (C1)** | Stage2 threshold (≥5/7), closed sample **n**, entry window (5 bars), timeout (60 bars), US regular-session scan window (ET 09:30–16:00 ≈ KST 22:30–05:00, every 30m). Explicit note: no/new signals is methodology, not silent failure. |
+| **Live vs Backtest table (C2)** | Side-by-side n / expectancy_r / win_rate / profit_factor / OOS expectancy with Δ. Honest gap when live n&lt;30 (LOW confidence). Baseline prefers cached `backtest_result.json` aggregate. |
+| **Model Health banner** | ON_TRACK / WATCH / UNDERPERFORMING vs. +0.460R (or cache) baseline. Confidence: LOW (&lt;30 trades) → MEDIUM → HIGH (80+). |
 | **KPI comparison** | Live win rate / expectancy / profit factor vs. backtest values. Delta highlighted. |
 | **Cumulative R curve** | Live equity curve overlaid on backtest baseline (grey dashed). Same chart, same R scale. |
 | **Current Pipeline** | PENDING signals (waiting for entry price) and ACTIVE trades (currently held). Entry/Stop/Target + R:R displayed. |
 | **Regime breakdown** | Expectancy grouped by RISK_ON / MIXED / RISK_OFF — shows when the model works. |
 | **Signal history table** | All logged signals with outcomes. Filter by WIN / LOSS / TIMEOUT / CANCELLED. |
 
-Auto-logging: every time `/watchlist` refreshes, Stage2 ≥ 5 signals are automatically recorded. No manual input.
+Auto-logging: every time `/watchlist` refreshes, Stage2 ≥ 5 signals are automatically recorded. No manual input. Empty closed-log → null expectancy (not fabricated).
 
 ---
 

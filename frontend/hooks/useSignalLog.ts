@@ -36,11 +36,54 @@ export interface EquityCurvePoint {
   trade_n: number;
 }
 
+export interface SignalMethodology {
+  stage2_threshold: number;
+  scan_window_en?: string | null;
+  scan_window_ko?: string | null;
+  entry_window_bars?: number | null;
+  timeout_bars?: number | null;
+  outcome_update_en?: string | null;
+  outcome_update_ko?: string | null;
+  note_en?: string | null;
+  note_ko?: string | null;
+}
+
+export interface LiveBacktestComparison {
+  sample_n: number;
+  confidence: string;
+  health_status: string;
+  live?: {
+    n: number;
+    expectancy_r: number | null;
+    win_rate: number | null;
+    profit_factor: number | null;
+  } | null;
+  backtest?: {
+    n?: number | null;
+    expectancy_r?: number | null;
+    win_rate?: number | null;
+    profit_factor?: number | null;
+    oos_expectancy_r?: number | null;
+    config?: Record<string, unknown> | null;
+    source?: string | null;
+  } | null;
+  delta?: {
+    expectancy_r?: number | null;
+    win_rate?: number | null;
+    profit_factor?: number | null;
+  } | null;
+  honest_gap_en?: string | null;
+  honest_gap_ko?: string | null;
+  comparable?: boolean;
+}
+
 export interface SignalLogStats {
   n_closed: number;
   n_active: number;
   n_pending: number;
   n_total: number;
+  /** C1: closed-trade sample size for expectancy (same as n_closed) */
+  sample_n?: number;
   wins: number;
   losses: number;
   timeouts: number;
@@ -65,7 +108,12 @@ export interface SignalLogStats {
     profit_factor: number;
     n: number;
     oos_expectancy_r: number;
+    source?: string | null;
+    generated_at?: string | null;
+    config?: Record<string, unknown> | null;
   };
+  methodology?: SignalMethodology | null;
+  comparison?: LiveBacktestComparison | null;
 }
 
 export function useSignalLog(symbol?: string) {

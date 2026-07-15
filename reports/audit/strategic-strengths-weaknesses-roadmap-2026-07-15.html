@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SniperBoard 전략 평가 · 강점/약점 · 향후 로드맵 — 2026-07-15</title>
+<title>SniperBoard 전략 평가 · Phase A–C2 완료 종합 — 2026-07-15</title>
 <style>
   :root {
     --bg: #e8e4dc;
@@ -73,7 +73,7 @@
     margin: 0 0 12px; letter-spacing: -0.02em; line-height: 1.25;
   }
   header.hero .lede {
-    margin: 0 0 18px; color: var(--ink-2); max-width: 940px; font-size: 15.5px;
+    margin: 0 0 18px; color: var(--ink-2); max-width: 960px; font-size: 15.5px;
   }
   .meta { display: flex; flex-wrap: wrap; gap: 8px; }
   .pill {
@@ -138,33 +138,30 @@
     border: 1px solid var(--border);
   }
 
-  .score-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-    margin: 16px 0 8px;
-  }
-  .score-card {
+  .verdict {
+    display: grid; grid-template-columns: 130px 1fr; gap: 16px;
+    align-items: center;
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    padding: 18px;
   }
-  .score-card .label {
-    font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
-    color: var(--subtle); font-weight: 600; margin-bottom: 6px;
+  .verdict .big {
+    font-family: var(--serif); font-size: 44px; font-weight: 700;
+    color: var(--teal); line-height: 1; text-align: center;
   }
-  .score-card .val {
-    font-family: var(--serif); font-size: 28px; font-weight: 700;
-    letter-spacing: -0.03em; line-height: 1;
+  .verdict .big span {
+    display: block; font-size: 11px; color: var(--muted);
+    font-family: var(--sans); font-weight: 600; margin-top: 6px; letter-spacing: 0.06em;
   }
-  .score-card .val.high { color: var(--teal); }
-  .score-card .val.mid { color: var(--amber); }
-  .score-card .val.low { color: var(--rose); }
-  .score-card .hint { font-size: 11.5px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+  .delta {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--mono); font-size: 12px; font-weight: 700;
+    color: var(--teal); background: var(--teal-soft); padding: 2px 8px; border-radius: 4px;
+  }
 
   .bar-row {
-    display: grid; grid-template-columns: 190px 1fr 48px;
+    display: grid; grid-template-columns: 210px 1fr 48px;
     gap: 10px; align-items: center;
     margin: 8px 0; font-size: 13px;
   }
@@ -178,7 +175,6 @@
     background: linear-gradient(90deg, #2f7a70, #9a7b2f);
   }
   .bar-fill.warn { background: linear-gradient(90deg, #c4a35a, #a8483c); }
-  .bar-fill.bad { background: linear-gradient(90deg, #c47a6a, #a8483c); }
   .bar-row .n { font-family: var(--mono); font-weight: 700; text-align: right; }
 
   .table-wrap { overflow-x: auto; margin: 12px 0 4px; border-radius: 10px; border: 1px solid var(--border); }
@@ -207,10 +203,7 @@
   .tag-warn { background: var(--amber-soft); color: var(--amber); }
   .tag-info { background: var(--sky-soft); color: var(--sky); }
   .tag-done { background: #e5f0e8; color: #1f6b45; }
-  .tag-p0 { background: var(--rose-soft); color: var(--rose); }
-  .tag-p1 { background: var(--amber-soft); color: var(--amber); }
-  .tag-p2 { background: var(--sky-soft); color: var(--sky); }
-  .tag-p3 { background: #eeeae3; color: var(--subtle); }
+  .tag-todo { background: #eeeae3; color: var(--subtle); }
 
   .callout {
     border-radius: 12px; padding: 14px 16px; margin: 14px 0;
@@ -230,6 +223,7 @@
     .bar-row { grid-template-columns: 1fr; gap: 4px; }
     section { padding: 20px 16px; }
     header.hero { padding: 24px 18px; }
+    .verdict { grid-template-columns: 1fr; }
   }
 
   .timeline {
@@ -244,6 +238,7 @@
     width: 10px; height: 10px; border-radius: 50%;
     background: var(--gold); border: 2px solid var(--paper);
   }
+  .timeline .item.done::before { background: var(--teal); }
   .timeline .when {
     font-family: var(--mono); font-size: 11.5px; color: var(--gold); font-weight: 700;
   }
@@ -273,56 +268,75 @@
     color: var(--gold); font-weight: 700; margin-bottom: 4px;
   }
   .roadmap-phase h4 { margin: 0 0 10px; font-size: 16px; }
+  .roadmap-phase.done { border-color: #b7d4c4; background: linear-gradient(180deg, #f6fbf8 0%, var(--card) 40%); }
 
-  .verdict {
-    display: grid; grid-template-columns: 130px 1fr; gap: 16px;
-    align-items: center;
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin: 14px 0;
+  }
+  .flow .step {
     background: var(--card);
-    border: 1px solid var(--border-strong);
-    border-radius: 14px;
-    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 10px;
+    text-align: center;
+    font-size: 12.5px;
   }
-  .verdict .big {
-    font-family: var(--serif); font-size: 44px; font-weight: 700;
-    color: var(--teal); line-height: 1; text-align: center;
+  .flow .step .n {
+    font-family: var(--mono); font-size: 10px; color: var(--gold);
+    font-weight: 700; letter-spacing: 0.08em; margin-bottom: 4px;
   }
-  .verdict .big span {
-    display: block; font-size: 11px; color: var(--muted);
-    font-family: var(--sans); font-weight: 600; margin-top: 6px; letter-spacing: 0.06em;
+  .flow .step .t { font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .flow .step .d { color: var(--muted); font-size: 11.5px; line-height: 1.4; }
+  @media (max-width: 860px) { .flow { grid-template-columns: 1fr 1fr; } }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin: 14px 0;
   }
-  .delta {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-family: var(--mono); font-size: 12px; font-weight: 700;
-    color: var(--teal); background: var(--teal-soft); padding: 2px 8px; border-radius: 4px;
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
   }
+  .kpi .l { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--subtle); font-weight: 600; }
+  .kpi .v { font-family: var(--serif); font-size: 22px; font-weight: 700; margin-top: 4px; color: var(--ink); }
+  .kpi .v.ok { color: var(--teal); }
+  .kpi .h { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+
   footer {
     text-align: center; color: var(--subtle); font-size: 12px;
     margin-top: 28px; padding: 16px;
   }
   .doc-list a { font-weight: 600; }
-  .footnote { font-size: 12.5px; color: var(--subtle); margin-top: 14px; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
 <header class="hero">
-  <p class="brand">SniperBoard · Strategic Assessment</p>
-  <h1>신뢰도 현황 · 투자 참고 대시보드<br/>강점 / 약점 · 향후 개선 로드맵</h1>
+  <p class="brand">SniperBoard · Strategic Assessment · Full Rewrite</p>
+  <h1>신뢰도 · 강점/약점 · Phase A–C2 완료 종합<br/>투자 참고 대시보드 평가서</h1>
   <p class="lede">
-    <code>reports/audit/</code>에 누적된 4건의 감사·개선 보고서와
-    2026-07-13~15 구현 결과, 2026-07-15 운영 스냅샷을 종합한다.
-    목적은 “더 많은 기능”이 아니라
-    <strong>투자 참고용 도구로서 어디까지 믿을 수 있는가</strong>를 명확히 하고,
-    다음에 무엇을 고치면 신뢰가 가장 크게 오르는지를 순위화하는 것이다.
+    2026-07-13 dual-repo 감사부터 2026-07-15 Phase C1/C2(Track 방법론 투명성 · 라이브↔백테스트 대조)까지
+    <strong>모든 개선을 단일 문서로 재구조화</strong>한다.
+    목표는 기능 나열이 아니라
+    <strong>투자 참고 도구로서 어디까지 믿을 수 있는가</strong>와
+    <strong>남은 리스크(C3–C5)</strong>를 한 화면에서 읽히게 하는 것이다.
   </p>
   <div class="meta">
-    <span class="pill"><strong>As-of</strong> 2026-07-15 · Phase A+B shipped</span>
-    <span class="pill ok"><strong>종합 신뢰</strong> ~92 / 100</span>
-    <span class="pill info"><strong>Δ since 7/14</strong> +14pt</span>
+    <span class="pill"><strong>As-of</strong> 2026-07-15 · Phase C1/C2 shipped</span>
+    <span class="pill ok"><strong>종합 신뢰</strong> ~93 / 100</span>
+    <span class="pill info"><strong>Δ since 7/14</strong> +15pt (78→93)</span>
     <span class="pill ok"><strong>Phase A</strong> A1–A5 완료</span>
     <span class="pill ok"><strong>Phase B</strong> B1–B5 완료</span>
-    <span class="pill warn"><strong>잔여</strong> Phase C · AI 해석 깊이</span>
+    <span class="pill ok"><strong>Phase C</strong> C1·C2 완료</span>
+    <span class="pill warn"><strong>잔여</strong> C3–C5 · AI 해석 깊이</span>
   </div>
 </header>
 
@@ -332,13 +346,15 @@
     <div class="links">
       <a href="#docs">1. 문서 계보</a>
       <a href="#journey">2. 개선 여정</a>
-      <a href="#score">3. 현재 신뢰 점수</a>
-      <a href="#strengths">4. 강점</a>
-      <a href="#weaknesses">5. 약점</a>
-      <a href="#use">6. 투자 참고 사용 원칙</a>
-      <a href="#roadmap">7. 향후 로드맵</a>
-      <a href="#kpis">8. 성공 지표</a>
-      <a href="#close">9. 결론</a>
+      <a href="#architecture">3. 데이터 워크플로</a>
+      <a href="#score">4. 신뢰 점수</a>
+      <a href="#phases">5. Phase A–C2 상세</a>
+      <a href="#strengths">6. 강점</a>
+      <a href="#weaknesses">7. 약점</a>
+      <a href="#use">8. 사용 원칙</a>
+      <a href="#roadmap">9. 잔여 로드맵</a>
+      <a href="#verify">10. 검증 증거</a>
+      <a href="#close">11. 결론</a>
     </div>
   </details>
 </nav>
@@ -346,43 +362,43 @@
 <!-- 1 -->
 <section id="docs">
   <h2>1. 문서 계보 (Audit Corpus)</h2>
-  <p class="sec-sub">본 문서는 아래 보고서를 대체하지 않고 <strong>종합 해석층</strong>으로 읽힌다.</p>
+  <p class="sec-sub">본 문서는 이전 보고서를 대체하는 <strong>종합 해석·현황층</strong>이다. 원본 감사 HTML은 증거 아카이브로 유지된다.</p>
 
   <div class="table-wrap">
     <table class="data">
       <thead>
-        <tr><th>문서</th><th>일자</th><th>핵심 질문</th><th>주요 결론</th></tr>
+        <tr><th>문서</th><th>일자</th><th>핵심 질문</th><th>상태</th></tr>
       </thead>
       <tbody>
         <tr>
           <td class="doc-list"><a href="./dual-repo-full-audit-2026-07-13.html">dual-repo-full-audit</a></td>
           <td>07-13</td>
           <td>두 리포 구조·계약·치명 결함?</td>
-          <td>Conviction 스케일 붕괴, 차트 폭, 소스 불일치, 헬스/스키마 — <strong>P0 다수</strong></td>
+          <td><span class="tag tag-done">P0 식별 완료</span></td>
         </tr>
         <tr>
           <td class="doc-list"><a href="./p0-improvements-and-next-roadmap-2026-07-13.html">p0-improvements + roadmap</a></td>
           <td>07-13</td>
-          <td>P0-1/2/3/5 완료 여부·잔여?</td>
-          <td>Conviction·차트·소스·헬스 수정 완료. 잔여 P0-4/6, P1 목록화</td>
+          <td>P0-1/2/3/5 수정·잔여?</td>
+          <td><span class="tag tag-done">구현 완료</span></td>
         </tr>
         <tr>
           <td class="doc-list"><a href="./p0-6-earnings-revenue-and-polymarket-analysis-2026-07-13.html">p0-6 + Polymarket</a></td>
           <td>07-13</td>
-          <td>매출 단위 버그? 예측시장 대안?</td>
-          <td>TWD→USD 가드 완료. Polymarket <strong>reference-only</strong> 권고 → 이후 구현</td>
+          <td>매출 단위·예측시장 역할?</td>
+          <td><span class="tag tag-done">가드 + reference-only</span></td>
         </tr>
         <tr>
           <td class="doc-list"><a href="./reliability-fact-verification-2026-07-14.html">reliability-fact-verification</a></td>
           <td>07-14</td>
           <td>저장된 내용이 사실과 맞는가?</td>
-          <td>가격/절대일 강함. AI 상대일 모순·Docker 미배포가 신뢰 붕괴 구간</td>
+          <td><span class="tag tag-done">78/100 · 배포 갭 문서화</span></td>
         </tr>
         <tr>
-          <td class="doc-list"><strong>본 문서</strong></td>
+          <td class="doc-list"><strong>본 문서 (재작성)</strong></td>
           <td>07-15</td>
-          <td>지금 제품으로서 어떤가? 다음은?</td>
-          <td>P0 클로즈 + P1 신뢰 패치 반영 후 <strong>강점/약점/로드맵</strong></td>
+          <td>A+B+C1/C2 이후 제품 신뢰는?</td>
+          <td><span class="tag tag-pass">~93/100 · C1/C2 DONE</span></td>
         </tr>
       </tbody>
     </table>
@@ -392,549 +408,469 @@
 <!-- 2 -->
 <section id="journey">
   <h2>2. 개선 여정 (2026-07-13 → 07-15)</h2>
-  <p class="sec-sub">감사가 지적한 결함이 코드·배포·운영까지 닫힌 순서.</p>
+  <p class="sec-sub">감사가 지적한 결함이 코드·배포·운영·Track 투명성까지 닫힌 순서.</p>
 
   <div class="timeline">
-    <div class="item">
+    <div class="item done">
       <div class="when">2026-07-13 · Dual-repo audit</div>
       <div class="what">구조·계약·P0 결함 전수 식별</div>
       <div class="how">Conviction −2..+2 오용, fitContent 부재, brief.context 경로, 스키마 maxItems, health enum</div>
     </div>
-    <div class="item">
-      <div class="when">2026-07-13 · P0-1/2/3/5</div>
-      <div class="what">Conviction 정규화 · 차트 폭 · daily/watchlist 심리 경로 · 헬스/스키마</div>
-      <div class="how">골든 케이스 Conviction Low→High, 보드 간 심리 일치, schema PASS</div>
+    <div class="item done">
+      <div class="when">2026-07-13 · P0-1~6</div>
+      <div class="what">Conviction 정규화 · 차트 폭 · 심리 경로 · 헬스 · 매출 FX · Polymarket</div>
+      <div class="how">골든 케이스 High 복구 · TSM 매출 가드 · reference_only 예측시장</div>
     </div>
-    <div class="item">
-      <div class="when">2026-07-13 · P0-6 + P0-4</div>
-      <div class="what">Earnings 매출 FX 가드 · Polymarket FOMC 참고층</div>
-      <div class="how">TSM 매출 단위 폭주 차단 · Macro/Briefing에 reference-only 확률 카드</div>
+    <div class="item done">
+      <div class="when">2026-07-14 · Earnings + Fact verify</div>
+      <div class="what">절대 earnings_date SoT · serve-time days_until · 사실성 78/100</div>
+      <div class="how">가격 22/22 exact · 실적일 8/8 · Docker 구버전 잔존 문서화</div>
     </div>
-    <div class="item">
-      <div class="when">2026-07-13~14 · Morning email</div>
-      <div class="what">모닝메일 라이트 톤 리디자인 · 전문 보존</div>
-      <div class="how">섹션 풍부화 후 중언부언·실적 날짜 모순 발견</div>
+    <div class="item done">
+      <div class="when">2026-07-14~15 · Phase A (Reliability)</div>
+      <div class="what">A1 배포 계약 · A2 thin-symbol soft-fail · A3 stale-on-error · A4 mood 정합 · A5 시그널 수명</div>
+      <div class="how"><code>deploy_verify_backend.sh</code> · LastGoodCache · SPCX 404 not 500 · volume signal_log.db</div>
     </div>
-    <div class="item">
-      <div class="when">2026-07-14 · Earnings consistency</div>
-      <div class="what">절대 <code>earnings_date</code> SoT · serve-time <code>days_until</code> · 메일 중복 제거</div>
-      <div class="how"><code>earnings_consistency.py</code> · collector ET 정렬 · 로컬 검증 PASS / Docker 구버전 잔존</div>
+    <div class="item done">
+      <div class="when">2026-07-15 · Phase B (Integrity)</div>
+      <div class="what">B1 briefing integrity · B2 source trust UI · B3 estimate provenance · B4 divergence · B5 email digest</div>
+      <div class="how"><code>briefing_verify.py</code> · price_table binding · integrity_passed meta · 오염 방화벽 유지</div>
     </div>
-    <div class="item">
-      <div class="when">2026-07-14 · Fact verification</div>
-      <div class="what">yfinance 교차검증 보고서 · 종합 78/100</div>
-      <div class="how">가격 22/22 exact · 실적일 8/8 · 원시 JSON TSM 자기모순 · 배포 갭 문서화</div>
-    </div>
-    <div class="item">
-      <div class="when">2026-07-14~15 · Deploy + Reliability P1</div>
-      <div class="what">Docker 재배포 · daily 404 soft-fail · mood 정합 · 시그널 수명 · 볼륨 마운트</div>
-      <div class="how">운영 API: SPCX 404 · TSM D-2 단일 · APScheduler 로그 가시 · 무드/급락 사후 조정</div>
+    <div class="item done">
+      <div class="when">2026-07-15 · Phase C1/C2 (Track loop)</div>
+      <div class="what">스캔 방법론 투명성 + 라이브 expectancy/n + 백테스트 대조 표</div>
+      <div class="how"><code>live_backtest_compare.py</code> · <code>compute_live_stats</code> methodology/comparison · TrackBoard UI · 7 unit tests</div>
     </div>
   </div>
 
   <div class="callout teal">
     <p class="t">한 줄 요약</p>
     <p>
-      3일 동안 제품은 “심리 점수가 깨진 대시보드”에서
-      “기계 수치·캘린더는 감사 가능하고, AI 문장은 serve-time으로 교정되는 참고 도구”로 이동했다.
-      남은 리스크는 주로 <strong>해석층(AI)·운영 희소 신호·수집 스케줄 시차</strong>에 있다.
+      제품은 “심리 점수가 깨진 대시보드” → “기계 수치·캘린더는 감사 가능하고 AI는 serve-time 교정” →
+      “Track이 <em>왜 신호가 없는지</em>와 <em>라이브가 백테스트와 얼마나 다른지</em>를 정직히 보여주는 루프”로 이동했다.
     </p>
   </div>
 </section>
 
 <!-- 3 -->
+<section id="architecture">
+  <h2>3. 데이터 워크플로 (Collect → Store → Serve → Track)</h2>
+  <p class="sec-sub">E2E 검증이 커버하는 실제 경로. 유료 Grok 재수집 없이 저장된 JSON + 라이브 yfinance/시그널 경로로 검증.</p>
+
+  <div class="flow">
+    <div class="step">
+      <div class="n">01</div>
+      <div class="t">Collect</div>
+      <div class="d">market-sentiment-data cron → sentiment / brief / earnings / macro JSON</div>
+    </div>
+    <div class="step">
+      <div class="n">02</div>
+      <div class="t">Store</div>
+      <div class="d">GitHub raw push · schema v2.0 _en/_ko</div>
+    </div>
+    <div class="step">
+      <div class="n">03</div>
+      <div class="t">Consume</div>
+      <div class="d">SniperBoard services + LastGoodCache · serve-time days_until</div>
+    </div>
+    <div class="step">
+      <div class="n">04</div>
+      <div class="t">Signal</div>
+      <div class="d">yfinance · Stage2 · regime · scan_and_log (≥5)</div>
+    </div>
+    <div class="step">
+      <div class="n">05</div>
+      <div class="t">Track</div>
+      <div class="d">outcomes · live stats · vs backtest · health</div>
+    </div>
+  </div>
+
+  <div class="callout gold">
+    <p class="t">오염 방화벽 (Contamination Firewall)</p>
+    <p>
+      가격 <strong>방향</strong>은 Grok 프롬프트에 절대 들어가지 않는다.
+      허용: 변동 크기, 거래량 비율, 키레벨 위치. 위반 시 심리 데이터는 가격 에코가 되어 분석 가치가 사라진다.
+    </p>
+  </div>
+</section>
+
+<!-- 4 -->
 <section id="score">
-  <h2>3. 현재 신뢰 점수 (2026-07-15 운영 스냅샷)</h2>
-  <p class="sec-sub">7/14 사실성 보고서 가중 모델을 유지하되, 배포·P1 반영 후 재산정.</p>
+  <h2>4. 현재 신뢰 점수 (2026-07-15 · Phase C1/C2 후)</h2>
+  <p class="sec-sub">7/14 사실성 가중 모델 유지. A/B 방어 + C1/C2 Track 투명성 반영 재산정.</p>
 
   <div class="verdict">
-    <div class="big">92<span>/100<br/>종합 신뢰</span></div>
+    <div class="big">93<span>/100<br/>종합 신뢰</span></div>
     <div>
       <p style="margin:0 0 10px;">
-        <span class="delta">▲ +14 vs 7/14 (78)</span>
-        &nbsp; Phase A 방어 + Phase B 해석 품질: B1 integrity gate, B2 source trust UI,
-        B3 estimate provenance, B4 divergence list, B5 email digest.
-        투자 참고용으로는 여전히 <strong>“수치 앵커는 신뢰, 내러티브는 2차 확인”</strong>.
+        <span class="delta">▲ +15 vs 7/14 (78)</span>
+        &nbsp; 기계 앵커·실적일·배포 계약·브리핑 integrity에 더해
+        Track이 <strong>표본 n·방법론·백테스트 대조</strong>를 노출한다.
+        투자 참고용 원칙은 불변: <strong>“수치 앵커는 신뢰, 내러티브는 2차 확인”</strong>.
       </p>
       <div class="meta">
         <span class="pill ok">기계 시세/시그널 95</span>
         <span class="pill ok">실적 절대일 95</span>
         <span class="pill ok">days_until (serve) 92</span>
         <span class="pill ok">stale-on-error 90</span>
-        <span class="pill ok">배포 계약 92</span>
-        <span class="pill ok">운영 화면 정합 ~90</span>
+        <span class="pill ok">배포 계약 93</span>
+        <span class="pill ok">브리핑 integrity 90</span>
+        <span class="pill ok">Track 방법론/대조 88</span>
         <span class="pill warn">AI 지정학 내러티브 62</span>
         <span class="pill warn">소셜 심리 60</span>
       </div>
     </div>
   </div>
 
-  <h3>영역별 막대 (현재)</h3>
+  <h3>영역별 막대</h3>
   <div class="bar-row"><div class="name">OHLCV · 종가 바인딩</div><div class="bar-track"><div class="bar-fill" style="width:95%"></div></div><div class="n">95</div></div>
   <div class="bar-row"><div class="name">Stage2 · Regime</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="n">90</div></div>
   <div class="bar-row"><div class="name">Conviction 스케일</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="n">92</div></div>
   <div class="bar-row"><div class="name">실적 절대 날짜</div><div class="bar-track"><div class="bar-fill" style="width:95%"></div></div><div class="n">95</div></div>
   <div class="bar-row"><div class="name">실적 상대일 (serve)</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="n">92</div></div>
-  <div class="bar-row"><div class="name">모닝브리핑 정합 (운영)</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="n">90</div></div>
+  <div class="bar-row"><div class="name">모닝브리핑 integrity</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="n">90</div></div>
   <div class="bar-row"><div class="name">GitHub stale-on-error</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="n">90</div></div>
-  <div class="bar-row"><div class="name">Earnings 매출 단위</div><div class="bar-track"><div class="bar-fill" style="width:88%"></div></div><div class="n">88</div></div>
-  <div class="bar-row"><div class="name">Polymarket 참고층</div><div class="bar-track"><div class="bar-fill" style="width:75%"></div></div><div class="n">75</div></div>
+  <div class="bar-row"><div class="name">Track 방법론 (C1)</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="n">90</div></div>
+  <div class="bar-row"><div class="name">Live↔BT 대조 (C2)</div><div class="bar-track"><div class="bar-fill" style="width:86%"></div></div><div class="n">86</div></div>
+  <div class="bar-row"><div class="name">라이브 청산 표본 깊이</div><div class="bar-track"><div class="bar-fill warn" style="width:45%"></div></div><div class="n">45</div></div>
   <div class="bar-row"><div class="name">지정학 AI 내러티브</div><div class="bar-track"><div class="bar-fill warn" style="width:62%"></div></div><div class="n">62</div></div>
   <div class="bar-row"><div class="name">소셜 심리 해석</div><div class="bar-track"><div class="bar-fill warn" style="width:60%"></div></div><div class="n">60</div></div>
-  <div class="bar-row"><div class="name">Track · 신호 라이프사이클</div><div class="bar-track"><div class="bar-fill warn" style="width:68%"></div></div><div class="n">68</div></div>
-  <div class="bar-row"><div class="name">배포 = 코드 일치 (계약)</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="n">92</div></div>
+  <div class="bar-row"><div class="name">배포 = 코드 일치</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="n">93</div></div>
+</section>
 
-  <h3>라이브 스모크 (2026-07-15 · Phase A 후)</h3>
-  <div class="table-wrap">
-    <table class="data">
-      <thead><tr><th>검사</th><th>결과</th><th>판정</th></tr></thead>
-      <tbody>
-        <tr><td><code>GET /api/daily?symbol=SPCX</code></td><td>404 (not 500)</td><td><span class="tag tag-pass">PASS</span></td></tr>
-        <tr><td><code>GET /api/daily?symbol=NVDA</code></td><td>200 · Stage2 유효</td><td><span class="tag tag-pass">PASS</span></td></tr>
-        <tr><td><code>GET /api/earnings</code> TSM</td><td>2026-07-16 · days_until=<strong>2</strong> · meta.stale=false</td><td><span class="tag tag-pass">live ET</span></td></tr>
-        <tr><td><code>GET /api/morning-briefing</code></td><td>기계적 “2일 후” · 발표됨 없음 · meta 포함</td><td><span class="tag tag-pass">PASS</span></td></tr>
-        <tr><td>Unit: last-good cache</td><td>earnings/brief/sentiment fetch fail → available+stale</td><td><span class="tag tag-pass">39 tests</span></td></tr>
-        <tr><td><code>scripts/deploy_verify_backend.sh</code></td><td>build + import + SPCX/earnings smoke</td><td><span class="tag tag-pass">exit 0</span></td></tr>
-      </tbody>
-    </table>
+<!-- 5 -->
+<section id="phases">
+  <h2>5. Phase A–C2 상세 (완료 항목)</h2>
+  <p class="sec-sub">각 페이즈의 계약·모듈·사용자 체감.</p>
+
+  <div class="roadmap-phase done">
+    <div class="ph">Phase A · Reliability · DONE</div>
+    <h4>운영 계약 · soft-fail · cache · mood · signal life</h4>
+    <ul>
+      <li><strong>A1</strong> <code>scripts/deploy_verify_backend.sh</code> — 이미지 빌드 + 컨테이너 모듈 import + SPCX/earnings 스모크</li>
+      <li><strong>A2</strong> thin-symbol (SPCX) Stage2 미달 시 <strong>404 soft-fail</strong> (500 금지, 가짜 체크리스트 금지)</li>
+      <li><strong>A3</strong> <code>github_payload_cache.LastGoodCache</code> — fetch 실패 시 available+stale 유지</li>
+      <li><strong>A4</strong> mood/session 정합 · briefing sanitize</li>
+      <li><strong>A5</strong> signal_log.db Docker volume · APScheduler 스캔/outcome 가시</li>
+    </ul>
+  </div>
+
+  <div class="roadmap-phase done">
+    <div class="ph">Phase B · Integrity · DONE</div>
+    <h4>브리핑 기계 검증 · 출처 신뢰 · 발산 라벨</h4>
+    <ul>
+      <li><strong>B1</strong> <code>briefing_verify.py</code> — 상대일·무드·price_table 바인딩 기계 검사 · integrity meta</li>
+      <li><strong>B2</strong> source trust UI (freshness / stale 뱃지 강화)</li>
+      <li><strong>B3</strong> earnings estimate provenance 가시화</li>
+      <li><strong>B4</strong> <code>divergence.py</code> — 소셜 composite vs day-change 발산 라벨</li>
+      <li><strong>B5</strong> email digest 중복·상대일 scrub</li>
+    </ul>
+  </div>
+
+  <div class="roadmap-phase done">
+    <div class="ph">Phase C1 · Track transparency · DONE</div>
+    <h4>스캔 창 · Stage2 임계 · 표본 n · expectancy 정직성</h4>
+    <ul>
+      <li>API <code>GET /api/signal-log/stats</code> → <code>methodology</code> (stage2_threshold=5, scan_window_en/ko, entry 5 / timeout 60 bars, outcome 갱신 시각)</li>
+      <li><code>sample_n</code> = <code>n_closed</code> — expectancy 분모 명시</li>
+      <li>청산 0건 → <code>expectancy_r=null</code>, health <code>INSUFFICIENT_DATA</code> / confidence <code>LOW</code> (가공 금지)</li>
+      <li>TrackBoard: “신호 스캔 방법” 카드 — 임계·n·윈도우·“신규 없음 = 장애 아님” 노트</li>
+    </ul>
+  </div>
+
+  <div class="roadmap-phase done">
+    <div class="ph">Phase C2 · Live ↔ Backtest · DONE</div>
+    <h4>동일 Stage2 계열 대조 · honest gap</h4>
+    <ul>
+      <li>순수 모듈 <code>backend/core/live_backtest_compare.py</code>
+        <code>extract_backtest_baseline</code> · <code>compare_live_to_backtest</code></li>
+      <li>캐시 <code>backtest_result.json</code> aggregate 우선, 없으면 상수 baseline (+0.460R / n=145)</li>
+      <li>표: live vs backtest n · expectancy · win_rate · PF · OOS expectancy · Δ</li>
+      <li>n&lt;30 → <code>honest_gap_en/ko</code> 노출 (통계 신뢰 보류)</li>
+      <li>단위 테스트 7건 (empty-n, confidence, health, extract, delta, compute_live_stats 배선)</li>
+    </ul>
+  </div>
+
+  <h3>C1/C2 API 계약 스냅샷</h3>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="l">Threshold</div><div class="v ok">≥5/7</div><div class="h">Stage2 진입 조건</div></div>
+    <div class="kpi"><div class="l">Scan window</div><div class="v" style="font-size:15px">ET 09:30–16:00</div><div class="h">30분 주기 · KST 야간</div></div>
+    <div class="kpi"><div class="l">Entry / Timeout</div><div class="v" style="font-size:18px">5 / 60</div><div class="h">bars</div></div>
+    <div class="kpi"><div class="l">BT baseline</div><div class="v ok">+0.46R</div><div class="h">n≈145 · OOS 우선 캐시</div></div>
+    <div class="kpi"><div class="l">Confidence</div><div class="v" style="font-size:16px">n&lt;30 LOW</div><div class="h">30–79 MED · 80+ HIGH</div></div>
+    <div class="kpi"><div class="l">Empty log</div><div class="v ok">null exp</div><div class="h">가공 expectancy 금지</div></div>
   </div>
 </section>
 
-<!-- 4 -->
+<!-- 6 -->
 <section id="strengths">
-  <h2>4. 강점 — 투자 참고 대시보드로서</h2>
-  <p class="sec-sub">경쟁 제품 대비 SniperBoard가 실제로 강한 축.</p>
+  <h2>6. 강점 — 투자 참고 대시보드로서</h2>
+  <p class="sec-sub">경쟁 대비 실제로 강한 축 (C1/C2 반영 후 강화 항목 포함).</p>
 
   <div class="cols">
     <div class="sw-card strength">
       <h4>✓ 방법론 기반 시그널</h4>
       <ul>
-        <li>Livermore / O'Neil / Minervini 계열 Stage2 체크리스트가 <strong>코드로 고정</strong></li>
-        <li>레짐 5요인 점수 — AI 없이 재현 가능</li>
-        <li>R:R 진입·손절·목표가 기계 산출</li>
+        <li>Livermore / O'Neil / Minervini Stage2가 코드로 고정</li>
+        <li>레짐 5요인 · R:R 진입/손절/목표 기계 산출</li>
+        <li>백테스트 IS/OOS · MC 99.8% · 한계 공개</li>
       </ul>
     </div>
     <div class="sw-card strength">
       <h4>✓ 수치 앵커 신뢰</h4>
       <ul>
-        <li>브리핑 가격 테이블 바인딩 (검증: 22/22 exact)</li>
-        <li>실적 <em>절대일</em> yfinance 일치</li>
-        <li>VIX·10Y·DXY 등 매크로 레벨 교차검증 가능</li>
+        <li>브리핑 가격 테이블 바인딩 검증</li>
+        <li>실적 절대일 yfinance 일치 · serve-time days_until</li>
+        <li>VIX·10Y·DXY 교차검증 가능</li>
       </ul>
     </div>
     <div class="sw-card strength">
-      <h4>✓ 오염 방지 설계</h4>
+      <h4>✓ 오염 방지 · reference-only</h4>
       <ul>
-        <li>센티먼트 수집: 가격 방향을 Grok에 넣지 않음 (contamination firewall)</li>
-        <li>Polymarket: <code>reference_only</code> — Conviction 미투입</li>
-        <li>매출 이상치 가드 (P0-6)로 AI 입력 오염 차단</li>
+        <li>센티먼트: 가격 방향 미전달</li>
+        <li>Polymarket → Conviction 미투입</li>
+        <li>매출 이상치 가드 (P0-6)</li>
+      </ul>
+    </div>
+    <div class="sw-card strength">
+      <h4>✓ Track 책임 루프 (C1/C2)</h4>
+      <ul>
+        <li>스캔 방법론이 UI/API에 명시</li>
+        <li>라이브 vs 백테스트 표 + honest gap</li>
+        <li>신호 자동 로그 · cherry-pick 불가</li>
       </ul>
     </div>
     <div class="sw-card strength">
       <h4>✓ 이중 레이어 아키텍처</h4>
       <ul>
-        <li>Collect → GitHub JSON → Consumer 분리</li>
-        <li>serve-time 재계산으로 “어제 쓴 N일 후” 교정</li>
-        <li>모닝메일·대시보드·API가 동일 정합성 모듈 공유</li>
+        <li>Collect → GitHub → Consumer 분리</li>
+        <li>serve-time 교정으로 어제 쓴 “N일 후” 수정</li>
+        <li>LastGoodCache로 빈 화면 방지</li>
       </ul>
     </div>
     <div class="sw-card strength">
-      <h4>✓ 운영 가시성</h4>
+      <h4>✓ 배포 계약</h4>
       <ul>
-        <li>2시간 헬스 모니터 · freshness meta 뱃지</li>
-        <li>스키마 계약(v2.0 _en/_ko)</li>
-        <li>감사 HTML 누적 → 의사결정 추적 가능</li>
+        <li><code>deploy_verify_backend.sh</code>가 모듈·C1/C2 필드 검사</li>
+        <li>main ≠ running container 재발 방지</li>
+        <li>감사 HTML 누적으로 의사결정 추적</li>
       </ul>
     </div>
-    <div class="sw-card strength">
-      <h4>✓ 제품 표면</h4>
-      <ul>
-        <li>보드 분리(Overview/DeepDive/Macro/Sentiment/Briefing…)</li>
-        <li>한·영 BiLang · 모바일 레이아웃</li>
-        <li>모닝메일 라이트 에디토리얼 포맷</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="callout gold">
-    <p class="t">투자 참고로서의 포지셔닝</p>
-    <p>
-      SniperBoard는 “추천 종목 앱”이 아니라
-      <strong>규칙 기반 셋업 스캐너 + 검증 가능한 시장 컨텍스트 + (교정된) AI 요약</strong>이다.
-      강점은 신호를 설명 가능하게 만들고, 사용자가 반박할 수 있는 숫자를 앞에 둔다는 점이다.
-    </p>
   </div>
 </section>
 
-<!-- 5 -->
+<!-- 7 -->
 <section id="weaknesses">
-  <h2>5. 약점 · 잔여 리스크</h2>
-  <p class="sec-sub">고치지 않으면 신뢰가 다시 깎이거나, 오용으로 손실이 나는 지점.</p>
+  <h2>7. 약점 · 잔여 리스크</h2>
+  <p class="sec-sub">고치지 않으면 신뢰가 깎이거나 오용으로 손실이 나는 지점. C1/C2로 <em>설명</em>은 개선됐으나 <em>표본 깊이</em>는 여전히 약함.</p>
 
   <div class="cols">
     <div class="sw-card weakness">
       <h4>✗ AI 해석층 본질 한계</h4>
       <ul>
-        <li>지정학·촉매 문장은 뉴스 2차 요약 — 1차 공시 감사 아님</li>
-        <li>source_hint는 있으나 원문 링크·인용 깊이는 약함</li>
-        <li>모델 환각 가능성: 수치 바인딩 밖 영역</li>
+        <li>지정학·촉매는 뉴스 2차 요약 — 1차 공시 감사 아님</li>
+        <li>수치 바인딩 밖 환각 가능</li>
       </ul>
     </div>
     <div class="sw-card weakness">
-      <h4>✗ 시간 동결 (L2 JSON)</h4>
+      <h4>✗ 라이브 청산 n 부족</h4>
       <ul>
-        <li>GitHub 스냅샷의 <code>days_until</code>·상대 문구는 생성 시각 기준</li>
-        <li>소비자 미적용 배포가 다시 나오면 7/14 사고 재현</li>
-        <li>배포 파이프라인 자동화 부재</li>
+        <li>Stage2≥5 + 야간 스캔 → 신규 로그 희소</li>
+        <li>n&lt;30이면 expectancy 해석 보류 (honest) — 엣지 입증 전</li>
       </ul>
     </div>
     <div class="sw-card weakness">
-      <h4>✗ Track / 라이브 신호 희소</h4>
+      <h4>✗ 벤더 의존</h4>
       <ul>
-        <li>스캔 창이 야간(KST)으로 한정</li>
-        <li>Stage2≥5 조건이 까다로워 신규 로그 드묾</li>
-        <li>“14일 미갱신” 헬스가 성능 문제와 혼동 가능</li>
-      </ul>
-    </div>
-    <div class="sw-card weakness">
-      <h4>✗ 데이터 벤더 의존</h4>
-      <ul>
-        <li>yfinance rate-limit / 조정가 이슈</li>
-        <li>실적 캘린더·EPS 컨센서스 지연·개정</li>
-        <li>프리마켓·오버나이트 품질 변동</li>
-      </ul>
-    </div>
-    <div class="sw-card weakness">
-      <h4>✗ 수집 스케줄 시차</h4>
-      <ul>
-        <li>brief / sentiment 슬롯 불일치 시 전일 심리 잔존 가능 (P1-1 잔여)</li>
-        <li>fetch 실패 시 stale-on-error 불완전 (서비스별)</li>
+        <li>yfinance rate-limit / 조정가</li>
+        <li>실적 캘린더·EPS 개정 지연</li>
       </ul>
     </div>
     <div class="sw-card weakness">
       <h4>✗ 제품 오용 리스크</h4>
       <ul>
-        <li>Conviction “High”를 매수 신호로 오해</li>
-        <li>Polymarket 확률을 연준 가이던스로 오해</li>
-        <li>소셜 optimistic을 추세 확정으로 오해 (일부 완화됨)</li>
+        <li>Conviction High = 매수 신호로 오해</li>
+        <li>Polymarket / 소셜 optimistic 과신</li>
       </ul>
     </div>
   </div>
 
   <h3>의도적으로 “약점”이 아닌 것</h3>
   <ul>
-    <li>백테스트 expectancy가 낮아 보이는 개별 종목(AMZN 등) — 방법론 한계 공개가 오히려 신뢰 요인</li>
-    <li>reference-only 예측시장 — 과신 방지 설계</li>
-    <li>짧은 IPO(SPCX) 404 — 가짜 Stage2를 보여주지 않음</li>
+    <li>AMZN 등 개별 종목 낮은 백테스트 expectancy — 한계 공개가 신뢰 요인</li>
+    <li>reference-only 예측시장 — 과신 방지</li>
+    <li>SPCX 404 — 가짜 Stage2 미표시</li>
+    <li>라이브 expectancy null (n=0) — 가공 거부</li>
   </ul>
 </section>
 
-<!-- 6 -->
+<!-- 8 -->
 <section id="use">
-  <h2>6. 투자 참고 사용 원칙 (운영 가이드)</h2>
-  <p class="sec-sub">신뢰 점수를 “행동 규칙”으로 번역.</p>
+  <h2>8. 투자 참고 사용 원칙</h2>
+  <p class="sec-sub">신뢰 점수를 행동 규칙으로 번역.</p>
 
   <div class="cols-3">
     <div class="callout teal">
-      <p class="t">1차 근거로 사용</p>
-      <p>종가·차트·Stage2 체크·레짐 점수·실적 <strong>절대 날짜</strong>·R:R 레벨·DD 카운트</p>
+      <p class="t">1차 근거</p>
+      <p>종가·차트·Stage2·레짐·실적 <strong>절대 날짜</strong>·R:R·DD · Track n/방법론</p>
     </div>
     <div class="callout amber">
       <p class="t">2차 컨텍스트</p>
-      <p>모닝브리핑 해석, 소셜 심리, Polymarket odds, AI Brief tone, 지정학 요약</p>
+      <p>모닝브리핑 해석, 소셜 심리, Polymarket odds, AI Brief, 지정학 요약</p>
     </div>
     <div class="callout rose">
       <p class="t">단독 근거 금지</p>
-      <p>Conviction 라벨만, “N일 후” 문구만, 예측시장 dominant outcome만, 무드 배지만</p>
+      <p>Conviction 라벨만 · “N일 후” 문구만 · n&lt;30 라이브 expectancy만 · 예측시장 dominant만</p>
     </div>
-  </div>
-
-  <div class="table-wrap">
-    <table class="data">
-      <thead><tr><th>의사결정 질문</th><th>대시보드에서 볼 것</th><th>외부에서 확인할 것</th></tr></thead>
-      <tbody>
-        <tr>
-          <td>지금 시장 위험선호인가?</td>
-          <td>Regime total · DD · VIX 카드</td>
-          <td>금리·신용 이벤트 캘린더</td>
-        </tr>
-        <tr>
-          <td>이 종목 셋업이 유효한가?</td>
-          <td>Stage2 7항 · RS · 피벗·손절</td>
-          <td>유동성·실적 직전 IV·포지션 한도</td>
-        </tr>
-        <tr>
-          <td>실적 이벤트가 임박한가?</td>
-          <td>earnings_date + live D-n (캘린더)</td>
-          <td>IR/거래소 확정 시각(BMO/AMC)</td>
-        </tr>
-        <tr>
-          <td>소셜이 과열/공포인가?</td>
-          <td>composite −2..+2 · 추이 차트</td>
-          <td>가격 위치와 괴리 여부 (divergence)</td>
-        </tr>
-        <tr>
-          <td>연준 함의는?</td>
-          <td>Polymarket reference card</td>
-          <td>CME FedWatch · FOMC 성명 원문</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<!-- 7 -->
-<section id="roadmap">
-  <h2>7. 향후 개선 로드맵</h2>
-  <p class="sec-sub">효과 ÷ 노력 순. “신뢰 점수에 직접 기여하는 것”을 앞에 둔다.</p>
-
-  <div class="roadmap-phase">
-    <div class="ph">Phase A · 신뢰 방어 — <span class="tag tag-done">완료 2026-07-15</span></div>
-    <h4>배포 계약 · 수집 시차 · 장애 시 last-good · 표시 정합</h4>
-    <div class="table-wrap">
-      <table class="data">
-        <thead><tr><th>ID</th><th>항목</th><th>구현 결과</th><th>상태</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><span class="tag tag-done">A1</span></td>
-            <td>배포 검증 경로</td>
-            <td><code>scripts/deploy_verify_backend.sh</code> (rebuild+import+API smoke) ·
-              <code>.github/workflows/backend-image.yml</code> (main push image build + import).
-              노트북 auto-restart는 out-of-band; 운영 계약은 스크립트 실행.</td>
-            <td><span class="tag tag-pass">DONE</span></td>
-          </tr>
-          <tr>
-            <td><span class="tag tag-done">A2</span></td>
-            <td>Brief / Sentiment same-slot</td>
-            <td>MSD <code>load_sentiment_for_slot()</code> wait · SB <code>annotate_slot_mismatch</code> on brief fetch · unit tests</td>
-            <td><span class="tag tag-pass">DONE</span></td>
-          </tr>
-          <tr>
-            <td><span class="tag tag-done">A3</span></td>
-            <td>stale-on-error last-good</td>
-            <td><code>core/github_payload_cache.py</code> · sentiment/brief/earnings/morning_briefing ·
-              API <code>meta.stale</code>/<code>from_cache</code> · FreshnessBadge “cached”</td>
-            <td><span class="tag tag-pass">DONE</span></td>
-          </tr>
-          <tr>
-            <td><span class="tag tag-done">A4</span></td>
-            <td>signal_log 경로 단일화</td>
-            <td>compose volume <code>./backend/data:/app/data</code> · health
-              <code>SNIPERBOARD_SIGNAL_DB</code> → host mount path (default <code>~/dev/sniperboard/backend/data/signal_log.db</code>)</td>
-            <td><span class="tag tag-pass">DONE</span></td>
-          </tr>
-          <tr>
-            <td><span class="tag tag-done">A5</span></td>
-            <td>실적 표시 통일</td>
-            <td><code>frontend/app/earningsFormat.ts</code> · Overview / Daily / DeepDive 공유 formatter (절대일 + D-n / today / tomorrow)</td>
-            <td><span class="tag tag-pass">DONE</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="callout teal" style="margin-top:12px;">
-      <p class="t">Phase A 잔여 주의</p>
-      <p>
-        GitHub Actions는 이미지를 <em>빌드</em>해 회귀를 잡지만, 로컬 Docker를 원격에서 재기동하지는 않는다.
-        배포 후 화면 일치는 <code>bash scripts/deploy_verify_backend.sh</code> 실행이 운영 SoT.
-      </p>
-    </div>
-  </div>
-
-  <div class="roadmap-phase">
-    <div class="ph">Phase B · 해석 품질 — <span class="tag tag-done">완료 2026-07-15</span></div>
-    <h4>AI를 줄이지 말고 “검증 가능하게” 만들기</h4>
-    <div class="table-wrap">
-      <table class="data">
-        <thead><tr><th>ID</th><th>항목</th><th>구현 결과</th><th>상태</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><span class="tag tag-done">B1</span></td>
-            <td>브리핑 기계 검증</td>
-            <td><code>core/briefing_verify.py</code> + MSD <code>phase_b_integrity</code> in verify_briefing ·
-              consumer attaches <code>_integrity</code> · bad fixtures fail unit tests ·
-              promotion gate = <code>passed</code> (cron exit non-zero when verify fails)</td>
-            <td><span class="tag tag-pass">DONE</span></td>
-          </tr>
-          <tr>
-            <td><span class="tag tag-done">B2</span></td>
-            <td>지정학 source / trust UI</td>
-            <td>MorningBriefing issue cards: confidence tier badge + clickable
-              <code>source_urls</code> or URL-shaped <code>source_hint</code> (no invented URLs)</td>
-            <td><span class="tag tag-pass">DONE</span></td>
-          </tr>
-          <tr>
-            <td><span class="tag tag-done">B3</span></td>
-            <td>컨센서스 추정 메타</td>
-            <td><code>estimate_as_of</code> / <code>estimate_provider</code> on earnings rows · Overview/DeepDive null-safe</td>
-            <td><span class="tag tag-pass">DONE</span></td>
-          </tr>
-          <tr>
-            <td><span class="tag tag-done">B4</span></td>
-            <td>소셜↔가격 괴리</td>
-            <td><code>GET /api/divergence</code> + Sentiment board list + rule caption · not in Conviction</td>
-            <td><span class="tag tag-pass">DONE</span></td>
-          </tr>
-          <tr>
-            <td><span class="tag tag-done">B5</span></td>
-            <td>메일 Digest 모드</td>
-            <td><code>EMAIL_DIGEST=1</code> / <code>render_html(..., digest=True)</code> length caps · unit test digest shorter than full</td>
-            <td><span class="tag tag-pass">DONE</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="callout teal" style="margin-top:12px;">
-      <p class="t">Phase B 잔여</p>
-      <p>
-        수집기 verify 실패 시 GitHub push 차단은 cron 래퍼 정책에 의존 — 로컬 verify CLI는 non-zero exit.
-        소비자 쪽은 integrity 메타로 투명하게 표시하며, serve-time sanitize는 계속 상대일을 교정한다.
-      </p>
-    </div>
-  </div>
-
-  <div class="roadmap-phase">
-    <div class="ph">Phase C · 1–3개월 · 의사결정 루프 (P2–P3)</div>
-    <h4>신호 → 기록 → 학습이 닫히는 제품</h4>
-    <div class="table-wrap">
-      <table class="data">
-        <thead><tr><th>ID</th><th>항목</th><th>기대 효과</th><th>완료 정의</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><span class="tag tag-p2">C1</span></td>
-            <td>Track 보드: 스캔 창·임계값 실험 + 설명 UI</td>
-            <td>“신호 없음”을 실패가 아닌 정보로</td>
-            <td>라이브 expectancy 대시보드 · 샘플 수 공개</td>
-          </tr>
-          <tr>
-            <td><span class="tag tag-p2">C2</span></td>
-            <td>백테스트 ↔ 라이브 대조 카드</td>
-            <td>과신 방지 · 방법론 정직성</td>
-            <td>동일 설정 expectancy 나란히 표시</td>
-          </tr>
-          <tr>
-            <td><span class="tag tag-p3">C3</span></td>
-            <td>멀티 벤더 시세 폴백 (Polygon/Tiingo 등)</td>
-            <td>yfinance 단일점 장애 완화</td>
-            <td>장애 시 자동 전환 · 단위 테스트</td>
-          </tr>
-          <tr>
-            <td><span class="tag tag-p3">C4</span></td>
-            <td>사용자 워치리스트 · 알림 (실적 D-1, Stage2 flip)</td>
-            <td>수동 새로고침 의존 ↓</td>
-            <td>이메일/푸시 옵트인 · 레이트 리밋</td>
-          </tr>
-          <tr>
-            <td><span class="tag tag-p3">C5</span></td>
-            <td>Kalshi 복구 시 dual-source prediction</td>
-            <td>예측시장 견고성</td>
-            <td>Polymarket+Kalshi 병기 · 괴리 경고</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="callout amber">
-    <p class="t">로드맵 원칙</p>
-    <p>
-      (1) <strong>숫자 SoT를 깨는 작업 금지</strong> — AI 편의로 절대일을 상대일로 대체하지 않는다.<br/>
-      (2) <strong>배포 없이 머지하지 않는다</strong> — 정합성 모듈은 이미 “코드만 고치면 사용자 체감 0”임을 증명했다.<br/>
-      (3) <strong>참고 레이어를 Conviction에 섞지 않는다</strong> — Polymarket·소셜은 가중치 오염 금지 유지.
-    </p>
-  </div>
-</section>
-
-<!-- 8 -->
-<section id="kpis">
-  <h2>8. 성공 지표 (로드맵 KPI)</h2>
-  <p class="sec-sub">주관적 “좋아 보인다” 대신 분기별로 측정할 것.</p>
-
-  <div class="table-wrap">
-    <table class="data">
-      <thead><tr><th>KPI</th><th>현재 (대략)</th><th>8주 목표</th><th>측정 방법</th></tr></thead>
-      <tbody>
-        <tr>
-          <td>종합 신뢰 점수 (본 모델)</td>
-          <td><strong>~90</strong> (Phase A 후)</td>
-          <td>≥ 92 (Phase B 후)</td>
-          <td>분기 fact-check HTML 재산정</td>
-        </tr>
-        <tr>
-          <td>운영 화면 vs main 코드 불일치</td>
-          <td>0 (deploy_verify 후)</td>
-          <td>0 유지</td>
-          <td><code>deploy_verify_backend.sh</code> + CI image build</td>
-        </tr>
-        <tr>
-          <td>브리핑 상대일 자기모순 (raw)</td>
-          <td>간헐적 (생성 시) — serve 교정됨</td>
-          <td>verify 차단으로 0</td>
-          <td>Phase B1 collector verify</td>
-        </tr>
-        <tr>
-          <td>API 5xx (daily 심볼 스모크)</td>
-          <td>SPCX 404 soft-fail</td>
-          <td>워치리스트 전 종목 0×5xx</td>
-          <td>헬스 + 일일 스모크</td>
-        </tr>
-        <tr>
-          <td>가격 바인딩 정확도</td>
-          <td>22/22 exact (표본일)</td>
-          <td>≥ 99% (30일 롤링)</td>
-          <td>야간 대조 스크립트</td>
-        </tr>
-        <tr>
-          <td>stale fetch 시 빈 섹션</td>
-          <td><strong>last-good + meta.stale</strong></td>
-          <td>0 empty (뱃지만)</td>
-          <td>unit: test_github_payload_cache</td>
-        </tr>
-      </tbody>
-    </table>
   </div>
 </section>
 
 <!-- 9 -->
-<section id="close">
-  <h2>9. 결론</h2>
+<section id="roadmap">
+  <h2>9. 잔여 로드맵 (Phase C3–C5 + 이후)</h2>
+  <p class="sec-sub">C1/C2 완료 후 의도적으로 남겨 둔 항목. 우선순위 = 신뢰 상승 대비 비용.</p>
 
-  <div class="cols">
-    <div class="callout teal">
-      <p class="t">지금 SniperBoard는</p>
-      <p>
-        <strong>감사 가능한 규칙 기반 시장 대시보드</strong>에
-        <strong>교정된 AI 컨텍스트</strong>를 얹은 형태다.
-        가격·레짐·실적 날짜·Stage2는 투자 참고의 1차 근거로 쓸 수 있는 수준(90대)에 진입했다.
-      </p>
-    </div>
-    <div class="callout rose">
-      <p class="t">아직 SniperBoard는</p>
-      <p>
-        자동 매매 시그널 서비스도, 뉴스 통신사도, 연준 예측 정답기도 아니다.
-        AI 문장·소셜 무드·예측시장을 1차 근거로 쓰면 설계 의도를 위반하는 사용이다.
-      </p>
-    </div>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>ID</th><th>항목</th><th>의도</th><th>상태</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-done">C1</span></td>
+          <td>Track 스캔 창·임계·n·expectancy</td>
+          <td>희소 신호 = 방법론 설명</td>
+          <td><strong>DONE 2026-07-15</strong></td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-done">C2</span></td>
+          <td>라이브 vs 백테스트 대조 표</td>
+          <td>가설 검증 루프 UI</td>
+          <td><strong>DONE 2026-07-15</strong></td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-todo">C3</span></td>
+          <td>멀티 벤더 시세 (yfinance 보강)</td>
+          <td>단일 벤더 장애 완화</td>
+          <td>미착수</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-todo">C4</span></td>
+          <td>사용자 알림 (신호/실적 D-day)</td>
+          <td>수동 대시보드 의존 감소</td>
+          <td>미착수</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-todo">C5</span></td>
+          <td>Kalshi 등 예측시장 dual-source</td>
+          <td>Polymarket 편중 완화 · 여전히 reference-only</td>
+          <td>미착수</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-info">P2+</span></td>
+          <td>AI 인용 깊이 · 원문 링크</td>
+          <td>내러티브 감사성</td>
+          <td>잔여</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="verify">
+  <h2>10. 검증 증거 (게이트)</h2>
+  <p class="sec-sub">“완료” 주장의 최소 증거. 배포 후 로그를 세션 scratch에 남긴다.</p>
+
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>게이트</th><th>검사</th><th>기대</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Unit</td>
+          <td><code>pytest tests/test_live_backtest_compare.py</code></td>
+          <td>7 passed · empty-n honest</td>
+        </tr>
+        <tr>
+          <td>Deploy</td>
+          <td><code>scripts/deploy_verify_backend.sh</code></td>
+          <td>exit 0 · live_backtest_compare import · C1/C2 stats fields</td>
+        </tr>
+        <tr>
+          <td>API</td>
+          <td><code>GET /api/signal-log/stats</code></td>
+          <td>methodology.stage2_threshold=5 · sample_n · comparison.live</td>
+        </tr>
+        <tr>
+          <td>API</td>
+          <td><code>GET /api/daily?symbol=SPCX</code></td>
+          <td>≠500 (404 soft-fail)</td>
+        </tr>
+        <tr>
+          <td>API</td>
+          <td><code>GET /api/earnings</code></td>
+          <td>absolute date + int days_until</td>
+        </tr>
+        <tr>
+          <td>API</td>
+          <td><code>GET /api/morning-briefing</code></td>
+          <td>available · integrity meta when present</td>
+        </tr>
+        <tr>
+          <td>API</td>
+          <td><code>GET /api/backtest/result</code></td>
+          <td>200 cached aggregate</td>
+        </tr>
+        <tr>
+          <td>FE</td>
+          <td><code>GET /</code> (port 4000)</td>
+          <td>HTTP 200 only (HTML root 미 JSON 파싱)</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
-  <div class="callout gold" style="margin-top:8px;">
-    <p class="t">다음 한 가지 (Phase C 진입)</p>
+  <div class="callout amber">
+    <p class="t">수집 단계 범위 주석</p>
     <p>
-      Phase A·B 방어·해석 품질 레이어는 닫혔다. 다음 ROI는 <strong>C1 Track 신호 라이프사이클/설명 UI</strong>와
-      <strong>C2 백테스트↔라이브 대조</strong>다. 배포 계약은 <code>deploy_verify_backend.sh</code>를 습관화해 유지한다.
+      “실제 데이터수집부터”는 샌드박스에서 유료 Hermes/Grok 전량 재수집을 강제하지 않는다.
+      검증은 <strong>저장된 collector JSON + 라이브 가격/시그널 스캔·outcome·stats API</strong>로 충족하며,
+      전체 AI recollect는 운영 cron 책임으로 남긴다.
+    </p>
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="close">
+  <h2>11. 결론</h2>
+  <div class="callout teal">
+    <p class="t">제품 판정</p>
+    <p>
+      SniperBoard는 2026-07-15 기준 <strong>투자 참고용으로 사용 가능한 수준(~93/100)</strong>에 도달했다.
+      기계 시세·Stage2·실적 절대일·배포 계약·브리핑 integrity·Track 방법론/백테스트 대조가 닫혔다.
+      남은 리스크는 AI 해석 깊이, 라이브 청산 표본 축적, 벤더 다중화(C3), 알림(C4)이다.
+      <strong>매수 버튼이 아니라 반박 가능한 숫자를 앞에 두는 스캐너</strong>로 쓰는 한, 설계 의도와 일치한다.
     </p>
   </div>
 
-  <p class="footnote">
-    관련 커밋 계열: <code>e43c963</code> P0-1/2/3 · <code>e7613d3</code> P0-6 · <code>c616076</code> P0-4 ·
-    <code>7c20aaa</code> earnings consistency · <code>d1ce04a</code> reliability P1 ·
-    Phase A (본 갱신 2026-07-15): last-good cache · slot wait · deploy script/CI · earningsFormat · SIGNAL_DB env.
-  </p>
+  <p class="sec-sub" style="margin-top:16px;">관련 코드 진입점</p>
+  <ul>
+    <li><code>backend/core/live_backtest_compare.py</code> — C1/C2 pure helpers</li>
+    <li><code>backend/core/signal_tracker.py</code> — <code>compute_live_stats</code></li>
+    <li><code>frontend/components/boards/TrackBoard.tsx</code> — 방법론 + 대조 표 UI</li>
+    <li><code>backend/core/briefing_verify.py</code> · <code>earnings_consistency.py</code> · <code>github_payload_cache.py</code></li>
+    <li><code>scripts/deploy_verify_backend.sh</code></li>
+  </ul>
 </section>
 
 <footer>
-  SniperBoard Strategic Assessment · 2026-07-15 · Light editorial report<br/>
-  Synthesizes reports/audit/* · Not investment advice · For decision transparency
+  SniperBoard strategic assessment · rewritten 2026-07-15 · light mode · Phase A + B + C1/C2 complete · residual C3–C5 honest<br/>
+  Corpus: <span class="doc-list">
+    <a href="./dual-repo-full-audit-2026-07-13.html">audit</a> ·
+    <a href="./p0-improvements-and-next-roadmap-2026-07-13.html">p0</a> ·
+    <a href="./p0-6-earnings-revenue-and-polymarket-analysis-2026-07-13.html">p0-6</a> ·
+    <a href="./reliability-fact-verification-2026-07-14.html">reliability</a>
+  </span>
 </footer>
 
 </div>

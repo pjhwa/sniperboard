@@ -26,12 +26,19 @@ echo "==> Verifying modules inside container"
 docker exec sniperboard-backend python -c "
 import core.earnings_consistency as ec
 from core.github_payload_cache import slots_compatible
+from core.live_backtest_compare import DEFAULT_METHODOLOGY, compare_live_to_backtest
 from api.endpoints import _MIN_STAGE2_BARS
 assert hasattr(ec, 'reconcile_sentiment_mood_with_session'), 'missing mood reconcile'
 assert hasattr(ec, 'sanitize_briefing_payload'), 'missing sanitize_briefing_payload'
 assert _MIN_STAGE2_BARS == 200, _MIN_STAGE2_BARS
 assert slots_compatible('pre_open', 'pre_open')
-print('OK: earnings_consistency + github_payload_cache + MIN_STAGE2=200')
+assert DEFAULT_METHODOLOGY['stage2_threshold'] == 5
+cmp_ = compare_live_to_backtest(
+    {'n_closed': 0, 'expectancy_r': None, 'win_rate': None, 'profit_factor': None},
+    {'expectancy_r': 0.46, 'win_rate': 0.386, 'profit_factor': 1.9, 'n': 145},
+)
+assert cmp_['confidence'] == 'LOW' and cmp_['health_status'] == 'INSUFFICIENT_DATA'
+print('OK: earnings_consistency + github_payload_cache + MIN_STAGE2=200 + live_backtest_compare')
 "
 
 echo "==> Soft-fail smoke: SPCX must not be 500"
@@ -52,6 +59,21 @@ assert ups, 'no upcoming earnings'
 assert 'days_until' in ups[0]
 print('OK earnings', ups[0].get('symbol'), ups[0].get('earnings_date'), ups[0].get('days_until'))
 print('meta', d.get('meta'))
+"
+
+echo "==> Signal-log stats C1/C2 fields"
+curl -sS "http://localhost:5001/api/signal-log/stats" | python3 -c "
+import sys, json
+d=json.load(sys.stdin)
+assert 'methodology' in d and d['methodology'], d.keys()
+assert d['methodology'].get('stage2_threshold') == 5
+assert d.get('sample_n') == d.get('n_closed')
+assert 'comparison' in d and d['comparison'] is not None
+assert d['comparison'].get('sample_n') == d.get('n_closed')
+assert 'live' in d['comparison']
+print('OK signal-log/stats C1/C2', 'n_closed=', d.get('n_closed'),
+      'confidence=', d['comparison'].get('confidence'),
+      'health=', d['comparison'].get('health_status'))
 "
 
 echo "==> Deploy verify complete"

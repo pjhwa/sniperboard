@@ -37,13 +37,14 @@ STATUS_LOSS      = "LOSS"       # 손절가 도달
 STATUS_TIMEOUT   = "TIMEOUT"    # 60일 경과
 STATUS_CANCELLED = "CANCELLED"  # 진입 윈도우 내 진입 실패
 
-# 백테스트 기준값 (RS≥70 + SPY필터, 2019~2026, 145거래)
+# Fallback if backtest_result.json missing (RS≥70 + SPY filter historical run)
 BACKTEST_BASELINE = {
     "expectancy_r": 0.460,
     "win_rate": 0.386,
     "profit_factor": 1.917,
     "n": 145,
     "oos_expectancy_r": 0.511,
+    "source": "fallback_constant",
 }
 
 
@@ -421,24 +422,58 @@ def compute_live_stats() -> dict:
             "expectancy_r": round(sum(rs) / len(rs), 3) if rs else None,
         }
 
-    # 모델 헬스 판단
-    confidence = "LOW" if n < 30 else ("MEDIUM" if n < 80 else "HIGH")
-    bsl_exp = BACKTEST_BASELINE["expectancy_r"]
+    # Prefer cached full backtest aggregate when present (C2 comparable config)
+    from core.live_backtest_compare import (
+        DEFAULT_METHODOLOGY,
+        compare_live_to_backtest,
+        confidence_from_n,
+        extract_backtest_baseline,
+        health_from_expectancy,
+    )
+    baseline = dict(BACKTEST_BASELINE)
+    try:
+        from core.backtest_engine import load_cached_result
+        cached_bt = load_cached_result()
+        extracted = extract_backtest_baseline(cached_bt)
+        if extracted and extracted.get("expectancy_r") is not None:
+            baseline = {
+                "expectancy_r": extracted["expectancy_r"],
+                "win_rate": extracted.get("win_rate") or BACKTEST_BASELINE["win_rate"],
+                "profit_factor": extracted.get("profit_factor") or BACKTEST_BASELINE["profit_factor"],
+                "n": extracted.get("n") or BACKTEST_BASELINE["n"],
+                "oos_expectancy_r": extracted.get("oos_expectancy_r") or BACKTEST_BASELINE["oos_expectancy_r"],
+                "source": extracted.get("source"),
+                "generated_at": extracted.get("generated_at"),
+                "config": extracted.get("config"),
+            }
+    except Exception as e:
+        logger.debug("backtest cache load for baseline skipped: %s", e)
 
-    if n < 10 or expectancy_r is None:
-        health_status = "INSUFFICIENT_DATA"
-    elif expectancy_r >= bsl_exp * 0.7:
-        health_status = "ON_TRACK"
-    elif expectancy_r >= 0.0:
-        health_status = "WATCH"
-    else:
-        health_status = "UNDERPERFORMING"
+    bsl_exp = baseline.get("expectancy_r")
+    confidence = confidence_from_n(n)
+    health_status = health_from_expectancy(n, expectancy_r, bsl_exp)
+
+    live_slice = {
+        "n_closed": n,
+        "expectancy_r": expectancy_r,
+        "win_rate": round(win_rate, 3) if win_rate is not None else None,
+        "profit_factor": profit_factor,
+    }
+    comparison = compare_live_to_backtest(live_slice, baseline)
+
+    methodology = {
+        **DEFAULT_METHODOLOGY,
+        "stage2_threshold": SIGNAL_THRESHOLD,
+        "entry_window_bars": ENTRY_WINDOW_BARS,
+        "timeout_bars": TIMEOUT_BARS,
+    }
 
     return {
         "n_closed":   n,
         "n_active":   n_active,
         "n_pending":  n_pending,
         "n_total":    n_total,
+        "sample_n":   n,  # C1 alias — closed-trade sample size for expectancy
         "wins":       len(wins),
         "losses":     len(losses),
         "timeouts":   len(timeouts),
@@ -451,12 +486,21 @@ def compute_live_stats() -> dict:
         "equity_curve": curve,
         "regime_breakdown": regime_breakdown,
         "pipeline": recent_pipeline,
+        "methodology": methodology,
+        "comparison": comparison,
         "health": {
             "status":           health_status,
             "confidence":       confidence,
-            "expectancy_delta": round(expectancy_r - bsl_exp, 3) if expectancy_r is not None else None,
-            "win_rate_delta":   round(win_rate - BACKTEST_BASELINE["win_rate"], 3)
-                                if win_rate is not None else None,
+            "expectancy_delta": (
+                round(expectancy_r - float(bsl_exp), 3)
+                if expectancy_r is not None and bsl_exp is not None
+                else None
+            ),
+            "win_rate_delta": (
+                round(win_rate - float(baseline["win_rate"]), 3)
+                if win_rate is not None and baseline.get("win_rate") is not None
+                else None
+            ),
         },
-        "backtest_baseline": BACKTEST_BASELINE,
+        "backtest_baseline": baseline,
     }

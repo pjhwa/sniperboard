@@ -459,6 +459,9 @@ class BacktestBaseline(BaseModel):
     profit_factor: float
     n: int
     oos_expectancy_r: float
+    source: Optional[str] = None
+    generated_at: Optional[str] = None
+    config: Optional[dict] = None
 
 
 class RegimeBreakdownItem(BaseModel):
@@ -473,11 +476,38 @@ class EquityCurvePoint(BaseModel):
     trade_n: int
 
 
+class SignalMethodology(BaseModel):
+    """Phase C1 — scan window / threshold transparency."""
+    stage2_threshold: int = 5
+    scan_window_en: Optional[str] = None
+    scan_window_ko: Optional[str] = None
+    entry_window_bars: Optional[int] = None
+    timeout_bars: Optional[int] = None
+    outcome_update_en: Optional[str] = None
+    outcome_update_ko: Optional[str] = None
+    note_en: Optional[str] = None
+    note_ko: Optional[str] = None
+
+
+class LiveBacktestComparison(BaseModel):
+    """Phase C2 — side-by-side live vs backtest metrics."""
+    sample_n: int = 0
+    confidence: str = "LOW"
+    health_status: str = "INSUFFICIENT_DATA"
+    live: Optional[dict] = None
+    backtest: Optional[dict] = None
+    delta: Optional[dict] = None
+    honest_gap_en: Optional[str] = None
+    honest_gap_ko: Optional[str] = None
+    comparable: bool = False
+
+
 class SignalLogStats(BaseModel):
     n_closed: int
     n_active: int
     n_pending: int
     n_total: int
+    sample_n: Optional[int] = None  # C1 alias of n_closed
     wins: int
     losses: int
     timeouts: int
@@ -492,6 +522,8 @@ class SignalLogStats(BaseModel):
     pipeline: List[Any] = []
     health: HealthInfo
     backtest_baseline: BacktestBaseline
+    methodology: Optional[SignalMethodology] = None
+    comparison: Optional[LiveBacktestComparison] = None
 
 
 # --- Morning Briefing (아침 브리핑) ---

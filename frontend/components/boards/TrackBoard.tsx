@@ -66,6 +66,19 @@ const S: Record<string, BiLang> = {
   avgWin:        { en: 'Avg Win', ko: '평균 수익' },
   avgLoss:       { en: 'Avg Loss', ko: '평균 손실' },
   barsHeld:      { en: 'Bars', ko: '보유일' },
+  methodTitle:   { en: 'How signals are scanned', ko: '신호 스캔 방법' },
+  threshold:     { en: 'Stage2 threshold', ko: 'Stage2 임계' },
+  scanWindow:    { en: 'Scan window', ko: '스캔 창' },
+  entryWindow:   { en: 'Entry window', ko: '진입 윈도우' },
+  timeoutBars:   { en: 'Timeout', ko: '타임아웃' },
+  sampleN:       { en: 'Closed sample n', ko: '청산 표본 n' },
+  compareTitle:  { en: 'Live vs Backtest (same Stage2 family)', ko: '라이브 vs 백테스트 (동일 Stage2 계열)' },
+  metric:        { en: 'Metric', ko: '지표' },
+  liveCol:       { en: 'Live', ko: '라이브' },
+  btCol:         { en: 'Backtest', ko: '백테스트' },
+  deltaCol:      { en: 'Δ', ko: '차이' },
+  noClosedNote:  { en: 'Expectancy is null until closed trades exist — not a failure.',
+                   ko: '청산 거래가 생기기 전 기대값은 null입니다 — 장애가 아닙니다.' },
 };
 
 // ── 헬퍼 ─────────────────────────────────────────────────────────────────────
@@ -284,6 +297,110 @@ export function TrackBoard() {
             </span>
           )}
         </div>
+
+        {/* ── C1: 스캔 창 / 임계 설명 ─────────────────────────────────────── */}
+        {stats?.methodology && (
+          <div className="card" style={{ padding: '14px 16px' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>{tl(S.methodTitle)}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10, fontSize: 12.5 }}>
+              <div>
+                <div style={{ color: 'var(--fg-subtle)', fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{tl(S.threshold)}</div>
+                <div className="mono" style={{ fontWeight: 700, fontSize: 18 }}>≥ {stats.methodology.stage2_threshold}/7</div>
+              </div>
+              <div>
+                <div style={{ color: 'var(--fg-subtle)', fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{tl(S.sampleN)}</div>
+                <div className="mono" style={{ fontWeight: 700, fontSize: 18 }}>{stats.sample_n ?? stats.n_closed}</div>
+                <div style={{ color: 'var(--fg-muted)', fontSize: 11 }}>{tl(S.closed)}</div>
+              </div>
+              <div>
+                <div style={{ color: 'var(--fg-subtle)', fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{tl(S.entryWindow)}</div>
+                <div className="mono" style={{ fontWeight: 600 }}>{stats.methodology.entry_window_bars ?? '—'} bars</div>
+              </div>
+              <div>
+                <div style={{ color: 'var(--fg-subtle)', fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{tl(S.timeoutBars)}</div>
+                <div className="mono" style={{ fontWeight: 600 }}>{stats.methodology.timeout_bars ?? '—'} bars</div>
+              </div>
+            </div>
+            <div style={{ marginTop: 10, fontSize: 12, color: 'var(--fg-muted)', lineHeight: 1.55 }}>
+              <strong style={{ color: 'var(--fg)' }}>{tl(S.scanWindow)}:</strong>{' '}
+              {lc === 'ko' ? stats.methodology.scan_window_ko : stats.methodology.scan_window_en}
+            </div>
+            <div style={{ marginTop: 4, fontSize: 12, color: 'var(--fg-muted)', lineHeight: 1.55 }}>
+              {lc === 'ko' ? stats.methodology.note_ko : stats.methodology.note_en}
+            </div>
+            {(stats.n_closed === 0 || stats.expectancy_r == null) && (
+              <div style={{ marginTop: 8, fontSize: 12, color: 'var(--warn)' }}>{tl(S.noClosedNote)}</div>
+            )}
+          </div>
+        )}
+
+        {/* ── C2: 라이브 vs 백테스트 표 ───────────────────────────────────── */}
+        {stats?.comparison && (
+          <div className="card" style={{ padding: '14px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{tl(S.compareTitle)}</div>
+              <div style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>
+                n={stats.comparison.sample_n} · {stats.comparison.confidence}
+                {stats.comparison.backtest?.source ? ` · ${stats.comparison.backtest.source}` : ''}
+              </div>
+            </div>
+            {(lc === 'ko' ? stats.comparison.honest_gap_ko : stats.comparison.honest_gap_en) && (
+              <div style={{ fontSize: 12, color: 'var(--warn)', marginBottom: 8, lineHeight: 1.5 }}>
+                {lc === 'ko' ? stats.comparison.honest_gap_ko : stats.comparison.honest_gap_en}
+              </div>
+            )}
+            <div style={{ overflowX: 'auto' }}>
+              <table className="tbl" style={{ minWidth: 360 }}>
+                <thead>
+                  <tr>
+                    <th>{tl(S.metric)}</th>
+                    <th>{tl(S.liveCol)}</th>
+                    <th>{tl(S.btCol)}</th>
+                    <th>{tl(S.deltaCol)}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>n</td>
+                    <td className="mono">{stats.comparison.live?.n ?? '—'}</td>
+                    <td className="mono">{stats.comparison.backtest?.n ?? '—'}</td>
+                    <td className="mono">—</td>
+                  </tr>
+                  <tr>
+                    <td>{tl(S.expectancy)}</td>
+                    <td className="mono">{fmtR(stats.comparison.live?.expectancy_r)}</td>
+                    <td className="mono">{fmtR(stats.comparison.backtest?.expectancy_r)}</td>
+                    <td className="mono" style={{ color: (stats.comparison.delta?.expectancy_r ?? 0) >= 0 ? 'var(--bull)' : 'var(--bear)' }}>
+                      {fmtDelta(stats.comparison.delta?.expectancy_r)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>{tl(S.winRate)}</td>
+                    <td className="mono">{fmtPct(stats.comparison.live?.win_rate)}</td>
+                    <td className="mono">{fmtPct(stats.comparison.backtest?.win_rate)}</td>
+                    <td className="mono" style={{ color: (stats.comparison.delta?.win_rate ?? 0) >= 0 ? 'var(--bull)' : 'var(--bear)' }}>
+                      {fmtDelta(stats.comparison.delta?.win_rate, false)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>{tl(S.profitFactor)}</td>
+                    <td className="mono">{stats.comparison.live?.profit_factor?.toFixed(2) ?? '—'}</td>
+                    <td className="mono">{stats.comparison.backtest?.profit_factor?.toFixed(2) ?? '—'}</td>
+                    <td className="mono">{fmtDelta(stats.comparison.delta?.profit_factor)}</td>
+                  </tr>
+                  {stats.comparison.backtest?.oos_expectancy_r != null && (
+                    <tr>
+                      <td>OOS {tl(S.expectancy)}</td>
+                      <td className="mono">—</td>
+                      <td className="mono">{fmtR(stats.comparison.backtest.oos_expectancy_r)}</td>
+                      <td className="mono">—</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* ── 모델 헬스 배너 ────────────────────────────────────────────── */}
         {!statsLoading && stats && (
