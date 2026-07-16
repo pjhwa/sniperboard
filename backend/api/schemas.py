@@ -246,6 +246,9 @@ class TopNews(BaseModel):
     headline: Optional[str] = None
     summary: Optional[str] = None
     source: str
+    # Phase P2+: resolved audit links (search / profile / pass-through URL)
+    source_urls: Optional[List[str]] = None
+    source_resolved: Optional[dict] = None
 
 
 # --- Sentiment (소셜 심리) ---
@@ -600,6 +603,9 @@ class GlobalIssue(BaseModel):
     summary_en: Optional[str] = None
     summary_ko: Optional[str] = None
     source_hint: Optional[str] = None
+    # Phase P2+: auditable links (search deep-link or pass-through; never invent article IDs)
+    source_urls: Optional[List[str]] = None
+    source_resolved: Optional[dict] = None
     confidence: Optional[str] = None            # "confirmed" | "developing" | "unverified"
     asymmetric_impact_en: Optional[str] = None  # per-ticker directional analysis
     asymmetric_impact_ko: Optional[str] = None

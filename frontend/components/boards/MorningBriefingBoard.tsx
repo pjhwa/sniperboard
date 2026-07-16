@@ -458,34 +458,41 @@ function GlobalIssueCard({ issue, locale }: { issue: GlobalIssue; locale: Locale
                     ? t(S.unverified, locale)
                     : (locale === 'ko' ? '출처' : 'source')}
             </span>
-            {Array.isArray(issue.source_urls) && issue.source_urls.filter(Boolean).map((url, i) => (
-              <a
-                key={i}
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ fontSize: 10, color: 'var(--em-500)', fontFamily: 'var(--font-mono)' }}
-              >
-                {url.replace(/^https?:\/\//, '').slice(0, 42)}{url.length > 48 ? '…' : ''}
-              </a>
-            ))}
-            {issue.source_hint && !(issue.source_urls && issue.source_urls.length) && (
-              /^https?:\/\//i.test(issue.source_hint.trim()) ? (
+            {issue.source_hint && (
+              <span style={{ fontSize: 10, color: 'var(--fg-faint)', fontFamily: 'var(--font-mono)' }}>
+                {t(S.sourceLabel, locale)} {issue.source_hint}
+              </span>
+            )}
+            {Array.isArray(issue.source_urls) && issue.source_urls.filter(Boolean).map((url, i) => {
+              let label = url.replace(/^https?:\/\//, '').slice(0, 36);
+              try {
+                const h = new URL(url).hostname.replace(/^www\./, '');
+                if (h.includes('news.google')) label = 'Google News ↗';
+                else if (h.includes('reuters')) label = 'Reuters search ↗';
+                else if (h.includes('bloomberg')) label = 'Bloomberg search ↗';
+                else label = `${h} ↗`;
+              } catch { /* keep */ }
+              return (
                 <a
-                  href={issue.source_hint.trim()}
+                  key={i}
+                  href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ fontSize: 10, color: 'var(--em-500)', fontFamily: 'var(--font-mono)' }}
+                  title={locale === 'ko'
+                    ? (issue.source_resolved?.note_ko || url)
+                    : (issue.source_resolved?.note_en || url)}
+                  style={{ fontSize: 10, color: 'var(--em-500)', fontFamily: 'var(--font-mono)', textDecoration: 'underline' }}
                 >
-                  {issue.source_hint.trim().replace(/^https?:\/\//, '').slice(0, 48)}
+                  {label}
                 </a>
-              ) : (
-                <span style={{ fontSize: 10, color: 'var(--fg-faint)', fontFamily: 'var(--font-mono)' }}>
-                  {t(S.sourceLabel, locale)} {issue.source_hint}
-                </span>
-              )
-            )}
+              );
+            })}
           </div>
+          {issue.source_resolved?.note_en && (issue.source_urls?.length ?? 0) > 0 && (
+            <div style={{ fontSize: 10, color: 'var(--fg-faint)', marginTop: 4, lineHeight: 1.4 }}>
+              {locale === 'ko' ? issue.source_resolved.note_ko : issue.source_resolved.note_en}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useRegime } from '@/hooks/useRegime';
 import { Search, Sun, Moon } from '@/components/ui/Icons';
+import { AlertsBell } from '@/components/shell/AlertsBell';
 import { TIER1_SYMBOLS, TIER2_SYMBOLS, SYMBOL_NAMES, REGIME_META } from '@/app/types';
 import { t, type Locale } from '@/app/i18n';
 
@@ -183,6 +184,9 @@ export function Topbar() {
             </button>
           ))}
         </div>
+
+        {/* Phase C4: earnings / signal / health alerts */}
+        <AlertsBell />
 
         <button
           className="topbar__btn"

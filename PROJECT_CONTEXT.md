@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-07-15 phase-C1/C2)
+# SniperBoard — Project Context (UPDATED 2026-07-16 phase-C4/P2+)
 
 ## 0. Purpose of This Document
 
@@ -41,7 +41,9 @@ sniperboard/
 │   │   ├── github_payload_cache.py   # Phase A3: LastGoodCache + stale-on-error + slot_mismatch helpers.
 │   │   ├── briefing_verify.py        # Phase B1: mechanical integrity (relative day / mood / price binding).
 │   │   ├── divergence.py             # Phase B4: social composite vs day-change divergence labels.
-│   │   └── live_backtest_compare.py  # Phase C1/C2 pure helpers: DEFAULT_METHODOLOGY (scan window / Stage2 threshold), confidence_from_n, health_from_expectancy, extract_backtest_baseline(cached backtest_result.json), compare_live_to_backtest(live, baseline) → side-by-side + honest_gap when n<30. No I/O.
+│   │   ├── live_backtest_compare.py  # Phase C1/C2 pure helpers: DEFAULT_METHODOLOGY (scan window / Stage2 threshold), confidence_from_n, health_from_expectancy, extract_backtest_baseline(cached backtest_result.json), compare_live_to_backtest(live, baseline) → side-by-side + honest_gap when n<30. No I/O.
+│   │   ├── alerts_engine.py          # Phase C4: pure build_alerts from earnings days_until, signal_log PENDING/ACTIVE, Track health, briefing integrity. Dashboard-only (no push).
+│   │   └── source_citations.py       # Phase P2+: resolve source_hint/top_news.source → auditable urls (pass-through http, X @handles, outlet search + Google News). Never invents article permalinks. enrich_briefing_citations / enrich_sentiment_snapshot.
 │   ├── services/
 │   │   ├── base.py               # BaseDataService abstract class
 │   │   ├── data_service.py       # YFinanceDataService implementation + module-level helpers
@@ -51,7 +53,7 @@ sniperboard/
 │   │   └── overnight_service.py  # Yahoo Finance WebSocket → Blue Ocean ATS overnight price stream. Runs in a dedicated daemon thread (asyncio.run in thread) — NOT in uvicorn's event loop, to avoid handshake timeouts caused by blocking yfinance I/O. Protobuf base64 parsing (field1=symbol, field2=price/float32, field6=session_hours/varint:8=overnight, field12=chg_pct). start_overnight_service() called in FastAPI lifespan; spawns threading.Thread(daemon=True).
 │   │   └── cap_leaderboard_service.py # companiesmarketcap.com 글로벌 랭킹 스크래핑 → yfinance 1y 히스토리로 spark·52W·market_structure 보완. 1h 인메모리 캐시 + stale fallback. fetch_leaderboard() → TOP 15 dict.
 │   │   └── macro_insight_service.py  # GitHub raw fetch + 30-min in-memory cache (MACRO_INSIGHT_URL). fetch_macro_insight() → Optional[dict]. get_ai_meta(raw) → {generated_at,age_minutes}. Returns None gracefully if URL not set.
-│   │   └── morning_briefing_service.py  # GitHub raw fetch + 10-min raw cache (MORNING_BRIEFING_URL). On every serve: sanitize_briefing_payload (earnings dates + mood/session coherence). Generated once daily at KST 07:30.
+│   │   └── morning_briefing_service.py  # GitHub raw fetch + 10-min raw cache (MORNING_BRIEFING_URL). On every serve: sanitize_briefing_payload + integrity verify + P2+ enrich_briefing_citations (source_urls on global issues).
 │   │   └── email_report_service.py  # Morning email: collect + charts + Jinja2. prepare_email_sections() dedupes cross-section restatements; structured earnings calendar is SoT (free-text earnings_alert omitted when calendar present).
 │   └── tests/
 │       ├── test_data_adapter.py (29 tests — adapter + signal_engine; Phase 5 full suite green)
@@ -74,7 +76,8 @@ sniperboard/
 │   ├── components/
 │   │   ├── shell/
 │   │   │   ├── Rail.tsx          # Left navigation rail (7 board icons + active indicator). deepdive=Layers icon in 2nd position. Mobile: hidden via hide-mobile class.
-│   │   │   ├── Topbar.tsx        # Top bar (title, search, symbol buttons, Regime mini, theme toggle, EN/KO locale toggle). Mobile: topbar__symbols/topbar__regime/topbar__sep/topbar__search hidden → logo+board name+theme toggle only (48px slim). EN/KO toggle added 2026-05-31. BOARD_LABELS now includes all 9 boards (backtest/track added 2026-06-02) — fallback 'Overview' bug fixed.
+│   │   │   ├── Topbar.tsx        # Top bar (title, search, symbol buttons, Regime mini, AlertsBell C4, theme toggle, EN/KO). BOARD_LABELS includes all boards.
+│   │   │   ├── AlertsBell.tsx    # Phase C4: topbar bell + dropdown. useAlerts → GET /api/alerts. Dismiss via Zustand dismissedAlertIds. Click navigates board/symbol.
 │   │   │   ├── BottomTabs.tsx    # Mobile-only bottom tab bar (4 tabs: Overview/Analysis/Macro/Sentiment). Shows only at max-width:767px. Connected to useStore board/setBoard. safe-area-inset-bottom applied. Bilingual labels (2026-05-31).
 │   │   │   ├── MarketStrip.tsx   # Slim market strip (selected symbol + SPY/QQQ/IWM/VIX/DXY/GLD/CL=F/KRW=X). PRE/POST price display (usePrePost). "? Guide" button on far right — dispatches 'guide:open' custom event on click. Mobile: hidden via hide-mobile class. Bilingual tooltips and guide button (2026-05-31).
 │   │   │   └── CommandPalette.tsx # ⌘K command palette (symbol/board search). Typing '?' switches to glossary search mode — filters GLOSSARY array, shows "Glossary search mode — N results" banner. Bilingual nav subs and glossary entries (2026-05-31).
@@ -138,18 +141,19 @@ Base URL: `http://<host>:4000/api` (via Next.js proxy) or `http://<host>:5001/ap
 | `GET /watchlist` | — | WATCHLIST_SYMS (22 symbols) Stage2 score descending. IPO stocks with < 20 bars return a minimal entry (score=0, all checks=False, conviction_notes=["Insufficient historical data (recent IPO)"]). |
 | `GET /regime` | — | Risk Regime 5-factor scores + regime string |
 | `GET /distribution-days` | — | SPY·QQQ DD count/level/dates |
-| `GET /sentiment` | — | Social sentiment JSON (GitHub raw 30-min cache) + `meta: {fetched_at, age_minutes, source}` |
+| `GET /sentiment` | — | Social sentiment JSON (GitHub raw 30-min cache) + `meta`. P2+: market/symbol `top_news.source_urls` + `source_resolved` (X handles → x.com; outlet search links). |
 | `GET /sentiment/history` | `symbol` (required), `days` (1-30, default 7) | N-day pre_open/post_close sentiment point array. Supports `symbol="MARKET"`. 5-min TTL cache. |
 | `GET /prepost` | `symbol` | Pre/after-market price · change% · market_state (PRE/POST/REGULAR/CLOSED/OVERNIGHT). ticker.info first, PREPRE or CLOSED→OVERNIGHT conversion when WebSocket cache populated. regular_close always uses regularMarketPrice (not regularMarketPreviousClose) for non-REGULAR states. |
 | `GET /brief` | — | AI Daily Brief JSON (GitHub raw 30-min cache) + `meta: {fetched_at, age_minutes, source}` |
 | `GET /earnings` | — | Earnings Intelligence JSON (GitHub raw 60-min cache) + `meta: {fetched_at, age_minutes, source}` |
 | `GET /macro/insight` | — | 6 group traffic lights (signal/direction) + AI interpretation text (text/text_en/text_ko) + overall judgment + summary/summary_en/summary_ko + bullets/bullets_en/bullets_ko + ai_meta (age_minutes). Rule-based real-time + GitHub-cached AI overlay. |
-| `GET /morning-briefing` | — | Morning briefing JSON (GitHub raw 10-min cache). briefing/latest.json. Fields: headline/executive_bullets/market_mood/big_picture/sector_analysis/spotlight/watchlist(22-symbol rows: squeeze potential+correction risk+price trend+current status)/today_checkpoints/earnings_alert. |
+| `GET /morning-briefing` | — | Morning briefing JSON (GitHub raw 10-min cache). Serve-time: earnings sanitize + integrity + P2+ `global_context.issues[].source_urls` / `source_resolved`. |
 | `GET /backtest/result` | — | Cached backtest results JSON. Returns 404 if not yet run. Structure: generated_at/config(rs_threshold/use_spy_filter)/methodology/aggregate(all/in_sample/out_of_sample)/breakdown_by_score/by_symbol. |
 | `POST /backtest/run` | `symbols[]` (optional), `threshold` (1-7, default 5), `rs_threshold` (0-100, default 70), `use_spy_filter` (bool, default true) | Runs backtest immediately, caches result, returns summary. Defaults to full WATCHLIST_SYMS if symbols not specified. Takes tens of seconds. |
 | `POST /backtest/sweep` | `symbols[]` (optional) | Runs 8-config parameter sweep and returns comparison results. Takes several minutes. |
 | `GET /signal-log` | `symbol?`, `limit` (default 200) | Signal log query (most recent first). Includes status: PENDING/ACTIVE/WIN/LOSS/TIMEOUT/CANCELLED. |
 | `GET /signal-log/stats` | — | Live performance stats vs. backtest baseline. Fields: sample_n (=n_closed), methodology (scan window / Stage2≥5 / entry·timeout bars), comparison (live vs backtest expectancy/win_rate/PF + honest_gap when n<30), health.status ON_TRACK/WATCH/UNDERPERFORMING/INSUFFICIENT_DATA, backtest_baseline (cached aggregate preferred). |
+| `GET /alerts` | `max_earnings_days` (0–14, default 3) | Phase C4 actionable alerts: earnings D-day, open signals (PENDING/ACTIVE), model health WATCH/UNDERPERFORMING, briefing integrity fail. Dashboard bell only (no push). |
 | `GET /symbol-info` | `symbol` | 시가총액·52W High/Low·섹터·산업. 심볼별 1h 인메모리 캐시. SymbolInfoResponse. |
 | `GET /cap-leaderboard` | — | companiesmarketcap.com 글로벌 랭킹 스크래핑 기반 시가총액 TOP 15. spark(30일 종가)·rank_change·market_structure 포함. 1h 인메모리 캐시 + stale fallback + SQLite 순위 스냅샷. |
 | `POST /signal-log/refresh` | — | Resolves PENDING/ACTIVE signal outcomes against latest daily candles (background task). |

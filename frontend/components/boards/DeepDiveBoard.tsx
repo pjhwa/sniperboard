@@ -26,6 +26,7 @@ import { InfoPopover } from '@/components/ui/InfoPopover';
 import { G } from '@/app/glossary';
 import { t, tField } from '@/app/i18n';
 import { formatEarningsRelative } from '@/app/earningsFormat';
+import { SourceCite } from '@/components/ui/SourceCite';
 
 // ─── Static bilingual strings ───────────────────────────────────────────────
 
@@ -225,7 +226,14 @@ function TopNewsBox({ news, locale }: { news: TopNews | null | undefined; locale
       <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--fg-subtle)', marginBottom: 2 }}>{t(S.topNews, locale)}</div>
       <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.4, marginBottom: 2 }}>{headline}</div>
       <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 2 }}>{summary}</div>
-      <div style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>{t(S.newsSource, locale)}: {news.source}</div>
+      <SourceCite
+        locale={locale}
+        sourceLabel={`${t(S.newsSource, locale)}:`}
+        sourceText={news.source}
+        sourceUrls={news.source_urls}
+        resolved={news.source_resolved}
+        compact
+      />
     </div>
   );
 }

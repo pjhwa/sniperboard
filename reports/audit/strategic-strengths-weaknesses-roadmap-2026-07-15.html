@@ -330,13 +330,14 @@
     <strong>남은 리스크(C3–C5)</strong>를 한 화면에서 읽히게 하는 것이다.
   </p>
   <div class="meta">
-    <span class="pill"><strong>As-of</strong> 2026-07-15 · Phase C1/C2 shipped</span>
-    <span class="pill ok"><strong>종합 신뢰</strong> ~93 / 100</span>
+    <span class="pill"><strong>As-of</strong> 2026-07-16 · Phase C4 + P2+ shipped</span>
+    <span class="pill ok"><strong>종합 신뢰</strong> ~94 / 100</span>
     <span class="pill info"><strong>Δ since 7/14</strong> +15pt (78→93)</span>
     <span class="pill ok"><strong>Phase A</strong> A1–A5 완료</span>
     <span class="pill ok"><strong>Phase B</strong> B1–B5 완료</span>
     <span class="pill ok"><strong>Phase C</strong> C1·C2 완료</span>
-    <span class="pill warn"><strong>잔여</strong> C3–C5 · AI 해석 깊이</span>
+    <span class="pill ok"><strong>C4 · P2+</strong> 완료 2026-07-16</span>
+    <span class="pill warn"><strong>잔여</strong> C3 · C5 · 라이브 n 축적</span>
   </div>
 </header>
 
@@ -533,7 +534,9 @@
   <div class="bar-row"><div class="name">Track 방법론 (C1)</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="n">90</div></div>
   <div class="bar-row"><div class="name">Live↔BT 대조 (C2)</div><div class="bar-track"><div class="bar-fill" style="width:86%"></div></div><div class="n">86</div></div>
   <div class="bar-row"><div class="name">라이브 청산 표본 깊이</div><div class="bar-track"><div class="bar-fill warn" style="width:45%"></div></div><div class="n">45</div></div>
-  <div class="bar-row"><div class="name">지정학 AI 내러티브</div><div class="bar-track"><div class="bar-fill warn" style="width:62%"></div></div><div class="n">62</div></div>
+  <div class="bar-row"><div class="name">AI 출처 감사 (P2+)</div><div class="bar-track"><div class="bar-fill" style="width:78%"></div></div><div class="n">78</div></div>
+  <div class="bar-row"><div class="name">알림 벨 (C4)</div><div class="bar-track"><div class="bar-fill" style="width:85%"></div></div><div class="n">85</div></div>
+  <div class="bar-row"><div class="name">지정학 AI 내러티브</div><div class="bar-track"><div class="bar-fill warn" style="width:68%"></div></div><div class="n">68</div></div>
   <div class="bar-row"><div class="name">소셜 심리 해석</div><div class="bar-track"><div class="bar-fill warn" style="width:60%"></div></div><div class="n">60</div></div>
   <div class="bar-row"><div class="name">배포 = 코드 일치</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="n">93</div></div>
 </section>
@@ -755,10 +758,10 @@
           <td>미착수</td>
         </tr>
         <tr>
-          <td><span class="tag tag-todo">C4</span></td>
+          <td><span class="tag tag-done">C4</span></td>
           <td>사용자 알림 (신호/실적 D-day)</td>
-          <td>수동 대시보드 의존 감소</td>
-          <td>미착수</td>
+          <td>Topbar 벨 + GET /api/alerts (푸시 없음)</td>
+          <td><strong>DONE 2026-07-16</strong></td>
         </tr>
         <tr>
           <td><span class="tag tag-todo">C5</span></td>
@@ -767,10 +770,10 @@
           <td>미착수</td>
         </tr>
         <tr>
-          <td><span class="tag tag-info">P2+</span></td>
-          <td>AI 인용 깊이 · 원문 링크</td>
-          <td>내러티브 감사성</td>
-          <td>잔여</td>
+          <td><span class="tag tag-done">P2+</span></td>
+          <td>AI 인용 깊이 · 감사 링크</td>
+          <td>source_hint → search/X (가짜 기사 URL 금지)</td>
+          <td><strong>DONE 2026-07-16</strong></td>
         </tr>
       </tbody>
     </table>
@@ -848,7 +851,7 @@
     <p>
       SniperBoard는 2026-07-15 기준 <strong>투자 참고용으로 사용 가능한 수준(~93/100)</strong>에 도달했다.
       기계 시세·Stage2·실적 절대일·배포 계약·브리핑 integrity·Track 방법론/백테스트 대조가 닫혔다.
-      남은 리스크는 AI 해석 깊이, 라이브 청산 표본 축적, 벤더 다중화(C3), 알림(C4)이다.
+      남은 리스크는 라이브 청산 표본 축적, 벤더 다중화(C3), 예측시장 dual-source(C5)이다. C4 알림·P2+ 출처 감사 링크는 2026-07-16 완료.
       <strong>매수 버튼이 아니라 반박 가능한 숫자를 앞에 두는 스캐너</strong>로 쓰는 한, 설계 의도와 일치한다.
     </p>
   </div>
@@ -864,7 +867,7 @@
 </section>
 
 <footer>
-  SniperBoard strategic assessment · rewritten 2026-07-15 · light mode · Phase A + B + C1/C2 complete · residual C3–C5 honest<br/>
+  SniperBoard strategic assessment · rewritten 2026-07-15 · light mode · Phase A + B + C1/C2 + C4 + P2+ complete · residual C3/C5 honest · rewritten notes 2026-07-16<br/>
   Corpus: <span class="doc-list">
     <a href="./dual-repo-full-audit-2026-07-13.html">audit</a> ·
     <a href="./p0-improvements-and-next-roadmap-2026-07-13.html">p0</a> ·

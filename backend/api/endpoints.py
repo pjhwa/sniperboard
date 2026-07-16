@@ -741,6 +741,13 @@ async def get_sentiment_endpoint():
         if not snapshot.get("available"):
             return {"available": False, "error": snapshot.get("error", "데이터 없음")}
 
+        # Phase P2+: resolve top_news.source → auditable links
+        try:
+            from core.source_citations import enrich_sentiment_snapshot
+            snapshot = enrich_sentiment_snapshot(snapshot)
+        except Exception:
+            pass
+
         today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         today_slots = fetch_today_slots(today_str)
 
@@ -1004,6 +1011,54 @@ async def get_signal_log_endpoint(
     """실거래 신호 로그 조회."""
     entries = get_signal_log(limit=limit, symbol=symbol.upper() if symbol else None)
     return {"entries": entries, "total": len(entries)}
+
+
+@router.get("/alerts")
+async def get_alerts_endpoint(
+    max_earnings_days: int = Query(3, ge=0, le=14, description="Earnings alert horizon (days)"),
+):
+    """Phase C4 — actionable alerts: earnings D-day, open signals, model health, briefing integrity.
+
+    Dashboard bell only (no push). Derived from live services; never invents trades.
+    """
+    from core.alerts_engine import build_alerts
+    from services.earnings_service import fetch_earnings
+
+    upcoming: list = []
+    try:
+        earn = fetch_earnings()
+        if earn.get("available") and isinstance(earn.get("data"), dict):
+            upcoming = earn["data"].get("upcoming_earnings") or []
+    except Exception as e:
+        logger.warning("alerts: earnings fetch failed: %s", e)
+
+    entries: list = []
+    try:
+        entries = get_signal_log(limit=200)
+    except Exception as e:
+        logger.warning("alerts: signal log failed: %s", e)
+
+    stats = None
+    try:
+        stats = compute_live_stats()
+    except Exception as e:
+        logger.warning("alerts: live stats failed: %s", e)
+
+    briefing_data = None
+    try:
+        br = fetch_morning_briefing()
+        if br.get("available"):
+            briefing_data = br.get("data")
+    except Exception as e:
+        logger.warning("alerts: briefing fetch failed: %s", e)
+
+    return build_alerts(
+        upcoming_earnings=upcoming,
+        signal_entries=entries,
+        live_stats=stats,
+        briefing_data=briefing_data,
+        max_earnings_days=max_earnings_days,
+    )
 
 
 @router.get("/signal-log/stats", response_model=SignalLogStats)

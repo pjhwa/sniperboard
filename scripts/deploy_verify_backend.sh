@@ -76,4 +76,28 @@ print('OK signal-log/stats C1/C2', 'n_closed=', d.get('n_closed'),
       'health=', d['comparison'].get('health_status'))
 "
 
+echo "==> C4 alerts + P2+ citations"
+curl -sS "http://localhost:5001/api/alerts" | python3 -c "
+import sys, json
+d=json.load(sys.stdin)
+assert 'alerts' in d and 'count' in d, d.keys()
+assert isinstance(d['alerts'], list)
+print('OK alerts count=', d['count'], 'types=', d.get('counts_by_type'))
+"
+curl -sS "http://localhost:5001/api/morning-briefing" | python3 -c "
+import sys, json
+d=json.load(sys.stdin)
+data=d.get('data') or {}
+gc=data.get('global_context') or {}
+issues=gc.get('issues') or []
+if issues:
+    iss=issues[0]
+    assert 'source_urls' in iss or iss.get('source_hint'), iss
+    if iss.get('source_hint') and not (iss.get('source_urls') or []):
+        raise SystemExit('expected source_urls enrichment for source_hint')
+    print('OK briefing citations', 'urls=', (iss.get('source_urls') or [])[:1], 'kind=', (iss.get('source_resolved') or {}).get('kind'))
+else:
+    print('OK briefing (no global issues to cite)')
+"
+
 echo "==> Deploy verify complete"

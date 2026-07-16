@@ -443,6 +443,16 @@ export interface TopNews {
   headline?: string
   summary?: string
   source: string;
+  /** Phase P2+: resolved audit links (search / X profile / pass-through) */
+  source_urls?: string[] | null;
+  source_resolved?: {
+    display?: string | null;
+    urls?: string[] | null;
+    kind?: string | null;
+    outlet?: string | null;
+    note_en?: string | null;
+    note_ko?: string | null;
+  } | null;
 }
 
 export interface SymbolSentiment {

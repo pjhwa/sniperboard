@@ -105,9 +105,20 @@ def _attach_integrity_verify(data: dict) -> dict:
         return data
 
 
+def _attach_source_citations(data: dict) -> dict:
+    """Phase P2+: resolve source_hint → auditable search/profile links (no fake articles)."""
+    try:
+        from core.source_citations import enrich_briefing_citations
+        return enrich_briefing_citations(data)
+    except Exception as e:
+        logger.warning(f"briefing source citations skipped: {e}")
+        return data
+
+
 def _success(raw: dict, *, stale: bool = False, reason: str = "") -> dict:
     sanitized = _apply_earnings_consistency(dict(raw))
     sanitized = _attach_integrity_verify(sanitized)
+    sanitized = _attach_source_citations(sanitized)
     out: dict[str, Any] = {
         "available": True,
         "data": sanitized,

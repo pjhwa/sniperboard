@@ -15,6 +15,7 @@ import { SentimentTrendChart } from './SentimentTrendChart';
 import { t, tField } from '@/app/i18n';
 import type { BiLang } from '@/app/i18n';
 import { API_BASE } from '@/app/types';
+import { SourceCite } from '@/components/ui/SourceCite';
 
 const S: Record<string, BiLang> = {
   guideTitle:    { en: 'Sentiment Guide', ko: 'Sentiment 가이드' },
@@ -184,9 +185,14 @@ export function SentimentBoard() {
         <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 4 }}>
           {summary}
         </div>
-        <div style={{ fontSize: 10.5, color: 'var(--fg-subtle)' }}>
-          {t(S.sourceLabel, locale)} {topNews.source}
-        </div>
+        <SourceCite
+          locale={locale}
+          sourceLabel={t(S.sourceLabel, locale)}
+          sourceText={topNews.source}
+          sourceUrls={topNews.source_urls}
+          resolved={topNews.source_resolved}
+          compact
+        />
       </div>
     );
   }

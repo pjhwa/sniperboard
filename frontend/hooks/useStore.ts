@@ -16,6 +16,8 @@ interface StoreState {
   cmdOpen: boolean;
   rrAccount: string;
   rrRiskPct: string;
+  /** Phase C4: dismissed alert ids (persisted) */
+  dismissedAlertIds: string[];
   setSymbol: (symbol: string) => void;
   setTimeframe: (timeframe: string) => void;
   setBoard: (board: Board) => void;
@@ -24,6 +26,8 @@ interface StoreState {
   setCmdOpen: (open: boolean) => void;
   setRrAccount: (val: string) => void;
   setRrRiskPct: (val: string) => void;
+  dismissAlert: (id: string) => void;
+  clearDismissedAlerts: () => void;
 }
 
 export const useStore = create<StoreState>()(
@@ -37,6 +41,7 @@ export const useStore = create<StoreState>()(
       cmdOpen: false,
       rrAccount: '100000',
       rrRiskPct: '1',
+      dismissedAlertIds: [] as string[],
       setSymbol: (symbol) => set({ symbol }),
       setTimeframe: (timeframe) => set({ timeframe }),
       setBoard: (board) => set({ board }),
@@ -45,6 +50,13 @@ export const useStore = create<StoreState>()(
       setCmdOpen: (cmdOpen) => set({ cmdOpen }),
       setRrAccount: (rrAccount) => set({ rrAccount }),
       setRrRiskPct: (rrRiskPct) => set({ rrRiskPct }),
+      dismissAlert: (id) =>
+        set((s) => ({
+          dismissedAlertIds: s.dismissedAlertIds.includes(id)
+            ? s.dismissedAlertIds
+            : [...s.dismissedAlertIds, id].slice(-100),
+        })),
+      clearDismissedAlerts: () => set({ dismissedAlertIds: [] }),
     }),
     {
       name: 'sniperboard',

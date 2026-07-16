@@ -42,6 +42,8 @@ Most signal dashboards show signals but never prove they work. SniperBoard is bu
 | **Bilingual (EN/KO)** | Full UI, AI narratives, glossary (28 terms) all switch instantly | English-only |
 | **AI market narratives** | Grok/Hermes generates bilingual daily briefs, earnings intelligence, and macro interpretation from actual signal + sentiment data | Generic AI summaries |
 | **Automated journaling** | Signals auto-logged when watchlist refreshes — no manual entry | Manual input required |
+| **Actionable alerts (C4)** | Topbar bell: earnings D-day/D-1, open Stage2 signals, model health, briefing integrity | Passive-only or none |
+| **Auditable AI sources (P2+)** | Geopolitical `source_hint` and social top_news resolve to search/profile links (never fake article IDs) | Opaque AI prose |
 
 ### Signal Tracker — The Key Differentiator
 
@@ -308,6 +310,25 @@ Simulates Stage2 signals from 2019 to present with strict anti-overfitting desig
 **AMZN structural note**: 21% win rate across all parameter combinations — Stage2 pivot breakout is incompatible with AMZN's range-bound price structure. Clearly flagged in the per-symbol table.
 
 ---
+
+### Alerts Bell (C4) — Earnings · Signals · Health
+
+Topbar **bell** aggregates live, non-invented alerts:
+
+| Type | Source | Severity |
+|------|--------|----------|
+| Earnings D-day / D-1 / D-n | Serve-time `days_until` from earnings calendar | critical (D0) → high (D1) → medium/low |
+| Open signals | `signal_log` PENDING / ACTIVE | high (ACTIVE) / medium (PENDING) |
+| Model health | Track `UNDERPERFORMING` / `WATCH` | high / medium |
+| Briefing integrity | Morning briefing `integrity_passed=false` | medium |
+
+Click opens the relevant board (Deep Dive / Track / Briefing). Dismiss is local (Zustand persist). **No push vendor** — in-dashboard only. API: `GET /api/alerts`.
+
+### AI source citations (P2+)
+
+- Morning Briefing global issues: free-text `source_hint` → `source_urls` (outlet search + Google News, or direct URL / X profile). Notes disclose search-vs-permalink honesty.
+- Sentiment / Deep Dive top news: `@handle` → `https://x.com/handle`; outlet names → search deep-links.
+- Shared UI: `SourceCite` component. **Never invents article permalinks.**
 
 ### Signal Tracker — Live vs. Backtest Validation
 
