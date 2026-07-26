@@ -25,7 +25,7 @@ import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
 import { InfoPopover } from '@/components/ui/InfoPopover';
 import { G } from '@/app/glossary';
 import { t, tField } from '@/app/i18n';
-import { formatEarningsRelative } from '@/app/earningsFormat';
+
 import { SourceCite } from '@/components/ui/SourceCite';
 
 // ─── Static bilingual strings ───────────────────────────────────────────────
@@ -260,7 +260,7 @@ export function DeepDiveBoard() {
   }, []);
 
   const { ohlcvData }                = useIntraday(symbol, timeframe);
-  const { dailyData, isLoading: chartLoading } = useDaily(symbol);
+  const { dailyData, isLoading: chartLoading, insufficientHistory, errorDetail } = useDaily(symbol);
   const { data: sentimentData }      = useSentiment();
   const { briefData }                = useBrief();
   const { earningsData }             = useEarnings();
@@ -636,7 +636,25 @@ export function DeepDiveBoard() {
           <div className="card__bd" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
             {chartLoading
               ? <div className="subtle" style={{ padding: '32px 16px' }}>{t(S.chartLoading, locale)}</div>
-              : dailyData ? <div className="mob-chart-limit"><DailyChart data={dailyData} /></div> : null
+              : dailyData
+                ? <div className="mob-chart-limit"><DailyChart data={dailyData} /></div>
+                : insufficientHistory
+                  ? (
+                    <div style={{ padding: '28px 20px', textAlign: 'center' }}>
+                      <div className="badge warn" style={{ fontSize: 12, marginBottom: 10 }}>
+                        {locale === 'ko' ? '데이터 부족' : 'Limited history'}
+                      </div>
+                      <div style={{ fontSize: 13.5, color: 'var(--fg)', fontWeight: 600, marginBottom: 6 }}>
+                        {symbol} · {locale === 'ko' ? '최근 상장 / 히스토리 부족' : 'Recent IPO / short history'}
+                      </div>
+                      <div style={{ fontSize: 12.5, color: 'var(--fg-muted)', lineHeight: 1.6, maxWidth: 420, margin: '0 auto' }}>
+                        {errorDetail || (locale === 'ko'
+                          ? 'Stage2·EMA200 산출에 필요한 일봉이 아직 부족합니다. 가격 모니터링만 가능합니다.'
+                          : 'Not enough daily bars for Stage2/EMA200 yet. Price monitoring only.')}
+                      </div>
+                    </div>
+                  )
+                  : null
             }
           </div>
         </div>
@@ -656,7 +674,18 @@ export function DeepDiveBoard() {
           <small>{stage2 ? (stage2.score >= 6 ? t(S.stage2Consider, locale) : stage2.score >= 4 ? t(S.stage2Watch, locale) : t(S.stage2Avoid, locale)) : '—'}</small>
         </div>
         <div className="card__bd">
-          {stage2 ? (
+          {insufficientHistory && !stage2 ? (
+            <div style={{ padding: '12px 4px' }}>
+              <div className="badge warn" style={{ fontSize: 11, marginBottom: 8 }}>
+                {locale === 'ko' ? 'Stage2 대기' : 'Stage2 pending'}
+              </div>
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--fg-muted)', lineHeight: 1.65 }}>
+                {locale === 'ko'
+                  ? '최근 상장 종목은 EMA200·RS 등 장기 지표를 계산할 일봉이 쌓일 때까지 Stage2 점수와 진입가(Entry/Stop/Target)를 표시하지 않습니다. 0/7 점수가 아닙니다.'
+                  : 'Recent listings wait until enough daily bars exist for EMA200/RS. Stage2 score and Entry/Stop/Target are withheld — this is not a real 0/7 score.'}
+              </p>
+            </div>
+          ) : stage2 ? (
             <>
               {/* 7개 체크리스트 — 2컬럼 */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 10px', marginBottom: 10 }}>
@@ -1017,14 +1046,10 @@ export function DeepDiveBoard() {
             {symEarning ? (
               <>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-                  <div style={{ padding: '7px 10px', borderRadius: 8, background: 'var(--card-elev)' }}>
+                  <div style={{ padding: '7px 10px', borderRadius: 8, background: symEarning.days_until <= 7 ? 'var(--bear-soft)' : 'var(--card-elev)' }}>
                     <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.earningsDate, locale)}</div>
-                    <div className="mono" style={{ fontSize: 15, fontWeight: 700 }}>{symEarning.earnings_date}</div>
-                  </div>
-                  <div style={{ padding: '7px 10px', borderRadius: 8, background: symEarning.days_until <= 7 ? 'var(--bear-soft)' : 'var(--warn-soft)' }}>
-                    <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{t(S.dDay, locale)}</div>
-                    <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: symEarning.days_until <= 7 ? 'var(--bear)' : 'var(--warn)' }}>
-                      {formatEarningsRelative(symEarning.days_until, locale)}
+                    <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: symEarning.days_until <= 7 ? 'var(--bear)' : 'inherit' }}>
+                      {symEarning.earnings_date}
                     </div>
                   </div>
                   {symEarning.eps_estimate != null && (

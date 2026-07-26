@@ -120,6 +120,10 @@ export interface WatchlistItem {
   // 월봉 추세
   monthly_phase?: string;
   monthly_uptrend_confirmed?: boolean;
+  /** "ok" | "insufficient_history" — recent IPO / short bar history */
+  data_status?: string | null;
+  bars_available?: number | null;
+  bars_needed?: number | null;
 }
 
 export interface LatestData {

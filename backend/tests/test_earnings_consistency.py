@@ -1,4 +1,4 @@
-"""Tests for live earnings calendar consistency (relative-day SoT)."""
+"""Tests for live earnings calendar consistency (absolute date SoT)."""
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
@@ -6,6 +6,7 @@ import pytest
 
 from core.earnings_consistency import (
     days_until,
+    format_absolute,
     format_relative,
     refresh_upcoming_earnings,
     rebuild_earnings_alert,
@@ -27,7 +28,12 @@ def test_days_until_recomputed_from_absolute_date():
     assert days_until("2026-07-12", as_of=AS_OF) == -1
 
 
-def test_refresh_overwrites_stale_days_until_and_drops_past():
+def test_format_absolute_iso():
+    assert format_absolute("2026-07-16", "ko") == "2026-07-16"
+    assert format_absolute("2026-07-16", "en") == "2026-07-16"
+
+
+def test_refresh_overwrites_stale_days_until_and_uses_absolute_in_text():
     items = [
         {
             "symbol": "TSM",
@@ -46,8 +52,13 @@ def test_refresh_overwrites_stale_days_until_and_drops_past():
     assert len(out) == 1
     assert out[0]["symbol"] == "TSM"
     assert out[0]["days_until"] == 3
-    assert "3일 후" in out[0]["ai_summary_ko"]
-    assert "in 3 days" in out[0]["ai_summary_en"].lower()
+    # Relative phrases rewritten to absolute ISO date
+    assert "2일 후" not in out[0]["ai_summary_ko"]
+    assert "3일 후" not in out[0]["ai_summary_ko"]
+    assert "2026-07-16" in out[0]["ai_summary_ko"]
+    assert "in 2 days" not in out[0]["ai_summary_en"].lower()
+    assert "in 3 days" not in out[0]["ai_summary_en"].lower()
+    assert "2026-07-16" in out[0]["ai_summary_en"]
 
 
 def test_sanitize_false_already_reported_claim():
@@ -55,21 +66,23 @@ def test_sanitize_false_already_reported_claim():
     text = "TSM 오늘 미국 장 마감 후 실적 발표됨; EPS 일정 확인 필요"
     cleaned = sanitize_free_text(text, cal, as_of=AS_OF, locale="ko")
     assert "발표됨" not in cleaned or "예정" in cleaned
-    assert "7월 16일" in cleaned or "3일" in cleaned
+    assert "2026-07-16" in cleaned
+    assert "3일 후" not in cleaned
 
 
-def test_rebuild_earnings_alert_mechanical():
+def test_rebuild_earnings_alert_mechanical_absolute_only():
     items = refresh_upcoming_earnings(
         [{"symbol": "TSM", "earnings_date": "2026-07-16", "eps_estimate": 2.1}],
         as_of=AS_OF,
     )
     alert = rebuild_earnings_alert(items, as_of=AS_OF, locale="ko")
     assert "TSM" in alert
-    assert "3일 후" in alert
+    assert "2026-07-16" in alert
+    assert "3일 후" not in alert
     assert "발표됨" not in alert
 
 
-def test_sanitize_briefing_unifies_tsm_relative_days():
+def test_sanitize_briefing_uses_absolute_dates():
     briefing = {
         "headline_ko": "TSM 2일 후 실적 앞두고 관망",
         "earnings_alert_ko": "TSM 오늘 미국 장 마감 후 실적 발표됨",
@@ -91,15 +104,16 @@ def test_sanitize_briefing_unifies_tsm_relative_days():
         {"symbol": "TSM", "earnings_date": "2026-07-16", "days_until": 99, "eps_estimate": 2.0}
     ]
     out = sanitize_briefing_payload(briefing, upcoming, as_of=AS_OF, locale="ko")
-    # Mechanical alert uses live days
-    assert "3일 후" in out["earnings_alert_ko"]
+    assert "2026-07-16" in out["earnings_alert_ko"]
+    assert "3일 후" not in out["earnings_alert_ko"]
     assert "발표됨" not in out["earnings_alert_ko"]
-    # Watchlist analysis rewritten
-    assert "2일 후" not in (out["watchlist"][0].get("analysis_ko") or "")
-    assert "3일 후" in (out["watchlist"][0].get("analysis_ko") or "")
-    # Pure restatement checkpoint dropped or rewritten
+    analysis = out["watchlist"][0].get("analysis_ko") or ""
+    assert "2일 후" not in analysis
+    assert "3일 후" not in analysis
+    assert "2026-07-16" in analysis
     joined = " ".join(out.get("today_checkpoints_ko") or [])
     assert "발표됨" not in joined
+    assert "2일 후" not in joined
 
 
 def test_prepare_email_drops_alert_when_calendar_present():
@@ -116,7 +130,6 @@ def test_prepare_email_drops_alert_when_calendar_present():
     assert out.get("earnings_alert_ko") == ""
     assert out.get("_earnings_calendar")
     assert out["_earnings_calendar"][0]["days_until"] == 3
-    # executive deduped
     assert len(out["executive_bullets_ko"]) == 1
 
 
@@ -138,7 +151,8 @@ def test_text_overlaps():
     assert not text_overlaps("apple earnings beat", "tesla delivery miss")
 
 
-def test_format_relative_ko():
+def test_format_relative_ko_legacy():
+    """format_relative kept for internal use only — not for UI copy."""
     assert format_relative(3, "ko") == "3일 후 발표"
     assert format_relative(0, "ko") == "오늘 발표"
     assert format_relative(-2, "ko") == "2일 전 발표"

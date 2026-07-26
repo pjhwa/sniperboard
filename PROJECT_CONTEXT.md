@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-07-26 TrackBoard flex card collapse fix)
+# SniperBoard — Project Context (UPDATED 2026-07-26 absolute earnings dates + thin-history UI)
 
 ## 0. Purpose of This Document
 
@@ -37,7 +37,7 @@ sniperboard/
 │   │   ├── macro_rules.py            # Macro Insight traffic-light rule engine. compute_macro_signals(items) → {overall:{judgment,green_count,red_count}, groups:{key:{signal,direction}}}. 6 groups (volatility/breadth/credit/rates/commodities/sectors) each with green/yellow/red + overall RISK_ON/MIXED/RISK_OFF. Pure function, dict list input. TDD 20 tests.
 │   │   ├── cap_rank_tracker.py       # 글로벌 시총 순위 SQLite 영속 (cap_ranks.db). init_db / save_ranks / get_previous_ranks / CapRankItem dataclass.
 │   │   ├── backtest_engine.py        # Backtesting engine (2026-06-02). Daily bar backtest driven by Stage2 signals.
-│   │   ├── earnings_consistency.py   # Earnings relative-day SoT + email dedupe + mood/session coherence.
+│   │   ├── earnings_consistency.py   # Absolute earnings_date SoT (YYYY-MM-DD). days_until internal only for sort/tier. AI relative phrases scrubbed → absolute. Email dedupe + mood/session coherence.
 │   │   ├── github_payload_cache.py   # Phase A3: LastGoodCache + stale-on-error + slot_mismatch helpers.
 │   │   ├── briefing_verify.py        # Phase B1: mechanical integrity (relative day / mood / price binding).
 │   │   ├── divergence.py             # Phase B4: social composite vs day-change divergence labels.
@@ -48,7 +48,7 @@ sniperboard/
 │   │   ├── base.py               # BaseDataService abstract class
 │   │   ├── data_service.py       # YFinanceDataService implementation + module-level helpers
 │   │   ├── brief_service.py      # GitHub raw fetch + 30-min in-memory cache (BRIEF_DATA_URL)
-│   │   ├── earnings_service.py   # GitHub raw fetch + 5-min raw cache (EARNINGS_DATA_URL). P0-6: sanitize revenue_estimate_b — drop |v|>300. P0-consistency (2026-07-14): every serve recomputes days_until via core.earnings_consistency.refresh_upcoming_earnings (US/Eastern absolute date SoT); past events dropped from upcoming; AI relative-day phrases scrubbed.
+│   │   ├── earnings_service.py   # GitHub raw fetch + 5-min raw cache (EARNINGS_DATA_URL). P0-6: sanitize revenue_estimate_b — drop |v|>300. P0-consistency: every serve recomputes days_until (ET) for tier/sort only; AI free text rewritten to absolute YYYY-MM-DD (no "N일 후"/"in N days" in user-facing copy).
 │   │   ├── prediction_service.py # P0-4: GitHub raw prediction/latest.json (Polymarket FOMC odds). usage=reference_only — never feeds Conviction. 5-min cache.
 │   │   └── overnight_service.py  # Yahoo Finance WebSocket → Blue Ocean ATS overnight price stream. Runs in a dedicated daemon thread (asyncio.run in thread) — NOT in uvicorn's event loop, to avoid handshake timeouts caused by blocking yfinance I/O. Protobuf base64 parsing (field1=symbol, field2=price/float32, field6=session_hours/varint:8=overnight, field12=chg_pct). start_overnight_service() called in FastAPI lifespan; spawns threading.Thread(daemon=True).
 │   │   └── cap_leaderboard_service.py # companiesmarketcap.com 글로벌 랭킹 스크래핑 → yfinance 1y 히스토리로 spark·52W·market_structure 보완. 1h 인메모리 캐시 + stale fallback. fetch_leaderboard() → TOP 15 dict.
@@ -608,7 +608,8 @@ Note: Brief/Earnings data covers TIER1 12 symbols (collect_brief.py, collect_ear
 | Brief/Earnings URL | `docker-compose.yml: BRIEF_DATA_URL / EARNINGS_DATA_URL` |
 | Brief cache TTL | `backend/services/brief_service.py: CACHE_TTL` (currently 1800s) |
 | Earnings cache TTL | `backend/services/earnings_service.py: CACHE_TTL` (300s raw; days_until recomputed every serve) |
-| Earnings relative-day consistency | `backend/core/earnings_consistency.py` — absolute date SoT, ET recompute, AI text sanitize, email dedupe |
+| Earnings absolute-date consistency | `backend/core/earnings_consistency.py` — YYYY-MM-DD SoT; days_until internal only; scrub relative AI phrases; email dedupe |
+| Thin-history watchlist (e.g. SPCX) | `/api/watchlist` sets `data_status=insufficient_history` + bars_available/bars_needed; frontend `app/dataStatus.ts` + Watchlist/Overview/DeepDive/Daily UI (not fake Stage2 0/7) |
 | Brief watchlist | `collect/collect_brief.py: WATCHLIST` + `collect/collect_earnings.py: WATCHLIST` |
 | Macro Insight traffic light rules | `backend/core/macro_rules.py` (compute_*_signal functions) |
 | Macro Insight AI cache TTL/URL | `backend/services/macro_insight_service.py: CACHE_TTL / MACRO_INSIGHT_URL` |

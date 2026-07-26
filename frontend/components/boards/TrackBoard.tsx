@@ -249,10 +249,14 @@ export function TrackBoard() {
     .filter(e => e.status === 'PENDING' || e.status === 'ACTIVE')
     .sort((a, b) => b.stage2_score - a.stage2_score);
 
-  // 신규 IPO 심볼: 워치리스트에서 entry=0인 종목 (데이터 부족 종목)
+  // 신규 IPO / 히스토리 부족: data_status 또는 entry=0 셸
   const trackedSymbols = new Set(allEntries.map(e => e.symbol));
   const ipoSymbols = (wlItems ?? [])
-    .filter((item: WatchlistItem) => item.entry === 0 && !trackedSymbols.has(item.symbol))
+    .filter((item: WatchlistItem) =>
+      !trackedSymbols.has(item.symbol) && (
+        item.data_status === 'insufficient_history' || item.entry === 0
+      )
+    )
     .map((item: WatchlistItem) => item.symbol);
 
   // 전체 신호 기록 필터 (PENDING/ACTIVE 포함)

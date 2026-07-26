@@ -40,19 +40,17 @@ def earnings_alerts(
         risk = (e.get("risk_level") or "").lower()
         if days == 0:
             sev = "critical"
-            title_en = f"{sym} earnings TODAY"
-            title_ko = f"{sym} 실적 오늘 발표"
         elif days == 1:
             sev = "high"
-            title_en = f"{sym} earnings tomorrow (D-1)"
-            title_ko = f"{sym} 실적 내일 (D-1)"
         else:
             sev = "medium" if risk == "high" else "low"
-            title_en = f"{sym} earnings in {days} days"
-            title_ko = f"{sym} 실적 {days}일 후"
 
-        body_en = f"Report date {date}. days_until={days}."
-        body_ko = f"발표일 {date}. D-{days}."
+        # Absolute date only in user-facing titles (no "tomorrow" / "D-n" / "N일 후")
+        title_en = f"{sym} earnings {date}" if date else f"{sym} earnings"
+        title_ko = f"{sym} 실적 {date}" if date else f"{sym} 실적"
+
+        body_en = f"Report date {date}." if date else "Earnings date pending."
+        body_ko = f"발표일 {date}." if date else "발표일 미정."
         if e.get("action_note_en") or e.get("action_note_ko"):
             body_en = (e.get("action_note_en") or body_en)
             body_ko = (e.get("action_note_ko") or body_ko)

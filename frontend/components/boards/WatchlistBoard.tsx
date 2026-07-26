@@ -12,6 +12,7 @@ import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
 import { G } from '@/app/glossary';
 import { t } from '@/app/i18n';
 import type { BiLang } from '@/app/i18n';
+import { isInsufficientHistory, thinHistoryHint, thinHistoryLabel } from '@/app/dataStatus';
 
 const S: Record<string, BiLang> = {
   guideTitle:     { en: 'Watchlist Guide', ko: 'Watchlist 가이드' },
@@ -48,6 +49,7 @@ const S: Record<string, BiLang> = {
   // R:R card
   rrTitle:        { en: 'Risk / Reward', ko: 'Risk / Reward' },
   rrAction:       { en: 'Entry-based Comparison', ko: 'Entry 기준 비교' },
+  thinBadge:      { en: 'Limited data', ko: '데이터 부족' },
 };
 
 const STRUCT_COLOR: Record<string, string> = {
@@ -121,7 +123,8 @@ export function WatchlistBoard() {
             .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
             .map(w => {
               const sb = briefMap.get(w.symbol);
-              const entryDist = w.entry > 0 ? (w.entry - w.price) / w.price * 100 : null;
+              const thin = isInsufficientHistory(w);
+              const entryDist = !thin && w.entry > 0 ? (w.entry - w.price) / w.price * 100 : null;
               const inZone = entryDist !== null && entryDist > 0 && entryDist <= 5;
               const broken = entryDist !== null && entryDist <= 0;
               const conviction = w.conviction_score ?? 0;
@@ -140,45 +143,59 @@ export function WatchlistBoard() {
                   key={w.symbol}
                   className="mob-watchlist-card"
                   style={{
-                    background: broken ? 'var(--bull-soft)' : inZone ? 'var(--em-soft)' : 'transparent',
+                    background: thin ? 'var(--warn-soft)' : broken ? 'var(--bull-soft)' : inZone ? 'var(--em-soft)' : 'transparent',
                   }}
                 >
                   {/* 1행: 심볼 + 가격 + Action Bias + Setup Quality */}
                   <div className="mob-watchlist-card__row1">
                     <span className="mob-watchlist-card__sym">{w.symbol}</span>
                     <span className="mob-watchlist-card__price">${w.price.toFixed(2)}</span>
-                    {sb && (
-                      <span className={`badge ${actionCls}`} style={{ fontSize: 13 }}>
-                        {actionLabel}
-                      </span>
-                    )}
-                    {sb?.setup_quality && (
-                      <span style={{ fontWeight: 700, fontSize: 14, color: gradeColor }}>
-                        {sb.setup_quality}
-                      </span>
+                    {thin ? (
+                      <span className="badge warn" style={{ fontSize: 12 }}>{thinHistoryLabel(w, locale)}</span>
+                    ) : (
+                      <>
+                        {sb && (
+                          <span className={`badge ${actionCls}`} style={{ fontSize: 13 }}>
+                            {actionLabel}
+                          </span>
+                        )}
+                        {sb?.setup_quality && (
+                          <span style={{ fontWeight: 700, fontSize: 14, color: gradeColor }}>
+                            {sb.setup_quality}
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                   {/* 2행: 진입 거리 + Conviction 바 + 점수 */}
                   <div className="mob-watchlist-card__row2">
-                    <span
-                      className="mob-watchlist-card__dist"
-                      style={{
-                        color: broken ? 'var(--bull)' : inZone ? 'var(--em-500)' : entryDist && entryDist > 15 ? 'var(--fg-subtle)' : 'var(--fg)',
-                      }}
-                    >
-                      {broken
-                        ? (locale === 'ko' ? '✓ 돌파' : '✓ Break')
-                        : entryDist !== null
-                        ? `+${entryDist.toFixed(1)}%`
-                        : '—'}
-                    </span>
-                    <div className="mob-watchlist-card__bar">
-                      <div
-                        className="mob-watchlist-card__bar-fill"
-                        style={{ width: `${conviction}%`, background: convColor }}
-                      />
-                    </div>
-                    <ConvictionBadge score={w.conviction_score ?? undefined} locale={locale} size="sm" />
+                    {thin ? (
+                      <span className="mob-watchlist-card__dist" style={{ color: 'var(--fg-subtle)', fontSize: 12 }}>
+                        {thinHistoryHint(locale)}
+                      </span>
+                    ) : (
+                      <>
+                        <span
+                          className="mob-watchlist-card__dist"
+                          style={{
+                            color: broken ? 'var(--bull)' : inZone ? 'var(--em-500)' : entryDist && entryDist > 15 ? 'var(--fg-subtle)' : 'var(--fg)',
+                          }}
+                        >
+                          {broken
+                            ? (locale === 'ko' ? '✓ 돌파' : '✓ Break')
+                            : entryDist !== null
+                            ? `+${entryDist.toFixed(1)}%`
+                            : '—'}
+                        </span>
+                        <div className="mob-watchlist-card__bar">
+                          <div
+                            className="mob-watchlist-card__bar-fill"
+                            style={{ width: `${conviction}%`, background: convColor }}
+                          />
+                        </div>
+                        <ConvictionBadge score={w.conviction_score ?? undefined} locale={locale} size="sm" />
+                      </>
+                    )}
                   </div>
                 </div>
               );
@@ -217,12 +234,15 @@ export function WatchlistBoard() {
                   const tier1 = watchlist.filter(w => (w.tier ?? 1) === 1);
                   const tier2 = watchlist.filter(w => (w.tier ?? 1) === 2);
 
-                  const renderRow = (w: typeof watchlist[number]) => (
+                  const renderRow = (w: typeof watchlist[number]) => {
+                    const thin = isInsufficientHistory(w);
+                    return (
                     <tr
                       key={w.symbol}
                       className={w.symbol === symbol ? 'selected' : ''}
                       onClick={() => { setSymbol(w.symbol); setBoard('deepdive'); }}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: 'pointer', opacity: thin ? 0.92 : 1 }}
+                      title={thin ? thinHistoryHint(locale) : undefined}
                     >
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -233,26 +253,49 @@ export function WatchlistBoard() {
                             background: (w.tier ?? 1) === 1 ? 'rgba(56,189,248,0.15)' : 'rgba(167,139,250,0.15)',
                             color: (w.tier ?? 1) === 1 ? 'var(--sky, #38bdf8)' : 'var(--purple, #a78bfa)',
                           }}>T{w.tier ?? 1}</span>
+                          {thin && (
+                            <span className="badge warn" style={{ fontSize: 9 }} title={thinHistoryHint(locale)}>
+                              {t(S.thinBadge, locale)}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="num">${w.price.toFixed(2)}</td>
-                      <td><ScorePill score={w.score} /></td>
-                      <td className="num" style={{ color: w.rs_score >= 70 ? 'var(--bull)' : w.rs_score >= 50 ? 'var(--teal)' : 'var(--bear)' }}>
-                        {w.rs_score}
-                      </td>
-                      <td className="num">{w.pct_from_52w_high.toFixed(1)}%</td>
-                      <td className="num" style={{ color: 'var(--info)' }}>${w.entry.toFixed(2)}</td>
-                      <td className="num" style={{ color: 'var(--bear)' }}>${w.stop.toFixed(2)}</td>
-                      <td className="num" style={{ color: 'var(--bull)' }}>${w.target.toFixed(2)}</td>
                       <td>
-                        <div style={{ display: 'flex', gap: 2 }}>
-                          {Object.values(w.checks).map((c, i) => (
-                            <div key={i} style={{ width: 8, height: 8, borderRadius: 2, background: c ? 'var(--bull)' : 'var(--border)' }} />
-                          ))}
-                        </div>
+                        {thin
+                          ? <span className="badge neutral" style={{ fontSize: 10 }}>{thinHistoryLabel(w, locale)}</span>
+                          : <ScorePill score={w.score} />}
+                      </td>
+                      <td className="num" style={{ color: thin ? 'var(--fg-subtle)' : w.rs_score >= 70 ? 'var(--bull)' : w.rs_score >= 50 ? 'var(--teal)' : 'var(--bear)' }}>
+                        {thin ? '—' : w.rs_score}
+                      </td>
+                      <td className="num">{thin ? '—' : `${w.pct_from_52w_high.toFixed(1)}%`}</td>
+                      <td className="num" style={{ color: thin ? 'var(--fg-subtle)' : 'var(--info)' }}>
+                        {thin ? '—' : `$${w.entry.toFixed(2)}`}
+                      </td>
+                      <td className="num" style={{ color: thin ? 'var(--fg-subtle)' : 'var(--bear)' }}>
+                        {thin ? '—' : `$${w.stop.toFixed(2)}`}
+                      </td>
+                      <td className="num" style={{ color: thin ? 'var(--fg-subtle)' : 'var(--bull)' }}>
+                        {thin ? '—' : `$${w.target.toFixed(2)}`}
                       </td>
                       <td>
-                        {(() => {
+                        {thin ? (
+                          <span style={{ fontSize: 11, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>
+                            {locale === 'ko' ? '축적 중' : 'accumulating'}
+                          </span>
+                        ) : (
+                          <div style={{ display: 'flex', gap: 2 }}>
+                            {Object.values(w.checks).map((c, i) => (
+                              <div key={i} style={{ width: 8, height: 8, borderRadius: 2, background: c ? 'var(--bull)' : 'var(--border)' }} />
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        {thin ? (
+                          <span style={{ fontSize: 12, color: 'var(--fg-subtle)' }}>—</span>
+                        ) : (() => {
                           const mp = w.monthly_phase ?? 'UNKNOWN';
                           const label = MP_SHORT[mp] ?? MP_SHORT.UNKNOWN;
                           const color = MP_COLOR[mp] ?? MP_COLOR.UNKNOWN;
@@ -260,7 +303,9 @@ export function WatchlistBoard() {
                         })()}
                       </td>
                       <td>
-                        <ConvictionBadge score={w.conviction_score ?? undefined} locale={locale} size="sm" />
+                        {thin
+                          ? <span className="badge warn" style={{ fontSize: 10 }}>{locale === 'ko' ? '대기' : 'pending'}</span>
+                          : <ConvictionBadge score={w.conviction_score ?? undefined} locale={locale} size="sm" />}
                       </td>
                       <td>
                         <button
@@ -272,7 +317,8 @@ export function WatchlistBoard() {
                         </button>
                       </td>
                     </tr>
-                  );
+                    );
+                  };
 
                   const tierLabel = (tier: 1 | 2, label: string, color: string) => (
                     <tr

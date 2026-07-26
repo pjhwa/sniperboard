@@ -1,4 +1,4 @@
-"""Earnings calendar consistency — single source of truth for relative day language.
+"""Earnings calendar consistency — absolute date is the only public timing language.
 
 Problem:
   Collectors freeze phrases like "3일 후" / "earnings in 2 days" into AI text at
@@ -6,11 +6,10 @@ Problem:
   days_until) + wall-clock, producing contradictory TSM/TSLA/etc. statements.
 
 Solution:
-  1. Absolute earnings_date is authoritative.
-  2. days_until is always recomputed at serve/display time (US/Eastern calendar day
-     for US equity event timing; matches when the report typically drops).
-  3. AI free-text is scrubbed of conflicting relative-day phrases and rewritten
-     to the live relative form + absolute date.
+  1. Absolute earnings_date (YYYY-MM-DD) is authoritative for all user-facing copy.
+  2. days_until is recomputed at serve time (US/Eastern) only for sort/tier/alerts
+     severity — never rewritten into free text as "N일 후" / "in N days".
+  3. AI free-text relative-day phrases are scrubbed and replaced with the absolute date.
 """
 
 from __future__ import annotations
@@ -81,6 +80,7 @@ def relevance_tier(days: Optional[int]) -> Optional[str]:
 
 
 def format_relative(days: Optional[int], locale: str = "ko") -> str:
+    """Internal/legacy helper. Prefer format_absolute for any user-facing string."""
     if days is None:
         return ""
     if locale == "ko":
@@ -101,12 +101,11 @@ def format_relative(days: Optional[int], locale: str = "ko") -> str:
 
 
 def format_absolute(earnings_date: Any, locale: str = "ko") -> str:
+    """User-facing absolute date — always ISO YYYY-MM-DD (locale kept for API compat)."""
     ed = parse_iso_date(earnings_date)
     if ed is None:
         return ""
-    if locale == "ko":
-        return f"{ed.month}월 {ed.day}일"
-    return ed.strftime("%b %d")
+    return ed.isoformat()
 
 
 def build_calendar(items: Iterable[dict], *, as_of: Optional[datetime] = None) -> dict[str, date]:
@@ -201,54 +200,53 @@ def sanitize_text_for_symbol(
     days: Optional[int],
     locale: str = "ko",
 ) -> str:
-    """Fix relative-day language for one symbol given live days_until."""
+    """Replace relative-day language with absolute YYYY-MM-DD for one symbol."""
     if not text:
         return text
     ed = parse_iso_date(earnings_date)
     abs_s = format_absolute(ed, locale) if ed else ""
-    rel = format_relative(days, locale)
-
-    # If text doesn't mention this symbol or earnings, still fix generic "N일 후 실적" when alone
     out = text
 
+    if not abs_s:
+        return out
+
     if days is not None and days > 0:
-        # Remove false "already reported today" claims
-        out = _RE_KO_TODAY_REPORTED.sub(f"{abs_s} 실적 예정({rel})", out)
-        out = _RE_EN_ALREADY.sub(f"earnings scheduled {abs_s} ({rel})", out)
-        out = _RE_KO_TODAY_EARN.sub(f"{abs_s} 실적({rel})", out)
-        out = _RE_EN_TODAY_EARN.sub(f"earnings {abs_s} ({rel})", out)
+        # Future: strip relative claims → absolute date only
+        out = _RE_KO_TODAY_REPORTED.sub(f"{abs_s} 실적 예정", out)
+        out = _RE_EN_ALREADY.sub(f"earnings scheduled {abs_s}", out)
+        out = _RE_KO_TODAY_EARN.sub(f"{abs_s} 실적", out)
+        out = _RE_EN_TODAY_EARN.sub(f"earnings {abs_s}", out)
 
         def _ko_sub(m: re.Match) -> str:
-            return f"{m.group('prefix') or ''}{days}일 후{m.group('suffix') or ''}"
+            prefix = m.group("prefix") or ""
+            suffix = m.group("suffix") or ""
+            return f"{prefix}{abs_s}{suffix}"
 
         out = _RE_KO_IN_DAYS.sub(_ko_sub, out)
-        out = _RE_KO_IN_DAYS_ALT.sub(f"{days}일 후", out)
-        out = _RE_EN_IN_DAYS.sub(f"in {days} days", out)
-        if days != 1:
-            out = _RE_KO_TOMORROW.sub(f"{abs_s} 실적({rel})", out)
-            out = _RE_EN_TOMORROW.sub(f"earnings {abs_s} ({rel})", out)
+        out = _RE_KO_IN_DAYS_ALT.sub(abs_s, out)
+        out = _RE_EN_IN_DAYS.sub(f"on {abs_s}", out)
+        out = _RE_KO_TOMORROW.sub(f"{abs_s} 실적", out)
+        out = _RE_EN_TOMORROW.sub(f"earnings {abs_s}", out)
     elif days is not None and days == 0:
-        out = _RE_KO_IN_DAYS.sub("오늘 실적 발표", out)
-        out = _RE_EN_IN_DAYS.sub("earnings today", out)
+        out = _RE_KO_IN_DAYS.sub(f"{abs_s} 실적 발표", out)
+        out = _RE_EN_IN_DAYS.sub(f"earnings {abs_s}", out)
+        out = _RE_KO_TODAY_EARN.sub(f"{abs_s} 실적", out)
+        out = _RE_EN_TODAY_EARN.sub(f"earnings {abs_s}", out)
     elif days is not None and days < 0:
-        # Past: force reported language, kill "N days later"
-        out = _RE_KO_IN_DAYS.sub("이미 발표된 실적", out)
-        out = _RE_EN_IN_DAYS.sub("already reported", out)
-        if locale == "ko" and not _RE_KO_TODAY_REPORTED.search(out) and "발표" in out:
-            pass
+        # Past: absolute reported language
+        out = _RE_KO_IN_DAYS.sub(f"{abs_s} 발표 완료", out)
+        out = _RE_EN_IN_DAYS.sub(f"already reported ({abs_s})", out)
 
-    # Prefer absolute date when we have it and text mentions relative-only without date
-    if ed and abs_s and symbol and symbol.upper() in out.upper():
-        # Ensure absolute date appears near earnings mention for this symbol
+    # Ensure absolute date appears near earnings mention for this symbol
+    if symbol and symbol.upper() in out.upper():
         if abs_s not in out and re.search(r"실적|earnings|발표", out, re.I):
-            if locale == "ko":
-                out = re.sub(
-                    rf"({re.escape(symbol)})",
-                    rf"\1({abs_s})",
-                    out,
-                    count=1,
-                    flags=re.I,
-                )
+            out = re.sub(
+                rf"({re.escape(symbol)})",
+                rf"\1({abs_s})",
+                out,
+                count=1,
+                flags=re.I,
+            )
 
     return out
 
@@ -268,17 +266,18 @@ def sanitize_free_text(
     for sym, ed in calendar.items():
         d = days_until(ed, as_of=as_of)
         # Patterns like "TSM 7월 16일 실적(2일 후)" or "TSM ... 3일 후"
+        abs_s = format_absolute(ed, locale)
         if locale == "ko":
-            # (N일 후) near symbol
+            # (N일 후) near symbol → absolute date
             out = re.sub(
                 rf"({re.escape(sym)})([^。.\n]{{0,40}}?)\((\d+)\s*일\s*후\)",
-                lambda m, _d=d, _ed=ed: f"{m.group(1)}{m.group(2)}({format_relative(_d, 'ko').replace(' 발표','')})",
+                lambda m, _a=abs_s: f"{m.group(1)}{m.group(2)}({_a})",
                 out,
                 flags=re.I,
             )
             out = re.sub(
                 rf"({re.escape(sym)})([^。.\n]{{0,60}}?)(\d+)\s*일\s*후\s*실적",
-                lambda m, _d=d: f"{m.group(1)}{m.group(2)}{format_relative(_d, 'ko').replace(' 발표',' 실적') if _d is not None else m.group(0)}",
+                lambda m, _a=abs_s: f"{m.group(1)}{m.group(2)}{_a} 실적",
                 out,
                 flags=re.I,
             )
@@ -287,16 +286,15 @@ def sanitize_free_text(
                 out = re.sub(
                     rf"{re.escape(sym)}\s*오늘\s*미국\s*장\s*마감\s*후\s*실적\s*발표됨"
                     rf"[^;。\n]*",
-                    f"{sym} {format_absolute(ed, 'ko')} 실적 예정({format_relative(d, 'ko')}"
-                    + (f", EPS 일정 확인" if "EPS" in text else "")
-                    + ")",
+                    f"{sym} {abs_s} 실적 예정"
+                    + (f" · EPS 일정 확인" if "EPS" in text else ""),
                     out,
                     flags=re.I,
                 )
         else:
             out = re.sub(
                 rf"({re.escape(sym)})([^.\n]{{0,40}}?)in\s+(\d+)\s*days?",
-                lambda m, _d=d: f"{m.group(1)}{m.group(2)}in {_d} days" if _d is not None else m.group(0),
+                lambda m, _a=abs_s: f"{m.group(1)}{m.group(2)}on {_a}",
                 out,
                 flags=re.I,
             )
@@ -325,23 +323,18 @@ def rebuild_earnings_alert(
             continue
         eps = it.get("eps_estimate")
         abs_s = format_absolute(ed, locale)
-        rel = format_relative(d, locale)
         if locale == "ko":
             if d < 0:
                 seg = f"{sym} {abs_s} 실적 발표됨"
-            elif d == 0:
-                seg = f"{sym} 오늘({abs_s}) 실적 발표"
             else:
-                seg = f"{sym} {abs_s} 실적 ({rel})"
+                seg = f"{sym} 실적 {abs_s}"
             if eps is not None:
                 seg += f" · EPS 추정 ${eps}"
         else:
             if d < 0:
                 seg = f"{sym} reported {abs_s}"
-            elif d == 0:
-                seg = f"{sym} reports today ({abs_s})"
             else:
-                seg = f"{sym} {abs_s} ({rel})"
+                seg = f"{sym} earnings {abs_s}"
             if eps is not None:
                 seg += f" · EPS est ${eps}"
         parts.append(seg)
@@ -616,8 +609,8 @@ def prepare_email_sections(
         ed = it.get("earnings_date")
         d = it.get("days_until")
         if sym:
-            corpus.append(f"{sym} {format_absolute(ed, 'ko')} {format_relative(d, 'ko')}")
-            corpus.append(f"{sym} {format_absolute(ed, 'en')} {format_relative(d, 'en')}")
+            corpus.append(f"{sym} {format_absolute(ed, 'ko')}")
+            corpus.append(f"{sym} {format_absolute(ed, 'en')}")
         for k in ("ai_summary_ko", "ai_summary_en", "action_note_ko", "action_note_en"):
             if it.get(k):
                 corpus.append(str(it[k]))

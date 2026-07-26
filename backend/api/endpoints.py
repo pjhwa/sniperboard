@@ -607,7 +607,7 @@ def build_watchlist_result() -> tuple[list[dict], str | None]:
         market_sentiment = None
         symbol_sentiment_map = {}
 
-    def _thin_history_item(sym: str, price: float, note: str) -> dict:
+    def _thin_history_item(sym: str, price: float, note: str, bars_available: int = 0) -> dict:
         return {
             "symbol": sym,
             "tier": SYMBOL_TIER.get(sym, 1),
@@ -625,6 +625,9 @@ def build_watchlist_result() -> tuple[list[dict], str | None]:
             "conviction_reliability": "low",
             "conviction_notes": [note],
             "monthly_phase": "UNKNOWN", "monthly_uptrend_confirmed": False,
+            "data_status": "insufficient_history",
+            "bars_available": int(bars_available),
+            "bars_needed": int(_MIN_STAGE2_BARS),
         }
 
     for sym in WATCHLIST_SYMS:
@@ -640,6 +643,7 @@ def build_watchlist_result() -> tuple[list[dict], str | None]:
             result.append(_thin_history_item(
                 sym, last_price,
                 f"Insufficient historical data ({len(df)} days; Stage2 needs ~{_MIN_STAGE2_BARS})",
+                bars_available=len(df),
             ))
             continue
         try:
@@ -647,12 +651,14 @@ def build_watchlist_result() -> tuple[list[dict], str | None]:
             if df is None or df.empty:
                 result.append(_thin_history_item(
                     sym, last_price, "Insufficient history after indicator warm-up",
+                    bars_available=0,
                 ))
                 continue
             stage2 = calculate_stage2_analysis(df, spy_close, rsp_close)
             if not stage2 or "score" not in stage2:
                 result.append(_thin_history_item(
                     sym, last_price, "Stage2 unavailable (insufficient clean history)",
+                    bars_available=len(df),
                 ))
                 continue
             stage2_score = stage2.get("score", 0)
@@ -697,6 +703,9 @@ def build_watchlist_result() -> tuple[list[dict], str | None]:
                 "conviction_notes": c_notes,
                 "monthly_phase": stage2.get("monthly_phase", "UNKNOWN"),
                 "monthly_uptrend_confirmed": stage2.get("monthly_uptrend_confirmed", False),
+                "data_status": "ok",
+                "bars_available": len(df),
+                "bars_needed": int(_MIN_STAGE2_BARS),
             })
         except Exception as e:
             logger.error(f"Watchlist error for {sym}: {e}", exc_info=True)

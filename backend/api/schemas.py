@@ -107,6 +107,10 @@ class WatchlistItemSchema(BaseModel):
     # 월봉 추세
     monthly_phase: str = 'UNKNOWN'
     monthly_uptrend_confirmed: bool = False
+    # Thin history (recent IPO etc.) — Stage2 not computed
+    data_status: Optional[str] = None  # "ok" | "insufficient_history"
+    bars_available: Optional[int] = None
+    bars_needed: Optional[int] = None
 
 class MacroItemSchema(BaseModel):
     symbol: str

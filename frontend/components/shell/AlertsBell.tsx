@@ -10,8 +10,8 @@ const S = {
   title: { en: 'Alerts', ko: '알림' },
   empty: { en: 'No active alerts', ko: '활성 알림 없음' },
   method: {
-    en: 'Earnings D-day · open signals · model health · briefing integrity',
-    ko: '실적 D-day · 열린 신호 · 모델 헬스 · 브리핑 정합',
+    en: 'Earnings dates · open signals · model health · briefing integrity',
+    ko: '실적 일정 · 열린 신호 · 모델 헬스 · 브리핑 정합',
   },
   dismiss: { en: 'Dismiss', ko: '닫기' },
   clear: { en: 'Show dismissed', ko: '숨긴 알림 복원' },

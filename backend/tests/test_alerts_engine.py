@@ -23,7 +23,11 @@ def test_earnings_d0_critical():
 def test_earnings_d1_high():
     al = earnings_alerts([{"symbol": "AAPL", "earnings_date": "2026-07-17", "days_until": 1}])
     assert al[0]["severity"] == "high"
-    assert "tomorrow" in al[0]["title_en"].lower() or "D-1" in al[0]["title_en"]
+    # Absolute date only — no relative "tomorrow" / "D-1" copy
+    assert "2026-07-17" in al[0]["title_en"]
+    assert "tomorrow" not in al[0]["title_en"].lower()
+    assert "D-1" not in al[0]["title_en"]
+    assert "D-" not in al[0]["body_en"]
 
 
 def test_signal_pending_active():

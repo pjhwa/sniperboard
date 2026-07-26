@@ -1,46 +1,50 @@
 /**
- * Shared earnings date display — absolute date (SoT) + live relative D-n.
- * Phase A5: Overview / Daily / DeepDive must use the same formatter.
+ * Shared earnings date display — absolute calendar date only (YYYY-MM-DD).
+ * Relative phrases ("D-2", "3일 후", "tomorrow") are never shown in the UI.
+ * days_until remains an internal sort/tier field; do not surface it as copy.
  */
 
 export type EarningsLocale = 'en' | 'ko';
 
-export function formatEarningsRelative(
-  daysUntil: number | null | undefined,
+/** Absolute earnings date (source of truth). */
+export function formatEarningsAbsolute(
+  earningsDate: string | null | undefined,
   locale: EarningsLocale = 'en',
 ): string {
-  if (daysUntil == null || Number.isNaN(Number(daysUntil))) {
-    return locale === 'ko' ? '일정 미정' : 'TBD';
-  }
-  const d = Number(daysUntil);
-  if (d === 0) return locale === 'ko' ? '오늘 발표' : 'reports today';
-  if (d === 1) return locale === 'ko' ? '내일 발표' : 'tomorrow';
-  if (d < 0) {
-    const ago = Math.abs(d);
-    return locale === 'ko' ? `${ago}일 전 발표` : `${ago}d ago`;
-  }
-  return locale === 'ko' ? `D-${d}` : `D-${d}`;
+  const abs = (earningsDate || '').trim().slice(0, 10);
+  if (!abs) return locale === 'ko' ? '날짜 없음' : 'no date';
+  return abs;
 }
 
-/** Full label: "2026-07-16 · D-2" */
+/**
+ * @deprecated Relative day language is disabled — returns absolute date when available,
+ * otherwise empty. Prefer formatEarningsAbsolute.
+ */
+export function formatEarningsRelative(
+  _daysUntil: number | null | undefined,
+  locale: EarningsLocale = 'en',
+  earningsDate?: string | null,
+): string {
+  if (earningsDate) return formatEarningsAbsolute(earningsDate, locale);
+  return locale === 'ko' ? '일정 미정' : 'TBD';
+}
+
+/** Full label: absolute date only (e.g. "2026-07-16"). */
 export function formatEarningsLabel(
   earningsDate: string | null | undefined,
-  daysUntil: number | null | undefined,
+  _daysUntil?: number | null,
   locale: EarningsLocale = 'en',
 ): string {
-  const abs = (earningsDate || '').trim() || (locale === 'ko' ? '날짜 없음' : 'no date');
-  return `${abs} · ${formatEarningsRelative(daysUntil, locale)}`;
+  return formatEarningsAbsolute(earningsDate, locale);
 }
 
-/** Compact banner text for Daily board */
+/** Compact banner: "실적 2026-07-16" / "EARNINGS 2026-07-16". */
 export function formatEarningsBanner(
-  daysUntil: number | null | undefined,
+  earningsDate: string | null | undefined,
   locale: EarningsLocale = 'en',
+  _daysUntil?: number | null,
 ): string {
-  if (daysUntil == null) return locale === 'ko' ? '실적 일정' : 'EARNINGS';
-  const d = Number(daysUntil);
-  if (d === 0) return locale === 'ko' ? '실적 오늘' : 'EARNINGS TODAY';
-  if (d === 1) return locale === 'ko' ? '실적 내일' : 'EARNINGS TOMORROW';
-  if (d < 0) return locale === 'ko' ? `실적 ${Math.abs(d)}일 전` : `REPORTED ${Math.abs(d)}D AGO`;
-  return locale === 'ko' ? `실적 D-${d}` : `EARNINGS D-${d}`;
+  const abs = formatEarningsAbsolute(earningsDate, locale);
+  if (!earningsDate) return locale === 'ko' ? '실적 일정' : 'EARNINGS';
+  return locale === 'ko' ? `실적 ${abs}` : `EARNINGS ${abs}`;
 }

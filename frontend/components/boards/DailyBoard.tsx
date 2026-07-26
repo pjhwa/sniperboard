@@ -67,7 +67,7 @@ export function DailyBoard() {
     return () => document.removeEventListener('guide:open', handler);
   }, []);
   const { symbol, rrAccount, rrRiskPct, locale } = useStore();
-  const { dailyData, isLoading } = useDaily(symbol);
+  const { dailyData, isLoading, insufficientHistory, errorDetail } = useDaily(symbol);
   const { earningsData } = useEarnings();
   const symbolEarning: UpcomingEarning | undefined = earningsData?.upcoming_earnings?.find(
     (e: UpcomingEarning) => e.symbol === symbol
@@ -153,7 +153,7 @@ export function DailyBoard() {
             }}>
               <span style={{ fontWeight: 700 }}>
                 {symbolEarning.relevance_tier === 'imminent' ? '⚡' : '📅'}{' '}
-                {symbolEarning.earnings_date} · {formatEarningsBanner(symbolEarning.days_until, locale)}
+                {formatEarningsBanner(symbolEarning.earnings_date, locale)}
               </span>
               <span style={{ opacity: 0.8 }}>{tField(symbolEarning.action_note_en, symbolEarning.action_note_ko, symbolEarning.action_note, locale)}</span>
             </div>
@@ -164,13 +164,38 @@ export function DailyBoard() {
             </div>
           ) : dailyData ? (
             <DailyChart data={dailyData} />
+          ) : insufficientHistory ? (
+            <div style={{ padding: 28, textAlign: 'center' }}>
+              <div className="badge warn" style={{ fontSize: 12, marginBottom: 10 }}>
+                {locale === 'ko' ? '데이터 부족' : 'Limited history'}
+              </div>
+              <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 6 }}>
+                {symbol} · {locale === 'ko' ? '최근 상장 / 히스토리 부족' : 'Recent IPO / short history'}
+              </div>
+              <div style={{ fontSize: 12.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+                {errorDetail || (locale === 'ko'
+                  ? 'Stage2 산출에 필요한 일봉이 부족합니다.'
+                  : 'Not enough daily bars for Stage2 yet.')}
+              </div>
+            </div>
           ) : null}
         </div>
       </div>
 
       {/* Stage 2 score */}
       <Card title={t(S.stage2Title, locale)} action={t(S.stage2Action, locale)} info={{ term: t(G.stage2.term, locale), body: t(G.stage2.body, locale) }}>
-        {stage2 ? (
+        {insufficientHistory && !stage2 ? (
+          <div style={{ padding: '8px 0' }}>
+            <span className="badge warn" style={{ fontSize: 11, marginBottom: 8, display: 'inline-block' }}>
+              {locale === 'ko' ? 'Stage2 대기' : 'Stage2 pending'}
+            </span>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+              {locale === 'ko'
+                ? '일봉 히스토리가 쌓일 때까지 Stage2 점수와 진입가를 표시하지 않습니다. 0/7이 아닙니다.'
+                : 'Stage2 score and entry levels are withheld until enough history accumulates — not a 0/7 score.'}
+            </p>
+          </div>
+        ) : stage2 ? (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
               <RadialGauge

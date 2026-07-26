@@ -17,6 +17,7 @@ import { useBrief } from '@/hooks/useBrief';
 import { useEarnings } from '@/hooks/useEarnings';
 import { t, tField } from '@/app/i18n';
 import { formatEarningsLabel } from '@/app/earningsFormat';
+import { isInsufficientHistory, thinHistoryLabel } from '@/app/dataStatus';
 
 // Static bilingual strings
 const S = {
@@ -562,9 +563,32 @@ export function OverviewBoard() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: 340, overflowY: 'auto' }}>
             {[...watchlist]
-              .map(w => ({ ...w, entryDist: w.entry > 0 ? (w.entry - w.price) / w.price * 100 : 999 }))
-              .sort((a, b) => a.entryDist - b.entryDist)
+              .map(w => ({
+                ...w,
+                thin: isInsufficientHistory(w),
+                entryDist: w.entry > 0 ? (w.entry - w.price) / w.price * 100 : 999,
+              }))
+              // Thin-history (e.g. SPCX) sinks to bottom — not a false "breakout"
+              .sort((a, b) => {
+                if (a.thin !== b.thin) return a.thin ? 1 : -1;
+                return a.entryDist - b.entryDist;
+              })
               .map(w => {
+                if (w.thin) {
+                  return (
+                    <div key={w.symbol} style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '5px 8px', borderRadius: 6, opacity: 0.85,
+                    }}>
+                      <span style={{ fontWeight: 600, width: 46, fontFamily: 'var(--mono)', fontSize: 12, flexShrink: 0 }}>
+                        {w.symbol}
+                      </span>
+                      <span className="badge warn" style={{ fontSize: 10 }}>{thinHistoryLabel(w, locale)}</span>
+                      <span style={{ flex: 1 }} />
+                      <span style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>—</span>
+                    </div>
+                  );
+                }
                 const inZone = w.entryDist > 0 && w.entryDist <= 5;
                 const broken = w.entryDist <= 0;
                 return (
@@ -673,7 +697,10 @@ export function OverviewBoard() {
         <summary>{t(S.watchlistTitle, locale)}</summary>
         <div className="mob-collapse-body">
           <Card title={t(S.watchlistTitle, locale)} action={t(S.watchlistAction, locale)}>
-            {watchlist.slice(0, 3).map(w => (
+            {watchlist
+              .filter(w => !isInsufficientHistory(w))
+              .slice(0, 3)
+              .map(w => (
               <div key={w.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-soft)' }}>
                 <span className="sym-pill__badge" style={{ width: 22, height: 22 }}>{w.symbol[0]}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>

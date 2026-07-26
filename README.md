@@ -190,7 +190,7 @@ The main board showing the full market picture in one view. 11 cards.
 | Card | Content |
 |------|---------|
 | **AI Market Snapshot** | Grok AI-generated market narrative (tone · key_themes · watch_points) + per-symbol AI analysis (Setup Quality A+~D · Action Bias · one-line summary). Falls back to Regime text when briefData is unavailable. ⏱ Freshness badge. |
-| **Earnings Calendar** | Upcoming earnings within 30 days for watchlist symbols. Absolute `earnings_date` is source of truth; `days_until` is recomputed live (US/Eastern) on every API serve so frozen AI text cannot show conflicting "2일 후 / 오늘 발표됨 / 3일 후". Risk tier (high/med/low) + imminent/approaching/watching. ⏱ Freshness badge. |
+| **Earnings Calendar** | Upcoming earnings within 30 days. **Absolute `earnings_date` (YYYY-MM-DD) only** in the UI — no "D-n" / "N일 후" / "tomorrow". `days_until` is recomputed live (US/Eastern) for sort/tier only; AI free text is scrubbed to absolute dates on serve. Risk tier (high/med/low) + imminent/approaching/watching. ⏱ Freshness badge. |
 | **Risk Regime** | Macro environment score 0~100 (5 factors: Trend · Breadth · Credit · Volatility · Momentum + raw values). RadialGauge visualization. |
 | **Distribution Days** | SPY·QQQ institutional selling day count (O'Neil, 25 trading days). OK / WARNING / DANGER levels. |
 | **Market Breadth** | SPY · RSP · MAGS · IWM 5-day return comparison. Auto-warns on narrow Mag7-led rallies. |
@@ -226,7 +226,7 @@ Symbol selector buttons | Current price · RSI · EMA21 + intraday sparkline | S
 **Row 4 — Sentiment · AI · Earnings (3 equal columns)**
 - **Social Sentiment**: composite_score ScoreBar (−2~+2) + prior-day delta + key reason + top news + sentiment trend chart toggle (7d/30d)
 - **AI Analysis Brief**: Setup Quality (A+~D) + Action Bias badge + analysis text + opportunity/risk blocks
-- **Earnings**: Shows upcoming date · D-Day · EPS · Beat rate when imminent; otherwise shows recent EPS surprise and AI reaction
+- **Earnings**: Shows absolute upcoming date (YYYY-MM-DD) · EPS · Beat rate when imminent; otherwise shows recent EPS surprise and AI reaction
 
 **Row 5 — Macro Context (60% : 40%)**
 - **Risk Regime**: RadialGauge (0~100) + regime description + 5-factor bar (Trend/Breadth/Credit/Volatility/Momentum)
@@ -317,7 +317,7 @@ Topbar **bell** aggregates live, non-invented alerts:
 
 | Type | Source | Severity |
 |------|--------|----------|
-| Earnings D-day / D-1 / D-n | Serve-time `days_until` from earnings calendar | critical (D0) → high (D1) → medium/low |
+| Earnings (absolute date) | Serve-time calendar; titles show `YYYY-MM-DD` | critical (same day) → high (next day) → medium/low by horizon |
 | Open signals | `signal_log` PENDING / ACTIVE | high (ACTIVE) / medium (PENDING) |
 | Model health | Track `UNDERPERFORMING` / `WATCH` | high / medium |
 | Briefing integrity | Morning briefing `integrity_passed=false` | medium |
@@ -446,7 +446,9 @@ A health monitor (`market-sentiment-data/monitor/health_check.py`) runs every 2 
 
 Each response includes `meta: {fetched_at, age_minutes, source}` — displayed as ⏱ freshness badges in the UI.
 
-**Earnings / briefing consistency (2026-07-14):** Collectors may freeze relative phrases ("3일 후", "already reported") into AI text. SniperBoard recomputes `days_until` from absolute `earnings_date` in **US/Eastern** on every `/api/earnings` and `/api/morning-briefing` serve, scrubs conflicting free text, and for morning email drops free-text earnings alerts when the structured calendar is present (plus cross-section dedupe of restated bullets).
+**Earnings / briefing consistency:** Collectors may freeze relative phrases ("3일 후", "in 2 days") into AI text. SniperBoard recomputes `days_until` from absolute `earnings_date` in **US/Eastern** on every `/api/earnings` and `/api/morning-briefing` serve **for sort/tier only**, rewrites free text to **absolute YYYY-MM-DD** (never re-emits relative day copy), and for morning email drops free-text earnings alerts when the structured calendar is present (plus cross-section dedupe of restated bullets).
+
+**Thin history (SPCX etc.):** Watchlist returns `data_status=insufficient_history` with bar counts instead of a fake Stage2 0/7. Overview Entry Radar, Watchlist table/cards, DeepDive, and Daily boards show a clear "limited data / Stage2 pending" state.
 
 **Reliability P1 (2026-07-15):** `/api/daily` returns **404** (not 500) when history is too short for Stage2/EMA200 (e.g. recent IPO like SPCX). Watchlist stubs thin names with price-only rows. Serve-time mood coherence: `optimistic`/`euphoric` auto-downgraded when the same analysis reports ≤−3% session move. Signal outcome refresh runs on backend startup; `backend/data` is volume-mounted for persistent `signal_log.db`.
 
