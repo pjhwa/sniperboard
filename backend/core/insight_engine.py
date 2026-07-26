@@ -265,6 +265,9 @@ def analyze_divergence(
     # Regime context: split by SPY 50-SMA (bull above / bear below)
     regime_ctx = _compute_regime_context(events, price_closes, horizon=5)
 
+    # Rolling accuracy + calibration
+    signal_quality = compute_signal_quality_metrics(events, price_closes, horizon=5)
+
     return {
         "methodology_en": (
             "Signal = post_close social divergence label. Entry = close on signal date T. "
@@ -283,6 +286,7 @@ def analyze_divergence(
         "contrast_bullish_vs_none_5d": contrast,
         "spy_baseline_5d": spy_baseline,
         "regime_context": regime_ctx,
+        "signal_quality": signal_quality,
         "n_total_events": len(events),
     }
 
@@ -372,6 +376,119 @@ def _compute_regime_context(
         "'bull' = 신호일 SPY > SMA; 'bear' = 미만. 표시 맥락 전용 — 신호 변경 아님."
     )
     return result
+
+
+def compute_signal_quality_metrics(
+    events: list[dict],
+    price_closes: dict[str, dict[date, float]],
+    horizon: int = 5,
+    window_days: int = 14,
+) -> dict[str, Any]:
+    """Rolling accuracy tracker + inverse calibration analysis for bullish_divergence."""
+    from statistics import stdev
+
+    # Build events with returns
+    events_with_r: list[dict] = []
+    for ev in events:
+        dt = parse_iso_date(ev["signal_date"])
+        if dt is None:
+            continue
+        r = forward_return(price_closes.get(ev["symbol"]) or {}, dt, horizon)
+        if r is not None:
+            events_with_r.append({
+                "date": dt,
+                "divergence": ev["divergence"],
+                "return": r,
+                "composite_score": float(ev.get("composite_score") or 0.0),
+            })
+
+    if not events_with_r:
+        return {
+            "rolling_windows": [],
+            "calibration": [],
+            "note_en": "Insufficient data.",
+            "note_ko": "데이터 부족.",
+        }
+
+    events_with_r.sort(key=lambda e: e["date"])
+    all_dates = sorted({e["date"] for e in events_with_r})
+
+    # ── Rolling windows: every 3rd date ─────────────────────────────────────
+    rolling: list[dict] = []
+    for anchor in all_dates[::3]:
+        cutoff = anchor - timedelta(days=window_days)
+        window = [e for e in events_with_r if cutoff < e["date"] <= anchor]
+        bull = [e["return"] for e in window if e["divergence"] == "bullish_divergence"]
+        none_ = [e["return"] for e in window if e["divergence"] == "none"]
+        if len(bull) < 5 or len(none_) < 2:
+            continue
+        delta = round(mean(bull) - mean(none_), 5)
+        hit = round(sum(1 for r in bull if r > 0) / len(bull), 3)
+        rolling.append({
+            "date": anchor.isoformat(),
+            "n_bull": len(bull),
+            "n_none": len(none_),
+            "delta_bull_vs_none": delta,
+            "hit_rate_bull": hit,
+        })
+
+    # ── Calibration: bullish events by composite_score quartile ─────────────
+    bull_events = [e for e in events_with_r if e["divergence"] == "bullish_divergence"]
+    score_bins = [
+        ("high", 0.75, 1.01),
+        ("medium", 0.50, 0.75),
+        ("low", 0.0, 0.50),
+    ]
+    calibration: list[dict] = []
+    for bin_name, lo, hi in score_bins:
+        chunk = [e for e in bull_events if lo <= e["composite_score"] < hi]
+        if not chunk:
+            continue
+        rets = [e["return"] for e in chunk]
+        pos = sum(1 for r in rets if r > 0)
+        avg = round(mean(rets), 5)
+        se = round(stdev(rets) / len(rets) ** 0.5, 5) if len(rets) > 1 else None
+        calibration.append({
+            "score_range": bin_name,
+            "n": len(chunk),
+            "avg_return": avg,
+            "hit_rate": round(pos / len(chunk), 3),
+            "se": se,
+        })
+
+    # Determine if inverse calibration is present (high score performs worse than low)
+    high_bin = next((c for c in calibration if c["score_range"] == "high"), None)
+    low_bin = next((c for c in calibration if c["score_range"] == "low"), None)
+    inverse = (
+        high_bin is not None and low_bin is not None
+        and high_bin["avg_return"] < low_bin["avg_return"]
+    )
+
+    return {
+        "rolling_windows": rolling,
+        "calibration": calibration,
+        "inverse_calibration_detected": inverse,
+        "note_en": (
+            "Rolling delta = bullish avg_return − none avg_return within each 14-day window. "
+            "Positive means bullish beat control in that window. "
+            + (
+                "Inverse calibration detected: higher composite_score bullish events "
+                "show lower actual hit rates — possible sentiment saturation signal."
+                if inverse
+                else "No inverse calibration detected in current data."
+            )
+        ),
+        "note_ko": (
+            "롤링 델타 = 14일 창 내 bullish 평균수익 − none 평균수익. "
+            "양수 = 해당 창에서 bullish가 통제군 초과. "
+            + (
+                "역교정(Inverse calibration) 감지: composite_score가 높은 bullish 이벤트일수록 "
+                "실제 hit rate가 낮음 — 심리 포화(saturation) 신호 가능성."
+                if inverse
+                else "현재 데이터에서 역교정 미감지."
+            )
+        ),
+    }
 
 
 def _div_interpretation(label: str, horizon_stats: dict, locale: str) -> str:

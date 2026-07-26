@@ -66,6 +66,25 @@ export interface InsightPayload {
       note_en?: string;
       note_ko?: string;
     } | null;
+    signal_quality?: {
+      rolling_windows: {
+        date: string;
+        n_bull: number;
+        n_none: number;
+        delta_bull_vs_none: number;
+        hit_rate_bull: number;
+      }[];
+      calibration: {
+        score_range: string;
+        n: number;
+        avg_return: number;
+        hit_rate: number;
+        se: number | null;
+      }[];
+      inverse_calibration_detected: boolean;
+      note_en: string;
+      note_ko: string;
+    } | null;
   };
   mvp2_actions: {
     brief: {

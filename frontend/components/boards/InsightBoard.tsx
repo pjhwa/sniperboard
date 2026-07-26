@@ -528,6 +528,82 @@ export function InsightBoard() {
                     </div>
                   );
                 })()}
+
+                {/* 신호 품질 추적기 */}
+                {d1.signal_quality && (
+                  <div style={{ marginTop: 16 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-subtle)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {ko ? '신호 품질 추적기' : 'Signal Quality Tracker'}
+                    </div>
+
+                    {/* Calibration table */}
+                    {d1.signal_quality.calibration.length > 0 && (
+                      <div style={{ marginBottom: 12 }}>
+                        <div style={{ fontSize: 11, color: 'var(--fg-subtle)', marginBottom: 5 }}>
+                          {ko
+                            ? 'composite_score 구간별 bullish 신호 실제 적중률'
+                            : 'Bullish signal hit rate by composite_score range'}
+                        </div>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5 }}>
+                          <thead>
+                            <tr style={{ color: 'var(--fg-subtle)', borderBottom: '1px solid var(--border-soft)' }}>
+                              <th style={{ textAlign: 'left', padding: '3px 0', fontWeight: 500 }}>{ko ? '점수 구간' : 'Score'}</th>
+                              <th style={{ textAlign: 'right', padding: '3px 0', fontWeight: 500 }}>n</th>
+                              <th style={{ textAlign: 'right', padding: '3px 0', fontWeight: 500 }}>{ko ? '평균수익' : 'Avg ret'}</th>
+                              <th style={{ textAlign: 'right', padding: '3px 0', fontWeight: 500 }}>{ko ? '적중률' : 'Hit rate'}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {d1.signal_quality.calibration.map((c) => (
+                              <tr key={c.score_range} style={{ borderBottom: '1px solid var(--border-soft)' }}>
+                                <td style={{ padding: '4px 0', fontFamily: 'var(--font-mono)', color: 'var(--fg)' }}>
+                                  {c.score_range === 'high' ? (ko ? '고점수 ≥0.75' : 'High ≥0.75')
+                                    : c.score_range === 'medium' ? (ko ? '중점수 0.5-0.75' : 'Mid 0.5-0.75')
+                                    : (ko ? '저점수 <0.5' : 'Low <0.5')}
+                                </td>
+                                <td style={{ padding: '4px 0', textAlign: 'right', fontFamily: 'var(--font-mono)', color: 'var(--fg-muted)' }}>{c.n}</td>
+                                <td style={{ padding: '4px 0', textAlign: 'right', fontFamily: 'var(--font-mono)', color: retColor(c.avg_return) }}>{pct(c.avg_return)}</td>
+                                <td style={{ padding: '4px 0', textAlign: 'right', fontFamily: 'var(--font-mono)', color: c.hit_rate >= 0.5 ? 'var(--bull)' : c.hit_rate < 0.35 ? 'var(--bear)' : 'var(--fg)' }}>{pct(c.hit_rate, 0)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {d1.signal_quality.inverse_calibration_detected && (
+                          <div style={{ marginTop: 6, padding: '6px 10px', borderRadius: 6, background: 'var(--warn-soft, var(--bg-subtle))', border: '1px solid var(--border-soft)', fontSize: 11, color: 'var(--fg-muted)', lineHeight: 1.5 }}>
+                            {ko
+                              ? '⚠ 역교정 감지: 고점수 bullish 신호의 실제 적중률이 저점수보다 낮습니다. 심리 포화 가능성.'
+                              : '⚠ Inverse calibration: high-score bullish signals underperform low-score ones — possible sentiment saturation.'}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Rolling windows summary */}
+                    {d1.signal_quality.rolling_windows.length > 0 && (
+                      <div>
+                        <div style={{ fontSize: 11, color: 'var(--fg-subtle)', marginBottom: 5 }}>
+                          {ko
+                            ? '14일 롤링 창 · bullish vs none 델타 (최근 5개)'
+                            : '14-day rolling windows · bullish vs none delta (last 5)'}
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          {d1.signal_quality.rolling_windows.slice(-5).map((w) => (
+                            <div key={w.date} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '5px 10px', borderRadius: 6, background: 'var(--bg-subtle)', border: '1px solid var(--border-soft)', minWidth: 64 }}>
+                              <div style={{ fontSize: 10, color: 'var(--fg-muted)', marginBottom: 2 }}>{w.date.slice(5)}</div>
+                              <div style={{ fontSize: 13, fontFamily: 'var(--font-mono)', fontWeight: 600, color: w.delta_bull_vs_none >= 0 ? 'var(--bull)' : 'var(--bear)' }}>
+                                {w.delta_bull_vs_none >= 0 ? '+' : ''}{(w.delta_bull_vs_none * 100).toFixed(1)}%
+                              </div>
+                              <div style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>{(w.hit_rate_bull * 100).toFixed(0)}% hit</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ marginTop: 6, fontSize: 11, color: 'var(--fg-muted)', lineHeight: 1.5 }}>
+                          {ko ? d1.signal_quality.note_ko : d1.signal_quality.note_en}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </Card>
