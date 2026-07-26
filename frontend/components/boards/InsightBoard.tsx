@@ -191,26 +191,29 @@ export function InsightBoard() {
   const ppImprovedN = pp.improved_rate != null ? Math.round(pp.improved_rate * pp.n_days) : null;
 
   // ── 평서문 생성 ──────────────────────────────────────────────
+  const edgeAbsPct = pct(edgeDelta != null ? Math.abs(edgeDelta) : null);
   const mvp1Body = ko
     ? edgePositive
-      ? `분석 기간(${days}일) 동안 소셜 분석에서 '강세(bullish)' 신호가 나온 날 기준 5일 후 평균 수익이, 신호 없는 날보다 ${pct(edgeDelta)} 높았습니다. (강세 ${contrast.n_a}회, 중립 ${contrast.n_b}회 분석)`
-      : `이 기간(${days}일)에는 '강세' 신호와 '신호 없음' 사이에 통계적으로 의미 있는 수익률 차이가 없었습니다. (강세 ${contrast.n_a}회, 중립 ${contrast.n_b}회 분석)`
+      ? `분석 기간(${days}일) 동안 소셜 분석에서 '강세(bullish)' 신호가 나온 날 기준 5일 후 평균 수익이, 신호 없는 날보다 ${pct(edgeDelta)} 높았습니다. (강세 ${contrast.n_a}회, 신호 없음 ${contrast.n_b}회 비교)`
+      : `분석 기간(${days}일) 동안 오히려 '강세' 신호가 나온 날이 신호 없는 날보다 5일 후 평균 ${edgeAbsPct} 낮은 수익을 보였습니다. 이 기간에는 강세 신호에 통계적 우위가 없었습니다. (강세 ${contrast.n_a}회, 신호 없음 ${contrast.n_b}회 비교)`
     : edgePositive
-      ? `Over the ${days}-day window, 'bullish' social signals averaged ${pct(edgeDelta)} higher 5-day return than the no-signal control group. (bullish: ${contrast.n_a} events, none: ${contrast.n_b} events)`
-      : `In this ${days}-day window, 'bullish' signals showed no meaningful return advantage over the control group. (bullish: ${contrast.n_a} events, none: ${contrast.n_b} events)`;
+      ? `Over the ${days}-day window, 'bullish' social signals averaged ${pct(edgeDelta)} higher 5-day return than the no-signal control group. (bullish: ${contrast.n_a} events vs none: ${contrast.n_b} events)`
+      : `In this ${days}-day window, days with a 'bullish' signal actually averaged ${edgeAbsPct} lower 5-day return than the no-signal control group — no statistical edge found. (bullish: ${contrast.n_a} events vs none: ${contrast.n_b} events)`;
 
   const mvp1Warn = contrast.n_a < 30 || contrast.n_b < 30;
 
+  const buyAbove50 = buyHit != null && buyHit >= 0.5;
+  const avoidAbove50 = avoidHit != null && avoidHit >= 0.5;
   const mvp2Body = ko
-    ? `AI 데일리 브리프가 '매수'를 권고했을 때 총 ${buyRow?.n ?? 0}회 중 ${pct(buyHit, 0)}는 ${data.action_horizon_days}일 후 실제로 주가가 올랐습니다. '회피' 권고 시에는 총 ${avoidRow?.n ?? 0}회 중 ${pct(avoidHit, 0)}가 실제로 하락했습니다.`
-    : `When AI Daily Brief signalled 'buy', ${pct(buyHit, 0)} of ${buyRow?.n ?? 0} calls saw the price rise within ${data.action_horizon_days} days. For 'avoid', ${pct(avoidHit, 0)} of ${avoidRow?.n ?? 0} calls saw the price fall.`;
+    ? `AI 데일리 브리프가 '매수'를 권고했을 때 총 ${buyRow?.n ?? 0}회 중 ${pct(buyHit, 0)}가 ${data.action_horizon_days}일 후 실제로 올랐습니다${!buyAbove50 ? ' — 절반에 미치지 못해 이 기간에는 매수 신호의 방향성 우위가 없었습니다' : ''}. '회피'는 총 ${avoidRow?.n ?? 0}회 중 ${pct(avoidHit, 0)}가 실제로 하락했습니다${avoidAbove50 ? ' — 절반 이상 맞았습니다' : ''}.`
+    : `AI Daily Brief 'buy' calls: ${pct(buyHit, 0)} of ${buyRow?.n ?? 0} were correct ${data.action_horizon_days}d later${!buyAbove50 ? ' — below 50%, no directional edge in this window' : ''}. 'Avoid' calls: ${pct(avoidHit, 0)} of ${avoidRow?.n ?? 0} were correct${avoidAbove50 ? ' — above 50%' : ''}.`;
 
   const mvp2Warn = buyRow?.confidence === 'LOW' || avoidRow?.confidence === 'LOW';
 
   const mvp3Body = topTheme
     ? ko
-      ? `분석 기간(${days}일) 중 가장 오래 지속된 테마는 '${topTheme.theme}'입니다. 총 ${topTheme.count_days}일 언급되었고 최대 ${topTheme.max_streak_days}일 연속 등장했습니다.${topTheme.spy_same_day_stats ? ` 해당 날의 S&P500 평균 수익: ${pct(topTheme.spy_same_day_stats.avg_return)}` : ''}`
-      : `The most persistent theme in the ${days}-day window: '${topTheme.theme}'. Mentioned on ${topTheme.count_days} days with a max streak of ${topTheme.max_streak_days} consecutive days.${topTheme.spy_same_day_stats ? ` SPY avg on those days: ${pct(topTheme.spy_same_day_stats.avg_return)}` : ''}`
+      ? `분석 기간(${days}일) 동안 AI 브리프에서 가장 오래 반복된 주제는 '${topTheme.theme}'입니다. 총 ${topTheme.count_days}일 등장했고 최대 ${topTheme.max_streak_days}일 연속 언급되었습니다.${topTheme.spy_same_day_stats ? ` 해당 날의 S&P500 평균 수익은 ${pct(topTheme.spy_same_day_stats.avg_return)}입니다 (관찰값, 인과관계 아님).` : ''}`
+      : `The most frequently recurring topic in AI briefs over the ${days}-day window: '${topTheme.theme}'. Appeared on ${topTheme.count_days} days with a max streak of ${topTheme.max_streak_days} consecutive days.${topTheme.spy_same_day_stats ? ` SPY avg return on those days: ${pct(topTheme.spy_same_day_stats.avg_return)} (observational, not causal).` : ''}`
     : ko
       ? '분석 기간에 반복 테마가 충분히 쌓이지 않았습니다.'
       : 'Not enough recurring themes found in this analysis window.';
@@ -219,9 +222,10 @@ export function InsightBoard() {
     ? `현재 거시경제는 '${judgmentText(macro.current_judgment, true)}' 국면입니다. 분석 기간(${days}일) 중 ${macro.n_transitions}번 국면이 바뀌었습니다.`
     : `The current macro environment is '${judgmentText(macro.current_judgment, false)}'. There were ${macro.n_transitions} regime transitions over the ${days}-day window.`;
 
+  const ppMajorityImproved = (pp.improved_rate ?? 0) >= 0.5;
   const mvp4bBody = ko
-    ? `장 시작 전과 마감 후 심리를 비교하면 하루 동안 평균 ${pp.avg_delta != null ? (pp.avg_delta > 0 ? '+' : '') + pp.avg_delta.toFixed(2) : '—'} 포인트 변화가 있었습니다. ${pp.n_days}일 중 ${ppImprovedN ?? '—'}일(${pct(pp.improved_rate, 0)})은 마감이 시작보다 심리가 개선되었습니다.`
-    : `From pre-open to post-close, market sentiment shifts an average of ${pp.avg_delta != null ? (pp.avg_delta > 0 ? '+' : '') + pp.avg_delta.toFixed(2) : '—'} points per day. ${ppImprovedN ?? '—'} of ${pp.n_days} days (${pct(pp.improved_rate, 0)}) showed improvement.`;
+    ? `장 시작 전과 마감 후 심리를 비교하면 하루 동안 평균 ${pp.avg_delta != null ? (pp.avg_delta > 0 ? '+' : '') + pp.avg_delta.toFixed(2) : '—'} 포인트 변화가 있었습니다. ${pp.n_days}일 중 ${ppImprovedN ?? '—'}일(${pct(pp.improved_rate, 0)})은 장 마감 심리가 개선되었고, 나머지 ${pp.n_days - (ppImprovedN ?? 0)}일은 악화되거나 변화 없었습니다.${!ppMajorityImproved ? ' 이 기간에는 장 중 심리가 더 자주 나빠졌습니다.' : ''}`
+    : `From pre-open to post-close, sentiment shifted an average of ${pp.avg_delta != null ? (pp.avg_delta > 0 ? '+' : '') + pp.avg_delta.toFixed(2) : '—'} points per day. ${ppImprovedN ?? '—'} of ${pp.n_days} days (${pct(pp.improved_rate, 0)}) saw improvement; the remaining ${pp.n_days - (ppImprovedN ?? 0)} days saw deterioration or no change.${!ppMajorityImproved ? ' Mood more often worsened during the day in this window.' : ''}`;
 
   const mvp4bWarn = pp.confidence === 'LOW';
 
@@ -576,7 +580,7 @@ export function InsightBoard() {
                 <>
                   <div style={{ marginBottom: 8 }}>
                     <div style={{ fontSize: 11, color: 'var(--fg-subtle)', marginBottom: 4 }}>
-                      {ko ? '가장 오래 지속된 테마' : 'Most persistent theme'}
+                      {ko ? '가장 오래 반복된 주제 (AI 브리프 기준)' : 'Most recurring topic (AI brief)'}
                     </div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--fg)', lineHeight: 1.4 }}>
                       {topTheme.theme}
