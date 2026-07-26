@@ -41,6 +41,7 @@ export function CommandPalette() {
     { type: 'nav', label: 'Watchlist', sub: locale === 'en' ? 'Stage2-sorted table'          : 'Stage2 정렬 테이블',       action: () => { setBoard('watchlist' as Board); setCmdOpen(false); }, meta: 'Board' },
     { type: 'nav', label: 'Macro',     sub: locale === 'en' ? 'Macro dashboard'              : '매크로 대시보드',           action: () => { setBoard('macro'     as Board); setCmdOpen(false); }, meta: 'Board' },
     { type: 'nav', label: 'Sentiment', sub: locale === 'en' ? 'Social sentiment'             : '소셜 심리',                action: () => { setBoard('sentiment' as Board); setCmdOpen(false); }, meta: 'Board' },
+    { type: 'nav', label: 'Insight',   sub: locale === 'en' ? 'Edge lab · historical proof'  : '통찰 랩 · 역사적 검증',      action: () => { setBoard('insight'   as Board); setCmdOpen(false); }, meta: 'Board' },
     { type: 'nav', label: 'Deep Dive', sub: locale === 'en' ? 'Full analysis'               : '종합분석',                 action: () => { setBoard('deepdive'  as Board); setCmdOpen(false); }, meta: 'Board' },
   ];
 

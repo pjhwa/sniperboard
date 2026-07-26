@@ -45,6 +45,19 @@ Most signal dashboards show signals but never prove they work. SniperBoard is bu
 | **Actionable alerts (C4)** | Topbar bell: earnings D-day/D-1, open Stage2 signals, model health, briefing integrity | Passive-only or none |
 | **Auditable AI sources (P2+)** | Geopolitical `source_hint` and social top_news resolve to search/profile links (never fake article IDs) | Opaque AI prose |
 
+### Insight Lab — Historical Proof Across AI & Social Layers
+
+Rail icon **Insight / 통찰**. Uses accumulated `market-sentiment-data` history (sentiment · brief · macro · briefing) joined with prices:
+
+| MVP | What it answers |
+|-----|-----------------|
+| **1 Divergence → Forward return** | Do social bullish/bearish divergence labels lead price over 3/5/10 trading days? Includes `none` control contrast. |
+| **2 AI action hit-rate** | Do brief `action_bias` / morning briefing `action` (buy/avoid) historically align with 5d direction? |
+| **3 Theme persistence** | Which narrative themes recur, max consecutive days, optional SPY same-day co-move (observational). |
+| **4 Macro × mood** | Macro judgment transitions vs market composite; pre_open→post_close same-day mood shift. |
+
+Every table shows **n**, **confidence**, and **honest_gap** when sample is thin. Integrity panel flags data-load / count bugs. **Not trading advice.**
+
 ### Signal Tracker — The Key Differentiator
 
 The **Signal Tracker** board (`🎯` in the Rail) implements a perpetual hypothesis test:

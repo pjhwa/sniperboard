@@ -122,6 +122,7 @@ export function Topbar() {
     track:     { en: 'Signal Tracker', ko: '신호 트래커' },
     briefing:  { en: 'Morning Briefing', ko: '아침 브리핑' },
     marketcap: { en: 'Market Cap TOP 15', ko: '시총 TOP 15' },
+    insight:   { en: 'Insight Lab', ko: '통찰 랩' },
   };
 
   const current = BOARD_LABELS[board] ?? BOARD_LABELS.overview;

@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-07-26 absolute earnings dates + thin-history UI)
+# SniperBoard — Project Context (UPDATED 2026-07-26 Insight Lab board MVP-1..4)
 
 ## 0. Purpose of This Document
 
@@ -43,7 +43,8 @@ sniperboard/
 │   │   ├── divergence.py             # Phase B4: social composite vs day-change divergence labels.
 │   │   ├── live_backtest_compare.py  # Phase C1/C2 pure helpers: DEFAULT_METHODOLOGY (scan window / Stage2 threshold), confidence_from_n, health_from_expectancy, extract_backtest_baseline(cached backtest_result.json), compare_live_to_backtest(live, baseline) → side-by-side + honest_gap when n<30. No I/O.
 │   │   ├── alerts_engine.py          # Phase C4: pure build_alerts from earnings days_until, signal_log PENDING/ACTIVE, Track health, briefing integrity. Dashboard-only (no push).
-│   │   └── source_citations.py       # Phase P2+: resolve source_hint/top_news.source → auditable urls (pass-through http, X @handles, outlet search + Google News). Never invents article permalinks. enrich_briefing_citations / enrich_sentiment_snapshot.
+│   │   ├── source_citations.py       # Phase P2+: resolve source_hint/top_news.source → auditable urls (pass-through http, X @handles, outlet search + Google News). Never invents article permalinks. enrich_briefing_citations / enrich_sentiment_snapshot.
+│   │   └── insight_engine.py         # Insight Lab pure analytics MVP-1..4 (divergence forward returns, AI action hit-rate, theme streaks, macro transitions, pre→post). No I/O.
 │   ├── services/
 │   │   ├── base.py               # BaseDataService abstract class
 │   │   ├── data_service.py       # YFinanceDataService implementation + module-level helpers
@@ -55,6 +56,7 @@ sniperboard/
 │   │   └── macro_insight_service.py  # GitHub raw fetch + 30-min in-memory cache (MACRO_INSIGHT_URL). fetch_macro_insight() → Optional[dict]. get_ai_meta(raw) → {generated_at,age_minutes}. Returns None gracefully if URL not set.
 │   │   └── morning_briefing_service.py  # GitHub raw fetch + 10-min raw cache (MORNING_BRIEFING_URL). On every serve: sanitize_briefing_payload + integrity verify + P2+ enrich_briefing_citations (source_urls on global issues).
 │   │   └── email_report_service.py  # Morning email: collect + charts + Jinja2. prepare_email_sections() dedupes cross-section restatements; structured earnings calendar is SoT (free-text earnings_alert omitted when calendar present).
+│   │   └── insight_service.py        # Insight Lab assembly: load MSD history (INSIGHT_DATA_ROOT local or GitHub raw) + yfinance closes → insight_engine. 15-min cache. GET /api/insight.
 │   └── tests/
 │       ├── test_data_adapter.py (29 tests — adapter + signal_engine; Phase 5 full suite green)
 │       ├── test_signal_engine.py (incl. adjusted vs raw split symbol TDD)
@@ -101,6 +103,7 @@ sniperboard/
 │   │   │   └── BacktestBoard.tsx  # Backtest results board (2026-06-02). Methodology transparency banner + 4 KPI cards (total trades/win rate/expectancy/profit factor) + IS vs OOS comparison + Stage2 score breakdown + SVG equity curve + per-symbol performance table + run button. Uses useBacktest() hook. GET /api/backtest/result, POST /api/backtest/run.
 │   │   └── signal_tracker.py         # Live signal tracker (2026-06-02). SQLite persistence (backend/data/signal_log.db). init_db() → called at app startup. scan_and_log(watchlist_items, regime) → auto-logs Stage2 ≥ 5 signals (UNIQUE on symbol+signal_date, prevents duplicate OPEN signals). update_outcomes() → resolves PENDING/ACTIVE signals bar-by-bar against latest daily candles → WIN/LOSS/TIMEOUT/CANCELLED (uses get_multi_daily period="6mo"). compute_live_stats() → n_closed/sample_n/win_rate/expectancy_r/profit_factor/mdd/equity_curve/regime_breakdown/pipeline + methodology (scan window, Stage2 threshold, entry/timeout bars) + comparison (live vs backtest side-by-side via live_backtest_compare) + health{status/confidence/deltas} + backtest_baseline (prefers load_cached_result aggregate when present, else BACKTEST_BASELINE constant). BACKTEST_BASELINE = {expectancy_r:0.460, win_rate:0.386, profit_factor:1.917, n:145}. Health: n<10 or null exp → INSUFFICIENT_DATA; else vs 0.7*baseline → ON_TRACK/WATCH/UNDERPERFORMING. Confidence: n<30 LOW, <80 MEDIUM, else HIGH.
 │   │   │   └── TrackBoard.tsx     # Live signal tracking board. C1 methodology card (Stage2 threshold, sample n, scan window note) + C2 live-vs-backtest comparison table (n/expectancy/win_rate/PF + honest_gap) + Model Health banner + KPI comparison + SVG cumulative R curve + pipeline + regime breakdown + history filter. useSignalLog/useSignalLogStats/useRefreshSignalLog hooks. Layout: .board as flex column — cards must not flex-shrink (see globals.css .board > *).
+│   │   │   └── InsightBoard.tsx   # Insight Lab (2026-07-26): MVP-1 divergence→forward return · MVP-2 AI action hit-rate · MVP-3 theme streaks · MVP-4 macro transitions + pre→post shift. useInsight → GET /api/insight. Integrity panel + honest_gap.
 │   │   │   └── MarketCapBoard.tsx    # 시총 TOP 15 보드 (board id: 'marketcap'). 글로벌 랭킹 기반 테이블: rank·순위변동(↑/↓/NEW/—)·심볼·시총·현재가·등락·스파크라인+트렌드·52W 위치 막대. Trophy 아이콘.
 │   │   │   └── MorningBriefingBoard.tsx  # Morning briefing board (2026-06-02). Card layout. Sections: headline banner / market mood (traffic light) + key summary / big picture (VIX/rates/dollar) / sector analysis / spotlight (2-4 symbols) / full watchlist (22 expandable rows: squeeze potential + correction risk + price trend + current status) / today checkpoints + earnings alerts. useMorningBriefing() hook → GET /api/morning-briefing (10-min staleTime).
 │   │   │   └── SentimentTrendChart.tsx # Sentiment trend chart: stock price line (left axis) + composite_score overlay (right axis), 7/30d toggle. P0-2 (2026-07-13): timeScale().fitContent() after setData; ResizeObserver uses chart.resize(w,h)+fitContent; host DOM always mounted (loading overlay, never unmount ref); rAF remeasure after layout.
@@ -109,7 +112,8 @@ sniperboard/
 │   │   │   └── DailyChart.tsx
 │   │   └── (legacy tab components — files kept, no longer used in page.tsx)
 │   └── hooks/
-│       ├── useStore.ts           # Zustand persist: symbol, timeframe, board, theme, locale, cmdOpen, rrAccount, rrRiskPct. locale: Locale ('en'|'ko', default 'ko') added 2026-05-31.
+│       ├── useStore.ts           # Zustand persist: symbol, timeframe, board (incl. insight), theme, locale, cmdOpen, rrAccount, rrRiskPct. locale: Locale ('en'|'ko', default 'ko') added 2026-05-31.
+│       ├── useInsight.ts         # GET /api/insight?days&horizon — Insight Lab payload (MVP-1..4 + integrity).
 │       ├── useIntraday.ts        # GET /api/ohlcv + /api/latest-signal (30-second polling)
 │       ├── useDaily.ts           # GET /api/daily
 │       ├── useWatchlist.ts       # GET /api/watchlist
@@ -154,6 +158,7 @@ Base URL: `http://<host>:4000/api` (via Next.js proxy) or `http://<host>:5001/ap
 | `GET /signal-log` | `symbol?`, `limit` (default 200) | Signal log query (most recent first). Includes status: PENDING/ACTIVE/WIN/LOSS/TIMEOUT/CANCELLED. |
 | `GET /signal-log/stats` | — | Live performance stats vs. backtest baseline. Fields: sample_n (=n_closed), methodology (scan window / Stage2≥5 / entry·timeout bars), comparison (live vs backtest expectancy/win_rate/PF + honest_gap when n<30), health.status ON_TRACK/WATCH/UNDERPERFORMING/INSUFFICIENT_DATA, backtest_baseline (cached aggregate preferred). |
 | `GET /alerts` | `max_earnings_days` (0–14, default 3) | Phase C4 actionable alerts: earnings D-day, open signals (PENDING/ACTIVE), model health WATCH/UNDERPERFORMING, briefing integrity fail. Dashboard bell only (no push). |
+| `GET /insight` | `days` (14–120, default 60), `horizon` (1–20, default 5) | Insight Lab MVP-1..4: divergence forward returns, AI action hit-rate, theme streaks, macro transitions + pre→post shift, integrity checks. Historical only. |
 | `GET /symbol-info` | `symbol` | 시가총액·52W High/Low·섹터·산업. 심볼별 1h 인메모리 캐시. SymbolInfoResponse. |
 | `GET /cap-leaderboard` | — | companiesmarketcap.com 글로벌 랭킹 스크래핑 기반 시가총액 TOP 15. spark(30일 종가)·rank_change·market_structure 포함. 1h 인메모리 캐시 + stale fallback + SQLite 순위 스냅샷. |
 | `POST /signal-log/refresh` | — | Resolves PENDING/ACTIVE signal outcomes against latest daily candles (background task). |

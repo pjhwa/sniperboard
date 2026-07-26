@@ -20,6 +20,11 @@ services:
       MORNING_BRIEFING_URL: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/briefing/latest.json"
       # Prediction market (Polymarket reference FOMC odds — not conviction input)
       PREDICTION_DATA_URL: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/prediction/latest.json"
+      # Insight Board: local MSD clone (fast) or leave empty to use GitHub history bases
+      INSIGHT_DATA_ROOT: ${INSIGHT_DATA_ROOT:-/data/market-sentiment-data}
+      BRIEF_HISTORY_BASE: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/brief/history"
+      MACRO_HISTORY_BASE: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/macro/history"
+      BRIEFING_HISTORY_BASE: "https://raw.githubusercontent.com/pjhwa/market-sentiment-data/main/briefing/history"
       # Private 리포일 때만 필요 (GitHub PAT). Public이면 빈 채로 두세요.
       SENTIMENT_DATA_TOKEN: ""
       # Email report (optional — leave blank to disable)
@@ -30,6 +35,8 @@ services:
     volumes:
       # Persist signal_log / cap_ranks so health monitor + host tools share the same DB
       - ./backend/data:/app/data
+      # MSD history for Insight Board (sibling clone path; optional on hosts without it)
+      - ${MSD_HOST_PATH:-../market-sentiment-data}:/data/market-sentiment-data:ro
     restart: unless-stopped
 
   frontend:

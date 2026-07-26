@@ -32,6 +32,7 @@ from core.regime_engine import compute_regime
 from core.conviction_calculator import calculate_conviction
 from core.backtest_engine import run_full_backtest, load_cached_result, load_cached_sweep, run_parameter_sweep, STAGE2_THRESHOLD
 from core.signal_tracker import scan_and_log, update_outcomes, get_signal_log, compute_live_stats
+from services.insight_service import build_insight_payload
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -792,6 +793,21 @@ async def get_sentiment_history_endpoint(
     except Exception as e:
         logger.error(f"Error in /sentiment/history: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="심리 히스토리 조회 중 오류 발생")
+
+
+@router.get("/insight")
+async def get_insight_endpoint(
+    days: int = Query(60, ge=14, le=120, description="분석 윈도우(일)"),
+    horizon: int = Query(5, ge=1, le=20, description="action 적중 평가 선행 거래일"),
+):
+    """Insight Board (MVP-1..4): divergence forward returns, AI action hit-rate,
+    theme streaks, macro transitions + pre→post shift. Historical only — not advice.
+    """
+    try:
+        return build_insight_payload(days=days, horizon=horizon)
+    except Exception as e:
+        logger.error(f"Error in /insight: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Insight 분석 중 오류 발생")
 
 
 @router.get("/brief", response_model=BriefResponse)
