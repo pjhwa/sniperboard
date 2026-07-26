@@ -58,7 +58,7 @@ Rail icon **Insight / 통찰**. Uses accumulated `market-sentiment-data` history
 
 Every table shows **n**, **confidence**, and **honest_gap** when sample is thin. Integrity panel flags data-load / count bugs. **Not trading advice.**
 
-**Mobile:** Desktop rail entry only for now. Follow-up plan: [docs/superpowers/plans/2026-07-26-insight-lab-mobile.md](docs/superpowers/plans/2026-07-26-insight-lab-mobile.md) (BottomTabs entry, hero KPIs, table→cards).
+**Mobile:** Accessible via the BottomTabs "More" sheet — tap **More → Insight (통찰)** to open the board. Hero KPI summary (edge Δ, buy/avoid hit-rate, macro judgment, pre→post Δ, integrity badge) shown first. Tables switch to card layout on narrow screens; all tables have horizontal scroll. Desktop 2-column layout unchanged.
 
 ### Signal Tracker — The Key Differentiator
 
@@ -129,16 +129,18 @@ Breakpoint: `max-width: 767px`
 
 | Desktop | Mobile |
 |---------|--------|
-| Left Rail navigation | Bottom tab bar (4 tabs: Market / Analysis / Macro / Sentiment) |
+| Left Rail navigation | Bottom tab bar (5 tabs + "More" sheet: Briefing / Market / Watch / Sentiment / Analysis + More) |
 | MarketStrip across top | Hidden |
 | Full topbar (search · symbols · Regime) | Slim header (logo · board name · theme toggle) |
 | Multi-column grid layout | Single-column vertical stack |
 
-### Mobile-Optimized Boards (4)
+The **More** sheet (bottom-right tab) gives access to: Insight (통찰) · Track (트래킹) · Macro (매크로) · Backtest (백테스트).
 
-| Overview | DeepDive | Macro | Sentiment |
-|:---:|:---:|:---:|:---:|
-| <img src="assets/images/mobile-overview.jpg" width="200"/> | <img src="assets/images/mobile-deepdive.jpg" width="200"/> | <img src="assets/images/mobile-macro.jpg" width="200"/> | <img src="assets/images/mobile-sentiment.jpg" width="200"/> |
+### Mobile-Optimized Boards (5)
+
+| Overview | DeepDive | Macro | Sentiment | Insight |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="assets/images/mobile-overview.jpg" width="200"/> | <img src="assets/images/mobile-deepdive.jpg" width="200"/> | <img src="assets/images/mobile-macro.jpg" width="200"/> | <img src="assets/images/mobile-sentiment.jpg" width="200"/> | — |
 
 **Overview** — Big→Detail order: Risk Regime → Market Breadth → VIX → Sector Momentum → Entry Radar → Conviction Leaderboard → AI Insight (collapsible) → detail cards
 
@@ -147,6 +149,8 @@ Breakpoint: `max-width: 767px`
 **Macro** — Overall judgment banner → 6 group cards (1 column) → Sector Rotation → detailed interpretation (collapsible)
 
 **Sentiment** — Market Sentiment → Symbol Sentiment → Top News (collapsible) → Data guide
+
+**Insight Lab** — Controls (44px touch targets) → Integrity badge → Disclaimer (collapsible) → Hero KPI (6-cell 2-col grid: edge Δ / integrity / buy hit / avoid hit / macro / pre→post) → MVP-1 card list (each divergence type as a card) → MVP-2..4 tables with horizontal scroll
 
 ### iPhone Home Bar
 

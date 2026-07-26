@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-07-26 Insight Lab board MVP-1..4)
+# SniperBoard — Project Context (UPDATED 2026-07-26 Insight Lab mobile support)
 
 ## 0. Purpose of This Document
 
@@ -80,7 +80,7 @@ sniperboard/
 │   │   │   ├── Rail.tsx          # Left navigation rail (7 board icons + active indicator). deepdive=Layers icon in 2nd position. Mobile: hidden via hide-mobile class.
 │   │   │   ├── Topbar.tsx        # Top bar (title, search, symbol buttons, Regime mini, AlertsBell C4, theme toggle, EN/KO). BOARD_LABELS includes all boards.
 │   │   │   ├── AlertsBell.tsx    # Phase C4: topbar bell + dropdown. useAlerts → GET /api/alerts. Dismiss via Zustand dismissedAlertIds. Click navigates board/symbol.
-│   │   │   ├── BottomTabs.tsx    # Mobile-only bottom tab bar (4 tabs: Overview/Analysis/Macro/Sentiment). Shows only at max-width:767px. Connected to useStore board/setBoard. safe-area-inset-bottom applied. Bilingual labels (2026-05-31).
+│   │   │   ├── BottomTabs.tsx    # Mobile-only bottom tab bar (5 tabs + "More" sheet). Tabs: Briefing/Market/Watch/Sentiment/Analysis. "More" (6th) opens a 4-item slide-up sheet: Insight(Lightbulb)/Track(Target)/Macro(Globe)/Backtest(Flask). More tab shows active when current board is one of insight/track/macro/backtest. Shows only at max-width:767px. safe-area-inset-bottom applied. Bilingual labels.
 │   │   │   ├── MarketStrip.tsx   # Slim market strip (selected symbol + SPY/QQQ/IWM/VIX/DXY/GLD/CL=F/KRW=X). PRE/POST price display (usePrePost). "? Guide" button on far right — dispatches 'guide:open' custom event on click. Mobile: hidden via hide-mobile class. Bilingual tooltips and guide button (2026-05-31).
 │   │   │   └── CommandPalette.tsx # ⌘K command palette (symbol/board search). Typing '?' switches to glossary search mode — filters GLOSSARY array, shows "Glossary search mode — N results" banner. Bilingual nav subs and glossary entries (2026-05-31).
 │   │   ├── ui/
@@ -103,7 +103,7 @@ sniperboard/
 │   │   │   └── BacktestBoard.tsx  # Backtest results board (2026-06-02). Methodology transparency banner + 4 KPI cards (total trades/win rate/expectancy/profit factor) + IS vs OOS comparison + Stage2 score breakdown + SVG equity curve + per-symbol performance table + run button. Uses useBacktest() hook. GET /api/backtest/result, POST /api/backtest/run.
 │   │   └── signal_tracker.py         # Live signal tracker (2026-06-02). SQLite persistence (backend/data/signal_log.db). init_db() → called at app startup. scan_and_log(watchlist_items, regime) → auto-logs Stage2 ≥ 5 signals (UNIQUE on symbol+signal_date, prevents duplicate OPEN signals). update_outcomes() → resolves PENDING/ACTIVE signals bar-by-bar against latest daily candles → WIN/LOSS/TIMEOUT/CANCELLED (uses get_multi_daily period="6mo"). compute_live_stats() → n_closed/sample_n/win_rate/expectancy_r/profit_factor/mdd/equity_curve/regime_breakdown/pipeline + methodology (scan window, Stage2 threshold, entry/timeout bars) + comparison (live vs backtest side-by-side via live_backtest_compare) + health{status/confidence/deltas} + backtest_baseline (prefers load_cached_result aggregate when present, else BACKTEST_BASELINE constant). BACKTEST_BASELINE = {expectancy_r:0.460, win_rate:0.386, profit_factor:1.917, n:145}. Health: n<10 or null exp → INSUFFICIENT_DATA; else vs 0.7*baseline → ON_TRACK/WATCH/UNDERPERFORMING. Confidence: n<30 LOW, <80 MEDIUM, else HIGH.
 │   │   │   └── TrackBoard.tsx     # Live signal tracking board. C1 methodology card (Stage2 threshold, sample n, scan window note) + C2 live-vs-backtest comparison table (n/expectancy/win_rate/PF + honest_gap) + Model Health banner + KPI comparison + SVG cumulative R curve + pipeline + regime breakdown + history filter. useSignalLog/useSignalLogStats/useRefreshSignalLog hooks. Layout: .board as flex column — cards must not flex-shrink (see globals.css .board > *).
-│   │   │   └── InsightBoard.tsx   # Insight Lab (2026-07-26): MVP-1 divergence→forward return · MVP-2 AI action hit-rate · MVP-3 theme streaks · MVP-4 macro transitions + pre→post shift. useInsight → GET /api/insight. Integrity panel + honest_gap. Mobile deferred: docs/superpowers/plans/2026-07-26-insight-lab-mobile.md
+│   │   │   └── InsightBoard.tsx   # Insight Lab (2026-07-26): MVP-1 divergence→forward return · MVP-2 AI action hit-rate · MVP-3 theme streaks · MVP-4 macro transitions + pre→post shift. useInsight → GET /api/insight. Integrity panel + honest_gap. Mobile (2026-07-26): Hero KPI 2×3 grid (mob-show) · MVP-1 card list (mob-show) / table (mob-hide) · disclaimer details.mob-collapse · all tables overflow-x:auto · mob-order-1..8 · touch-target 44px controls.
 │   │   │   └── MarketCapBoard.tsx    # 시총 TOP 15 보드 (board id: 'marketcap'). 글로벌 랭킹 기반 테이블: rank·순위변동(↑/↓/NEW/—)·심볼·시총·현재가·등락·스파크라인+트렌드·52W 위치 막대. Trophy 아이콘.
 │   │   │   └── MorningBriefingBoard.tsx  # Morning briefing board (2026-06-02). Card layout. Sections: headline banner / market mood (traffic light) + key summary / big picture (VIX/rates/dollar) / sector analysis / spotlight (2-4 symbols) / full watchlist (22 expandable rows: squeeze potential + correction risk + price trend + current status) / today checkpoints + earnings alerts. useMorningBriefing() hook → GET /api/morning-briefing (10-min staleTime).
 │   │   │   └── SentimentTrendChart.tsx # Sentiment trend chart: stock price line (left axis) + composite_score overlay (right axis), 7/30d toggle. P0-2 (2026-07-13): timeScale().fitContent() after setData; ResizeObserver uses chart.resize(w,h)+fitContent; host DOM always mounted (loading overlay, never unmount ref); rAF remeasure after layout.
@@ -577,6 +577,7 @@ Note: Brief/Earnings data covers TIER1 12 symbols (collect_brief.py, collect_ear
 - **DeepDive**: Symbol bar(1) → Chart(2) → R:R(3) → Stage2(4) → Institutional(5) → Social·Brief·Earnings(6) → Regime·Sentiment(7)
 - **Macro**: Banner(1) → 6 groups(2) → Sector(3)
 - **Sentiment**: Market(1) → Symbol(2) → TopNews(3, collapsible) → Guide(4)
+- **Insight Lab**: Controls/header(1) → Integrity+Source(2) → Disclaimer(3, collapsible) → Hero KPI(4, mob-show) → MVP-1(5) → MVP-2(6) → MVP-3(7) → MVP-4(8)
 
 ### Notes When Modifying
 - Wrapper divs touching the desktop grid structure must have `mob-wrap` class + desktop `display:contents`

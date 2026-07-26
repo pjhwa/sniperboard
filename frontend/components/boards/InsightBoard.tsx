@@ -54,6 +54,14 @@ const S: Record<string, BiLang> = {
   },
   window: { en: 'Window', ko: '윈도우' },
   horizon: { en: 'Action horizon', ko: 'Action 선행일' },
+  heroEdge: { en: 'Bullish vs None Edge', ko: 'Bullish vs None 우위' },
+  heroBuyHit: { en: 'Buy Hit-Rate', ko: 'Buy 적중률' },
+  heroAvoidHit: { en: 'Avoid Hit-Rate', ko: 'Avoid 적중률' },
+  heroMacro: { en: 'Macro', ko: '매크로' },
+  heroPrePost: { en: 'Pre→Post Δ', ko: '장전→장후 Δ' },
+  heroIntegrity: { en: 'Integrity', ko: '정합' },
+  expandTable: { en: 'Full table ▼', ko: '전체 표 ▼' },
+  collapseTable: { en: 'Collapse ▲', ko: '접기 ▲' },
 };
 
 function pct(v: number | null | undefined, digits = 2): string {
@@ -107,53 +115,75 @@ export function InsightBoard() {
   const contrast = d1.contrast_bullish_vs_none_5d;
   const edgePositive = (contrast.delta_a_minus_b ?? 0) > 0;
 
+  // Hero KPI: extract key numbers for mobile summary
+  const buyRow = data.mvp2_actions.brief.by_action.find((r) => r.action === 'buy');
+  const avoidRow = data.mvp2_actions.brief.by_action.find((r) => r.action === 'avoid');
+
   return (
     <div className="board-wrap">
       <div className="board" style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '16px 16px 32px' }}>
 
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
+        {/* Header + controls — mob-order-1 */}
+        <div className="mob-order-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
           <div>
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{t(S.title, locale)}</h2>
             <div style={{ fontSize: 13, color: 'var(--fg-muted)', marginTop: 4 }}>{t(S.subtitle, locale)}</div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <label style={{ fontSize: 12, color: 'var(--fg-subtle)' }}>
-              {t(S.window, locale)}{' '}
+            <label style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              {t(S.window, locale)}
               <select
                 value={days}
                 onChange={(e) => setDays(Number(e.target.value))}
-                style={{ marginLeft: 4, background: 'var(--card)', color: 'var(--fg)', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 8px' }}
+                style={{
+                  background: 'var(--card)', color: 'var(--fg)', border: '1px solid var(--border)',
+                  borderRadius: 6, padding: '6px 8px', minHeight: 44,
+                }}
               >
                 {[30, 45, 60, 90].map((d) => <option key={d} value={d}>{d}d</option>)}
               </select>
             </label>
-            <label style={{ fontSize: 12, color: 'var(--fg-subtle)' }}>
-              {t(S.horizon, locale)}{' '}
+            <label style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              {t(S.horizon, locale)}
               <select
                 value={horizon}
                 onChange={(e) => setHorizon(Number(e.target.value))}
-                style={{ marginLeft: 4, background: 'var(--card)', color: 'var(--fg)', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 8px' }}
+                style={{
+                  background: 'var(--card)', color: 'var(--fg)', border: '1px solid var(--border)',
+                  borderRadius: 6, padding: '6px 8px', minHeight: 44,
+                }}
               >
                 {[3, 5, 10].map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
             </label>
-            <button className="btn" style={{ fontSize: 12, padding: '5px 12px' }} onClick={() => refetch()}>
+            <button
+              className="btn"
+              style={{ fontSize: 12, padding: '6px 14px', minHeight: 44 }}
+              onClick={() => refetch()}
+            >
               {ko ? '새로고침' : 'Refresh'}
             </button>
           </div>
         </div>
 
-        {/* Disclaimer + integrity */}
-        <div style={{
-          background: 'var(--warn-soft)', border: '1px solid color-mix(in srgb, var(--warn) 30%, transparent)',
-          borderRadius: 'var(--r-md)', padding: '10px 14px', fontSize: 12.5, color: 'var(--fg)', lineHeight: 1.55,
-        }}>
-          <strong>{t(S.disclaimer, locale)}:</strong>{' '}
-          {ko ? data.disclaimer_ko : data.disclaimer_en}
-        </div>
+        {/* Disclaimer — mob-order-3, details.mob-collapse (open always; on mobile user can collapse) */}
+        <details className="mob-collapse mob-order-3" open style={{ height: 'auto' }}>
+          <summary style={{ padding: '10px 14px', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+            {t(S.disclaimer, locale)}
+          </summary>
+          <div className="mob-collapse-body">
+            <div style={{
+              background: 'var(--warn-soft)', border: '1px solid color-mix(in srgb, var(--warn) 30%, transparent)',
+              borderRadius: 'var(--r-md)', padding: '10px 14px', fontSize: 12.5, color: 'var(--fg)', lineHeight: 1.55,
+            }}>
+              <strong>{t(S.disclaimer, locale)}:</strong>{' '}
+              {ko ? data.disclaimer_ko : data.disclaimer_en}
+            </div>
+          </div>
+        </details>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }} className="mob-wrap">
+        {/* Integrity + Source — mob-order-2 (show above disclaimer on mobile) */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }} className="mob-wrap mob-order-2">
           <Card title={t(S.integrity, locale)} action={data.integrity.passed ? t(S.integrityOk, locale) : t(S.integrityFail, locale)}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <span className={`badge ${data.integrity.passed ? 'bull' : 'bear'}`}>
@@ -193,154 +223,285 @@ export function InsightBoard() {
           </Card>
         </div>
 
-        {/* MVP-1 */}
-        <Card
-          title={t(S.mvp1, locale)}
-          action={`${d1.n_total_events} ${t(S.events, locale)}`}
-        >
-          <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)', marginBottom: 10, lineHeight: 1.5 }}>
-            <strong>{t(S.method, locale)}:</strong> {ko ? d1.methodology_ko : d1.methodology_en}
-          </div>
+        {/* Mobile Hero KPI — mob-show only, mob-order-4 */}
+        <div className="mob-show mob-order-4">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {/* Edge */}
+            <div style={{
+              background: edgePositive ? 'var(--bull-soft)' : 'var(--bg-subtle)',
+              border: '1px solid var(--border-soft)', borderRadius: 10, padding: '10px 12px',
+            }}>
+              <div style={{ fontSize: 10, color: 'var(--fg-subtle)', marginBottom: 4 }}>{t(S.heroEdge, locale)}</div>
+              <div className="mono" style={{ fontSize: 20, fontWeight: 700, color: retColor(contrast.delta_a_minus_b) }}>
+                {pct(contrast.delta_a_minus_b)}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--fg-subtle)', marginTop: 3 }}>
+                n={contrast.n_a} vs {contrast.n_b}
+              </div>
+              {!edgePositive && (
+                <div style={{ fontSize: 10, color: 'var(--bear)', marginTop: 4 }}>
+                  {ko ? '우위 없음' : 'No edge'}
+                </div>
+              )}
+            </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table className="tbl" style={{ minWidth: 640 }}>
-              <thead>
-                <tr>
-                  <th>Divergence</th>
-                  <th>{t(S.events, locale)}</th>
-                  {d1.horizons.map((h) => (
-                    <th key={h}>{h}d avg · n · hit+</th>
-                  ))}
-                  <th>{ko ? '해석' : 'Read'}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {d1.groups.map((g) => (
-                  <tr key={g.divergence}>
-                    <td style={{ fontWeight: 700 }}>{g.divergence}</td>
-                    <td className="mono">{g.n_events}</td>
-                    {d1.horizons.map((h) => {
-                      const st = g.horizons[String(h)];
-                      return (
-                        <td key={h} style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>
-                          <span style={{ color: retColor(st?.avg_return), fontWeight: 600 }}>{pct(st?.avg_return)}</span>
-                          <span style={{ color: 'var(--fg-subtle)' }}> · {st?.n ?? 0}</span>
-                          <span style={{ color: 'var(--fg-subtle)' }}> · {pct(st?.hit_rate, 0)}</span>
-                          <div><span className={`badge ${confCls(st?.confidence || '')}`} style={{ fontSize: 9 }}>{st?.confidence}</span></div>
-                        </td>
-                      );
-                    })}
-                    <td style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
-                      {ko ? g.interpretation_ko : g.interpretation_en}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+            {/* Integrity */}
+            <div style={{
+              background: data.integrity.passed ? 'var(--bull-soft)' : 'var(--bear-soft)',
+              border: '1px solid var(--border-soft)', borderRadius: 10, padding: '10px 12px',
+            }}>
+              <div style={{ fontSize: 10, color: 'var(--fg-subtle)', marginBottom: 4 }}>{t(S.heroIntegrity, locale)}</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: data.integrity.passed ? 'var(--bull)' : 'var(--bear)' }}>
+                {data.integrity.passed ? (ko ? '통과' : 'Pass') : (ko ? '실패' : 'Fail')}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--fg-subtle)', marginTop: 3 }}>
+                fail {data.integrity.fail_count} · warn {data.integrity.warn_count}
+              </div>
+            </div>
 
-          <div style={{
-            marginTop: 12, padding: '10px 12px', borderRadius: 8,
-            background: edgePositive ? 'var(--bull-soft)' : 'var(--bg-subtle)',
-            border: '1px solid var(--border-soft)', fontSize: 12.5, lineHeight: 1.55,
-          }}>
-            <strong>{t(S.contrast, locale)}</strong>
-            <div style={{ marginTop: 4 }}>
-              Δ = {pct(contrast.delta_a_minus_b)}{' '}
-              <span style={{ color: 'var(--fg-subtle)' }}>
-                (bullish {pct(contrast.avg_a)} n={contrast.n_a} − none {pct(contrast.avg_b)} n={contrast.n_b})
+            {/* Buy hit */}
+            <div style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-soft)', borderRadius: 10, padding: '10px 12px' }}>
+              <div style={{ fontSize: 10, color: 'var(--fg-subtle)', marginBottom: 4 }}>{t(S.heroBuyHit, locale)}</div>
+              <div className="mono" style={{ fontSize: 20, fontWeight: 700 }}>
+                {buyRow?.scored_directionally ? pct(buyRow.directional_hit_rate, 0) : '—'}
+              </div>
+              <span className={`badge ${confCls(buyRow?.confidence || '')}`} style={{ fontSize: 9, marginTop: 4, display: 'inline-block' }}>
+                {buyRow?.confidence ?? '—'}
               </span>
             </div>
-            <div style={{ marginTop: 4, color: 'var(--fg-muted)' }}>
-              {edgePositive ? t(S.hasEdge, locale) : t(S.noEdge, locale)}{' '}
-              {ko ? contrast.note_ko : contrast.note_en}
+
+            {/* Avoid hit */}
+            <div style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-soft)', borderRadius: 10, padding: '10px 12px' }}>
+              <div style={{ fontSize: 10, color: 'var(--fg-subtle)', marginBottom: 4 }}>{t(S.heroAvoidHit, locale)}</div>
+              <div className="mono" style={{ fontSize: 20, fontWeight: 700 }}>
+                {avoidRow?.scored_directionally ? pct(avoidRow.directional_hit_rate, 0) : '—'}
+              </div>
+              <span className={`badge ${confCls(avoidRow?.confidence || '')}`} style={{ fontSize: 9, marginTop: 4, display: 'inline-block' }}>
+                {avoidRow?.confidence ?? '—'}
+              </span>
+            </div>
+
+            {/* Macro judgment */}
+            <div style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-soft)', borderRadius: 10, padding: '10px 12px' }}>
+              <div style={{ fontSize: 10, color: 'var(--fg-subtle)', marginBottom: 4 }}>{t(S.heroMacro, locale)}</div>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>{data.mvp4_macro.current_judgment ?? '—'}</div>
+              <div style={{ fontSize: 10, color: 'var(--fg-subtle)', marginTop: 3 }}>
+                {data.mvp4_macro.n_transitions} transitions
+              </div>
+            </div>
+
+            {/* Pre→Post avg Δ */}
+            <div style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-soft)', borderRadius: 10, padding: '10px 12px' }}>
+              <div style={{ fontSize: 10, color: 'var(--fg-subtle)', marginBottom: 4 }}>{t(S.heroPrePost, locale)}</div>
+              <div className="mono" style={{
+                fontSize: 20, fontWeight: 700,
+                color: retColor(data.mvp4_pre_post.avg_delta != null ? data.mvp4_pre_post.avg_delta / 100 : null),
+              }}>
+                {data.mvp4_pre_post.avg_delta != null
+                  ? (data.mvp4_pre_post.avg_delta > 0 ? '+' : '') + data.mvp4_pre_post.avg_delta.toFixed(3)
+                  : '—'}
+              </div>
+              <span className={`badge ${confCls(data.mvp4_pre_post.confidence)}`} style={{ fontSize: 9, marginTop: 4, display: 'inline-block' }}>
+                {data.mvp4_pre_post.confidence}
+              </span>
             </div>
           </div>
-        </Card>
+        </div>
 
-        {/* MVP-2 */}
-        <Card title={t(S.mvp2, locale)} action={`${data.action_horizon_days}d`}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }} className="mob-wrap">
-            {([
-              [t(S.briefSrc, locale), data.mvp2_actions.brief],
-              [t(S.briefingSrc, locale), data.mvp2_actions.briefing],
-            ] as const).map(([label, block]) => (
-              <div key={label}>
-                <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>
-                  {label} <span style={{ color: 'var(--fg-subtle)', fontWeight: 500 }}>n={block.n_events}</span>
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--fg-subtle)', marginBottom: 8, lineHeight: 1.45 }}>
-                  {ko ? block.methodology_ko : block.methodology_en}
-                </div>
-                <table className="tbl">
-                  <thead>
-                    <tr>
-                      <th>{t(S.action, locale)}</th>
-                      <th>{t(S.n, locale)}</th>
-                      <th>{t(S.avgRet, locale)}</th>
-                      <th>{t(S.dirHit, locale)}</th>
-                      <th>{t(S.conf, locale)}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {block.by_action.map((r) => (
-                      <tr key={r.action}>
-                        <td style={{ fontWeight: 700 }}>{r.action}</td>
-                        <td className="mono">{r.n}</td>
-                        <td className="mono" style={{ color: retColor(r.avg_return) }}>{pct(r.avg_return)}</td>
-                        <td className="mono">
-                          {r.scored_directionally ? pct(r.directional_hit_rate, 0) : '—'}
-                        </td>
-                        <td><span className={`badge ${confCls(r.confidence)}`} style={{ fontSize: 10 }}>{r.confidence}</span></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ))}
-          </div>
-        </Card>
+        {/* MVP-1 — mob-order-5 */}
+        <div className="mob-order-5">
+          <Card
+            title={t(S.mvp1, locale)}
+            action={`${d1.n_total_events} ${t(S.events, locale)}`}
+          >
+            <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)', marginBottom: 10, lineHeight: 1.5 }}>
+              <strong>{t(S.method, locale)}:</strong> {ko ? d1.methodology_ko : d1.methodology_en}
+            </div>
 
-        {/* MVP-3 */}
-        <Card title={t(S.mvp3, locale)} action={`${data.mvp3_themes.n_theme_days} theme-days`}>
-          <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)', marginBottom: 10 }}>
-            {ko ? data.mvp3_themes.methodology_ko : data.mvp3_themes.methodology_en}
-          </div>
-          {data.mvp3_themes.themes.length === 0 ? (
-            <div className="subtle">{ko ? '테마 데이터 부족' : 'No themes in window'}</div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table className="tbl" style={{ minWidth: 560 }}>
+            {/* Desktop table */}
+            <div className="mob-hide" style={{ overflowX: 'auto' }}>
+              <table className="tbl" style={{ minWidth: 640 }}>
                 <thead>
                   <tr>
-                    <th>{t(S.theme, locale)}</th>
-                    <th>{t(S.days, locale)}</th>
-                    <th>{t(S.streak, locale)}</th>
-                    <th>{t(S.range, locale)}</th>
-                    <th>{t(S.spyCo, locale)}</th>
+                    <th>Divergence</th>
+                    <th>{t(S.events, locale)}</th>
+                    {d1.horizons.map((h) => (
+                      <th key={h}>{h}d avg · n · hit+</th>
+                    ))}
+                    <th>{ko ? '해석' : 'Read'}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.mvp3_themes.themes.map((th) => (
-                    <tr key={th.theme + th.first_date}>
-                      <td style={{ fontSize: 12.5, maxWidth: 320 }}>{th.theme}</td>
-                      <td className="mono">{th.count_days}</td>
-                      <td className="mono" style={{ fontWeight: 700 }}>{th.max_streak_days}</td>
-                      <td style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>{th.first_date} → {th.last_date}</td>
-                      <td className="mono" style={{ color: retColor(th.spy_same_day_stats?.avg_return) }}>
-                        {pct(th.spy_same_day_stats?.avg_return)}
-                        {th.spy_same_day_stats ? ` (n=${th.spy_same_day_stats.n})` : ''}
+                  {d1.groups.map((g) => (
+                    <tr key={g.divergence}>
+                      <td style={{ fontWeight: 700 }}>{g.divergence}</td>
+                      <td className="mono">{g.n_events}</td>
+                      {d1.horizons.map((h) => {
+                        const st = g.horizons[String(h)];
+                        return (
+                          <td key={h} style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+                            <span style={{ color: retColor(st?.avg_return), fontWeight: 600 }}>{pct(st?.avg_return)}</span>
+                            <span style={{ color: 'var(--fg-subtle)' }}> · {st?.n ?? 0}</span>
+                            <span style={{ color: 'var(--fg-subtle)' }}> · {pct(st?.hit_rate, 0)}</span>
+                            <div><span className={`badge ${confCls(st?.confidence || '')}`} style={{ fontSize: 9 }}>{st?.confidence}</span></div>
+                          </td>
+                        );
+                      })}
+                      <td style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
+                        {ko ? g.interpretation_ko : g.interpretation_en}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          )}
-        </Card>
 
-        {/* MVP-4 */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 12 }} className="mob-wrap">
+            {/* Mobile card list */}
+            <div className="mob-show">
+              {d1.groups.map((g) => (
+                <div key={g.divergence} style={{
+                  background: 'var(--bg-subtle)', borderRadius: 8, padding: '10px 12px',
+                  border: '1px solid var(--border-soft)', marginBottom: 10,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ fontWeight: 700, fontSize: 13 }}>{g.divergence}</span>
+                    <span style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>{g.n_events} {t(S.events, locale)}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+                    {d1.horizons.map((h) => {
+                      const st = g.horizons[String(h)];
+                      return (
+                        <div key={h} style={{ textAlign: 'center', minWidth: 60 }}>
+                          <div style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>{h}d</div>
+                          <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: retColor(st?.avg_return) }}>
+                            {pct(st?.avg_return, 1)}
+                          </div>
+                          <div style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>n={st?.n ?? 0}</div>
+                          <span className={`badge ${confCls(st?.confidence || '')}`} style={{ fontSize: 8 }}>{st?.confidence}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.4 }}>
+                    {ko ? g.interpretation_ko : g.interpretation_en}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{
+              marginTop: 12, padding: '10px 12px', borderRadius: 8,
+              background: edgePositive ? 'var(--bull-soft)' : 'var(--bg-subtle)',
+              border: '1px solid var(--border-soft)', fontSize: 12.5, lineHeight: 1.55,
+            }}>
+              <strong>{t(S.contrast, locale)}</strong>
+              <div style={{ marginTop: 4 }}>
+                Δ = {pct(contrast.delta_a_minus_b)}{' '}
+                <span style={{ color: 'var(--fg-subtle)' }}>
+                  (bullish {pct(contrast.avg_a)} n={contrast.n_a} − none {pct(contrast.avg_b)} n={contrast.n_b})
+                </span>
+              </div>
+              <div style={{ marginTop: 4, color: 'var(--fg-muted)' }}>
+                {edgePositive ? t(S.hasEdge, locale) : t(S.noEdge, locale)}{' '}
+                {ko ? contrast.note_ko : contrast.note_en}
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* MVP-2 — mob-order-6 */}
+        <div className="mob-order-6">
+          <Card title={t(S.mvp2, locale)} action={`${data.action_horizon_days}d`}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }} className="mob-wrap">
+              {([
+                [t(S.briefSrc, locale), data.mvp2_actions.brief],
+                [t(S.briefingSrc, locale), data.mvp2_actions.briefing],
+              ] as const).map(([label, block]) => (
+                <div key={label}>
+                  <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>
+                    {label} <span style={{ color: 'var(--fg-subtle)', fontWeight: 500 }}>n={block.n_events}</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--fg-subtle)', marginBottom: 8, lineHeight: 1.45 }}>
+                    {ko ? block.methodology_ko : block.methodology_en}
+                  </div>
+                  <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+                    <table className="tbl">
+                      <thead>
+                        <tr>
+                          <th>{t(S.action, locale)}</th>
+                          <th>{t(S.n, locale)}</th>
+                          <th>{t(S.avgRet, locale)}</th>
+                          <th>{t(S.dirHit, locale)}</th>
+                          <th>{t(S.conf, locale)}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {block.by_action.map((r) => (
+                          <tr key={r.action}>
+                            <td style={{ fontWeight: 700 }}>{r.action}</td>
+                            <td className="mono">{r.n}</td>
+                            <td className="mono" style={{ color: retColor(r.avg_return) }}>{pct(r.avg_return)}</td>
+                            <td className="mono">
+                              {r.scored_directionally ? pct(r.directional_hit_rate, 0) : '—'}
+                            </td>
+                            <td><span className={`badge ${confCls(r.confidence)}`} style={{ fontSize: 10 }}>{r.confidence}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* MVP-3 — mob-order-7 */}
+        <div className="mob-order-7">
+          <Card title={t(S.mvp3, locale)} action={`${data.mvp3_themes.n_theme_days} theme-days`}>
+            <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)', marginBottom: 10 }}>
+              {ko ? data.mvp3_themes.methodology_ko : data.mvp3_themes.methodology_en}
+            </div>
+            {data.mvp3_themes.themes.length === 0 ? (
+              <div className="subtle">{ko ? '테마 데이터 부족' : 'No themes in window'}</div>
+            ) : (
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+                <table className="tbl" style={{ minWidth: 560 }}>
+                  <thead>
+                    <tr>
+                      <th>{t(S.theme, locale)}</th>
+                      <th>{t(S.days, locale)}</th>
+                      <th>{t(S.streak, locale)}</th>
+                      <th>{t(S.range, locale)}</th>
+                      <th>{t(S.spyCo, locale)}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.mvp3_themes.themes.map((th) => (
+                      <tr key={th.theme + th.first_date}>
+                        <td style={{
+                          fontSize: 12.5, maxWidth: 200,
+                          overflow: 'hidden', textOverflow: 'ellipsis',
+                          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                        } as React.CSSProperties}>{th.theme}</td>
+                        <td className="mono">{th.count_days}</td>
+                        <td className="mono" style={{ fontWeight: 700 }}>{th.max_streak_days}</td>
+                        <td style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>{th.first_date} → {th.last_date}</td>
+                        <td className="mono" style={{ color: retColor(th.spy_same_day_stats?.avg_return) }}>
+                          {pct(th.spy_same_day_stats?.avg_return)}
+                          {th.spy_same_day_stats ? ` (n=${th.spy_same_day_stats.n})` : ''}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* MVP-4 — mob-order-8 */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 12 }} className="mob-wrap mob-order-8">
           <Card title={t(S.mvp4, locale)} action={data.mvp4_macro.current_judgment || '—'}>
             <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)', marginBottom: 8 }}>
               {ko ? data.mvp4_macro.methodology_ko : data.mvp4_macro.methodology_en}
@@ -354,7 +515,7 @@ export function InsightBoard() {
               {Object.entries(data.mvp4_macro.dwell_days || {}).map(([k, v]) => `${k}=${v}d`).join(' · ') || '—'}
             </div>
             <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 6 }}>{t(S.transitions, locale)}</div>
-            <div style={{ maxHeight: 220, overflowY: 'auto' }}>
+            <div style={{ maxHeight: 220, overflowY: 'auto', overflowX: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
               <table className="tbl">
                 <thead>
                   <tr>
@@ -397,7 +558,7 @@ export function InsightBoard() {
                 <span className={`badge ${confCls(data.mvp4_pre_post.confidence)}`} style={{ fontSize: 10 }}>{data.mvp4_pre_post.confidence}</span>
               </div>
             </div>
-            <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+            <div style={{ maxHeight: 200, overflowY: 'auto', overflowX: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
               <table className="tbl">
                 <thead>
                   <tr>

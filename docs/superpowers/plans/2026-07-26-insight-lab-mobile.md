@@ -4,7 +4,7 @@
 
 **Goal:** iOS/Android에서 Insight Lab(통찰 랩) 보드를 스크롤 가능한 단일 컬럼으로 읽고, 핵심 KPI(표본 n·신뢰도·Δ)를 한 눈에 확인하며, 넓은 표는 가로 스크롤/카드화로 손실 없이 볼 수 있게 한다.
 
-**Status (2026-07-26):** Desktop Insight Lab shipped (`GET /api/insight`, `InsightBoard.tsx`, rail `insight`). **Mobile not yet optimized** — this plan is deferred follow-up.
+**Status (2026-07-26): Done** — BottomTabs "More" sheet (Task 1), InsightBoard mobile layout + Hero KPI (Task 2), table card/scroll (Task 3), docs (Task 6). Task 4 (summary API) skipped (existing 15-min cache sufficient).
 
 **Architecture:** 기존 `max-width: 767px` 모바일 셸(BottomTabs · hide-mobile Rail · board flex 단일 컬럼)을 재사용한다. Insight 전용 레이아웃 변경은 `InsightBoard.tsx` + `globals.css`에 한정한다. API/스키마 변경은 원칙적으로 불필요(선택: 모바일 요약 필드).
 
