@@ -178,6 +178,8 @@ export function InsightBoard() {
   const contrast = d1.contrast_bullish_vs_none_5d;
   const edgeDelta = contrast.delta_a_minus_b;
   const edgePositive = (edgeDelta ?? 0) > 0;
+  const spyBaseline = d1.spy_baseline_5d;
+  const regimeCtx = d1.regime_context;
 
   const buyRow   = data.mvp2_actions.brief.by_action.find((r) => r.action === 'buy');
   const avoidRow = data.mvp2_actions.brief.by_action.find((r) => r.action === 'avoid');
@@ -192,13 +194,20 @@ export function InsightBoard() {
 
   // ── 평서문 생성 ──────────────────────────────────────────────
   const edgeAbsPct = pct(edgeDelta != null ? Math.abs(edgeDelta) : null);
+  // SPY 베이스라인 컨텍스트 문장
+  const spyAvg = spyBaseline?.avg_return;
+  const spyCtxSuffix = spyAvg != null
+    ? ko
+      ? ` 참고로 같은 가격 기간 동안 SPY 무조건 5일 수익은 평균 ${pct(spyAvg)}였습니다 — 시장 전체 방향이 기준값에 영향을 줍니다.`
+      : ` For context, SPY's unconditional 5-day return over the price window averaged ${pct(spyAvg)} — overall market direction affects all baselines.`
+    : '';
   const mvp1Body = ko
     ? edgePositive
-      ? `분석 기간(${days}일) 동안 소셜 분석에서 '강세(bullish)' 신호가 나온 날 기준 5일 후 평균 수익이, 신호 없는 날보다 ${pct(edgeDelta)} 높았습니다. (강세 ${contrast.n_a}회, 신호 없음 ${contrast.n_b}회 비교)`
-      : `분석 기간(${days}일) 동안 오히려 '강세' 신호가 나온 날이 신호 없는 날보다 5일 후 평균 ${edgeAbsPct} 낮은 수익을 보였습니다. 이 기간에는 강세 신호에 통계적 우위가 없었습니다. (강세 ${contrast.n_a}회, 신호 없음 ${contrast.n_b}회 비교)`
+      ? `분석 기간(${days}일) 동안 소셜 분석에서 '강세(bullish)' 신호가 나온 날 기준 5일 후 평균 수익이, 신호 없는 날보다 ${pct(edgeDelta)} 높았습니다. (강세 ${contrast.n_a}회, 신호 없음 ${contrast.n_b}회 비교)${spyCtxSuffix}`
+      : `분석 기간(${days}일) 동안 오히려 '강세' 신호가 나온 날이 신호 없는 날보다 5일 후 평균 ${edgeAbsPct} 낮은 수익을 보였습니다. 이 기간에는 강세 신호에 통계적 우위가 없었습니다. (강세 ${contrast.n_a}회, 신호 없음 ${contrast.n_b}회 비교)${spyCtxSuffix}`
     : edgePositive
-      ? `Over the ${days}-day window, 'bullish' social signals averaged ${pct(edgeDelta)} higher 5-day return than the no-signal control group. (bullish: ${contrast.n_a} events vs none: ${contrast.n_b} events)`
-      : `In this ${days}-day window, days with a 'bullish' signal actually averaged ${edgeAbsPct} lower 5-day return than the no-signal control group — no statistical edge found. (bullish: ${contrast.n_a} events vs none: ${contrast.n_b} events)`;
+      ? `Over the ${days}-day window, 'bullish' social signals averaged ${pct(edgeDelta)} higher 5-day return than the no-signal control group. (bullish: ${contrast.n_a} events vs none: ${contrast.n_b} events)${spyCtxSuffix}`
+      : `In this ${days}-day window, days with a 'bullish' signal actually averaged ${edgeAbsPct} lower 5-day return than the no-signal control group — no statistical edge found. (bullish: ${contrast.n_a} events vs none: ${contrast.n_b} events)${spyCtxSuffix}`;
 
   const mvp1Warn = contrast.n_a < 30 || contrast.n_b < 30;
 
@@ -463,6 +472,62 @@ export function InsightBoard() {
                     {ko ? contrast.note_ko : contrast.note_en}
                   </div>
                 </div>
+
+                {/* SPY 시장 베이스라인 */}
+                {spyBaseline?.avg_return != null && (
+                  <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 8, background: 'var(--bg-subtle)', border: '1px solid var(--border-soft)', fontSize: 12 }}>
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                      {ko ? '📊 시장 베이스라인 (SPY 무조건 5일 수익)' : '📊 Market Baseline (SPY unconditional 5d return)'}
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-mono)', color: retColor(spyBaseline.avg_return) }}>
+                      {pct(spyBaseline.avg_return)} <span style={{ color: 'var(--fg-subtle)', fontFamily: 'inherit' }}>n={spyBaseline.n}</span>
+                    </div>
+                    <div style={{ color: 'var(--fg-muted)', marginTop: 4, lineHeight: 1.4 }}>
+                      {ko ? ko ? spyBaseline.note_ko : spyBaseline.note_en : spyBaseline.note_en}
+                    </div>
+                  </div>
+                )}
+
+                {/* 레짐 컨텍스트 */}
+                {regimeCtx && (regimeCtx.bull || regimeCtx.bear) && (
+                  <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 8, background: 'var(--bg-subtle)', border: '1px solid var(--border-soft)', fontSize: 12 }}>
+                    <div style={{ fontWeight: 600, marginBottom: 6 }}>
+                      {ko ? '📈 SPY 50SMA 레짐별 강세 vs 중립 delta' : '📈 Bullish vs None delta by SPY 50-SMA regime'}
+                    </div>
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                      {(['bull', 'bear'] as const).map((r) => {
+                        const rv = regimeCtx[r];
+                        if (!rv) return null;
+                        const d = rv.delta_bullish_vs_none;
+                        return (
+                          <div key={r} style={{ minWidth: 110 }}>
+                            <div style={{ fontSize: 11, color: 'var(--fg-subtle)', marginBottom: 2 }}>
+                              {r === 'bull' ? (ko ? '상승장 (SPY > SMA)' : 'Bull (SPY > SMA)') : (ko ? '하락장 (SPY < SMA)' : 'Bear (SPY < SMA)')}
+                            </div>
+                            <div className="mono" style={{ fontWeight: 700, color: retColor(d) }}>Δ {pct(d)}</div>
+                            <div style={{ fontSize: 10, color: 'var(--fg-subtle)' }}>n={rv.n_bullish} bull · {rv.n_none} none</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div style={{ color: 'var(--fg-muted)', marginTop: 6, lineHeight: 1.4 }}>
+                      {ko ? regimeCtx.note_ko : regimeCtx.note_en}
+                    </div>
+                  </div>
+                )}
+
+                {/* 상관 n 경고 */}
+                {(() => {
+                  const bullGroup = d1.groups.find((g) => g.divergence === 'bullish_divergence');
+                  const note = bullGroup?.horizons?.['5']?.correlated_n_note_en;
+                  if (!note) return null;
+                  const noteText = ko ? (bullGroup?.horizons?.['5']?.correlated_n_note_ko || note) : note;
+                  return (
+                    <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: 'var(--warn-soft, var(--bg-subtle))', border: '1px solid var(--border-soft)', fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.5 }}>
+                      ⚠ {noteText}
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </Card>

@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-07-26 Insight Lab mobile support)
+# SniperBoard — Project Context (UPDATED 2026-07-26 Insight Lab signal honesty layer)
 
 ## 0. Purpose of This Document
 
@@ -44,7 +44,7 @@ sniperboard/
 │   │   ├── live_backtest_compare.py  # Phase C1/C2 pure helpers: DEFAULT_METHODOLOGY (scan window / Stage2 threshold), confidence_from_n, health_from_expectancy, extract_backtest_baseline(cached backtest_result.json), compare_live_to_backtest(live, baseline) → side-by-side + honest_gap when n<30. No I/O.
 │   │   ├── alerts_engine.py          # Phase C4: pure build_alerts from earnings days_until, signal_log PENDING/ACTIVE, Track health, briefing integrity. Dashboard-only (no push).
 │   │   ├── source_citations.py       # Phase P2+: resolve source_hint/top_news.source → auditable urls (pass-through http, X @handles, outlet search + Google News). Never invents article permalinks. enrich_briefing_citations / enrich_sentiment_snapshot.
-│   │   └── insight_engine.py         # Insight Lab pure analytics MVP-1..4 (divergence forward returns, AI action hit-rate, theme streaks, macro transitions, pre→post). No I/O.
+│   │   └── insight_engine.py         # Insight Lab pure analytics MVP-1..4 (divergence forward returns, AI action hit-rate, theme streaks, macro transitions, pre→post). No I/O. analyze_divergence now adds: spy_baseline_5d (unconditional SPY forward return as market baseline), regime_context (SPY 50-SMA bull/bear split of bullish-vs-none delta), correlated_n_note on each InsightReturnStats (when >3 symbols × overlapping windows inflate raw n).
 │   ├── services/
 │   │   ├── base.py               # BaseDataService abstract class
 │   │   ├── data_service.py       # YFinanceDataService implementation + module-level helpers

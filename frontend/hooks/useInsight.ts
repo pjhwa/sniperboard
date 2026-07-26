@@ -9,6 +9,8 @@ export interface InsightReturnStats {
   confidence: string;
   honest_gap_en?: string | null;
   honest_gap_ko?: string | null;
+  correlated_n_note_en?: string | null;
+  correlated_n_note_ko?: string | null;
 }
 
 export interface InsightPayload {
@@ -35,6 +37,7 @@ export interface InsightPayload {
     groups: {
       divergence: string;
       n_events: number;
+      n_unique_symbols?: number;
       horizons: Record<string, InsightReturnStats>;
       interpretation_en: string;
       interpretation_ko: string;
@@ -48,6 +51,21 @@ export interface InsightPayload {
       note_en: string;
       note_ko: string;
     };
+    spy_baseline_5d?: {
+      n: number;
+      avg_return: number | null;
+      horizon: number;
+      note_en: string;
+      note_ko: string;
+    } | null;
+    regime_context?: {
+      sma_window?: number;
+      horizon?: number;
+      bull?: { n_bullish: number; n_none: number; avg_bullish: number | null; avg_none: number | null; delta_bullish_vs_none: number | null };
+      bear?: { n_bullish: number; n_none: number; avg_bullish: number | null; avg_none: number | null; delta_bullish_vs_none: number | null };
+      note_en?: string;
+      note_ko?: string;
+    } | null;
   };
   mvp2_actions: {
     brief: {

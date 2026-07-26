@@ -11,7 +11,7 @@ MVP-4 Macro judgment transitions × market composite + pre→post shift
 
 from __future__ import annotations
 
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from statistics import mean, median
@@ -218,6 +218,7 @@ def analyze_divergence(
     groups: list[dict] = []
     for label in DIVERGENCE_LABELS:
         evs = by_div.get(label, [])
+        unique_syms = len({ev["symbol"] for ev in evs})
         horizon_stats: dict[str, Any] = {}
         for h in horizons:
             rets: list[float] = []
@@ -229,10 +230,27 @@ def analyze_divergence(
                 r = forward_return(closes, sd, h)
                 if r is not None:
                     rets.append(r)
-            horizon_stats[str(h)] = summarize_returns(rets)
+            stats = summarize_returns(rets)
+            # Correlated-n caveat: multiple symbols × overlapping windows inflate raw n
+            if unique_syms > 3 and stats["n"] > 0:
+                eff_n = max(1, stats["n"] // max(1, unique_syms))
+                stats["correlated_n_note_en"] = (
+                    f"n={stats['n']} spans {unique_syms} correlated symbols "
+                    f"with overlapping {h}-day windows — effective independent n ≈ {eff_n}. "
+                    "Stated confidence may be overstated."
+                )
+                stats["correlated_n_note_ko"] = (
+                    f"n={stats['n']}은 {unique_syms}개 상관 종목 × {h}일 겹침 관찰 — "
+                    f"실효 독립 n ≈ {eff_n}. 신뢰도가 과장되었을 수 있습니다."
+                )
+            else:
+                stats["correlated_n_note_en"] = None
+                stats["correlated_n_note_ko"] = None
+            horizon_stats[str(h)] = stats
         groups.append({
             "divergence": label,
             "n_events": len(evs),
+            "n_unique_symbols": unique_syms,
             "horizons": horizon_stats,
             "interpretation_en": _div_interpretation(label, horizon_stats, "en"),
             "interpretation_ko": _div_interpretation(label, horizon_stats, "ko"),
@@ -240,22 +258,120 @@ def analyze_divergence(
 
     # control contrast: bullish vs none at h=5
     contrast = _contrast(groups, "bullish_divergence", "none", "5")
+
+    # SPY unconditional market baseline (all trading days in window, horizon=5)
+    spy_baseline = _compute_spy_baseline(price_closes.get("SPY") or {}, horizon=5)
+
+    # Regime context: split by SPY 50-SMA (bull above / bear below)
+    regime_ctx = _compute_regime_context(events, price_closes, horizon=5)
+
     return {
         "methodology_en": (
             "Signal = post_close social divergence label. Entry = close on signal date T. "
             f"Forward return = close[T+N]/close[T]-1 for N in {list(horizons)} trading days. "
-            "No look-ahead. Small n → honest_gap warning."
+            "No look-ahead. Small n → honest_gap warning. "
+            "Correlated-n note added when events span >3 symbols with overlapping windows."
         ),
         "methodology_ko": (
             "신호 = post_close 소셜 다이버전스 라벨. 진입 = 신호일 T 종가. "
             f"선행수익 = close[T+N]/close[T]-1 (N={list(horizons)} 거래일). "
-            "룩어헤드 없음. 소표본 시 honest_gap 경고."
+            "룩어헤드 없음. 소표본 시 honest_gap 경고. "
+            "3개 초과 종목·겹침 구간은 상관 n 주의 표시."
         ),
         "horizons": list(horizons),
         "groups": groups,
         "contrast_bullish_vs_none_5d": contrast,
+        "spy_baseline_5d": spy_baseline,
+        "regime_context": regime_ctx,
         "n_total_events": len(events),
     }
+
+
+def _compute_spy_baseline(spy_closes: dict[date, float], horizon: int = 5) -> dict[str, Any]:
+    """Unconditional SPY forward return across all trading days in the price map."""
+    rets: list[float] = []
+    for d in sorted(spy_closes.keys()):
+        r = forward_return(spy_closes, d, horizon)
+        if r is not None:
+            rets.append(r)
+    if not rets:
+        return {"n": 0, "avg_return": None, "horizon": horizon,
+                "note_en": "SPY price data unavailable.",
+                "note_ko": "SPY 가격 데이터 없음."}
+    return {
+        "n": len(rets),
+        "avg_return": round(mean(rets), 5),
+        "horizon": horizon,
+        "note_en": (
+            f"SPY unconditional {horizon}-day forward return across all {len(rets)} trading days "
+            "in the price window — the pure market baseline, no signal conditioning."
+        ),
+        "note_ko": (
+            f"SPY 무조건 {horizon}일 선행수익 (전체 {len(rets)} 거래일 기준) — "
+            "신호 조건 없는 순수 시장 베이스라인."
+        ),
+    }
+
+
+def _compute_regime_context(
+    events: list[dict],
+    price_closes: dict[str, dict[date, float]],
+    horizon: int = 5,
+    sma_window: int = 50,
+) -> dict[str, Any]:
+    """Split events by SPY 50-SMA regime; compute bullish-vs-none delta per regime."""
+    spy_closes = price_closes.get("SPY") or {}
+    if not spy_closes:
+        return {}
+    sorted_spy_dates = sorted(spy_closes.keys())
+    # Rolling 50-SMA
+    spy_sma: dict[date, float] = {}
+    win: deque = deque()
+    for d in sorted_spy_dates:
+        win.append(spy_closes[d])
+        if len(win) > sma_window:
+            win.popleft()
+        if len(win) >= sma_window:
+            spy_sma[d] = mean(win)
+
+    # Classify each event by regime
+    regime_rets: dict[str, dict[str, list[float]]] = {
+        "bull": defaultdict(list),  # SPY above 50-SMA
+        "bear": defaultdict(list),  # SPY below 50-SMA
+    }
+    for ev in events:
+        sd = parse_iso_date(ev["signal_date"])
+        if sd is None or sd not in spy_sma:
+            continue
+        regime = "bull" if spy_closes[sd] >= spy_sma[sd] else "bear"
+        closes = price_closes.get(ev["symbol"]) or {}
+        r = forward_return(closes, sd, horizon)
+        if r is not None:
+            regime_rets[regime][ev["divergence"]].append(r)
+
+    result: dict[str, Any] = {"sma_window": sma_window, "horizon": horizon}
+    for regime_name, by_div in regime_rets.items():
+        bull_rets = by_div.get("bullish_divergence", [])
+        none_rets = by_div.get("none", [])
+        avg_bull = round(mean(bull_rets), 5) if bull_rets else None
+        avg_none = round(mean(none_rets), 5) if none_rets else None
+        delta = round(avg_bull - avg_none, 5) if avg_bull is not None and avg_none is not None else None
+        result[regime_name] = {
+            "n_bullish": len(bull_rets),
+            "n_none": len(none_rets),
+            "avg_bullish": avg_bull,
+            "avg_none": avg_none,
+            "delta_bullish_vs_none": delta,
+        }
+    result["note_en"] = (
+        f"SPY {sma_window}-SMA regime split of bullish-vs-none {horizon}d delta. "
+        "'bull' = SPY above SMA on signal date; 'bear' = below. Display context only — not a new signal."
+    )
+    result["note_ko"] = (
+        f"SPY {sma_window}일 SMA 레짐별 bullish-vs-none {horizon}일 delta. "
+        "'bull' = 신호일 SPY > SMA; 'bear' = 미만. 표시 맥락 전용 — 신호 변경 아님."
+    )
+    return result
 
 
 def _div_interpretation(label: str, horizon_stats: dict, locale: str) -> str:
