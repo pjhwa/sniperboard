@@ -58,6 +58,8 @@ Rail icon **Insight / 통찰**. Uses accumulated `market-sentiment-data` history
 
 Every table shows **n**, **confidence**, and **honest_gap** when sample is thin. Integrity panel flags data-load / count bugs. **Not trading advice.**
 
+**Mobile:** Desktop rail entry only for now. Follow-up plan: [docs/superpowers/plans/2026-07-26-insight-lab-mobile.md](docs/superpowers/plans/2026-07-26-insight-lab-mobile.md) (BottomTabs entry, hero KPIs, table→cards).
+
 ### Signal Tracker — The Key Differentiator
 
 The **Signal Tracker** board (`🎯` in the Rail) implements a perpetual hypothesis test:
