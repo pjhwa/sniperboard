@@ -264,7 +264,7 @@ export function TrackBoard() {
 
   return (
     <div className="board-wrap">
-      <div className="board" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '16px 16px 32px' }}>
+      <div className="board" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '16px 16px 32px', alignItems: 'stretch' }}>
 
         {/* ── 헤더 ──────────────────────────────────────────────────────── */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>

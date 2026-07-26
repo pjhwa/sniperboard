@@ -358,9 +358,17 @@ body {
 }
 .board {
   flex: 1; overflow: auto;
+  min-height: 0; /* allow flex child to scroll instead of clipping */
   padding: 14px;
   display: grid; gap: 12px;
   grid-auto-rows: max-content;
+}
+/* Track/Backtest use display:flex column via inline style.
+   Default flex-shrink:1 + .card { overflow:hidden } collapses card bodies
+   so content is clipped and the board never scrolls. */
+.board > * {
+  flex-shrink: 0;
+  min-height: min-content;
 }
 
 /* ============================================================
