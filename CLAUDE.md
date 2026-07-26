@@ -37,6 +37,7 @@ These two files give you an immediate understanding of the project without readi
 - **i18n**: `frontend/app/i18n.ts` — `Locale`, `BiLang`, `t()`, `tField()`. Per-component `const S: Record<string, BiLang>` for static strings. `tField(en, ko, fallback, locale)` for AI data.
 - **API router**: `backend/api/endpoints.py` — 7+ endpoints. `MACRO_SYMBOLS` uses English names.
 - **Global state**: `frontend/hooks/useStore.ts` — Zustand (symbol, board, theme, locale: 'en'|'ko' default 'ko')
+- **Insight Lab**: `backend/core/insight_engine.py` + `GET /api/insight` + `InsightBoard.tsx`. Mobile follow-up brief: `docs/claude-code-brief-insight-mobile.md` (plan: `docs/superpowers/plans/2026-07-26-insight-lab-mobile.md`)
 
 See `PROJECT_CONTEXT.md` Section 10 "Code Modification Reference Points" for details.
 
