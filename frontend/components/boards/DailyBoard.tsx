@@ -18,15 +18,24 @@ import { HeatStrip } from '@/components/ui/HeatStrip';
 import { t, tField } from '@/app/i18n';
 import type { BiLang } from '@/app/i18n';
 import { formatEarningsBanner } from '@/app/earningsFormat';
+import {
+  classifySetupStatus,
+  distanceToEntryPct,
+  isDeepBreakdown,
+  marketNowLevels,
+  SETUP_STATUS_META,
+  DEEP_BREAKDOWN_COPY,
+  type SetupStatus,
+} from '@/lib/entryPlan';
 
 const S: Record<string, BiLang> = {
   guideTitle:    { en: 'Daily Guide', ko: 'Daily 가이드' },
   guide1Heading: { en: 'About this screen', ko: '이 화면은' },
   guide1Body:    { en: 'Analyzes setup quality and medium/long-term trends using daily candles. Use the Stage2 checklist to determine if this stock has a buyable structure now.', ko: '일봉 기준 셋업 품질과 중장기 추세를 분석하는 화면입니다. Stage2 체크리스트로 지금 이 종목이 매수 가능한 구조인지 판단합니다.' },
   guide2Heading: { en: 'How to read key indicators', ko: '핵심 지표 읽는 법' },
-  guide2Body:    { en: 'Stage2 score (0-7) is key. 6-7 = consider entry, 4-5 = watch, ≤3 = avoid. GC status shows medium-term trend phase; Breakout = aggressive buy, Below Channel = watch. Check entry/stop/target in the R:R panel.', ko: 'Stage2 점수(0~7)가 핵심입니다. 6~7점이면 진입 검토, 4~5점은 관망, 3 이하면 회피. GC 상태는 중기 추세 단계를 나타내며, Breakout이면 적극 매수, Below Channel이면 관망입니다. R:R 패널에서 진입·손절·목표가를 확인합니다.' },
+  guide2Body:    { en: 'Stage2 score (0-7) is key. 6-7 = consider entry, 4-5 = watch, ≤3 = avoid. GC status shows medium-term trend phase; Breakout = aggressive buy, Below Channel = watch. Check entry/stop/target in the R:R panel — status badge shows whether the pivot plan is Ready, Watch, or Invalid.', ko: 'Stage2 점수(0~7)가 핵심입니다. 6~7점이면 진입 검토, 4~5점은 관망, 3 이하면 회피. GC 상태는 중기 추세 단계를 나타내며, Breakout이면 적극 매수, Below Channel이면 관망입니다. R:R 패널에서 진입·손절·목표가와 셋업 상태(준비/관망/무효)를 확인합니다.' },
   guide3Heading: { en: 'How to use now', ko: '지금 이렇게 쓰세요' },
-  guide3Body:    { en: 'Stage2 ≥ 5 → GC Breakout or Above → Monthly uptrend confirmed → R:R ≥ 1:2 → Enter. Strong setup when all 4 pass.', ko: 'Stage2 ≥ 5 확인 → GC Breakout 또는 Above 확인 → 월봉 상승 확인 → R:R ≥ 1:2 확인 → 진입. 4가지 통과 시 강한 셋업입니다.' },
+  guide3Body:    { en: 'Stage2 ≥ 5 → GC Breakout or Above → Monthly uptrend confirmed → R:R Setup Ready near Entry → Enter. Strong setup when all pass. Far below Entry = Invalid, not a buy.', ko: 'Stage2 ≥ 5 확인 → GC Breakout 또는 Above 확인 → 월봉 상승 확인 → R:R 셋업 준비·Entry 근접 → 진입. Entry에서 멀리 떨어지면 셋업 무효로 매수 신호가 아닙니다.' },
   loading:       { en: 'Loading...', ko: '로딩 중...' },
   chartLoading:  { en: 'Loading chart + Conviction...', ko: '차트 + Conviction 로딩 중...' },
   considerEntry: { en: 'Consider Entry', ko: '진입 고려' },
@@ -44,6 +53,15 @@ const S: Record<string, BiLang> = {
   stage2Title:   { en: 'Minervini Stage 2', ko: 'Minervini Stage 2' },
   stage2Action:  { en: 'Checklist · 7 items', ko: '체크리스트 · 7항목' },
   rrTitle:       { en: 'R:R + Patterns', ko: 'R:R + 패턴' },
+  rrSystemPlan:  { en: 'System plan · pivot breakout', ko: '시스템 계획 · 피벗 돌파' },
+  rrDistToEntry: { en: 'Distance to Entry', ko: 'Entry까지 거리' },
+  rrDistAbove:   { en: 'Above Entry', ko: 'Entry 상회' },
+  rrDeepBreakdown: DEEP_BREAKDOWN_COPY as BiLang,
+  rrMarketNowTitle: { en: 'If market entry now (reference only)', ko: '즉시 시장가 진입 시 (참고용)' },
+  rrMarketNowNote: {
+    en: 'Not a system signal — ATR illustration at current price.',
+    ko: '시스템 신호 아님 — 현재가 ATR 예시입니다.',
+  },
 };
 
 const STRUCT_COLOR: Record<string, string> = {
@@ -104,11 +122,29 @@ export function DailyBoard() {
   const entry = stage2?.entry ?? 0;
   const stop = stage2?.stop ?? 0;
   const target = stage2?.target ?? 0;
+  const priceForPlan = stage2?.latest_close ?? 0;
+  const atrForPlan = stage2?.latest_atr ?? 0;
+  const setupStatus: SetupStatus | null = stage2
+    ? classifySetupStatus({
+        price: priceForPlan,
+        entry,
+        stage2Score: stage2.score,
+        pullbackPct: stage2.pullback_pct,
+      })
+    : null;
+  const distToEntry = stage2 ? distanceToEntryPct(priceForPlan, entry) : null;
+  const deepBreakdown = stage2
+    ? isDeepBreakdown(priceForPlan, entry, stage2.pullback_pct)
+    : false;
+  const marketNow = stage2 ? marketNowLevels(priceForPlan, atrForPlan) : null;
+  const statusMeta = setupStatus ? SETUP_STATUS_META[setupStatus] : null;
+  const planActionable = setupStatus === 'ready';
+  const pivotMuted = setupStatus === 'invalid';
 
   const accountNum = parseFloat(rrAccount.replace(/,/g, '')) || 100000;
   const riskPct = parseFloat(rrRiskPct) || 1;
   const riskAmt = accountNum * (riskPct / 100);
-  const qty = stop > 0 && entry > stop ? Math.floor(riskAmt / (entry - stop)) : 0;
+  const qty = planActionable && stop > 0 && entry > stop ? Math.floor(riskAmt / (entry - stop)) : 0;
   const stopLossPct = entry > 0 ? ((entry - stop) / entry) * 100 : 0;
 
   const DAILY_GUIDE = (): GuideSection[] => [
@@ -278,9 +314,51 @@ export function DailyBoard() {
 
       {/* R:R + patterns */}
       <Card title={t(S.rrTitle, locale)} info={{ term: t(G.rr_ratio.term, locale), body: t(G.rr_ratio.body, locale) }} style={{ minHeight: 0 }}>
-        {stage2 ? (
+        {stage2 && setupStatus && statusMeta ? (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+              <span className={`badge ${statusMeta.tone}`} style={{ fontSize: 11.5, fontWeight: 700 }}>
+                {t(statusMeta.label, locale)}
+              </span>
+              {distToEntry != null && (
+                <span className="mono" style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: distToEntry > 15 ? 'var(--bear)' : distToEntry > 5 ? 'var(--warn)' : 'var(--bull)',
+                }}>
+                  {distToEntry > 0
+                    ? `${t(S.rrDistToEntry, locale)} +${distToEntry.toFixed(1)}%`
+                    : `${t(S.rrDistAbove, locale)} ${Math.abs(distToEntry).toFixed(1)}%`}
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.4, marginBottom: deepBreakdown ? 6 : 8 }}>
+              {t(statusMeta.hint, locale)}
+            </div>
+            {deepBreakdown && (
+              <div style={{
+                fontSize: 11,
+                lineHeight: 1.4,
+                marginBottom: 8,
+                padding: '7px 9px',
+                borderRadius: 8,
+                background: 'var(--bear-soft)',
+                color: 'var(--bear)',
+              }}>
+                {t(S.rrDeepBreakdown, locale)}
+              </div>
+            )}
+
+            <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+              {t(S.rrSystemPlan, locale)}
+            </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 8,
+              marginBottom: 10,
+              opacity: pivotMuted ? 0.55 : 1,
+            }}>
               <div style={{ padding: 8, borderRadius: 8, background: 'var(--info-soft)' }}>
                 <div style={{ fontSize: 10.5, color: 'var(--info)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Entry</div>
                 <div className="mono" style={{ fontSize: 15, fontWeight: 600, color: 'var(--info)' }}>${entry.toFixed(2)}</div>
@@ -295,18 +373,42 @@ export function DailyBoard() {
               </div>
             </div>
 
-            <div style={{ fontSize: 12, color: 'var(--fg-muted)', display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
+            <div style={{ fontSize: 12, color: 'var(--fg-muted)', display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--border-soft)', opacity: pivotMuted ? 0.55 : 1 }}>
               <span>R:R Ratio</span>
               <span className="mono" style={{ fontWeight: 600, color: 'var(--fg)' }}>1 : 3.00</span>
             </div>
-            <div style={{ fontSize: 12, color: 'var(--fg-muted)', display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>
+            <div style={{ fontSize: 12, color: 'var(--fg-muted)', display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--border-soft)', opacity: pivotMuted ? 0.55 : 1 }}>
               <span>Stop Loss %</span>
               <span className="mono" style={{ color: 'var(--bear)' }}>-{stopLossPct.toFixed(2)}%</span>
             </div>
-            <div style={{ fontSize: 12, color: 'var(--fg-muted)', display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
+            <div style={{ fontSize: 12, color: 'var(--fg-muted)', display: 'flex', justifyContent: 'space-between', padding: '5px 0', opacity: pivotMuted ? 0.7 : 1 }}>
               <span>{t(S.posLabel, locale)} ({rrRiskPct}% risk on ${(accountNum / 1000).toFixed(0)}K)</span>
-              <span className="mono" style={{ color: 'var(--em-500)', fontWeight: 600 }}>{qty > 0 ? `${qty} ${t(S.posUnit, locale)}` : '—'}</span>
+              <span className="mono" style={{ color: planActionable ? 'var(--em-500)' : 'var(--fg-muted)', fontWeight: 600 }}>
+                {qty > 0 ? `${qty} ${t(S.posUnit, locale)}` : '—'}
+              </span>
             </div>
+
+            {marketNow && (
+              <div style={{
+                marginTop: 10,
+                padding: '8px 10px',
+                borderRadius: 8,
+                background: 'var(--border-soft)',
+                border: '1px dashed var(--border)',
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-muted)', marginBottom: 3 }}>
+                  {t(S.rrMarketNowTitle, locale)}
+                </div>
+                <div style={{ fontSize: 10.5, color: 'var(--fg-subtle)', marginBottom: 6 }}>
+                  {t(S.rrMarketNowNote, locale)}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6, fontSize: 12 }}>
+                  <div className="mono" style={{ textAlign: 'center', color: 'var(--fg-muted)' }}>E ${marketNow.entry.toFixed(2)}</div>
+                  <div className="mono" style={{ textAlign: 'center', color: 'var(--fg-muted)' }}>S ${marketNow.stop.toFixed(2)}</div>
+                  <div className="mono" style={{ textAlign: 'center', color: 'var(--fg-muted)' }}>T ${marketNow.target.toFixed(2)}</div>
+                </div>
+              </div>
+            )}
 
             <div className="divider" />
 

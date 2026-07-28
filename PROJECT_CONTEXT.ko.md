@@ -1,6 +1,6 @@
 > English docs: [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md)
 
-# SniperBoard — Project Context (UPDATED 2026-06-13 health-monitor)
+# SniperBoard — Project Context (UPDATED 2026-07-29 Entry Plan setup status UX)
 
 ## 0. 이 문서의 목적
 
@@ -180,11 +180,17 @@ Minervini 7개 체크리스트 (score 0~7):
 7. `volume_contracting`: 최근 5일 평균 < 20일 평균
 
 추가 계산:
-- 진입가 = 20일 **일봉 고가(high)** 최대 × 1.005 (close 아닌 high 기준)
+- 진입가 = 20일 **일봉 고가(high)** 최대 × 1.005 (close 아닌 high 기준) — **Entry Plan UX로 변경하지 않음**
 - 손절가 = 진입가 - 2 × ATR14
 - 목표가 = 진입가 + 3 × (진입가 - 손절가)
 - rs_score 공식: min(100, max(0, 50 + (stock_63d_ret - spy_63d_ret) × 2))
 - breadth_narrow: SPY가 20일 신고가인데 RSP가 아닐 때 True
+
+**Entry Plan UX (프론트 `lib/entryPlan.ts`, 2026-07-29)** — 백엔드 피벗 공식은 유지:
+- `distanceToEntryPct` = (entry − price) / price × 100
+- `classifySetupStatus`: ready / watch / invalid
+- `marketNowLevels`: 참고용 현재가 시나리오
+- DeepDive·Daily R:R에 상태 배지·거리%·무효 시 흐림·깊은 조정 카피·즉시 진입 참고 박스
 
 Phase 2 (part of yf-accuracy-harden): long-horizon metrics (52w pcts, RS 63d, EMA200 slope 20d, pullback, pivot high/entry) now use adj_close + scaled high/low when 'adj_close' column present (from data_adapter daily, single source of truth). Non-split or legacy path unchanged (full compat). GC/detects/short-term on raw. (Phase 5: adapter full delegation + endpoint direct use confirmed via tests + manual verification.)
 
@@ -299,7 +305,7 @@ SYMBOLS 버튼 | 현재가 + RSI + EMA21 + 스파크라인(60봉) + PRE/POST 가
 
 **Row 3: 세력참여도 분석 (3fr) + R:R 진입 계획 (2fr)**
 - 좌: 최근 60거래일 등락 히트맵(3행×20열) + Up/Down 거래량 비율 + 거래량 추세 + 집중일 감지 + 세력 점수(0~100) + 10일 누적 매집/분산 그리드. 계산은 `dailyData.candles` 기반 프론트엔드 순수 함수.
-- 우: Entry/Stop/Target 3-col + 빨강1:녹색3 시각 바 + 포지션 수량(Max Loss/ATR) + 패턴 배지
+- 우: 셋업 상태 배지(준비/관망/무효) + Entry 거리% + 시스템 피벗 Entry/Stop/Target(무효 시 흐림) + 빨강1:녹색3 바 + Ready일 때만 포지션 강조 + 깊은 조정 안내 + 즉시 시장가 참고 수치 + 패턴 배지
 
 **Row 4 (3×1fr, `alignItems: 'stretch'`)**
 | 카드 | 데이터 | 내용 |

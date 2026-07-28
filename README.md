@@ -240,7 +240,7 @@ Symbol selector buttons | Current price · RSI · EMA21 + intraday sparkline | S
 
 **Row 3 — Institutional Activity (60%) + R:R Entry Plan (40%)**
 - **Institutional Activity**: 60-day up/down heatmap (3 rows × 20 columns) + up/down volume ratio + volume trend + concentrated day detection + institutional score (0~100) + 10-day accumulation/distribution grid
-- **R:R Entry Plan**: Entry/Stop/Target 3-column + red-1:green-3 visual bar + position size · Max Loss · ATR calculation
+- **R:R Entry Plan**: **Setup status** badge (Ready / Watch / Invalid·Avoid) + **distance to pivot Entry (%)** + primary pivot Entry/Stop/Target (20d high × 1.005 — formulas unchanged) + red-1:green-3 bar + position size (emphasized only when Ready). When price is far below Entry or Stage2 is weak, levels are subdued with deep-drawdown copy. Secondary **“if market entry now”** ATR illustration is reference-only (not a system signal).
 
 **Row 4 — Sentiment · AI · Earnings (3 equal columns)**
 - **Social Sentiment**: composite_score ScoreBar (−2~+2) + prior-day delta + key reason + top news + sentiment trend chart toggle (7d/30d)
@@ -277,7 +277,7 @@ Symbol selector buttons | Current price · RSI · EMA21 + intraday sparkline | S
 - **Bear Flag pattern** detection
 - **Gaussian Channel state**: Breakout · Retest · Below (causal kernel, no look-ahead bias)
 - **Conviction badge**: Weighted composite of Stage2 + Sentiment + Regime (0~100)
-- **R:R Panel**: Entry/Stop/Target + position size. Card ⓘ button provides a R:R concept popover.
+- **R:R Panel**: Setup status (Ready / Watch / Invalid) + distance to Entry + pivot Entry/Stop/Target + position size (Ready only) + optional market-now reference levels. Card ⓘ button provides a R:R concept popover.
 
 ---
 
@@ -437,14 +437,26 @@ Weighted average of Stage 2 score (40%) + Social Sentiment (30%) + Risk Regime (
 | DEFENSIVE | 20~39 | Increase cash allocation |
 | RISK_OFF | 0~19 | Avoid new buys |
 
-#### R:R Calculator
+#### R:R Calculator / Entry Plan status
 
+**System plan (unchanged pivot math):**
 ```
 Entry   = 20-day high × 1.005          (pivot breakout basis)
 Stop    = Entry − 2 × ATR(14)
 Target  = Entry + 3 × (Entry − Stop)   → R:R = 1:3
-Qty     = (Account × Risk%) ÷ (Entry − Stop)
+Qty     = (Account × Risk%) ÷ (Entry − Stop)   # UI shows size only when Setup Ready
 ```
+
+**Setup status** (client helper `frontend/lib/entryPlan.ts`, shared by DeepDive + Daily):
+
+| Status | Meaning |
+|--------|---------|
+| **Setup Ready** | Stage2 ≥ 5 and price within ~5% of Entry (or already above) — pivot plan actionable on breakout |
+| **Watch** | Mid-distance or partial Stage2 — wait, not an active buy cue |
+| **Invalid · Avoid** | Far below Entry (>15% of Entry) and/or weak Stage2 — not a buy signal; levels informational |
+
+**Distance to Entry** = `(Entry − price) / price × 100` (positive = still below Entry).  
+**Market entry now** (secondary, dashed box) uses current price ± 2×ATR / 1:3 — labeled reference-only, never replaces the system pivot plan.
 
 ### AI Pipeline
 

@@ -25,8 +25,17 @@ import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
 import { InfoPopover } from '@/components/ui/InfoPopover';
 import { G } from '@/app/glossary';
 import { t, tField } from '@/app/i18n';
-
+import type { BiLang } from '@/app/i18n';
 import { SourceCite } from '@/components/ui/SourceCite';
+import {
+  classifySetupStatus,
+  distanceToEntryPct,
+  isDeepBreakdown,
+  marketNowLevels,
+  SETUP_STATUS_META,
+  DEEP_BREAKDOWN_COPY,
+  type SetupStatus,
+} from '@/lib/entryPlan';
 
 // ─── Static bilingual strings ───────────────────────────────────────────────
 
@@ -80,6 +89,15 @@ const S = {
   instDataInsuff:    { en: 'Insufficient data (< 20d)', ko: '데이터 부족 (20일 미만)' },
   rrTitle:           { en: 'Entry Plan · R:R', ko: '진입 계획 · R:R' },
   rrBasis:           { en: 'Pivot × 1.005 basis', ko: '피벗 × 1.005 기준' },
+  rrSystemPlan:      { en: 'System plan · pivot breakout', ko: '시스템 계획 · 피벗 돌파' },
+  rrDistToEntry:     { en: 'Distance to Entry', ko: 'Entry까지 거리' },
+  rrDistAbove:       { en: 'Above Entry', ko: 'Entry 상회' },
+  rrDeepBreakdown:   DEEP_BREAKDOWN_COPY as BiLang,
+  rrMarketNowTitle:  { en: 'If market entry now (reference only)', ko: '즉시 시장가 진입 시 (참고용)' },
+  rrMarketNowNote:   {
+    en: 'Not a system signal — ATR-based illustration at current price. Do not treat as Stage2 entry.',
+    ko: '시스템 신호 아님 — 현재가 기준 ATR 예시입니다. Stage2 진입으로 보지 마세요.',
+  },
   positionLabel:     { en: 'Position', ko: '포지션' },
   sharesUnit:        { en: 'sh', ko: '주' },
   socialTitle:       { en: 'Social Sentiment', ko: '소셜 심리' },
@@ -282,16 +300,34 @@ export function DeepDiveBoard() {
   // ── Daily / Stage2
   const stage2 = dailyData?.stage2;
 
-  // ── R:R
+  // ── R:R (pivot system plan + setup status + market-now reference)
   const entry = stage2?.entry ?? 0;
   const stop  = stage2?.stop  ?? 0;
   const target = stage2?.target ?? 0;
+  const priceForPlan = stage2?.latest_close ?? 0;
+  const atrForPlan = stage2?.latest_atr ?? 0;
+  const setupStatus: SetupStatus | null = stage2
+    ? classifySetupStatus({
+        price: priceForPlan,
+        entry,
+        stage2Score: stage2.score,
+        pullbackPct: stage2.pullback_pct,
+      })
+    : null;
+  const distToEntry = stage2 ? distanceToEntryPct(priceForPlan, entry) : null;
+  const deepBreakdown = stage2
+    ? isDeepBreakdown(priceForPlan, entry, stage2.pullback_pct)
+    : false;
+  const marketNow = stage2 ? marketNowLevels(priceForPlan, atrForPlan) : null;
+  const statusMeta = setupStatus ? SETUP_STATUS_META[setupStatus] : null;
   const accountNum = parseFloat(rrAccount.replace(/,/g, '')) || 100000;
   const riskPct    = parseFloat(rrRiskPct) || 1;
-  const qty = stop > 0 && entry > stop
+  const planActionable = setupStatus === 'ready';
+  const qty = planActionable && stop > 0 && entry > stop
     ? Math.floor(accountNum * (riskPct / 100) / (entry - stop))
     : 0;
   const stopLossPct = entry > 0 ? ((entry - stop) / entry) * 100 : 0;
+  const pivotMuted = setupStatus === 'invalid';
 
   // ── 심리/AI/실적
   const symSent  = (sentimentData?.latest?.symbols ?? []).find(s => s.symbol === symbol);
@@ -857,10 +893,54 @@ export function DeepDiveBoard() {
           <small>{t(S.rrBasis, locale)}</small>
         </div>
         <div className="card__bd">
-          {stage2 ? (
+          {stage2 && setupStatus && statusMeta ? (
             <>
-              {/* Entry / Stop / Target */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 12 }}>
+              {/* Setup status + distance */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                <span className={`badge ${statusMeta.tone}`} style={{ fontSize: 11.5, fontWeight: 700 }}>
+                  {t(statusMeta.label, locale)}
+                </span>
+                {distToEntry != null && (
+                  <span className="mono" style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: distToEntry > 15 ? 'var(--bear)' : distToEntry > 5 ? 'var(--warn)' : 'var(--bull)',
+                  }}>
+                    {distToEntry > 0
+                      ? `${t(S.rrDistToEntry, locale)} +${distToEntry.toFixed(1)}%`
+                      : `${t(S.rrDistAbove, locale)} ${Math.abs(distToEntry).toFixed(1)}%`}
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: 11.5, color: 'var(--fg-muted)', lineHeight: 1.45, marginBottom: deepBreakdown ? 6 : 10 }}>
+                {t(statusMeta.hint, locale)}
+              </div>
+              {deepBreakdown && (
+                <div style={{
+                  fontSize: 11.5,
+                  lineHeight: 1.45,
+                  marginBottom: 10,
+                  padding: '8px 10px',
+                  borderRadius: 8,
+                  background: 'var(--bear-soft)',
+                  color: 'var(--bear)',
+                  border: '1px solid color-mix(in srgb, var(--bear) 25%, transparent)',
+                }}>
+                  {t(S.rrDeepBreakdown, locale)}
+                </div>
+              )}
+
+              {/* Primary: system pivot plan */}
+              <div style={{ fontSize: 10.5, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                {t(S.rrSystemPlan, locale)}
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3,1fr)',
+                gap: 8,
+                marginBottom: 12,
+                opacity: pivotMuted ? 0.55 : 1,
+              }}>
                 {([
                   ['Entry',  entry.toFixed(2),  'var(--info)',  'var(--info-soft)'],
                   ['Stop',   stop.toFixed(2),   'var(--bear)', 'var(--bear-soft)'],
@@ -874,7 +954,7 @@ export function DeepDiveBoard() {
               </div>
 
               {/* R:R 시각 바 (빨강1 : 녹색3) */}
-              <div style={{ marginBottom: 10 }}>
+              <div style={{ marginBottom: 10, opacity: pivotMuted ? 0.55 : 1 }}>
                 <div style={{ display: 'flex', height: 10, borderRadius: 6, overflow: 'hidden', gap: 1 }}>
                   <div style={{ flex: 1, background: 'var(--bear)', opacity: 0.7, borderRadius: '6px 0 0 6px' }} />
                   <div style={{ flex: 3, background: 'var(--bull)', opacity: 0.7, borderRadius: '0 6px 6px 0' }} />
@@ -886,19 +966,69 @@ export function DeepDiveBoard() {
                 </div>
               </div>
 
-              {/* 포지션 크기 */}
-              <div style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--em-soft)', border: '1px solid color-mix(in srgb, var(--em-500) 25%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              {/* 포지션 크기 — only emphasized when Ready */}
+              <div style={{
+                padding: '8px 12px',
+                borderRadius: 8,
+                background: planActionable ? 'var(--em-soft)' : 'var(--bg-elevated, var(--border-soft))',
+                border: planActionable
+                  ? '1px solid color-mix(in srgb, var(--em-500) 25%, transparent)'
+                  : '1px solid var(--border-soft)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 10,
+                opacity: pivotMuted ? 0.7 : 1,
+              }}>
                 <div>
                   <div style={{ fontSize: 10, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {t(S.positionLabel, locale)} ({rrRiskPct}% · ${(accountNum/1000).toFixed(0)}K)
                   </div>
-                  <div className="mono" style={{ fontSize: 22, fontWeight: 700, color: 'var(--em-500)', lineHeight: 1.1 }}>{qty > 0 ? `${qty} ${t(S.sharesUnit, locale)}` : '—'}</div>
+                  <div className="mono" style={{
+                    fontSize: 22,
+                    fontWeight: 700,
+                    color: planActionable ? 'var(--em-500)' : 'var(--fg-muted)',
+                    lineHeight: 1.1,
+                  }}>
+                    {qty > 0 ? `${qty} ${t(S.sharesUnit, locale)}` : '—'}
+                  </div>
                 </div>
                 <div style={{ textAlign: 'right', fontSize: 11.5, color: 'var(--fg-muted)' }}>
                   <div>Max Loss <span style={{ color: 'var(--bear)', fontWeight: 600 }}>${(accountNum * riskPct / 100).toFixed(0)}</span></div>
                   <div>ATR <span className="mono">{stage2.latest_atr.toFixed(2)}</span></div>
                 </div>
               </div>
+
+              {/* Secondary: market-now reference */}
+              {marketNow && (
+                <div style={{
+                  marginTop: 4,
+                  marginBottom: 10,
+                  padding: '10px 12px',
+                  borderRadius: 8,
+                  background: 'var(--border-soft)',
+                  border: '1px dashed var(--border)',
+                }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-muted)', marginBottom: 4 }}>
+                    {t(S.rrMarketNowTitle, locale)}
+                  </div>
+                  <div style={{ fontSize: 10.5, color: 'var(--fg-subtle)', lineHeight: 1.4, marginBottom: 8 }}>
+                    {t(S.rrMarketNowNote, locale)}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6 }}>
+                    {([
+                      ['Entry', marketNow.entry],
+                      ['Stop', marketNow.stop],
+                      ['Target', marketNow.target],
+                    ] as [string, number][]).map(([l, v]) => (
+                      <div key={`now-${l}`} style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 9.5, color: 'var(--fg-subtle)', textTransform: 'uppercase' }}>{l}</div>
+                        <div className="mono" style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-muted)' }}>${v.toFixed(2)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* 패턴 배지 */}
               {(gcBadges.length > 0 || patBadges.length > 0) && (

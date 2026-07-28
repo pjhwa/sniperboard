@@ -109,8 +109,8 @@ export const GLOSSARY: GlossaryEntry[] = [
     key: 'rr_ratio',
     term: { en: 'R:R Ratio (Risk:Reward)', ko: 'R:R 비율 (Risk:Reward)' },
     body: {
-      en: 'The ratio of potential loss to potential gain. 1:3 means you risk 1 unit to make 3 — you only need to be right 1 in 3 times to be profitable. Generally recommend 1:2 or better.',
-      ko: '내가 잃을 수 있는 금액 대비 벌 수 있는 금액의 비율입니다. 1:3이면 1만원 잃을 위험에 3만원을 노린다는 뜻. 일반적으로 1:2 이상을 권장합니다.',
+      en: 'The ratio of potential loss to potential gain. System Entry = 20-day high × 1.005 (pivot breakout), not current price. Setup status Ready/Watch/Invalid shows whether that pivot plan is actionable now; far below Entry = Invalid (not a buy). A secondary “market entry now” box is reference-only. 1:3 means risk 1 to make 3.',
+      ko: '잃을 수 있는 금액 대비 벌 수 있는 금액의 비율. 시스템 Entry는 현재가가 아니라 20일 고점×1.005(피벗 돌파)입니다. 셋업 상태(준비/관망/무효)가 그 계획이 지금 유효한지 알려 주며, Entry에서 멀리 떨어지면 무효(매수 신호 아님). “즉시 시장가 진입” 박스는 참고용입니다. 1:3이면 1을 위험에 3을 노립니다.',
     },
   },
   {

@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-07-26 Insight Lab signal honesty layer)
+# SniperBoard — Project Context (UPDATED 2026-07-29 Entry Plan setup status UX)
 
 ## 0. Purpose of This Document
 
@@ -94,9 +94,9 @@ sniperboard/
 │   │   │   └── HeatStrip.tsx     # CSS-based heatmap strip
 │   │   ├── boards/               # 7 board components. Common pattern: <div className="board-wrap"> wrapper → BoardGuidePanel is a direct child of board-wrap. Guide button lives in MarketStrip (moved there). Each board listens for 'guide:open' event via useEffect → setGuideOpen(true). GlossaryPanel fully removed. All boards converted to bilingual with t()/tField() (2026-05-31).
 │   │   │   ├── OverviewBoard.tsx # Market overview (11 cards): AI Insight + Earnings Calendar + Regime + DD + Breadth + VIX + Credit + Entry Radar + Conviction Leaderboard + Sector + Watchlist Top3. ⏱ freshness badges. 7 cards have info={G.*} props (resolved to locale-aware strings via t()). Mobile: mob-order-1~8 for Big→Detail reordering, AI Insight details.mob-collapse.
-│   │   │   ├── DeepDiveBoard.tsx # Full analysis (5-Row): Row1=symbol selector+price bar+badges(Stage2/Conviction/monthly/structure/signal)+PRE/POST price. Row2=DailyChart(3fr)|Stage2 checks+KPI4(2fr). Row3=Institutional Activity(3fr)|R:R Entry Plan(2fr). Row4(3×1fr)=Social Sentiment|AI Brief|Earnings. Row5=Regime(3fr)|Market-wide Sentiment(2fr). market_structure badge gets '·D' suffix (daily structure), intraday signal badges get '·{timeframe}' suffix — prevents UPTREND(D) vs downtrend(5m) confusion (2026-06-02). tField() for all AI data fields.
+│   │   │   ├── DeepDiveBoard.tsx # Full analysis (5-Row): Row1=symbol selector+price bar+badges(Stage2/Conviction/monthly/structure/signal)+PRE/POST price. Row2=DailyChart(3fr)|Stage2 checks+KPI4(2fr). Row3=Institutional Activity(3fr)|R:R Entry Plan(2fr: setup status Ready/Watch/Invalid + distance% + pivot plan primary + market-now secondary reference + deep-breakdown copy). Row4(3×1fr)=Social Sentiment|AI Brief|Earnings. Row5=Regime(3fr)|Market-wide Sentiment(2fr). market_structure badge gets '·D' suffix (daily structure), intraday signal badges get '·{timeframe}' suffix — prevents UPTREND(D) vs downtrend(5m) confusion (2026-06-02). tField() for all AI data fields.
 │   │   │   ├── IntradayBoard.tsx # Intraday: IntradayChart + active signals + RSI + action bar. SIG_META BiLang map for signal name InfoPopovers. Bilingual all labels.
-│   │   │   ├── DailyBoard.tsx    # Daily: DailyChart + Stage2 checklist + R:R panel. Stage2·R:R cards have info prop (t() applied to G.* entries). Earnings banner uses tField() for bilingual ai_summary/action_note fields (v2.0 _en/_ko pairs, v1.x fallback).
+│   │   │   ├── DailyBoard.tsx    # Daily: DailyChart + Stage2 checklist + R:R panel (same entryPlan status/distance/market-now as DeepDive). Stage2·R:R cards have info prop (t() applied to G.* entries). Earnings banner uses tField() for bilingual ai_summary/action_note fields (v2.0 _en/_ko pairs, v1.x fallback).
 │   │   │   ├── WatchlistBoard.tsx # Watchlist: Stage2-sorted table. Table headers (Stage2/RS/Conviction) have InfoPopovers (t() applied). Monthly phase bilingual.
 │   │   │   ├── MacroBoard.tsx    # Macro: overall RISK-ON/MIXED/RISK-OFF banner + sector rotation bar + 6 group cards. Each card: traffic light (🟢🟡🔴) · direction (↗↘) · AI interpretation text · freshness badge. useMacroInsight() combined. Graceful degrade when AI absent. Mobile: mob-order-1~3 (banner→groups→Sector), mob-macro-groups (display:contents desktop / flex-column mobile), bullets details.mob-collapse. Bilingual group labels and judgment text. Symbol names from MACRO_SYMBOL_NAMES BiLang map (not backend name field). AI text rendered via tField(text_en, text_ko, text, locale) for v2.0/v1.x compat; bullets via tField(bullets_en[i], bullets_ko[i], bullets[i], locale).
 │   │   │   └── SentimentBoard.tsx # Sentiment: market gauge + per-symbol cards with TIER1/TIER2 separation. TIER1 (12 symbols, sky-blue header) + TIER2 (10 symbols, purple header). Renders ALL symbols from TIER1_SYMBOLS/TIER2_SYMBOLS regardless of API response — symbols missing from the API (e.g. new IPO, collection pending) show a placeholder card ("심리 데이터 수집 예정 / Sentiment data pending"). Section headers show "N collected / M total" format. TopNewsBox tField() bilingual. Composite Score card info prop. Bottom: "Social Sentiment Data" explainer card.
@@ -111,6 +111,10 @@ sniperboard/
 │   │   │   ├── IntradayChart.tsx
 │   │   │   └── DailyChart.tsx
 │   │   └── (legacy tab components — files kept, no longer used in page.tsx)
+│   ├── lib/
+│   │   ├── entryPlan.ts          # Pure Entry Plan UX helpers (2026-07-29): distanceToEntryPct, classifySetupStatus (ready/watch/invalid), marketNowLevels, isDeepBreakdown + SETUP_STATUS_META/DEEP_BREAKDOWN_COPY BiLang. Pivot math stays in signal_engine; this module only classifies UI state. Test: `npm run test:entry-plan` (tsx lib/entryPlan.test.ts).
+│   │   ├── entryPlan.test.ts     # Unit tests for shipped entryPlan helpers (Ready/Watch/Invalid, TSLA-like drawdown, market-now 1:3).
+│   │   └── formatDateTime.ts
 │   └── hooks/
 │       ├── useStore.ts           # Zustand persist: symbol, timeframe, board (incl. insight), theme, locale, cmdOpen, rrAccount, rrRiskPct. locale: Locale ('en'|'ko', default 'ko') added 2026-05-31.
 │       ├── useInsight.ts         # GET /api/insight?days&horizon — Insight Lab payload (MVP-1..4 + integrity).
@@ -205,11 +209,17 @@ Minervini 7-item checklist (score 0~7):
 7. `volume_contracting`: 5-day avg < 20-day avg
 
 Additional calculations:
-- Entry price = 20-day **daily high** max × 1.005 (based on high, not close)
+- Entry price = 20-day **daily high** max × 1.005 (based on high, not close) — **unchanged by Entry Plan UX**
 - Stop price = Entry − 2 × ATR14
 - Target price = Entry + 3 × (Entry − Stop)
 - rs_score formula: min(100, max(0, 50 + (stock_63d_ret − spy_63d_ret) × 2))
 - breadth_narrow: True when SPY is at 20-day high but RSP is not
+
+**Entry Plan UX (frontend `lib/entryPlan.ts`, 2026-07-29)** — does not change backend formulas:
+- `distanceToEntryPct` = (entry − price) / price × 100
+- `classifySetupStatus`: ready (Stage2≥5 & within ~5% of entry) / watch / invalid (far below entry >15% of entry, or weak Stage2)
+- `marketNowLevels(price, atr)`: reference-only current-price entry + 2×ATR stop + 1:3 target
+- DeepDive + Daily R:R panels show status badge, distance %, subdued pivot levels when invalid, deep-breakdown copy, and secondary market-now box
 
 Phase 2: long-horizon metrics (52w pcts, RS 63d, EMA200 slope 20d, pullback, pivot high/entry) now use adj_close + scaled high/low when 'adj_close' column present. Non-split or legacy path unchanged. GC/detects/short-term on raw.
 
@@ -366,7 +376,7 @@ useSymbolInfo() 1h staleTime. 4 items: Market Cap (T/B/M format) | 52W High (gre
 
 **Row 3: Institutional Activity (3fr) + R:R Entry Plan (2fr)**
 - Left: 60-day up/down heatmap (3 rows × 20 columns) + Up/Down volume ratio + volume trend + concentrated day detection + institutional score (0~100) + 10-day accumulation/distribution grid. Calculated from `dailyData.candles` as pure frontend functions.
-- Right: Entry/Stop/Target 3-col + red-1:green-3 visual bar + position size (Max Loss/ATR) + pattern badges
+- Right: Setup status badge (Ready/Watch/Invalid·Avoid via `classifySetupStatus`) + distance to Entry % + system pivot Entry/Stop/Target (muted when invalid) + red-1:green-3 bar + position size only when Ready + deep-breakdown copy when pullback/distance deep + secondary market-now reference levels + pattern badges
 
 **Row 4 (3×1fr, `alignItems: 'stretch'`)**
 | Card | Data | Content |

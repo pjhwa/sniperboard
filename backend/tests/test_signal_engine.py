@@ -73,6 +73,14 @@ def test_calculate_stage2_analysis():
     assert "entry" in result
     assert "stop" in result
     assert "target" in result
+    # Pivot formula contract (Entry Plan UX must not rewrite these):
+    # entry = pivot_high × 1.005; stop = entry − 2×ATR; target = entry + 3×risk
+    assert result["entry"] == round(result["pivot_high"] * 1.005, 2)
+    risk = result["entry"] - result["stop"]
+    assert abs(risk - 2 * result["latest_atr"]) < 0.02  # rounding tolerance
+    assert result["target"] == round(result["entry"] + 3 * risk, 2)
+    # Entry is not forced to latest_close (market-price rewrite forbidden)
+    assert result["entry"] != result["latest_close"] or result["pivot_high"] * 1.005 == result["latest_close"]
 
 
 # =============================================================================
