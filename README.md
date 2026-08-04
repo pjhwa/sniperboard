@@ -470,7 +470,7 @@ Mac Mini cron generates external data twice daily, pushes to GitHub, and the bac
     └─ Grok/Hermes → market narrative + per-symbol Brief → GitHub brief/latest.json
 06:15/22:15 KST: collect_macro_insight.py → GitHub macro/latest.json
 06:30 KST (once/day): collect_earnings.py → GitHub earnings/latest.json
-06:45 KST (once/day): collect_morning_briefing.py → GitHub briefing/latest.json
+06:45 KST (once/day): collect_morning_briefing.py (Stage-1: mechanical RSS evidence + hermes web → 1–3 issues; Stage-2: table-bound brief; B2 integrity) → GitHub briefing/latest.json
 ```
 
 A health monitor (`market-sentiment-data/monitor/health_check.py`) runs every 2 hours via cron and sends a macOS native notification if any issue is detected (data staleness, Docker container down, API unresponsive, etc.).
@@ -491,7 +491,7 @@ Each response includes `meta: {fetched_at, age_minutes, source}` — displayed a
 - **A5** Shared `frontend/app/earningsFormat.ts` for absolute date + D-n on Overview/Daily/DeepDive.
 
 **Phase B interpretation quality (2026-07-15):**
-- **B1** Mechanical briefing integrity (`briefing_verify`) on serve + MSD `verify_briefing` / `phase_b_integrity` (relative day, mood vs drop, price binding).
+- **B1/B2** Mechanical briefing integrity (`briefing_verify`) on serve + MSD `verify_briefing` / `phase_b_integrity`: B1 relative day, mood vs drop, price binding; **B2** false-catalyst (headline must not pin a ticker move to a global theme that marks the ticker `unaffected` when post-market/earnings evidence exists), theme-recurrence/staleness vs history, day-window fitness for morning-brief framing.
 - **B2** Global issue cards: confidence tier + clickable `source_urls` / URL-shaped `source_hint`.
 - **B3** Earnings `estimate_as_of` / `estimate_provider` (null-safe UI).
 - **B4** `GET /api/divergence` + Sentiment board list (not used in Conviction).

@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-07-29 Entry Plan setup status UX)
+# SniperBoard — Project Context (UPDATED 2026-08-04 B2 integrity + morning-brief trust gates)
 
 ## 0. Purpose of This Document
 
@@ -39,7 +39,7 @@ sniperboard/
 │   │   ├── backtest_engine.py        # Backtesting engine (2026-06-02). Daily bar backtest driven by Stage2 signals.
 │   │   ├── earnings_consistency.py   # Absolute earnings_date SoT (YYYY-MM-DD). days_until internal only for sort/tier. AI relative phrases scrubbed → absolute. Email dedupe + mood/session coherence.
 │   │   ├── github_payload_cache.py   # Phase A3: LastGoodCache + stale-on-error + slot_mismatch helpers.
-│   │   ├── briefing_verify.py        # Phase B1: mechanical integrity (relative day / mood / price binding).
+│   │   ├── briefing_verify.py        # Phase B1/B2: mechanical integrity — B1 relative day / mood / price binding; B2 false-catalyst (headline vs asymmetric_impact + post-earnings), theme-recurrence/stale (optional history), day-window fitness. scan_briefing_artifacts() machine-readable entry.
 │   │   ├── divergence.py             # Phase B4: social composite vs day-change divergence labels.
 │   │   ├── live_backtest_compare.py  # Phase C1/C2 pure helpers: DEFAULT_METHODOLOGY (scan window / Stage2 threshold), confidence_from_n, health_from_expectancy, extract_backtest_baseline(cached backtest_result.json), compare_live_to_backtest(live, baseline) → side-by-side + honest_gap when n<30. No I/O.
 │   │   ├── alerts_engine.py          # Phase C4: pure build_alerts from earnings days_until, signal_log PENDING/ACTIVE, Track health, briefing integrity. Dashboard-only (no push).
@@ -54,7 +54,7 @@ sniperboard/
 │   │   └── overnight_service.py  # Yahoo Finance WebSocket → Blue Ocean ATS overnight price stream. Runs in a dedicated daemon thread (asyncio.run in thread) — NOT in uvicorn's event loop, to avoid handshake timeouts caused by blocking yfinance I/O. Protobuf base64 parsing (field1=symbol, field2=price/float32, field6=session_hours/varint:8=overnight, field12=chg_pct). start_overnight_service() called in FastAPI lifespan; spawns threading.Thread(daemon=True).
 │   │   └── cap_leaderboard_service.py # companiesmarketcap.com 글로벌 랭킹 스크래핑 → yfinance 1y 히스토리로 spark·52W·market_structure 보완. 1h 인메모리 캐시 + stale fallback. fetch_leaderboard() → TOP 15 dict.
 │   │   └── macro_insight_service.py  # GitHub raw fetch + 30-min in-memory cache (MACRO_INSIGHT_URL). fetch_macro_insight() → Optional[dict]. get_ai_meta(raw) → {generated_at,age_minutes}. Returns None gracefully if URL not set.
-│   │   └── morning_briefing_service.py  # GitHub raw fetch + 10-min raw cache (MORNING_BRIEFING_URL). On every serve: sanitize_briefing_payload + integrity verify + P2+ enrich_briefing_citations (source_urls on global issues).
+│   │   └── morning_briefing_service.py  # GitHub raw fetch + 10-min raw cache (MORNING_BRIEFING_URL). On every serve: sanitize_briefing_payload + B1/B2 integrity verify (integrity_passed / issue codes incl. B2-false-catalyst) + P2+ enrich_briefing_citations (source_urls on global issues).
 │   │   └── email_report_service.py  # Morning email: collect + charts + Jinja2. prepare_email_sections() dedupes cross-section restatements; structured earnings calendar is SoT (free-text earnings_alert omitted when calendar present).
 │   │   └── insight_service.py        # Insight Lab assembly: load MSD history (INSIGHT_DATA_ROOT local or GitHub raw) + yfinance closes → insight_engine. 15-min cache. GET /api/insight.
 │   └── tests/
@@ -155,7 +155,7 @@ Base URL: `http://<host>:4000/api` (via Next.js proxy) or `http://<host>:5001/ap
 | `GET /brief` | — | AI Daily Brief JSON (GitHub raw 30-min cache) + `meta: {fetched_at, age_minutes, source}` |
 | `GET /earnings` | — | Earnings Intelligence JSON (GitHub raw 60-min cache) + `meta: {fetched_at, age_minutes, source}` |
 | `GET /macro/insight` | — | 6 group traffic lights (signal/direction) + AI interpretation text (text/text_en/text_ko) + overall judgment + summary/summary_en/summary_ko + bullets/bullets_en/bullets_ko + ai_meta (age_minutes). Rule-based real-time + GitHub-cached AI overlay. |
-| `GET /morning-briefing` | — | Morning briefing JSON (GitHub raw 10-min cache). Serve-time: earnings sanitize + integrity + P2+ `global_context.issues[].source_urls` / `source_resolved`. |
+| `GET /morning-briefing` | — | Morning briefing JSON (GitHub raw 10-min cache). Serve-time: earnings sanitize + B1/B2 integrity (`integrity_passed`, codes e.g. B1-*, B2-false-catalyst, B2-theme-recurrence, B2-day-window) + P2+ `global_context.issues[].source_urls` / `source_resolved`. |
 | `GET /backtest/result` | — | Cached backtest results JSON. Returns 404 if not yet run. Structure: generated_at/config(rs_threshold/use_spy_filter)/methodology/aggregate(all/in_sample/out_of_sample)/breakdown_by_score/by_symbol. |
 | `POST /backtest/run` | `symbols[]` (optional), `threshold` (1-7, default 5), `rs_threshold` (0-100, default 70), `use_spy_filter` (bool, default true) | Runs backtest immediately, caches result, returns summary. Defaults to full WATCHLIST_SYMS if symbols not specified. Takes tens of seconds. |
 | `POST /backtest/sweep` | `symbols[]` (optional) | Runs 8-config parameter sweep and returns comparison results. Takes several minutes. |
