@@ -159,7 +159,7 @@ cp .env.example .env
 | 카드 | 내용 |
 |------|------|
 | **AI Market Snapshot** | Grok AI가 생성한 시장 내러티브 (tone · key_themes · watch_points) + 워치리스트 전 종목 AI 분석 (Setup Quality A+~D · Action Bias · 한 줄 요약). briefData 없을 때는 Regime 텍스트로 자동 대체. ⏱ 데이터 신선도 배지. |
-| **Earnings Calendar** | 워치리스트 30일 이내 실적 발표 일정. 리스크 등급(high/med/low) + 임박/진입권/관망 티어. ⏱ 신선도 배지. |
+| **Earnings Calendar** | 워치리스트 30일 이내 실적 발표 일정. 리스크 등급(high/med/low) + 임박/진입권/관망 티어. 각 행에서 해당 종목 [Perplexity Finance 실적](https://www.perplexity.ai/finance) 페이지로 이동. ⏱ 신선도 배지. |
 | **Risk Regime** | 매크로 환경 0~100점 종합 (5요소: Trend · Breadth · Credit · Volatility · Momentum + 원시 수치). RadialGauge 시각화. |
 | **Distribution Days** | SPY·QQQ 기관 분배일 카운트 (O'Neil, 25거래일 기준). OK / WARNING / DANGER 등급. |
 | **Market Breadth** | SPY·RSP·MAGS·IWM 5일 수익률 비교. Mag7 주도 협소 랠리 자동 경고. |
@@ -182,6 +182,8 @@ cp .env.example .env
 
 종목 선택 버튼 | 현재가 · RSI · EMA21 + 인트라데이 스파크라인 | Stage2 점수 · Conviction 배지 · 월봉 단계 · 시장구조 · 활성 신호 배지를 한 줄로 표시. PRE/POST 마켓 가격·변화율 실시간 표시 (정규장 외 시간대).
 
+- **심볼 정보 줄** — 시가총액·52W High/Low·섹터 + **Perplexity Finance** 시세 페이지 딥링크 (`/finance/{종목}`, 새 탭, 데이터 수집 없음).
+
 **Row 2 — 기술 심층 (60% : 40%)**
 - **Daily Chart**: 1년 일봉 캔들 + EMA8/21/50/200 + 가우시안 채널(보라) + Entry·Stop 라인
 - **Stage 2 체크리스트**: 7항목 2컬럼 + 월봉 EMA10 배너 + RS Score · 52주이격 · 조정폭 · EMA200기울기 KPI 4개
@@ -193,7 +195,7 @@ cp .env.example .env
 **Row 4 — 심리 · AI · 실적 (3등분, 동일 높이)**
 - **소셜 심리**: composite_score ScoreBar(−2~+2) + 전일 델타 + 핵심 이유 + 주요 뉴스 + 심리 추이 차트 토글 (7일/30일)
 - **AI 분석 Brief**: Setup Quality(A+~D) + Action Bias 배지 + 분석문 + 기회/리스크 블록
-- **실적 발표**: 임박 시 발표일·D-Day·EPS·Beat율 표시; 없으면 최근 실적 결과(EPS 서프라이즈·AI 반응) 자동 표시
+- **실적 발표**: 임박 시 발표일·D-Day·EPS·Beat율 표시; 없으면 최근 실적 결과(EPS 서프라이즈·AI 반응) 자동 표시. 하단에서 Perplexity `/finance/{종목}/earnings` (트랜스크립트·beat/miss·하이라이트)로 이동.
 
 **Row 5 — 매크로 맥락 (60% : 40%)**
 - **Risk Regime**: RadialGauge(0~100) + 레짐 설명 + 5요소 바(Trend/Breadth/Credit/Volatility/Momentum)

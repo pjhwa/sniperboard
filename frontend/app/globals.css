@@ -1228,6 +1228,10 @@ body {
   overflow: hidden;
   font-size: 0.78rem;
 }
+@media (max-width: 767px) {
+  .symbol-info-strip { flex-wrap: wrap; }
+  .symbol-info-strip__item { flex: 1 1 30%; }
+}
 .symbol-info-strip__item {
   display: flex;
   flex-direction: column;

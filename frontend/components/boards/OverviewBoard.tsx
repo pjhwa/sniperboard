@@ -17,6 +17,7 @@ import { useBrief } from '@/hooks/useBrief';
 import { useEarnings } from '@/hooks/useEarnings';
 import { t, tField } from '@/app/i18n';
 import { formatEarningsLabel } from '@/app/earningsFormat';
+import { PerplexityFinanceLink } from '@/components/ui/PerplexityFinanceLink';
 import { isInsufficientHistory, thinHistoryLabel } from '@/app/dataStatus';
 
 // Static bilingual strings
@@ -370,6 +371,7 @@ export function OverviewBoard() {
                       <span className={`badge ${rm.color}`} style={{ fontSize: 11 }}>
                         {rm.dot} {e.risk_level.toUpperCase()}
                       </span>
+                      <PerplexityFinanceLink symbol={e.symbol} locale={locale} page="earnings" compact />
                     </div>
                   );
                 })}

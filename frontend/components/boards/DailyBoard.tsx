@@ -18,6 +18,7 @@ import { HeatStrip } from '@/components/ui/HeatStrip';
 import { t, tField } from '@/app/i18n';
 import type { BiLang } from '@/app/i18n';
 import { formatEarningsBanner } from '@/app/earningsFormat';
+import { PerplexityFinanceLink } from '@/components/ui/PerplexityFinanceLink';
 import {
   classifySetupStatus,
   distanceToEntryPct,
@@ -191,7 +192,14 @@ export function DailyBoard() {
                 {symbolEarning.relevance_tier === 'imminent' ? '⚡' : '📅'}{' '}
                 {formatEarningsBanner(symbolEarning.earnings_date, locale)}
               </span>
-              <span style={{ opacity: 0.8 }}>{tField(symbolEarning.action_note_en, symbolEarning.action_note_ko, symbolEarning.action_note, locale)}</span>
+              <span style={{ opacity: 0.8, flex: 1 }}>{tField(symbolEarning.action_note_en, symbolEarning.action_note_ko, symbolEarning.action_note, locale)}</span>
+              <PerplexityFinanceLink
+                symbol={symbol}
+                locale={locale}
+                page="earnings"
+                compact
+                style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}
+              />
             </div>
           )}
           {isLoading ? (

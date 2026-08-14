@@ -27,6 +27,7 @@ import { G } from '@/app/glossary';
 import { t, tField } from '@/app/i18n';
 import type { BiLang } from '@/app/i18n';
 import { SourceCite } from '@/components/ui/SourceCite';
+import { PerplexityFinanceLink } from '@/components/ui/PerplexityFinanceLink';
 import {
   classifySetupStatus,
   distanceToEntryPct,
@@ -162,6 +163,7 @@ const S = {
   week52High:   { en: '52W High',    ko: '52주 고가' },
   week52Low:    { en: '52W Low',     ko: '52주 저가' },
   sector:       { en: 'Sector',      ko: '섹터' },
+  research:     { en: 'Research',    ko: '리서치' },
 };
 
 // ─── 색상 헬퍼 ─────────────────────────────────────────────────────────────────
@@ -648,6 +650,12 @@ export function DeepDiveBoard() {
           <span className="symbol-info-strip__label">{t(S.sector, locale)}</span>
           <span className="symbol-info-strip__value">
             {symbolInfo?.sector ?? '—'}
+          </span>
+        </div>
+        <div className="symbol-info-strip__item">
+          <span className="symbol-info-strip__label">{t(S.research, locale)}</span>
+          <span className="symbol-info-strip__value">
+            <PerplexityFinanceLink symbol={symbol} locale={locale} compact />
           </span>
         </div>
       </div>
@@ -1239,6 +1247,9 @@ export function DeepDiveBoard() {
                 {earningsData ? t(S.earningsNoData, locale) : t(S.loading, locale)}
               </div>
             )}
+            <div style={{ marginTop: 10 }}>
+              <PerplexityFinanceLink symbol={symbol} locale={locale} page="earnings" />
+            </div>
           </div>
         </div>
 

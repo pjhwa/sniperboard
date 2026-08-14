@@ -1,6 +1,6 @@
 > English docs: [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md)
 
-# SniperBoard — Project Context (UPDATED 2026-07-29 Entry Plan setup status UX)
+# SniperBoard — Project Context (UPDATED 2026-08-14 Perplexity Finance 딥링크)
 
 ## 0. 이 문서의 목적
 
@@ -312,7 +312,7 @@ SYMBOLS 버튼 | 현재가 + RSI + EMA21 + 스파크라인(60봉) + PRE/POST 가
 |------|--------|------|
 | 소셜 심리 | `useSentiment` (symbol 필터) | composite_score + ScoreBar(−2~+2) + 전일 델타 + key_reason + TopNews + 심리 추이 차트 토글(7/30일) |
 | AI Brief | `useBrief` (symbol 필터) | 그라디언트 카드 + Setup Quality 배지 + Action Bias + brief + 기회/리스크 블록 |
-| 실적 발표 | `useEarnings` (symbol 필터) | 임박: 발표일·D-Day·EPS·Beat율·ai_summary; 없으면 recent_result(EPS실제/추정/서프라이즈/ai_reaction) |
+| 실적 발표 | `useEarnings` (symbol 필터) | 임박: 발표일·D-Day·EPS·Beat율·ai_summary; 없으면 recent_result(EPS실제/추정/서프라이즈/ai_reaction). 하단: Perplexity `/finance/{종목}/earnings` 딥링크. |
 
 **Row 5: Risk Regime (3fr) + 시장 전체 심리 (2fr)**
 - 좌: RadialGauge(80px) + 레짐 설명 텍스트 + 5요소 바(raw수치 포함) — 2컬럼 내부 레이아웃
@@ -327,7 +327,7 @@ SYMBOLS 버튼 | 현재가 + RSI + EMA21 + 스파크라인(60봉) + PRE/POST 가
 | 카드 | span | 데이터 소스 | 내용 |
 |------|------|------------|------|
 | AI Market Snapshot | 2 | `useBrief` | tone 배지·summary·key_themes·watch_points + symbol_briefs(워치리스트 전 종목 AI 분석: 2컬럼 그리드, Action Bias 신호강도 미터); briefData=null이면 regime 텍스트 fallback. ⏱ freshness badge. |
-| Earnings Calendar | 1 | `useEarnings` | 30일 이내 실적 일정 + risk_level 배지 + relevance_tier(임박/진입권/관망). ⏱ freshness badge. |
+| Earnings Calendar | 1 | `useEarnings` | 30일 이내 실적 일정 + risk_level 배지 + relevance_tier(임박/진입권/관망) + 행별 Perplexity `/finance/{종목}/earnings` 링크. ⏱ freshness badge. |
 | Risk Regime | 1 | `useRegime` | RadialGauge + 5요소 바 + 원시 수치 |
 | Distribution Days | 1 | `useDistributionDays` | SPY·QQQ DD 카운트 + 도트 시각화 |
 | Market Breadth | 1 | `useMacro` | SPY·RSP·MAGS·IWM 5D 수익률 바 + 협소 랠리 경고 |

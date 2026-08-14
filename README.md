@@ -209,7 +209,7 @@ The main board showing the full market picture in one view. 11 cards.
 | Card | Content |
 |------|---------|
 | **AI Market Snapshot** | Grok AI-generated market narrative (tone · key_themes · watch_points) + per-symbol AI analysis (Setup Quality A+~D · Action Bias · one-line summary). Falls back to Regime text when briefData is unavailable. ⏱ Freshness badge. |
-| **Earnings Calendar** | Upcoming earnings within 30 days. **Absolute `earnings_date` (YYYY-MM-DD) only** in the UI — no "D-n" / "N일 후" / "tomorrow". `days_until` is recomputed live (US/Eastern) for sort/tier only; AI free text is scrubbed to absolute dates on serve. Risk tier (high/med/low) + imminent/approaching/watching. ⏱ Freshness badge. |
+| **Earnings Calendar** | Upcoming earnings within 30 days. **Absolute `earnings_date` (YYYY-MM-DD) only** in the UI — no "D-n" / "N일 후" / "tomorrow". `days_until` is recomputed live (US/Eastern) for sort/tier only; AI free text is scrubbed to absolute dates on serve. Risk tier (high/med/low) + imminent/approaching/watching. Each row links out to that symbol's public [Perplexity Finance earnings](https://www.perplexity.ai/finance) page. ⏱ Freshness badge. |
 | **Risk Regime** | Macro environment score 0~100 (5 factors: Trend · Breadth · Credit · Volatility · Momentum + raw values). RadialGauge visualization. |
 | **Distribution Days** | SPY·QQQ institutional selling day count (O'Neil, 25 trading days). OK / WARNING / DANGER levels. |
 | **Market Breadth** | SPY · RSP · MAGS · IWM 5-day return comparison. Auto-warns on narrow Mag7-led rallies. |
@@ -232,7 +232,7 @@ All perspectives on one symbol in a single continuous flow. Switch the symbol di
 
 Symbol selector buttons | Current price · RSI · EMA21 + intraday sparkline | Stage2 score · Conviction badge · Monthly phase · Market structure · Active signal badges in one line. PRE/POST market price and change % in real time (outside regular hours).
 
-- **Symbol Info Strip** — 선택 종목의 시가총액·52W High/Low·섹터를 차트 위에 컴팩트하게 표시.
+- **Symbol Info Strip** — 선택 종목의 시가총액·52W High/Low·섹터 + **Perplexity Finance** quote page deep link (`/finance/{SYM}`, new tab, no data fetch).
 
 **Row 2 — Technical Deep Dive (60% : 40%)**
 - **Daily Chart**: 1-year daily candles + EMA8/21/50/200 + Gaussian Channel (purple) + Entry·Stop lines
@@ -245,7 +245,7 @@ Symbol selector buttons | Current price · RSI · EMA21 + intraday sparkline | S
 **Row 4 — Sentiment · AI · Earnings (3 equal columns)**
 - **Social Sentiment**: composite_score ScoreBar (−2~+2) + prior-day delta + key reason + top news + sentiment trend chart toggle (7d/30d)
 - **AI Analysis Brief**: Setup Quality (A+~D) + Action Bias badge + analysis text + opportunity/risk blocks
-- **Earnings**: Shows absolute upcoming date (YYYY-MM-DD) · EPS · Beat rate when imminent; otherwise shows recent EPS surprise and AI reaction
+- **Earnings**: Shows absolute upcoming date (YYYY-MM-DD) · EPS · Beat rate when imminent; otherwise shows recent EPS surprise and AI reaction. Footer opens Perplexity `/finance/{SYM}/earnings` (transcripts · beat/miss · highlights).
 
 **Row 5 — Macro Context (60% : 40%)**
 - **Risk Regime**: RadialGauge (0~100) + regime description + 5-factor bar (Trend/Breadth/Credit/Volatility/Momentum)

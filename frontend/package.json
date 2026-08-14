@@ -7,8 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx lib/entryPlan.test.ts",
-    "test:entry-plan": "tsx lib/entryPlan.test.ts"
+    "test": "tsx lib/entryPlan.test.ts && tsx lib/perplexityFinance.test.ts",
+    "test:entry-plan": "tsx lib/entryPlan.test.ts",
+    "test:perplexity-finance": "tsx lib/perplexityFinance.test.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.100.11",
