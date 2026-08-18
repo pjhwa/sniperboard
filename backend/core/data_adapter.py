@@ -28,7 +28,68 @@ from typing import Optional, Dict, List
 logger = logging.getLogger(__name__)
 
 
-def normalize_yf_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+def _patch_latest_nan_row(result: pd.DataFrame, symbol: Optional[str]) -> pd.DataFrame:
+    """최신 행에 NaN인 OHLC 필드가 있으면 폴백 조회로 채운다.
+
+    관찰된 두 단계 지연:
+    1. yf.download() 일괄 엔드포인트는 최근 거래일 OHLC 전체를 일시적으로 NaN 반환
+       (volume은 정상). yf.Ticker(symbol).history() 는 다른 엔드포인트를 써서 Open/High/Low는
+       먼저 채워져 있는 경우가 많음.
+    2. 다만 Close(및 Adj Close)는 Yahoo 쪽에서 Open/High/Low보다 더 늦게 확정되는 경우가 있어
+       history() 에서도 한동안 NaN으로 남을 수 있음 — 이 경우 당일 인트라데이(15m) 마지막 봉의
+       종가로 근사한다 (거래는 이미 종료됐고 intraday 피드는 먼저 채워짐).
+
+    두 폴백 모두 실패하면 해당 필드는 NaN인 채로 남고 이후 dropna()에서 행이 제거된다.
+    """
+    if not symbol or result.empty:
+        return result
+    price_cols = [c for c in ["open", "high", "low", "close"] if c in result.columns]
+    if not price_cols:
+        return result
+    last_idx = result.index[-1]
+    if not result.loc[last_idx, price_cols].isna().any():
+        return result
+
+    try:
+        hist = yf.Ticker(symbol).history(period="5d", interval="1d", auto_adjust=False)
+        if hist is not None and not hist.empty:
+            if hist.index.tz is not None:
+                hist.index = hist.index.tz_localize(None)
+            if last_idx in hist.index:
+                row = hist.loc[last_idx]
+                for col, src in [("open", "Open"), ("high", "High"), ("low", "Low"), ("close", "Close")]:
+                    if col in result.columns and src in row.index and pd.notna(row[src]) and pd.isna(result.loc[last_idx, col]):
+                        result.loc[last_idx, col] = row[src]
+                if "adj_close" in result.columns and "Adj Close" in row.index and pd.notna(row["Adj Close"]) and pd.isna(result.loc[last_idx, "adj_close"]):
+                    result.loc[last_idx, "adj_close"] = row["Adj Close"]
+    except Exception as e:
+        logger.warning(f"Daily fallback history fetch failed for {symbol}: {e}")
+
+    # Close가 여전히 비어 있으면 당일 인트라데이 마지막 봉 종가로 근사
+    if "close" in result.columns and pd.isna(result.loc[last_idx, "close"]):
+        try:
+            intraday = yf.Ticker(symbol).history(period="5d", interval="15m", auto_adjust=False)
+            if intraday is not None and not intraday.empty:
+                if intraday.index.tz is not None:
+                    intraday.index = intraday.index.tz_localize(None)
+                day_rows = intraday[intraday.index.normalize() == last_idx.normalize()]
+                if not day_rows.empty:
+                    last_bar = day_rows.iloc[-1]
+                    if pd.notna(last_bar.get("Close")):
+                        result.loc[last_idx, "close"] = last_bar["Close"]
+                        if "adj_close" in result.columns and pd.isna(result.loc[last_idx, "adj_close"]):
+                            result.loc[last_idx, "adj_close"] = last_bar["Close"]
+                    if "high" in result.columns and pd.isna(result.loc[last_idx, "high"]) and pd.notna(day_rows["High"].max()):
+                        result.loc[last_idx, "high"] = day_rows["High"].max()
+                    if "low" in result.columns and pd.isna(result.loc[last_idx, "low"]) and pd.notna(day_rows["Low"].min()):
+                        result.loc[last_idx, "low"] = day_rows["Low"].min()
+        except Exception as e:
+            logger.warning(f"Intraday close fallback failed for {symbol}: {e}")
+
+    return result
+
+
+def normalize_yf_dataframe(df: pd.DataFrame, symbol: Optional[str] = None) -> pd.DataFrame:
     """yfinance download 결과 DF 의 MultiIndex 컬럼을 일관된 flat lowercase 로 정규화.
 
     처리 규칙 (TDD + yf 1.3+ live 대응):
@@ -88,6 +149,9 @@ def normalize_yf_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     if keep_cols:
         result = result[keep_cols]
 
+    # yf.download() 최신 행 NaN 폴백 (dropna 전에 처리해야 행이 살아남음)
+    result = _patch_latest_nan_row(result, symbol)
+
     # 기존 서비스와 동일하게 dropna
     result = result.dropna()
 
@@ -110,7 +174,7 @@ def get_daily(symbol: str, period: str = "2y") -> Optional[pd.DataFrame]:
         if raw_df is None or raw_df.empty:
             logger.warning(f"No data returned for symbol: {symbol}")
             return None
-        return normalize_yf_dataframe(raw_df)
+        return normalize_yf_dataframe(raw_df, symbol=symbol)
     except Exception as e:
         logger.error(f"Error fetching daily data for {symbol}: {e}", exc_info=True)
         return None
@@ -175,7 +239,7 @@ def get_multi_daily(symbols: List[str], period: str = "2y") -> Dict[str, Optiona
                     raw_df = data[sym].copy()
 
                 # Normalize (MultiIndex handling + rename + optional adj_close preserve + dropna) 위임
-                df = normalize_yf_dataframe(raw_df)
+                df = normalize_yf_dataframe(raw_df, symbol=sym)
                 result[sym] = df if df is not None and not df.empty else None
             except Exception as e:
                 logger.error(f"Error processing Multi Daily for {sym}: {e}", exc_info=True)
