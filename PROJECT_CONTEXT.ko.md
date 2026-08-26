@@ -1,6 +1,6 @@
 > English docs: [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md)
 
-# SniperBoard — Project Context (UPDATED 2026-08-14 Perplexity Finance 딥링크)
+# SniperBoard — Project Context (UPDATED 2026-08-26 gs-quant 기반 퀀트 지표)
 
 ## 0. 이 문서의 목적
 
@@ -199,6 +199,39 @@ Phase 2 (part of yf-accuracy-harden): long-horizon metrics (52w pcts, RS 63d, EM
 - `rsi_divergence_bearish/bullish`: `detect_rsi_divergence()` — 최근 40봉 스윙 포인트 비교
 - `bear_flag`: `detect_bear_flag()` — 5%+ 급락 후 거래량 감소 횡보
 
+### 4-5b. Quant Stats 모듈 (`backend/core/quant_stats.py`, 2026-08-26 추가)
+
+`signal_engine.py`와 `backtest_engine.py`가 같은 공식(RS 수익률 계산이 퍼센트/비율 단위로
+따로 중복 구현되어 있었음)을 각자 재구현하지 않도록 분리한 순수 pandas/numpy 유틸.
+`goldmansachs/gs-quant`의 `timeseries` 모듈(technicals/statistics/econometrics) 분석에서
+착안했으며, 모든 계산은 인과적(trailing-only, `center=True`나 `.shift(-n)` 없음)으로
+구현 — `backend/tests/test_no_lookahead.py`의 `assert_causal()`로 회귀 테스트됨.
+
+- `excess_return_pct(price, market_price, window=63)`: (종목 구간수익률 − 시장 구간수익률),
+  퍼센트 단위. `rs_score`의 기반 — 리팩터 전 인라인 공식과 **완전히 동일한 결과**를 냄
+  (`test_rs_score_unchanged_by_refactor`로 검증 + 22개 `WATCHLIST_SYMS` 전체에 대해
+  실시간 데이터로 변경 전/후 비교 시 `rs_score`/`rs_strong`/`score` 0건 변경 확인).
+- `rolling_beta(stock_price, market_price, window=63)`: 트레일링 윈도우 기준 SPY 대비 베타,
+  인덱스 정렬(inner join, positional iloc 아님). `beta_63d`로 반환 — **표시/진단 전용 필드**이며
+  Stage2 7항목 체크리스트에는 미반영.
+- `percentile_rank(value, population)`: 중간순위(mid-rank) 백분위(0~100). `endpoints.py:
+  build_watchlist_result()`에서만 사용해 각 종목의 `rs_excess_63d`를 워치리스트 유니버스
+  전체와 비교 → `rs_score_percentile` (워치리스트 전용 필드; `rs_score`/`rs_strong`은
+  DeepDive·`email_report_service.py` 등 유니버스가 없는 단일 종목 경로를 포함해 기존
+  SPY 고정 공식 의미를 그대로 유지).
+- `sharpe_sortino(returns, periods_per_year)`: `backtest_engine.py: compute_stats`에서 사용
+  (아래 4-8 참고).
+- `trailing_median_outlier_mask(x, window=30, threshold=0.5)`: 인과적(trailing-only) 롤링
+  중앙값 이상치 탐지. `data_adapter.py`에서 **탐지/로그 전용**으로 사용(`_log_price_outliers`)
+  — 봉이 트레일링 중앙값 대비 50% 이상 벗어나면 경고 로그만 남기고 값은 절대 변경하지 않음
+  (차트/백테스트가 항상 벤더 원본 데이터와 일치하도록 보장). 단일 봉 NaN 백필(커밋 `2b2a916`)
+  의 개념을 시계열 전체로 일반화해 중간 구간의 벤더 오류도 잡아내되, gs-quant의 원본
+  `smooth_outliers`(`center=True`)를 그대로 포팅했다면 생겼을 미래참조 위험은 배제함.
+
+`calculate_stage2_analysis()`의 신규 반환 키(둘 다 `Optional`, 추가형):
+`rs_excess_63d`(SPY 대비 원시 초과수익률 %), `beta_63d`(SPY 대비 롤링 베타).
+워치리스트 전용 신규 키: `rs_score_percentile`.
+
 ### 4-6b. 월봉 추세 분석 (`signal_engine.py: calculate_stage2_analysis` 내부)
 
 일봉 252봉을 월봉으로 리샘플링해 **10개월 EMA** 기반 추세를 판별:
@@ -223,6 +256,18 @@ Phase 2 (part of yf-accuracy-harden): long-horizon metrics (52w pcts, RS 63d, EM
 
 최근 25거래일: (종가변화율 ≤ -0.2%) AND (거래량 > 전일) 인 날 수
 OK(<4) / WARNING(4~5) / DANGER(≥6)
+
+### 4-8. 위험조정수익률 백테스트 지표 (`backtest_engine.py: compute_stats`, 2026-08-26 추가)
+
+`compute_stats()` 반환값에 기존 `win_rate`/`expectancy_r`/`profit_factor`/`mdd`와 함께
+`sharpe_ratio`/`sortino_ratio` 추가. `quant_stats.sharpe_sortino()`로 계산:
+- 무위험이자율 0 가정 (단기 스윙 주식 거래에서 펀딩비 영향은 트레이드 손익 규모 대비 미미).
+- 연환산은 `252 / avg_bars_held`가 아니라 **관측된 캘린더 스팬**(거래 세트 전체의
+  `마지막 청산일 − 첫 진입일`)을 사용 — `run_full_backtest()`가 ~22개 종목에 걸쳐 순차적으로
+  거래를 풀링하므로(하나의 포지션을 계속 보유하는 것이 아님) "항상 시장에 있다"는 가정은
+  거래 빈도를 과대평가함.
+- 순서 무관(거래별 수익률 분포 + 캘린더 스팬만 필요) — Section 9에 명시된 기존 equity curve
+  순서 이슈의 영향을 받지 않음.
 
 ---
 
@@ -481,6 +526,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | API_BASE 재빌드 | `NEXT_PUBLIC_API_URL`은 빌드 시 번들되므로 런타임 변경 불가 |
 | 매크로 데이터 | 시장 마감 후에는 당일 데이터 미갱신 |
 | yfinance MultiIndex / 정확도 | 멀티 종목 다운로드 시 컬럼 구조 주의. **data_adapter.py가 모든 yf 데이터 접근의 단일 진실 공급원(normalize + fetch)**: 전체 위임 완료 (data_service는 intraday만 thin wrapper; 일봉 경로는 get_multi_daily 직접 임포트). Phase 2: 일봉 프레임에 adj_close 보존 + Stage2 장기 지표에만 선택적 조정가 사용 (단기/GC/raw 완전 역호환). Phase4/5: FE 배지 + 전체 테스트·문서·수동 검증 완료. 크로스-리포: market-sentiment-data 어닝 수집기 하드닝 + GitHub raw 연동 + meta freshness. (Phase 5 2026-05-24) |
+| 백테스트 equity curve / MDD 순서 (2026-08-26 발견, 미수정) | `run_full_backtest()`는 `all_trades`를 종목 순서대로 extend하며 구성(날짜순 정렬 아님). `_compute_equity_curve()`/`_compute_mdd()`는 이 비-시간순 리스트를 그대로 복리 계산하므로, `mdd`는 실제 시간순이 아닌 종목별로 묶인 커브 기준으로 계산됨. 신규 `sharpe_ratio`/`sortino_ratio`(4-8 참고)는 순서 무관(equity curve가 아닌 거래별 수익률 분포 + 캘린더 스팬 기반)이라 이 문제의 영향을 받지 않지만, `mdd`는 `all_trades`를 `exit_date` 기준 정렬 후 커브를 재구성하기 전까지는 참고용으로만 취급할 것. |
 
 ---
 

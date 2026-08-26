@@ -289,6 +289,7 @@ Symbol selector buttons | Current price · RSI · EMA21 + intraday sparkline | S
 - Columns: Price · Stage 2 (out of 7) · RS Score · 52w high deviation · Entry · Stop · Target · Check indicators · Monthly phase · **Conviction** badge
 - Row click → switches to that symbol and navigates to Daily board
 - **RS Score ranking bar**: Symbol relative strength horizontal bar (≥70 green / 50-70 teal / <50 red)
+- API also returns `rs_score_percentile` (cross-sectional rank of each symbol's SPY-relative return against the rest of the watchlist) and `beta_63d` (rolling beta vs SPY) — not yet surfaced in this UI
 - **Stage 2 check heatmap**: 7 symbols × 7 conditions matrix (met = green cell)
 - **Risk / Reward**: Left (risk, red) · Right (reward, green) symmetric bar centered on Entry + 1:N ratio
 
@@ -323,6 +324,7 @@ Simulates Stage2 signals from 2019 to present with strict anti-overfitting desig
 | **In-sample / Out-of-sample split** | IS: ~2023 (training) / OOS: 2024~ (real validation). OOS > IS = no overfitting |
 | **Monte Carlo** | 10,000 bootstrap resamples → probability of positive expectancy = 99.8% |
 | **Slippage** | 0.05% included. Commission 0% (US broker standard). |
+| **Risk-adjusted return** | Sharpe / Sortino ratios (`sharpe_ratio`/`sortino_ratio` in the API response), annualized by observed calendar span rather than an always-in-market assumption |
 
 **Best configuration** (RS≥70 + SPY>EMA200 filter): 145 trades · Win rate 38.6% · Expectancy +0.460R · OOS +0.511R
 

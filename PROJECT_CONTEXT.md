@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-08-14 Perplexity Finance deep links)
+# SniperBoard — Project Context (UPDATED 2026-08-26 gs-quant-inspired quant stats)
 
 ## 0. Purpose of This Document
 
@@ -231,6 +231,43 @@ Additional pattern detection:
 - `rsi_divergence_bearish/bullish`: `detect_rsi_divergence()` — comparing last 40-candle swing points
 - `bear_flag`: `detect_bear_flag()` — 5%+ drop followed by low-volume consolidation
 
+### 4-5b. Quant Stats Module (`backend/core/quant_stats.py`, added 2026-08-26)
+
+Shared, dependency-free math (pandas/numpy only) extracted so `signal_engine.py` and
+`backtest_engine.py` stop reimplementing the same formulas separately (previously the
+RS-return math was duplicated with different unit scales — percent vs fraction). Inspired
+by a review of `goldmansachs/gs-quant`'s `timeseries` module (technicals/statistics/
+econometrics), adapted to be trailing-only (no `center=True`/`.shift(-n)` anywhere —
+regression-tested in `backend/tests/test_no_lookahead.py` via `assert_causal()`).
+
+- `excess_return_pct(price, market_price, window=63)`: (stock window-return − market
+  window-return) in percent. Backs `rs_score` — formula/output is **byte-identical** to
+  the pre-refactor inline version (verified by `test_rs_score_unchanged_by_refactor` and,
+  more importantly, by a live-data before/after diff across all 22 `WATCHLIST_SYMS`
+  showing 0 changed `rs_score`/`rs_strong`/`score` values).
+- `rolling_beta(stock_price, market_price, window=63)`: beta vs SPY over the trailing
+  window, index-aligned (inner join, not positional `iloc`). Returned as `beta_63d` — a
+  **display/diagnostic field only**, not part of the Stage2 7-item checklist.
+- `percentile_rank(value, population)`: mid-rank percentile (0–100). Used only in
+  `endpoints.py: build_watchlist_result()` to rank each symbol's `rs_excess_63d` against
+  the rest of the watchlist universe → `rs_score_percentile` (watchlist-only field;
+  `rs_score`/`rs_strong` keep their existing SPY-fixed-formula meaning everywhere else,
+  including single-symbol paths like DeepDive and `email_report_service.py` where no
+  universe is available).
+- `sharpe_sortino(returns, periods_per_year)`: used by `backtest_engine.py: compute_stats`
+  (see 4-9 below).
+- `trailing_median_outlier_mask(x, window=30, threshold=0.5)`: causal (trailing-only)
+  rolling-median outlier flag. Used in `data_adapter.py` for **detection/logging only**
+  (`_log_price_outliers`) — logs a warning when a bar deviates >50% from its trailing
+  median; never mutates OHLCV values, so charts/backtests always match the vendor feed
+  exactly. Generalizes the single-bar NaN backfill (see commit `2b2a916`) to catch
+  mid-series vendor glitches too, without the mutation risk a naive port of gs-quant's
+  own `smooth_outliers` (`center=True`) would have introduced.
+
+New `calculate_stage2_analysis()` return keys (both `Optional`, additive):
+`rs_excess_63d` (raw SPY-relative excess return %), `beta_63d` (rolling beta vs SPY).
+New watchlist-only key: `rs_score_percentile`.
+
 ### 4-6b. Monthly Phase Analysis (inside `signal_engine.py: calculate_stage2_analysis`)
 
 Resamples 252 daily candles to monthly candles and evaluates against **10-month EMA**:
@@ -255,6 +292,20 @@ Total = sum(valid) / len(valid) × 5 → RISK_ON(≥80) / CONSTRUCTIVE(≥60) / 
 
 Last 25 trading days: days where (closing change ≤ -0.2%) AND (volume > prior day)
 OK(<4) / WARNING(4~5) / DANGER(≥6)
+
+### 4-8. Risk-Adjusted Backtest Stats (`backtest_engine.py: compute_stats`, added 2026-08-26)
+
+`sharpe_ratio`/`sortino_ratio` added to the `compute_stats()` return dict (alongside the
+existing `win_rate`/`expectancy_r`/`profit_factor`/`mdd`). Computed from `quant_stats.
+sharpe_sortino()`:
+- Risk-free rate assumed 0 (short-swing equity trades — funding-rate drag is immaterial
+  relative to trade P&L magnitude).
+- Annualization uses the **observed calendar span** (`last exit date − first entry date`
+  across the trade set), not `252 / avg_bars_held`, because `run_full_backtest()` pools
+  trades sequentially across ~22 symbols rather than holding one continuous position —
+  an always-in-market assumption would overstate trade frequency.
+- Order-independent (only needs the per-trade return distribution + calendar span), so it
+  is not affected by the pre-existing equity-curve ordering issue noted in Section 9.
 
 ---
 
@@ -557,6 +608,7 @@ Note: Brief/Earnings data covers TIER1 12 symbols (collect_brief.py, collect_ear
 | API proxy | Frontend uses relative `/api/*` — Next.js rewrites to `BACKEND_URL`. Next.js 16 bakes `rewrites()` at build time → `BACKEND_URL` must be set as a build arg (docker-compose handles this). |
 | Macro data | Not refreshed after market close until next trading day |
 | yfinance MultiIndex / accuracy | **data_adapter.py is the SINGLE SOURCE OF TRUTH for ALL yf data access**: full delegation complete. Phase 2: adj_close preserved in daily frames + used selectively in Stage2 long-horizon metrics (split symbols accurate 52w/RS etc while short-term/GC/raw paths unchanged). |
+| Backtest equity curve / MDD ordering (found 2026-08-26, not fixed) | `run_full_backtest()` builds `all_trades` by extending per-symbol in symbol order (not sorted by date). `_compute_equity_curve()`/`_compute_mdd()` then compound `all_trades` in that non-chronological order, so `mdd` is computed over a symbol-grouped curve rather than a true time-ordered one. The new `sharpe_ratio`/`sortino_ratio` (see 4-9) are order-independent (computed from the trade-return distribution + calendar span, not the equity curve) so they don't inherit this, but `mdd` should be treated as directionally indicative only until `all_trades` is sorted by `exit_date` before curve construction. |
 
 ---
 
