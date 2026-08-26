@@ -11,6 +11,7 @@ from core.signal_engine import (
     calculate_signals, add_daily_indicators, calculate_stage2_analysis,
     detect_market_structure, ema, rsi
 )
+from core.quant_stats import percentile_rank
 from api.schemas import (
     OHLCVResponse, LatestSignalResponse, DailyResponse, WatchlistResponse,
     MacroResponse, MacroInsightResponse, MacroOverallInsight, MacroGroupInsight, MacroAiMeta,
@@ -712,6 +713,13 @@ def build_watchlist_result() -> tuple[list[dict], str | None]:
             })
         except Exception as e:
             logger.error(f"Watchlist error for {sym}: {e}", exc_info=True)
+
+    # 유니버스 내 상대강도 백분위 (gs-quant zscore/percentile 스타일) — rs_score/rs_strong는
+    # 기존 SPY 고정 공식 그대로 유지(하위 로직 영향 없음); 이 필드는 표시/랭킹 전용 보강값.
+    universe_excess = [r["rs_excess_63d"] for r in result if r.get("rs_excess_63d") is not None]
+    for r in result:
+        rex = r.get("rs_excess_63d")
+        r["rs_score_percentile"] = percentile_rank(rex, universe_excess) if rex is not None else None
 
     result.sort(key=lambda x: x["score"], reverse=True)
     return result, regime_label
