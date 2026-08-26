@@ -348,3 +348,45 @@ class TestEquityCurveAndMDD:
         curve = _compute_equity_curve(trades, start=10000.0)
         mdd = _compute_mdd(curve)
         assert mdd > 0.0
+
+
+class TestSharpeSortino:
+    def test_compute_stats_includes_sharpe_and_sortino(self):
+        # Two losses (so downside deviation is computable from >=2 points) and two
+        # bigger wins: total std is inflated by the wins' upside spread, so the
+        # downside-only deviation should be smaller -> sortino > sharpe.
+        trades = [
+            Trade(symbol="AAA", entry_date="2024-01-02", exit_date="2024-01-10",
+                  entry_price=100, exit_price=105, stop_price=95, target_price=115,
+                  outcome="WIN", bars_held=5, pnl_pct=5.0, r_multiple=1.0,
+                  stage2_score=6, period="in_sample"),
+            Trade(symbol="BBB", entry_date="2024-02-01", exit_date="2024-02-08",
+                  entry_price=50, exit_price=47, stop_price=45, target_price=65,
+                  outcome="LOSS", bars_held=5, pnl_pct=-2.0, r_multiple=-1.0,
+                  stage2_score=6, period="in_sample"),
+            Trade(symbol="CCC", entry_date="2024-03-01", exit_date="2024-03-12",
+                  entry_price=80, exit_price=88, stop_price=75, target_price=95,
+                  outcome="WIN", bars_held=8, pnl_pct=10.0, r_multiple=2.0,
+                  stage2_score=6, period="in_sample"),
+            Trade(symbol="DDD", entry_date="2024-04-01", exit_date="2024-04-10",
+                  entry_price=60, exit_price=58, stop_price=55, target_price=75,
+                  outcome="LOSS", bars_held=6, pnl_pct=-2.5, r_multiple=-1.0,
+                  stage2_score=6, period="in_sample"),
+        ]
+        stats = compute_stats(trades)
+        assert "sharpe_ratio" in stats
+        assert "sortino_ratio" in stats
+        assert isinstance(stats["sharpe_ratio"], float)
+        assert isinstance(stats["sortino_ratio"], float)
+        assert stats["sortino_ratio"] > stats["sharpe_ratio"]
+
+    def test_compute_stats_sharpe_zero_for_single_trade(self):
+        trades = [
+            Trade(symbol="AAA", entry_date="2024-01-02", exit_date="2024-01-10",
+                  entry_price=100, exit_price=105, stop_price=95, target_price=115,
+                  outcome="WIN", bars_held=5, pnl_pct=5.0, r_multiple=1.0,
+                  stage2_score=6, period="in_sample"),
+        ]
+        stats = compute_stats(trades)
+        assert stats["sharpe_ratio"] == 0.0
+        assert stats["sortino_ratio"] == 0.0

@@ -35,6 +35,7 @@ import yfinance as yf
 
 from core.data_adapter import normalize_yf_dataframe
 from core.signal_engine import add_daily_indicators, atr, ema
+from core.quant_stats import sharpe_sortino
 
 logger = logging.getLogger(__name__)
 
@@ -496,6 +497,17 @@ def compute_stats(trades: List[Trade], label: str = "all") -> dict:
     equity_curve = _compute_equity_curve(trades)
     mdd = _compute_mdd(equity_curve)
 
+    # 위험조정수익률 — 관측된 거래 빈도로 연환산 (전 종목 순차 풀링이라 "항상 포지션
+    # 보유" 가정은 거래빈도를 과대평가함; 대신 실제 캘린더 스팬을 사용)
+    entry_dt = pd.to_datetime([t.entry_date for t in trades])
+    exit_dt = pd.to_datetime([t.exit_date for t in trades])
+    span_days = (exit_dt.max() - entry_dt.min()).days
+    years_spanned = span_days / 365.25 if span_days > 0 else n / 252
+    periods_per_year = n / years_spanned if years_spanned > 0 else float(n)
+    sharpe_ratio, sortino_ratio = sharpe_sortino(
+        [t.pnl_pct / 100 for t in trades], periods_per_year
+    )
+
     # 연속 손실 최대
     max_consecutive_loss = 0
     streak = 0
@@ -521,6 +533,8 @@ def compute_stats(trades: List[Trade], label: str = "all") -> dict:
         "expectancy_r": round(expectancy_r, 3),
         "profit_factor": profit_factor,
         "mdd": mdd,
+        "sharpe_ratio": sharpe_ratio,
+        "sortino_ratio": sortino_ratio,
         "max_consecutive_loss": max_consecutive_loss,
         "avg_bars_held": round(float(np.mean([t.bars_held for t in trades])), 1),
         "equity_curve": equity_curve,
