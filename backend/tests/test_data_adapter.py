@@ -282,3 +282,20 @@ def test_normalize_yf_dataframe_intraday_price_first_multindex():
     # value preservation spot
     assert abs(float(result["close"].iloc[0]) - 200.0) < 0.5
     assert isinstance(result.index, pd.DatetimeIndex)
+
+
+def test_normalize_yf_dataframe_does_not_mutate_on_outlier(caplog):
+    import logging
+
+    idx = pd.date_range("2024-01-01", periods=40, freq="D")
+    close = [100.0] * 20 + [500.0] + [100.0] * 19  # injected spike at position 20
+    df = pd.DataFrame({
+        "Open": close, "High": close, "Low": close, "Close": close,
+        "Volume": [1_000_000] * 40,
+    }, index=idx)
+
+    with caplog.at_level(logging.WARNING):
+        result = normalize_yf_dataframe(df.copy(), symbol="TEST")
+
+    assert result["close"].iloc[20] == 500.0  # value is untouched
+    assert any("outlier" in r.message for r in caplog.records)

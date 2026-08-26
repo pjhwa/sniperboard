@@ -25,6 +25,8 @@ import yfinance as yf
 import logging
 from typing import Optional, Dict, List
 
+from core.quant_stats import trailing_median_outlier_mask
+
 logger = logging.getLogger(__name__)
 
 
@@ -89,6 +91,27 @@ def _patch_latest_nan_row(result: pd.DataFrame, symbol: Optional[str]) -> pd.Dat
     return result
 
 
+def _log_price_outliers(result: pd.DataFrame, symbol: Optional[str]) -> None:
+    """Flag (but never mutate) trailing-median outliers in close prices.
+
+    Detection-only by design: displayed charts and the backtest must always match the
+    vendor's raw feed exactly. This exists purely to surface vendor glitches (bad ticks,
+    stale bars, mis-applied splits) in logs for investigation — mutating `close` here
+    would silently rewrite history and make backtest results unachievable-in-live.
+    """
+    if symbol is None or result.empty or 'close' not in result.columns or len(result) < 10:
+        return
+    try:
+        mask = trailing_median_outlier_mask(result['close'], window=30, threshold=0.5)
+        if mask.any():
+            flagged = [str(d.date()) if hasattr(d, 'date') else str(d) for d in result.index[mask]]
+            logger.warning(
+                f"{symbol}: price outlier flagged (>50% trailing-median deviation) on {flagged}"
+            )
+    except Exception as e:
+        logger.debug(f"{symbol}: outlier detection skipped ({e})")
+
+
 def normalize_yf_dataframe(df: pd.DataFrame, symbol: Optional[str] = None) -> pd.DataFrame:
     """yfinance download 결과 DF 의 MultiIndex 컬럼을 일관된 flat lowercase 로 정규화.
 
@@ -151,6 +174,9 @@ def normalize_yf_dataframe(df: pd.DataFrame, symbol: Optional[str] = None) -> pd
 
     # yf.download() 최신 행 NaN 폴백 (dropna 전에 처리해야 행이 살아남음)
     result = _patch_latest_nan_row(result, symbol)
+
+    # 데이터 품질 진단 (로그만 — 값은 절대 변경하지 않음)
+    _log_price_outliers(result, symbol)
 
     # 기존 서비스와 동일하게 dropna
     result = result.dropna()
