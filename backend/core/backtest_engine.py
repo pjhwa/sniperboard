@@ -473,6 +473,11 @@ def compute_stats(trades: List[Trade], label: str = "all") -> dict:
     if not trades:
         return {"label": label, "n": 0, "note": "거래 없음"}
 
+    # 시간순 정렬 — 호출부(run_full_backtest/run_parameter_sweep)가 all_trades를 종목
+    # 순서로만 extend하므로, 정렬하지 않으면 equity_curve/mdd/max_consecutive_loss가
+    # 실제 시간순이 아닌 종목별로 묶인 순서 기준으로 계산됨 (2026-08-26 발견·수정).
+    trades = sorted(trades, key=lambda t: (t.exit_date, t.entry_date))
+
     wins = [t for t in trades if t.outcome == "WIN"]
     losses = [t for t in trades if t.outcome == "LOSS"]
     timeouts = [t for t in trades if t.outcome == "TIMEOUT"]

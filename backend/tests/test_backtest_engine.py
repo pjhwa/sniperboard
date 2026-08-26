@@ -390,3 +390,52 @@ class TestSharpeSortino:
         stats = compute_stats(trades)
         assert stats["sharpe_ratio"] == 0.0
         assert stats["sortino_ratio"] == 0.0
+
+
+class TestTradeOrderingFix:
+    """compute_stats() must sort trades chronologically before computing
+    equity_curve/mdd/max_consecutive_loss — run_full_backtest/run_parameter_sweep
+    build all_trades by extending per-symbol (symbol order, not date order), so
+    without this sort those metrics were computed over a non-chronological curve.
+    """
+
+    def test_max_consecutive_loss_uses_chronological_order_not_input_order(self):
+        # Chronologically: A(loss, exit 01-15) -> B(win, exit 01-25) -> C(loss, exit 02-05)
+        # The win in the middle means no two losses are ever adjacent in time.
+        trade_a = Trade(symbol="AAA", entry_date="2024-01-10", exit_date="2024-01-15",
+                         entry_price=100, exit_price=90, stop_price=85, target_price=130,
+                         outcome="LOSS", bars_held=3, pnl_pct=-10.0, r_multiple=-1.0,
+                         stage2_score=6, period="in_sample")
+        trade_b = Trade(symbol="BBB", entry_date="2024-01-20", exit_date="2024-01-25",
+                         entry_price=50, exit_price=52.5, stop_price=45, target_price=65,
+                         outcome="WIN", bars_held=3, pnl_pct=5.0, r_multiple=1.0,
+                         stage2_score=6, period="in_sample")
+        trade_c = Trade(symbol="AAA", entry_date="2024-02-01", exit_date="2024-02-05",
+                         entry_price=90, exit_price=81, stop_price=80, target_price=120,
+                         outcome="LOSS", bars_held=3, pnl_pct=-10.0, r_multiple=-1.0,
+                         stage2_score=6, period="in_sample")
+
+        # Simulates the real bug: all_trades.extend() per symbol -> AAA's two
+        # trades land adjacent in the input list even though B happened between them.
+        trades_grouped_by_symbol = [trade_a, trade_c, trade_b]
+
+        stats = compute_stats(trades_grouped_by_symbol)
+        assert stats["max_consecutive_loss"] == 1
+
+    def test_equity_curve_dates_are_chronological_regardless_of_input_order(self):
+        trade_a = Trade(symbol="AAA", entry_date="2024-01-10", exit_date="2024-01-15",
+                         entry_price=100, exit_price=90, stop_price=85, target_price=130,
+                         outcome="LOSS", bars_held=3, pnl_pct=-10.0, r_multiple=-1.0,
+                         stage2_score=6, period="in_sample")
+        trade_b = Trade(symbol="BBB", entry_date="2024-01-20", exit_date="2024-01-25",
+                         entry_price=50, exit_price=52.5, stop_price=45, target_price=65,
+                         outcome="WIN", bars_held=3, pnl_pct=5.0, r_multiple=1.0,
+                         stage2_score=6, period="in_sample")
+        trade_c = Trade(symbol="AAA", entry_date="2024-02-01", exit_date="2024-02-05",
+                         entry_price=90, exit_price=81, stop_price=80, target_price=120,
+                         outcome="LOSS", bars_held=3, pnl_pct=-10.0, r_multiple=-1.0,
+                         stage2_score=6, period="in_sample")
+
+        stats = compute_stats([trade_a, trade_c, trade_b])
+        dates = [pd.Timestamp(e["date"]) for e in stats["equity_curve"]]
+        assert dates == sorted(dates)
