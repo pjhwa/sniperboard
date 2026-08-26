@@ -199,3 +199,28 @@ def test_calculate_stage2_analysis_no_behavior_change_without_adj():
               "pullback_pct", "entry", "pivot_high", "latest_close"]:
         if k in res1 and k in res2:
             assert abs(res1[k] - res2[k]) < 1e-6, f"Mismatch on {k}"
+
+
+def test_rs_score_unchanged_by_refactor():
+    """Regression: rs_score/rs_strong must be byte-identical to the pre-refactor
+    inline formula (50 + (stock_ret - spy_ret) * 2, clipped 0-100)."""
+    idx = pd.date_range("2022-01-01", periods=300, freq="B")
+    rng = np.random.default_rng(42)
+    stock_close = pd.Series(100 + np.cumsum(rng.normal(0.05, 1, 300)), index=idx)
+    spy_close = pd.Series(100 + np.cumsum(rng.normal(0.02, 0.8, 300)), index=idx)
+    df = pd.DataFrame({
+        "open": stock_close, "high": stock_close * 1.01, "low": stock_close * 0.99,
+        "close": stock_close, "volume": 1_000_000,
+    }, index=idx)
+    df = add_daily_indicators(df)
+
+    stage2 = calculate_stage2_analysis(df, spy_close)
+
+    stock_ret = (float(stock_close.iloc[-1]) - float(stock_close.iloc[-63])) / float(stock_close.iloc[-63]) * 100
+    spy_ret = (float(spy_close.iloc[-1]) - float(spy_close.iloc[-63])) / float(spy_close.iloc[-63]) * 100
+    expected_rs_score = round(min(100.0, max(0.0, 50.0 + (stock_ret - spy_ret) * 2.0)), 1)
+
+    assert stage2["rs_score"] == expected_rs_score
+    assert stage2["checks"]["rs_strong"] == (expected_rs_score >= 50)
+    assert "beta_63d" in stage2
+    assert "rs_excess_63d" in stage2

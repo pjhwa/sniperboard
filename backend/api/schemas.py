@@ -48,6 +48,8 @@ class Stage2Schema(BaseModel):
     checks: Stage2ChecksSchema
     score: int
     rs_score: float
+    rs_excess_63d: Optional[float] = None
+    beta_63d: Optional[float] = None
     ema200_slope: float
     pct_from_52w_high: float
     pct_from_52w_low: float
@@ -92,6 +94,9 @@ class WatchlistItemSchema(BaseModel):
     price: float
     score: int
     rs_score: float
+    rs_excess_63d: Optional[float] = None
+    beta_63d: Optional[float] = None
+    rs_score_percentile: Optional[float] = None  # cross-sectional watchlist ranking (Task 4)
     pct_from_52w_high: float
     checks: Stage2ChecksSchema
     entry: float

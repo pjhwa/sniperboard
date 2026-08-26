@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from typing import Dict, List, Optional, Tuple
 
+from core.quant_stats import excess_return_pct, rolling_beta
+
 def ema(series: pd.Series, period: int) -> pd.Series:
     return series.ewm(span=period, adjust=False).mean()
 
@@ -354,13 +356,12 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None, rsp
     vol_contracting = bool(vol_last5 < vol_avg20)
 
     rs_score = 50.0
-    if spy_close is not None and len(df) >= 63 and len(spy_close) >= 63:
-        try:
-            stock_ret = (float(price_for_long.iloc[-1]) - float(price_for_long.iloc[-63])) / float(price_for_long.iloc[-63]) * 100
-            spy_ret = (float(spy_close.iloc[-1]) - float(spy_close.iloc[-63])) / float(spy_close.iloc[-63]) * 100
-            rs_score = min(100.0, max(0.0, 50.0 + (stock_ret - spy_ret) * 2.0))
-        except Exception:
-            pass
+    rs_excess_63d = excess_return_pct(price_for_long, spy_close, window=63) if spy_close is not None else None
+    if rs_excess_63d is not None:
+        rs_score = min(100.0, max(0.0, 50.0 + rs_excess_63d * 2.0))
+
+    # 롤링 시장 민감도 (Stage2 체크리스트에는 미반영 — 표시/진단 전용, gs-quant식 SPY 대비 베타)
+    beta_63d = rolling_beta(price_for_long, spy_close, window=63) if spy_close is not None else None
 
     checks = {
         'price_above_emas': bool(latest_close > latest_ema21 and latest_ema21 > latest_ema50 and latest_ema50 > latest_ema200),
@@ -456,6 +457,8 @@ def calculate_stage2_analysis(df: pd.DataFrame, spy_close: pd.Series = None, rsp
         'checks': checks,
         'score': score,
         'rs_score': round(rs_score, 1),
+        'rs_excess_63d': round(rs_excess_63d, 2) if rs_excess_63d is not None else None,
+        'beta_63d': beta_63d,
         'ema200_slope': round(ema200_slope, 3),
         'pct_from_52w_high': round(pct_from_52w_high, 2),
         'pct_from_52w_low': round(pct_from_52w_low, 2),

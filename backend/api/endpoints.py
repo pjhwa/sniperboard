@@ -691,6 +691,8 @@ def build_watchlist_result() -> tuple[list[dict], str | None]:
                 "price": round(float(df["close"].iloc[-1]), 2),
                 "score": stage2_score,
                 "rs_score": stage2.get("rs_score", 50.0),
+                "rs_excess_63d": stage2.get("rs_excess_63d"),
+                "beta_63d": stage2.get("beta_63d"),
                 "pct_from_52w_high": stage2.get("pct_from_52w_high", 0.0),
                 "checks": stage2.get("checks", {}),
                 "entry": stage2.get("entry", 0.0),
