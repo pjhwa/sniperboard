@@ -304,8 +304,10 @@ sharpe_sortino()`:
   across the trade set), not `252 / avg_bars_held`, because `run_full_backtest()` pools
   trades sequentially across ~22 symbols rather than holding one continuous position —
   an always-in-market assumption would overstate trade frequency.
-- Order-independent (only needs the per-trade return distribution + calendar span), so it
-  is not affected by the pre-existing equity-curve ordering issue noted in Section 9.
+- Order-independent (only needs the per-trade return distribution + calendar span) — was
+  never affected by the equity-curve ordering bug noted in Section 9, which is now fixed
+  in the same function (`compute_stats()` sorts `trades` chronologically before computing
+  `equity_curve`/`mdd`/`max_consecutive_loss`).
 
 ---
 
@@ -426,7 +428,7 @@ useSymbolInfo() 1h staleTime. 5 items: Market Cap (T/B/M format) | 52W High (gre
 
 **Row 2: Daily Chart (3fr) + Stage2 Analysis (2fr)**
 - Left: `DailyChart` embedded (EMA8/21/50/200 + GC + Entry/Stop). min-height:440px.
-- Right: 7-item 2-column checklist + monthly EMA10 banner + KPI 2×2 (RS Score · 52w deviation · recent correction · EMA200 slope)
+- Right: 7-item 2-column checklist + monthly EMA10 banner + KPI 2×2 (RS Score [subtext: vs SPY 63d + β63d when available] · 52w deviation · recent correction · EMA200 slope)
 
 **Row 3: Institutional Activity (3fr) + R:R Entry Plan (2fr)**
 - Left: 60-day up/down heatmap (3 rows × 20 columns) + Up/Down volume ratio + volume trend + concentrated day detection + institutional score (0~100) + 10-day accumulation/distribution grid. Calculated from `dailyData.candles` as pure frontend functions.
@@ -467,8 +469,8 @@ Top-right `? Guide` button → BoardGuidePanel slide-over (3 sections). 7 key ca
 
 | Card | Span | Content |
 |------|------|---------|
-| Stage 2 Sorted Table | 3 | 6 symbols × 10 columns (Symbol · Price · Stage2 · RS · 52W · Entry · Stop · Target · Checks · Analyze button) |
-| RS Score Ranking Bar | 1 | 6-symbol RS Score horizontal bar (≥70 green / 50~70 teal / <50 red) |
+| Stage 2 Sorted Table | 3 | 22 symbols (TIER1/TIER2 collapsible) × columns incl. Symbol · Price · Stage2 · RS (+P{percentile} subtext) · Beta · 52W · Entry · Stop · Target · Checks · Monthly · Conviction · Analyze button |
+| RS Score Ranking Bar | 1 | Per-symbol RS Score horizontal bar (≥70 green / 50~70 teal / <50 red) + `rs_score_percentile` shown as "P{n}" next to the score |
 | Stage 2 Check Heatmap | 1 | 6 symbols × 7 conditions matrix (met = green cell) |
 | Risk / Reward | 1 | Entry-centered left (risk, red) · right (reward, green) symmetric bar + 1:N ratio |
 
@@ -608,7 +610,7 @@ Note: Brief/Earnings data covers TIER1 12 symbols (collect_brief.py, collect_ear
 | API proxy | Frontend uses relative `/api/*` — Next.js rewrites to `BACKEND_URL`. Next.js 16 bakes `rewrites()` at build time → `BACKEND_URL` must be set as a build arg (docker-compose handles this). |
 | Macro data | Not refreshed after market close until next trading day |
 | yfinance MultiIndex / accuracy | **data_adapter.py is the SINGLE SOURCE OF TRUTH for ALL yf data access**: full delegation complete. Phase 2: adj_close preserved in daily frames + used selectively in Stage2 long-horizon metrics (split symbols accurate 52w/RS etc while short-term/GC/raw paths unchanged). |
-| Backtest equity curve / MDD ordering (found 2026-08-26, not fixed) | `run_full_backtest()` builds `all_trades` by extending per-symbol in symbol order (not sorted by date). `_compute_equity_curve()`/`_compute_mdd()` then compound `all_trades` in that non-chronological order, so `mdd` is computed over a symbol-grouped curve rather than a true time-ordered one. The new `sharpe_ratio`/`sortino_ratio` (see 4-9) are order-independent (computed from the trade-return distribution + calendar span, not the equity curve) so they don't inherit this, but `mdd` should be treated as directionally indicative only until `all_trades` is sorted by `exit_date` before curve construction. |
+| ~~Backtest equity curve / MDD ordering~~ | **Fixed 2026-08-26.** `run_full_backtest()`/`run_parameter_sweep()` build `all_trades` by extending per-symbol (symbol order, not date order). `compute_stats()` now sorts `trades` by `(exit_date, entry_date)` at the top of the function before computing `equity_curve`/`mdd`/`max_consecutive_loss`, so all three are correctly time-ordered regardless of input order. Regression-tested in `test_backtest_engine.py::TestTradeOrderingFix`. |
 
 ---
 

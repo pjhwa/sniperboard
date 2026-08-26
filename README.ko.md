@@ -239,7 +239,7 @@ cp .env.example .env
 - 컬럼: 가격 · Stage 2(7점 만점) · RS Score · 52주 고점 이격 · 진입가 · 손절가 · 목표가 · 체크 인디케이터 · 월봉 단계 · **Conviction** 배지
 - 행 클릭 → 해당 종목으로 전환 후 Daily 보드 이동
 - **RS Score 순위 바**: 6종목 상대강도 가로 막대 정렬 (≥70 녹 / 50~70 청록 / <50 적)
-- API는 `rs_score_percentile`(워치리스트 유니버스 내 SPY 대비 수익률 상대순위)과 `beta_63d`(SPY 대비 롤링 베타)도 반환 — 현재 UI에는 아직 미표시
+- **RS 백분위 + 베타**: 각 행에 `rs_score_percentile`(RS Score 옆 P{n} — 워치리스트 내 상대순위)과 `beta_63d`(SPY 대비 롤링 베타)를 별도 컬럼으로 표시
 - **Stage 2 체크 히트맵**: 7종목 × 7조건 매트릭스 (충족=녹 칸)
 - **Risk / Reward**: Entry 중심 좌(risk 적)·우(reward 녹) 대칭 바 + 1:N 비율
 

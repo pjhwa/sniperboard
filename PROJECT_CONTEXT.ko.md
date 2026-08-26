@@ -266,8 +266,9 @@ OK(<4) / WARNING(4~5) / DANGER(≥6)
   `마지막 청산일 − 첫 진입일`)을 사용 — `run_full_backtest()`가 ~22개 종목에 걸쳐 순차적으로
   거래를 풀링하므로(하나의 포지션을 계속 보유하는 것이 아님) "항상 시장에 있다"는 가정은
   거래 빈도를 과대평가함.
-- 순서 무관(거래별 수익률 분포 + 캘린더 스팬만 필요) — Section 9에 명시된 기존 equity curve
-  순서 이슈의 영향을 받지 않음.
+- 순서 무관(거래별 수익률 분포 + 캘린더 스팬만 필요) — Section 9의 equity curve 순서 이슈
+  영향을 애초에 받지 않았으며, 해당 이슈 자체는 같은 함수(`compute_stats()`가 시간순 정렬 후
+  `equity_curve`/`mdd`/`max_consecutive_loss` 계산)에서 수정 완료됨.
 
 ---
 
@@ -346,7 +347,7 @@ SYMBOLS 버튼 | 현재가 + RSI + EMA21 + 스파크라인(60봉) + PRE/POST 가
 
 **Row 2: Daily Chart (3fr) + Stage2 분석 (2fr)**
 - 좌: `DailyChart` 임베드 (EMA8/21/50/200 + GC + Entry/Stop). min-height:440px.
-- 우: 7항목 2컬럼 체크리스트 + 월봉 EMA10 배너 + KPI 2×2 (RS Score·52주이격·최근조정·EMA200기울기)
+- 우: 7항목 2컬럼 체크리스트 + 월봉 EMA10 배너 + KPI 2×2 (RS Score[서브텍스트: vs SPY 63일 + β63d 있을 시 표시]·52주이격·최근조정·EMA200기울기)
 
 **Row 3: 세력참여도 분석 (3fr) + R:R 진입 계획 (2fr)**
 - 좌: 최근 60거래일 등락 히트맵(3행×20열) + Up/Down 거래량 비율 + 거래량 추세 + 집중일 감지 + 세력 점수(0~100) + 10일 누적 매집/분산 그리드. 계산은 `dailyData.candles` 기반 프론트엔드 순수 함수.
@@ -387,8 +388,8 @@ SYMBOLS 버튼 | 현재가 + RSI + EMA21 + 스파크라인(60봉) + PRE/POST 가
 
 | 카드 | span | 내용 |
 |------|------|------|
-| Stage 2 정렬 테이블 | 3 | 6종목 × 10컬럼 (Symbol·Price·Stage2·RS·52W·Entry·Stop·Target·Checks·분석버튼) |
-| RS Score 순위 바 | 1 | 6종목 RS Score 가로 막대 정렬 (≥70 녹 / 50~70 청록 / <50 적) |
+| Stage 2 정렬 테이블 | 3 | 22종목(TIER1/TIER2 접기) × Symbol·Price·Stage2·RS(+P{percentile} 서브텍스트)·Beta·52W·Entry·Stop·Target·Checks·월봉·Conviction·분석버튼 |
+| RS Score 순위 바 | 1 | 종목별 RS Score 가로 막대 정렬 (≥70 녹 / 50~70 청록 / <50 적) + `rs_score_percentile`을 점수 옆 "P{n}"으로 표시 |
 | Stage 2 체크 히트맵 | 1 | 6종목 × 7조건 매트릭스 (충족=녹 칸) |
 | Risk / Reward | 1 | Entry 중심 좌(risk 적)·우(reward 녹) 대칭 바 + 1:N 비율 |
 
@@ -526,7 +527,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | API_BASE 재빌드 | `NEXT_PUBLIC_API_URL`은 빌드 시 번들되므로 런타임 변경 불가 |
 | 매크로 데이터 | 시장 마감 후에는 당일 데이터 미갱신 |
 | yfinance MultiIndex / 정확도 | 멀티 종목 다운로드 시 컬럼 구조 주의. **data_adapter.py가 모든 yf 데이터 접근의 단일 진실 공급원(normalize + fetch)**: 전체 위임 완료 (data_service는 intraday만 thin wrapper; 일봉 경로는 get_multi_daily 직접 임포트). Phase 2: 일봉 프레임에 adj_close 보존 + Stage2 장기 지표에만 선택적 조정가 사용 (단기/GC/raw 완전 역호환). Phase4/5: FE 배지 + 전체 테스트·문서·수동 검증 완료. 크로스-리포: market-sentiment-data 어닝 수집기 하드닝 + GitHub raw 연동 + meta freshness. (Phase 5 2026-05-24) |
-| 백테스트 equity curve / MDD 순서 (2026-08-26 발견, 미수정) | `run_full_backtest()`는 `all_trades`를 종목 순서대로 extend하며 구성(날짜순 정렬 아님). `_compute_equity_curve()`/`_compute_mdd()`는 이 비-시간순 리스트를 그대로 복리 계산하므로, `mdd`는 실제 시간순이 아닌 종목별로 묶인 커브 기준으로 계산됨. 신규 `sharpe_ratio`/`sortino_ratio`(4-8 참고)는 순서 무관(equity curve가 아닌 거래별 수익률 분포 + 캘린더 스팬 기반)이라 이 문제의 영향을 받지 않지만, `mdd`는 `all_trades`를 `exit_date` 기준 정렬 후 커브를 재구성하기 전까지는 참고용으로만 취급할 것. |
+| ~~백테스트 equity curve / MDD 순서~~ | **2026-08-26 수정 완료.** `run_full_backtest()`/`run_parameter_sweep()`는 `all_trades`를 종목 순서대로 extend하며 구성(날짜순 아님). `compute_stats()`가 함수 최상단에서 `trades`를 `(exit_date, entry_date)` 기준으로 정렬한 뒤 `equity_curve`/`mdd`/`max_consecutive_loss`를 계산하도록 수정 — 입력 순서와 무관하게 항상 시간순으로 계산됨. `test_backtest_engine.py::TestTradeOrderingFix`로 회귀 테스트됨. |
 
 ---
 

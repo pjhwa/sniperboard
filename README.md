@@ -289,7 +289,7 @@ Symbol selector buttons | Current price · RSI · EMA21 + intraday sparkline | S
 - Columns: Price · Stage 2 (out of 7) · RS Score · 52w high deviation · Entry · Stop · Target · Check indicators · Monthly phase · **Conviction** badge
 - Row click → switches to that symbol and navigates to Daily board
 - **RS Score ranking bar**: Symbol relative strength horizontal bar (≥70 green / 50-70 teal / <50 red)
-- API also returns `rs_score_percentile` (cross-sectional rank of each symbol's SPY-relative return against the rest of the watchlist) and `beta_63d` (rolling beta vs SPY) — not yet surfaced in this UI
+- **RS percentile + Beta**: each row also shows `rs_score_percentile` (P{n} next to RS Score — cross-sectional rank against the rest of the watchlist) and `beta_63d` (rolling beta vs SPY) in a dedicated column
 - **Stage 2 check heatmap**: 7 symbols × 7 conditions matrix (met = green cell)
 - **Risk / Reward**: Left (risk, red) · Right (reward, green) symmetric bar centered on Entry + 1:N ratio
 
