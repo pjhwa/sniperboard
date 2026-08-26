@@ -759,7 +759,7 @@ export function DeepDiveBoard() {
               {/* KPI 4개 — 2×2 그리드 */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {([
-                  ['RS Score', `${stage2.rs_score}`, stage2.rs_score >= 70 ? 'var(--bull)' : stage2.rs_score >= 50 ? 'var(--teal)' : 'var(--bear)', 'vs SPY 63d', G.rs_score],
+                  ['RS Score', `${stage2.rs_score}`, stage2.rs_score >= 70 ? 'var(--bull)' : stage2.rs_score >= 50 ? 'var(--teal)' : 'var(--bear)', `vs SPY 63d${stage2.beta_63d != null ? ` · β${stage2.beta_63d.toFixed(2)}` : ''}`, G.rs_score],
                   [t(S.rs52wHigh, locale), `${stage2.pct_from_52w_high.toFixed(1)}%`, stage2.pct_from_52w_high >= -25 ? 'var(--bull)' : 'var(--bear)', t(S.rs52wSub, locale), null],
                   [t(S.pullback, locale), `${stage2.pullback_pct.toFixed(1)}%`, stage2.pullback_pct <= 15 ? 'var(--bull)' : 'var(--bear)', t(S.pullbackSub, locale), null],
                   [t(S.ema200Slope, locale), `${stage2.ema200_slope >= 0 ? '+' : ''}${stage2.ema200_slope.toFixed(3)}`, stage2.ema200_slope >= 0 ? 'var(--bull)' : 'var(--bear)', t(S.ema200Sub, locale), null],

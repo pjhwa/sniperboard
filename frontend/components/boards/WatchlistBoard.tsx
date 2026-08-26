@@ -37,7 +37,7 @@ const S: Record<string, BiLang> = {
   mpUnknown:      { en: '—', ko: '—' },
   // RS score card
   rsTitle:        { en: 'RS Score', ko: 'RS Score' },
-  rsAction:       { en: 'Relative Strength vs SPY', ko: 'SPY 대비 상대강도' },
+  rsAction:       { en: 'Relative Strength vs SPY · P = watchlist percentile', ko: 'SPY 대비 상대강도 · P = 워치리스트 백분위' },
   rsStrong:       { en: '≥70 Strong', ko: '≥70 강세' },
   rsMid:          { en: '50-70 Normal', ko: '50~70 보통' },
   rsWeak:         { en: '<50 Weak', ko: '<50 약세' },
@@ -219,6 +219,7 @@ export function WatchlistBoard() {
                   <th>Price</th>
                   <th><span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>Stage2 <InfoPopover term={t(G.stage2.term, locale)} body={t(G.stage2.body, locale)} /></span></th>
                   <th><span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>RS <InfoPopover term={t(G.rs_score.term, locale)} body={t(G.rs_score.body, locale)} /></span></th>
+                  <th><span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>Beta <InfoPopover term={t(G.beta_63d.term, locale)} body={t(G.beta_63d.body, locale)} /></span></th>
                   <th>{t(S.col52wHigh, locale)}</th>
                   <th>Entry</th>
                   <th>Stop</th>
@@ -268,6 +269,12 @@ export function WatchlistBoard() {
                       </td>
                       <td className="num" style={{ color: thin ? 'var(--fg-subtle)' : w.rs_score >= 70 ? 'var(--bull)' : w.rs_score >= 50 ? 'var(--teal)' : 'var(--bear)' }}>
                         {thin ? '—' : w.rs_score}
+                        {!thin && w.rs_score_percentile != null && (
+                          <div style={{ fontSize: 9, fontWeight: 400, color: 'var(--fg-subtle)' }}>P{Math.round(w.rs_score_percentile)}</div>
+                        )}
+                      </td>
+                      <td className="num" style={{ color: thin || w.beta_63d == null ? 'var(--fg-subtle)' : Math.abs(w.beta_63d) >= 2 ? 'var(--warn)' : 'var(--fg)' }}>
+                        {thin || w.beta_63d == null ? '—' : w.beta_63d.toFixed(2)}
                       </td>
                       <td className="num">{thin ? '—' : `${w.pct_from_52w_high.toFixed(1)}%`}</td>
                       <td className="num" style={{ color: thin ? 'var(--fg-subtle)' : 'var(--info)' }}>
@@ -326,7 +333,7 @@ export function WatchlistBoard() {
                       onClick={() => setOpenTier(tier)}
                       style={{ cursor: 'pointer' }}
                     >
-                      <td colSpan={12} style={{ padding: '6px 8px 2px', fontSize: 11, fontWeight: 700, color, letterSpacing: '0.5px', borderTop: '1px solid var(--border-soft)', background: 'rgba(0,0,0,0.03)', userSelect: 'none' }}>
+                      <td colSpan={13} style={{ padding: '6px 8px 2px', fontSize: 11, fontWeight: 700, color, letterSpacing: '0.5px', borderTop: '1px solid var(--border-soft)', background: 'rgba(0,0,0,0.03)', userSelect: 'none' }}>
                         <span style={{ marginRight: 5, fontSize: 9 }}>{openTier === tier ? '▼' : '▶'}</span>
                         {label}
                       </td>
@@ -368,7 +375,12 @@ export function WatchlistBoard() {
                   <div className="bar" style={{ flex: 1 }}>
                     <div className="bar__fill" style={{ width: `${w.rs_score}%`, background: color }} />
                   </div>
-                  <span className="mono" style={{ width: 36, textAlign: 'right', fontSize: 12, color }}>{w.rs_score.toFixed(1)}</span>
+                  <span className="mono" style={{ width: 60, textAlign: 'right', fontSize: 12, color }}>
+                    {w.rs_score.toFixed(1)}
+                    {w.rs_score_percentile != null && (
+                      <span style={{ color: 'var(--fg-subtle)', fontSize: 10 }}> P{Math.round(w.rs_score_percentile)}</span>
+                    )}
+                  </span>
                 </div>
               );
             })}

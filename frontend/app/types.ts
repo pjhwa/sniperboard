@@ -50,6 +50,8 @@ export interface Stage2 {
   checks: Stage2Checks;
   score: number;
   rs_score: number;
+  rs_excess_63d?: number | null;
+  beta_63d?: number | null;
   ema200_slope: number;
   pct_from_52w_high: number;
   pct_from_52w_low: number;
@@ -105,6 +107,9 @@ export interface WatchlistItem {
   price: number;
   score: number;
   rs_score: number;
+  rs_excess_63d?: number | null;
+  beta_63d?: number | null;
+  rs_score_percentile?: number | null;
   pct_from_52w_high: number;
   checks: Stage2Checks;
   entry: number;

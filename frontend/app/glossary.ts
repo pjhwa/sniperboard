@@ -90,6 +90,22 @@ export const GLOSSARY: GlossaryEntry[] = [
     },
   },
   {
+    key: 'rs_score_percentile',
+    term: { en: 'RS Percentile (Watchlist Rank)', ko: 'RS 백분위 (워치리스트 순위)' },
+    body: {
+      en: "Where this stock's 63-day SPY-relative return ranks among all watchlist symbols right now, 0-100 (100 = strongest in the group). Unlike RS Score (a fixed formula vs SPY), this shifts as the whole group's relative strength shifts — useful for picking the best-positioned name when several symbols all score well on RS Score.",
+      ko: '이 종목의 63일 SPY 대비 수익률이 현재 워치리스트 전체 종목 중 어디에 위치하는지를 0~100으로 나타냅니다(100 = 그룹 내 최강). RS Score(SPY 대비 고정 공식)와 달리 그룹 전체의 상대강도가 바뀌면 함께 움직이므로, 여러 종목이 RS Score상 비슷하게 좋을 때 상대적으로 가장 앞선 종목을 고르는 데 유용합니다.',
+    },
+  },
+  {
+    key: 'beta_63d',
+    term: { en: 'Beta (63d, vs SPY)', ko: '베타 (63일, SPY 대비)' },
+    body: {
+      en: "How much this stock tends to move for every 1% move in SPY, based on the trailing 63 trading days of daily returns. Beta 1.0 = moves with the market; 2.0 = roughly double the swing (both up and down); below 0 = tends to move opposite SPY. Context only — not part of the Stage2 checklist.",
+      ko: 'SPY가 1% 움직일 때 이 종목이 평균적으로 얼마나 움직이는지를 최근 63거래일 일간 수익률로 계산한 값입니다. 베타 1.0 = 시장과 비슷하게 움직임, 2.0 = 오르내림 폭이 약 2배, 0 미만 = SPY와 반대로 움직이는 경향. 참고용 지표이며 Stage2 체크리스트에는 포함되지 않습니다.',
+    },
+  },
+  {
     key: 'gc_status',
     term: { en: 'Gaussian Channel', ko: '가우시안 채널 (Gaussian Channel)' },
     body: {
