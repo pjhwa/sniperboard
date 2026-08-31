@@ -11,6 +11,12 @@ thin HTTP passthrough to an already-running SniperBoard backend
 (`backend/main.py`, normally `uvicorn`). **The backend must be running
 before you use these tools.**
 
+**For the connected AI client (Claude, Grok, etc.):** read
+[`USAGE.md`](./USAGE.md) — it's written directly for you and covers every
+tool, the domain concepts needed to interpret the numbers (Stage2,
+Conviction, Risk Regime, etc.), safety rules for the mutating tools, and
+ready-made multi-tool workflows for common requests.
+
 ## Setup
 
 ```bash
