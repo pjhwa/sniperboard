@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-08-26 gs-quant-inspired quant stats)
+# SniperBoard — Project Context (UPDATED 2026-08-31 MCP server)
 
 ## 0. Purpose of This Document
 
@@ -134,6 +134,7 @@ sniperboard/
 │       ├── useSignalLog.ts       # GET /api/signal-log, /api/signal-log/stats, POST /api/signal-log/refresh. Exports: useSignalLog(symbol?), useSignalLogStats(), useRefreshSignalLog(). Types: SignalLogEntry, SignalLogStats, SignalStatus, SignalMethodology, LiveBacktestComparison (C1/C2).
 │       ├── useSymbolInfo.ts          # GET /api/symbol-info (1h staleTime). Returns { symbolInfo, isLoading }.
 │       └── useCapLeaderboard.ts      # GET /api/cap-leaderboard (1h staleTime, refetchOnWindowFocus:false). Returns { leaderboard, isLoading, isError, refetch }.
+├── mcp_server/                   # MCP server (stdio) exposing all 29 /api/* endpoints as tools for Claude Desktop/Code and other MCP clients. tool_registry.py = declarative endpoint table; client.py = httpx passthrough to running backend (SNIPERBOARD_API_URL env, default localhost:8000/api); server.py = mcp SDK (<2, low-level Server API) stdio wiring. No business logic — pure HTTP delegation. Own venv (mcp_server/.venv, gitignored); run as `python -m mcp_server.server` with repo root on PYTHONPATH. See mcp_server/README.md.
 └── docker-compose.yml            # backend 8000→5001, frontend 3000→4000. Frontend build arg+env: BACKEND_URL=http://backend:8000
 ```
 
@@ -688,3 +689,4 @@ Note: Brief/Earnings data covers TIER1 12 symbols (collect_brief.py, collect_ear
 | Macro Insight AI cache TTL/URL | `backend/services/macro_insight_service.py: CACHE_TTL / MACRO_INSIGHT_URL` |
 | market-sentiment-data schema | `~/dev/market-sentiment-data/schema.json` (v2.0: bilingual _en/_ko fields) |
 | market-sentiment-data pipeline | `~/dev/market-sentiment-data/collect_sentiment.py` + `collect/collect_brief.py` |
+| Add a new MCP tool | `mcp_server/tool_registry.py: TOOLS` (add a `ToolDef`) — no other file needs to change unless the endpoint needs body params, then also check `client.py`'s `body_params` routing |

@@ -530,6 +530,20 @@ Full response schemas: see `backend/api/schemas.py`
 
 ---
 
+## MCP Server
+
+SniperBoard ships a stdio [MCP](https://modelcontextprotocol.io) server
+(`mcp_server/`) that exposes all 29 `/api/*` endpoints as tools, so
+MCP-capable clients — Claude Desktop, Claude Code, and future clients like
+Grok once they support MCP — can query and operate SniperBoard directly:
+full watchlist/signal/macro/sentiment/briefing scans, plus mutating actions
+like running a backtest or refreshing the signal log. It's a thin HTTP
+passthrough to the running backend — no business logic lives in the MCP
+server itself. See `mcp_server/README.md` for setup and client
+registration.
+
+---
+
 ## Tech Stack
 
 ### Frontend

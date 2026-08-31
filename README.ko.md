@@ -432,6 +432,19 @@ Mac Mini cron이 하루 2회 외부 데이터를 생성해 GitHub에 푸시하�
 
 ---
 
+## MCP 서버
+
+SniperBoard는 모든 `/api/*` 엔드포인트(29개)를 도구로 노출하는 stdio
+[MCP](https://modelcontextprotocol.io) 서버(`mcp_server/`)를 제공합니다.
+Claude Desktop, Claude Code, 그리고 향후 MCP를 지원하게 될 Grok 같은
+클라이언트가 SniperBoard를 직접 조회·조작할 수 있습니다 — 워치리스트/
+시그널/매크로/센티먼트/브리핑 전체 스캔은 물론, 백테스트 실행이나 시그널
+로그 갱신 같은 상태 변경 액션도 포함됩니다. 실행 중인 백엔드로 위임하는
+얇은 HTTP 패스스루이며, MCP 서버 자체에는 비즈니스 로직이 없습니다. 설치와
+클라이언트 등록 방법은 `mcp_server/README.md`를 참고하세요.
+
+---
+
 ## 기술 스택
 
 ### Frontend

@@ -1,6 +1,6 @@
 > English docs: [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md)
 
-# SniperBoard — Project Context (UPDATED 2026-08-26 gs-quant 기반 퀀트 지표)
+# SniperBoard — Project Context (UPDATED 2026-08-31 MCP 서버 추가)
 
 ## 0. 이 문서의 목적
 
@@ -106,6 +106,7 @@ sniperboard/
 │       ├── usePrePost.ts         # GET /api/prepost (60초 폴링). prePostData: { market_state, pre/post price+chg_pct, regular_close }
 │       ├── useEarnings.ts        # GET /api/earnings (60분 staleTime)
 │       └── useDistributionDays.ts # GET /api/distribution-days
+├── mcp_server/                   # 모든 /api/* 엔드포인트(29개)를 MCP 도구로 노출하는 stdio MCP 서버. Claude Desktop/Code 등 MCP 클라이언트 연동용. tool_registry.py = 엔드포인트 선언 테이블, client.py = 실행 중인 백엔드로 위임하는 httpx 클라이언트(SNIPERBOARD_API_URL 환경변수, 기본값 localhost:8000/api), server.py = mcp SDK(<2, low-level Server API) stdio 연결. 비즈니스 로직 없음 — 순수 HTTP 위임. 자체 venv(mcp_server/.venv, gitignore 처리); `python -m mcp_server.server`로 저장소 루트를 PYTHONPATH에 두고 실행. mcp_server/README.md 참고.
 └── docker-compose.yml            # backend 8000→5001, frontend 3000→4000
 ```
 
@@ -600,3 +601,4 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | Brief 워치리스트 변경 | `collect/collect_brief.py: WATCHLIST` + `collect/collect_earnings.py: WATCHLIST` + `collect/collect_sentiment.py: TIER1_WATCHLIST` + `collect/verify_briefing.py: ALL_SYMBOLS` + `collect/collect_morning_briefing.py: ALL_SYMBOLS` |
 | Macro Insight 신호등 규칙 변경 | `backend/core/macro_rules.py` (compute_*_signal 함수들) |
 | Macro Insight AI 캐시 TTL/URL | `backend/services/macro_insight_service.py: CACHE_TTL / MACRO_INSIGHT_URL` |
+| MCP 도구 추가 | `mcp_server/tool_registry.py: TOOLS`에 `ToolDef` 추가 — body 파라미터가 필요한 경우에만 `client.py`의 `body_params` 라우팅도 확인 |
