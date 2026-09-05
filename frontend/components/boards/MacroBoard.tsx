@@ -6,6 +6,7 @@ import { useMacroInsight } from '@/hooks/useMacroInsight';
 import { useStore } from '@/hooks/useStore';
 import { Card } from '@/components/ui/Card';
 import { PredictionMarketCard } from '@/components/ui/PredictionMarketCard';
+import { MacroOverlays } from '@/components/overlays/MacroOverlays';
 import { MacroItem, MACRO_SYMBOL_NAMES } from '@/app/types';
 import { BoardGuidePanel, GuideSection } from '@/components/ui/BoardGuidePanel';
 import { G } from '@/app/glossary';
@@ -214,6 +215,8 @@ export function MacroBoard() {
             )}
           </Card>
         </div>
+
+        <MacroOverlays />
 
         {/* Macro Groups */}
         <div className="mob-order-2 mob-macro-groups">

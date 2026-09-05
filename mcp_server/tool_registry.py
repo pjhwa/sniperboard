@@ -244,6 +244,77 @@ TOOLS: list[ToolDef] = [
         path="/cap-leaderboard",
         description="Global market-cap TOP 15 leaderboard with rank changes, sparklines, 52-week position.",
     ),
+    ToolDef(
+        name="get_insider",
+        method="GET",
+        path="/insider",
+        description="Yahoo Form 4 insider transactions + 7-day cluster-buy flag. Reference only — not used in Conviction.",
+        params={"symbol": ParamSpec("string", "Stock symbol", required=True)},
+    ),
+    ToolDef(
+        name="get_short_float",
+        method="GET",
+        path="/short-float",
+        description="Short percent of float. Reference only.",
+        params={"symbol": ParamSpec("string", "Stock symbol", required=True)},
+    ),
+    ToolDef(
+        name="get_rs_horizons",
+        method="GET",
+        path="/rs-horizons",
+        description="Relative strength vs SPY at 1m/3m/6m/12m. Does not change Stage2 rs_score.",
+        params={"symbol": ParamSpec("string", "Stock symbol", required=True)},
+    ),
+    ToolDef(
+        name="get_calendar",
+        method="GET",
+        path="/calendar",
+        description="US CPI/FOMC/NFP-class macro calendar for the current week.",
+    ),
+    ToolDef(
+        name="get_alert_rules",
+        method="GET",
+        path="/alert-rules",
+        description="User overlay alert rules (price cross, volume spike, Stage2≥5, RS≥70).",
+    ),
+    ToolDef(
+        name="put_alert_rules",
+        method="PUT",
+        path="/alert-rules",
+        description="Replace overlay alert rules list.",
+        mutating=True,
+    ),
+    ToolDef(
+        name="get_options_unusual",
+        method="GET",
+        path="/options-unusual",
+        description="Unusual options (volume vs OI / premium). Reference only.",
+        params={"symbol": ParamSpec("string", "Stock symbol", required=True)},
+    ),
+    ToolDef(
+        name="get_sector_quadrants",
+        method="GET",
+        path="/sector-quadrants",
+        description="Sector ETF momentum × acceleration quadrants. Reference only.",
+    ),
+    ToolDef(
+        name="get_correlation",
+        method="GET",
+        path="/correlation",
+        description="Pearson return correlation among SPY, QQQ, GLD, CL, DXY, TNX, VIX.",
+    ),
+    ToolDef(
+        name="get_kelly",
+        method="GET",
+        path="/kelly",
+        description="Kelly / half-Kelly / MaxDD-R from live or backtest win-rate and expectancy.",
+    ),
+    ToolDef(
+        name="get_status",
+        method="GET",
+        path="/status",
+        description="Connection, overnight cache, and Model Health for the status strip.",
+    ),
 ]
 
 TOOLS_BY_NAME: dict[str, ToolDef] = {t.name: t for t in TOOLS}

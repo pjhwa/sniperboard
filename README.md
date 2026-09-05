@@ -22,7 +22,7 @@ SniperBoard is a web-based trading signal dashboard for US equity swing trading.
 - **Signal Philosophy**: VCP · Sniper · Pullback (O'Neil/Livermore) + Stage 2 (Minervini) + Conviction composite score + Risk Regime + Distribution Days
 - **Language Support**: EN/KO toggle in the Topbar — all UI labels, glossary (28 terms), signal descriptions, macro symbol names, and AI-generated text switch instantly. AI data uses bilingual `_en`/`_ko` fields (schema v2.0); v1.x data falls back gracefully.
 
-Plaid DS-based dark/light theme. ⌘K command palette for fast symbol/board switching. ⓘ popover on each indicator/card for context (auto-corrects for viewport edges). `? Guide` button on MarketStrip opens a board-level slide-over guide. Type `?` in the ⌘K input to enter glossary search mode (28 terms).
+Plaid DS-based dark/light theme. ⌘K command palette accepts Bloomberg-style GO commands (`TSLA`, `TSLA S2`, `TSLA RR`, `WATCH`, `REGIME`, `INSIDER TSLA`). Empty `?` opens keyboard shortcuts; `?term` is glossary search (28 terms). Desktop Trade / Research / Macro workspaces persist. Daily/intraday charts expose RSI/MACD/BB/ATR/VWAP toggles plus trendline / Fibonacci / horizontal-line drawings. DeepDive shows reference-only insider, short-float, RS-horizon, and unusual-options overlays; Macro adds US CPI/FOMC/NFP calendar, sector quadrants, and cross-asset correlation. Overlay alerts (price cross, volume spike, Stage2≥5, RS≥70) land in the existing bell. Status strip shows connection, data age, and Model Health. None of the new overlays feed Conviction.
 
 ---
 

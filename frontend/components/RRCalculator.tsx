@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDashboardStore } from '../hooks/useStore';
+import { useKelly } from '@/hooks/useOverlays';
 
 interface RRCalculatorProps {
   defaultEntry: number;
@@ -66,6 +67,8 @@ export default function RRCalculator({
 
   const pivot = calcRR(rrEntry, rrStop, rrTarget);
   const now = calcRR(rrNowEntry, rrNowStop, rrNowTarget);
+  const [tab, setTab] = useState<'position' | 'kelly' | 'maxdd'>('position');
+  const kellyQ = useKelly();
 
   // R:R 비율 시각화 바 렌더링 헬퍼
   const renderRRBar = (ratio: number | null) => {
@@ -105,6 +108,43 @@ export default function RRCalculator({
         <p className="text-xs text-zinc-400 mb-4 font-medium leading-relaxed">
           계좌 규모 및 리스크 감수 비율에 맞춰 최적의 매수 수량과 포지션을 계산합니다.
         </p>
+        <div className="flex gap-1 mb-3">
+          {(['position', 'kelly', 'maxdd'] as const).map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTab(id)}
+              className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${tab === id ? 'bg-zinc-700 text-white' : 'text-zinc-500'}`}
+            >
+              {id === 'position' ? 'Position' : id === 'kelly' ? 'Kelly' : 'MaxDD'}
+            </button>
+          ))}
+        </div>
+        {tab === 'kelly' && (
+          <div className="bg-zinc-900/40 p-3 rounded-xl border border-zinc-800 mb-3 text-xs">
+            <div className="text-zinc-500 mb-1">reference only · live/backtest win-rate</div>
+            {kellyQ.data?.kelly == null ? (
+              <div className="text-zinc-500">Insufficient closed trades</div>
+            ) : (
+              <>
+                <div>Win rate {(kellyQ.data.win_rate * 100).toFixed(1)}% · E[R] {kellyQ.data.expectancy_r?.toFixed(3)}</div>
+                <div className="font-bold text-emerald-400 mt-1">Kelly {(kellyQ.data.kelly * 100).toFixed(1)}% · Half {(kellyQ.data.half_kelly * 100).toFixed(1)}%</div>
+              </>
+            )}
+          </div>
+        )}
+        {tab === 'maxdd' && (
+          <div className="bg-zinc-900/40 p-3 rounded-xl border border-zinc-800 mb-3 text-xs">
+            <div className="text-zinc-500 mb-1">95th-pct losing streak (1R per loss)</div>
+            {kellyQ.data?.maxdd_r == null ? (
+              <div className="text-zinc-500">Insufficient closed trades</div>
+            ) : (
+              <div className="font-bold text-amber-400">MaxDD ≈ {kellyQ.data.maxdd_r}R</div>
+            )}
+          </div>
+        )}
+        {tab === 'position' && (
+        <div>
 
         {/* Global Account Configuration */}
         <div className="grid grid-cols-2 gap-3 mb-4.5 bg-zinc-900/40 p-3.5 rounded-xl border border-zinc-900">
@@ -135,7 +175,6 @@ export default function RRCalculator({
             <span className="text-zinc-500"> (허용할 수 있는 최대 리스크 규모)</span>
           </div>
         </div>
-      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         
@@ -262,6 +301,9 @@ export default function RRCalculator({
           
           {renderRRBar(pivot.ratio)}
         </div>
+      </div>
+        </div>
+        )}
       </div>
     </div>
   );

@@ -184,6 +184,7 @@ def build_alerts(
     signal_entries: Optional[list] = None,
     live_stats: Optional[dict] = None,
     briefing_data: Optional[dict] = None,
+    overlay_hits: Optional[list] = None,
     max_earnings_days: int = 3,
 ) -> dict[str, Any]:
     alerts: list[dict] = []
@@ -191,6 +192,7 @@ def build_alerts(
     alerts.extend(signal_alerts(signal_entries or []))
     alerts.extend(health_alerts(live_stats))
     alerts.extend(integrity_alerts(briefing_data))
+    alerts.extend(overlay_hits or [])
 
     alerts.sort(key=lambda a: (_sev_rank(str(a.get("severity"))), str(a.get("id"))))
 
@@ -208,12 +210,14 @@ def build_alerts(
         "alerts": alerts,
         "methodology_en": (
             "Derived from live earnings calendar (serve-time days_until), open signal_log "
-            "PENDING/ACTIVE rows, Track health, and morning-briefing integrity flags. "
+            "PENDING/ACTIVE rows, Track health, morning-briefing integrity flags, and "
+            "user overlay rules (price cross, volume spike, Stage2≥5, RS≥70). "
             "No push delivery — dashboard bell only."
         ),
         "methodology_ko": (
             "실적 캘린더(serve-time days_until), signal_log PENDING/ACTIVE, "
-            "Track 헬스, 아침 브리핑 integrity 플래그에서 파생. "
+            "Track 헬스, 아침 브리핑 integrity, 사용자 오버레이 규칙"
+            "(가격 돌파, 거래량 급증, Stage2≥5, RS≥70)에서 파생. "
             "푸시 발송 없음 — 대시보드 벨만 제공."
         ),
     }

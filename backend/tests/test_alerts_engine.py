@@ -54,3 +54,21 @@ def test_build_combined_sort():
     # first should be highest severity among set
     assert sevs[0] in ("critical", "high")
     assert out["counts_by_type"].get("earnings_dday") == 1
+
+
+def test_overlay_hits_included():
+    out = build_alerts(
+        overlay_hits=[{
+            "id": "overlay:1:TSLA:stage2_ready",
+            "type": "stage2_ready",
+            "severity": "medium",
+            "symbol": "TSLA",
+            "board": "deepdive",
+            "title_en": "TSLA stage2",
+            "title_ko": "TSLA stage2",
+            "body_en": "Stage2=6",
+            "body_ko": "Stage2=6",
+        }],
+    )
+    assert out["counts_by_type"].get("stage2_ready") == 1
+    assert any(a["id"].startswith("overlay:") for a in out["alerts"])

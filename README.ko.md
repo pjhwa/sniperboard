@@ -22,7 +22,7 @@ SniperBoard는 미국 주식 스윙 트레이딩을 위한 웹 기반 매매 신
 - **신호 철학**: VCP·Sniper·Pullback (O'Neil/Livermore) + Stage 2 (Minervini) + Conviction 종합 점수 + Risk Regime + Distribution Day
 - **언어 지원**: Topbar의 EN/KO 토글 버튼 — UI 레이블·용어 28개·신호 설명·매크로 심볼명·AI 생성 텍스트 즉시 전환. AI 데이터는 이중 언어 `_en`/`_ko` 필드(schema v2.0) 사용. v1.x 데이터는 자동 폴백 처리.
 
-Plaid DS 기반 다크/라이트 테마 전환 지원. ⌘K 커맨드 팔레트로 종목·보드 빠른 이동. 각 지표·카드마다 ⓘ 버튼으로 맥락 설명 팝오버 제공(뷰포트 경계 자동 보정), MarketStrip 우측의 `? 가이드` 버튼으로 보드 전체 사용 가이드를 슬라이드오버로 확인 가능. ⌘K 입력창에 `?`를 입력하면 28개 용어 검색 모드로 전환.
+Plaid DS 기반 다크/라이트 테마 전환 지원. ⌘K 커맨드 팔레트는 블룸버그식 GO 명령(`TSLA`, `TSLA S2`, `TSLA RR`, `WATCH`, `REGIME`, `INSIDER TSLA`)을 받습니다. 빈 `?`는 단축키 도움말, `?용어`는 기존 용어 검색입니다. 데스크톱 Trade / Research / Macro 워크스페이스가 저장됩니다. 일봉·분봉 차트에 RSI/MACD/BB/ATR/VWAP 토글과 추세선·피보·수평선 드로잉이 있습니다. DeepDive는 내부자·공매도·RS 멀티기간·이상옵션 오버레이, Macro는 미국 CPI/FOMC/NFP 캘린더·섹터 사분면·교차자산 상관을 보여 줍니다. 가격 돌파·거래량 급증·Stage2≥5·RS≥70 규칙은 기존 알림 벨로 전달됩니다. 하단 상태 줄은 연결·데이터 나이·Model Health를 표시합니다. 새 오버레이는 Conviction에 들어가지 않습니다.
 
 ---
 

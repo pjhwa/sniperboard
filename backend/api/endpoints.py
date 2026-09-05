@@ -4,7 +4,7 @@ import time
 import yfinance as yf
 from datetime import datetime, timezone
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Query, BackgroundTasks, Body
 from services.data_service import get_ohlcv
 from core.data_adapter import get_multi_daily
 from core.signal_engine import (
@@ -1087,11 +1087,42 @@ async def get_alerts_endpoint(
     except Exception as e:
         logger.warning("alerts: briefing fetch failed: %s", e)
 
+    overlay_hits: list = []
+    try:
+        from core.overlay_alerts import evaluate_overlay_rules
+        from services.overlay_service import load_alert_rules, quotes_for_rules
+        from core.data_adapter import get_daily as _gd
+        rules = load_alert_rules()
+        enabled_syms = [str(r.get("symbol") or "") for r in rules if r.get("enabled")]
+        quotes = quotes_for_rules(enabled_syms)
+        watch: dict = {}
+        for r in rules:
+            if not r.get("enabled"):
+                continue
+            if r.get("type") not in ("stage2_ready", "rs_strong"):
+                continue
+            sym = str(r.get("symbol") or "").upper()
+            if not sym or sym in watch:
+                continue
+            df = _gd(sym, period="1y")
+            if df is None or df.empty or len(df) < 20:
+                continue
+            spy = _gd("SPY", period="1y")
+            spy_close = None
+            if spy is not None and not spy.empty:
+                spy_close = spy["close"] if "close" in spy.columns else spy.get("Close")
+            s2 = calculate_stage2_analysis(df, spy_close=spy_close)
+            watch[sym] = {"stage2_score": s2.get("score"), "rs_score": s2.get("rs_score")}
+        overlay_hits = evaluate_overlay_rules(rules, quotes=quotes, watch=watch)
+    except Exception as e:
+        logger.warning("alerts: overlay rules failed: %s", e)
+
     return build_alerts(
         upcoming_earnings=upcoming,
         signal_entries=entries,
         live_stats=stats,
         briefing_data=briefing_data,
+        overlay_hits=overlay_hits,
         max_earnings_days=max_earnings_days,
     )
 
@@ -1209,3 +1240,109 @@ async def get_symbol_info(symbol: str = Query(..., min_length=1, max_length=10))
 async def get_cap_leaderboard():
     from services.cap_leaderboard_service import fetch_leaderboard
     return fetch_leaderboard()
+
+
+# ─── S3/S4 diagnostic overlays (reference_only — never feed Conviction) ────────
+
+@router.get("/insider")
+async def get_insider(symbol: str = Query(..., min_length=1, max_length=10)):
+    from services.overlay_service import fetch_insider
+    return fetch_insider(symbol.strip().upper())
+
+
+@router.get("/short-float")
+async def get_short_float(symbol: str = Query(..., min_length=1, max_length=10)):
+    from services.overlay_service import fetch_short_float
+    return fetch_short_float(symbol.strip().upper())
+
+
+@router.get("/rs-horizons")
+async def get_rs_horizons(symbol: str = Query(..., min_length=1, max_length=10)):
+    from services.overlay_service import fetch_rs_horizons
+    return fetch_rs_horizons(symbol.strip().upper())
+
+
+@router.get("/calendar")
+async def get_calendar():
+    from services.overlay_service import fetch_calendar
+    return fetch_calendar()
+
+
+@router.get("/alert-rules")
+async def get_alert_rules():
+    from services.overlay_service import load_alert_rules
+    return {"rules": load_alert_rules(), "usage": "reference_only"}
+
+
+@router.put("/alert-rules")
+async def put_alert_rules(payload: dict = Body(...)):
+    from services.overlay_service import save_alert_rules
+    rules = payload.get("rules") if isinstance(payload, dict) else None
+    if not isinstance(rules, list):
+        raise HTTPException(status_code=400, detail="body.rules must be a list")
+    return {"rules": save_alert_rules(rules), "usage": "reference_only"}
+
+
+@router.get("/options-unusual")
+async def get_options_unusual(symbol: str = Query(..., min_length=1, max_length=10)):
+    from services.overlay_service import fetch_options_unusual
+    return fetch_options_unusual(symbol.strip().upper())
+
+
+@router.get("/sector-quadrants")
+async def get_sector_quadrants():
+    from services.overlay_service import fetch_sector_quadrants
+    return fetch_sector_quadrants()
+
+
+@router.get("/correlation")
+async def get_correlation():
+    from services.overlay_service import fetch_correlation
+    return fetch_correlation()
+
+
+@router.get("/kelly")
+async def get_kelly():
+    from core.kelly import kelly_fraction, half_kelly, losing_streak_maxdd_r, payoff_ratio_from_expectancy
+    stats = compute_live_stats() or {}
+    wr = stats.get("win_rate")
+    exp = stats.get("expectancy_r")
+    if wr is None:
+        agg = (load_cached_result() or {}).get("aggregate") or {}
+        wr = (agg.get("all") or {}).get("win_rate")
+        exp = (agg.get("all") or {}).get("expectancy_r")
+    wr_f = float(wr) if wr is not None else None
+    exp_f = float(exp) if exp is not None else None
+    return {
+        "available": wr_f is not None and exp_f is not None,
+        "win_rate": wr_f,
+        "expectancy_r": exp_f,
+        "payoff_ratio": payoff_ratio_from_expectancy(wr_f, exp_f) if wr_f is not None and exp_f is not None else None,
+        "kelly": kelly_fraction(wr_f, exp_f) if wr_f is not None and exp_f is not None else None,
+        "half_kelly": half_kelly(wr_f, exp_f) if wr_f is not None and exp_f is not None else None,
+        "maxdd_r": losing_streak_maxdd_r(wr_f) if wr_f is not None else None,
+        "source": "live_stats_or_backtest",
+        "usage": "reference_only",
+    }
+
+
+@router.get("/status")
+async def get_status():
+    from services.overnight_service import get_overnight_price
+    ov = get_overnight_price("SPY")
+    stats = None
+    try:
+        stats = compute_live_stats()
+    except Exception:
+        stats = None
+    health = (stats or {}).get("health") or {}
+    return {
+        "available": True,
+        "connection": "ok",
+        "overnight": ov,
+        "model_health": health.get("status"),
+        "model_confidence": health.get("confidence"),
+        "n_closed": (stats or {}).get("n_closed") or (stats or {}).get("sample_n"),
+        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "usage": "reference_only",
+    }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   createChart, ColorType, CrosshairMode, Time,
   ISeriesPrimitive, SeriesAttachedParameter, ISeriesPrimitivePaneView,
@@ -8,6 +8,8 @@ import {
 } from 'lightweight-charts';
 import { CanvasRenderingTarget2D } from 'fancy-canvas';
 import { DailyData } from '../../app/types';
+import { rsiWilder, macd, bollingerBands, atr, vwap } from '@/lib/indicators';
+import { ChartToolbar, type DrawingTool, type IndicatorToggles } from './ChartToolbar';
 
 interface DailyChartProps {
   data: DailyData;
@@ -81,9 +83,18 @@ const LEGEND_ITEMS = [
   { color: '#a855f7', label: 'GC Band', dash: false },
 ];
 
+type Drawing = { type: DrawingTool; p1: { time: Time; price: number }; p2?: { time: Time; price: number } };
+
 export default function DailyChart({ data }: DailyChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<any>(null);
+  const candleSeriesRef = useRef<any>(null);
+  const pendingRef = useRef<{ time: Time; price: number } | null>(null);
+  const [toggles, setToggles] = useState<IndicatorToggles>({ rsi: false, macd: false, bb: false, atr: false, vwap: false });
+  const [tool, setTool] = useState<DrawingTool | null>(null);
+  const [drawings, setDrawings] = useState<Drawing[]>([]);
+  const toolRef = useRef<DrawingTool | null>(null);
+  toolRef.current = tool;
 
   const hasEntry = !!data.stage2?.entry;
   const { candles, indicators } = data;
@@ -131,6 +142,7 @@ export default function DailyChart({ data }: DailyChartProps) {
       low: c.low,
       close: c.close,
     })));
+    candleSeriesRef.current = candleSeries;
 
     // ── 2. GC 밴드 음영 ───────────────────────────────────────────────────────
     const gcUp = indicators['gc_upper'];
@@ -221,6 +233,78 @@ export default function DailyChart({ data }: DailyChartProps) {
       entryLine.setData(candles.map((c) => ({ time: c.time as Time, value: data.stage2.entry })));
     }
 
+    const closes = candles.map((c) => c.close);
+    const highs = candles.map((c) => c.high);
+    const lows = candles.map((c) => c.low);
+    const vols = candles.map((c) => c.volume);
+    const times = candles.map((c) => c.time as Time);
+    const lineOf = (vals: (number | null)[], color: string, scaleId?: string) => {
+      const s = chart.addLineSeries({
+        color, lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+        priceScaleId: scaleId,
+      });
+      s.setData(times.map((t, i) => (vals[i] == null ? null : { time: t, value: vals[i] as number })).filter(Boolean) as any);
+      return s;
+    };
+    if (toggles.bb) {
+      const bb = bollingerBands(closes, 20, 2);
+      lineOf(bb.upper, '#60a5fa');
+      lineOf(bb.middle, '#93c5fd');
+      lineOf(bb.lower, '#60a5fa');
+    }
+    if (toggles.vwap) lineOf(vwap(highs, lows, closes, vols), '#f97316');
+    if (toggles.atr) {
+      chart.priceScale('atr').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
+      lineOf(atr(highs, lows, closes, 14), '#eab308', 'atr');
+    }
+    if (toggles.rsi) {
+      chart.priceScale('rsi').applyOptions({ scaleMargins: { top: 0.78, bottom: 0 } });
+      lineOf(rsiWilder(closes, 14), '#a78bfa', 'rsi');
+    }
+    if (toggles.macd) {
+      const m = macd(closes);
+      chart.priceScale('macd').applyOptions({ scaleMargins: { top: 0.78, bottom: 0 } });
+      lineOf(m.macd, '#22d3ee', 'macd');
+      lineOf(m.signal, '#f472b6', 'macd');
+    }
+    drawings.forEach((d) => {
+      if (d.type === 'hline') {
+        const s = chart.addLineSeries({ color: '#e5e7eb', lineWidth: 1, lineStyle: 2, lastValueVisible: false, priceLineVisible: false });
+        s.setData(times.map((t) => ({ time: t, value: d.p1.price })));
+      } else if (d.p2) {
+        const s = chart.addLineSeries({ color: '#fbbf24', lineWidth: 1, lastValueVisible: false, priceLineVisible: false });
+        s.setData([
+          { time: d.p1.time, value: d.p1.price },
+          { time: d.p2.time, value: d.p2.price },
+        ]);
+        if (d.type === 'fibonacci') {
+          const lo = Math.min(d.p1.price, d.p2.price);
+          const hi = Math.max(d.p1.price, d.p2.price);
+          const mid = lo + (hi - lo) * 0.618;
+          const fib = chart.addLineSeries({ color: '#c084fc', lineWidth: 1, lineStyle: 2, lastValueVisible: false, priceLineVisible: false });
+          fib.setData(times.map((t) => ({ time: t, value: mid })));
+        }
+      }
+    });
+    chart.subscribeClick((param) => {
+      const t = toolRef.current;
+      if (!t || !param.point || !param.time || !candleSeriesRef.current) return;
+      const price = candleSeriesRef.current.coordinateToPrice(param.point.y);
+      if (price == null) return;
+      const pt = { time: param.time as Time, price };
+      if (t === 'hline') {
+        setDrawings((ds) => [...ds, { type: 'hline', p1: pt }]);
+        return;
+      }
+      if (!pendingRef.current) {
+        pendingRef.current = pt;
+        return;
+      }
+      const p1 = pendingRef.current;
+      pendingRef.current = null;
+      setDrawings((ds) => [...ds, { type: t, p1, p2: pt }]);
+    });
+
     chart.timeScale().fitContent();
 
     const handleResize = () => {
@@ -236,10 +320,17 @@ export default function DailyChart({ data }: DailyChartProps) {
       resizeObserver.disconnect();
       chart.remove();
     };
-  }, [data]);
+  }, [data, toggles, drawings]);
 
   return (
     <div className="relative w-full">
+      <ChartToolbar
+        toggles={toggles}
+        onToggle={(k) => setToggles((t) => ({ ...t, [k]: !t[k] }))}
+        tool={tool}
+        onTool={setTool}
+        onClear={() => { setDrawings([]); pendingRef.current = null; setTool(null); }}
+      />
       <div ref={chartContainerRef} className="w-full h-[480px]" />
       <div className="absolute top-2 left-2 flex flex-wrap gap-x-3 gap-y-1 pointer-events-none z-10">
         {legendItems.map(({ color, label, dash }) => (
