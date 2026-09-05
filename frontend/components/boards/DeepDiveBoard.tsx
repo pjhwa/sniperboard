@@ -15,6 +15,7 @@ import { RadialGauge } from '@/components/ui/RadialGauge';
 import { ConvictionBadge } from '@/components/ui/ConvictionBadge';
 import { Check, X, Sparkle } from '@/components/ui/Icons';
 import DailyChart from '@/components/charts/DailyChart';
+import { DeepDiveOverlays } from '@/components/overlays/DeepDiveOverlays';
 import {
   TIER1_SYMBOLS, TIER2_SYMBOLS, STAGE2_META, SIGNAL_META, SENTIMENT_META, TREND_META,
   VOLUME_META, SETUP_QUALITY_META, EARNINGS_RISK_META, REGIME_META,
@@ -1254,6 +1255,8 @@ export function DeepDiveBoard() {
         </div>
 
       </div>{/* end ROW 4 */}
+
+      <DeepDiveOverlays symbol={symbol} />
 
       {/* ════════════════════════════════════════════════════════════════
           ROW 5 LEFT — Risk Regime (3fr, 가로 레이아웃)

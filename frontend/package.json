@@ -7,9 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx lib/entryPlan.test.ts && tsx lib/perplexityFinance.test.ts",
+    "test": "tsx lib/entryPlan.test.ts && tsx lib/perplexityFinance.test.ts && tsx lib/goCommand.test.ts && tsx lib/workspaceLayout.test.ts && tsx lib/indicators.test.ts",
     "test:entry-plan": "tsx lib/entryPlan.test.ts",
-    "test:perplexity-finance": "tsx lib/perplexityFinance.test.ts"
+    "test:perplexity-finance": "tsx lib/perplexityFinance.test.ts",
+    "test:go-command": "tsx lib/goCommand.test.ts",
+    "test:workspace": "tsx lib/workspaceLayout.test.ts",
+    "test:indicators": "tsx lib/indicators.test.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.100.11",

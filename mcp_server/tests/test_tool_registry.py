@@ -1,12 +1,12 @@
 from mcp_server.tool_registry import TOOLS, TOOLS_BY_NAME, ToolDef
 
-MUTATING_NAMES = {"run_backtest", "run_backtest_sweep", "refresh_signal_log", "send_email_report"}
+MUTATING_NAMES = {"run_backtest", "run_backtest_sweep", "refresh_signal_log", "send_email_report", "put_alert_rules"}
 
 BODY_PARAM_NAMES = {"run_backtest": {"symbols"}, "run_backtest_sweep": {"symbols"}}
 
 
 def test_tool_count():
-    assert len(TOOLS) == 29
+    assert len(TOOLS) == 40
 
 
 def test_tool_names_are_unique():
@@ -26,11 +26,12 @@ def test_mutating_flags_match_known_mutating_endpoints():
 
 
 def test_only_mutating_tools_use_post():
+    write_methods = {"POST", "PUT", "PATCH", "DELETE"}
     for t in TOOLS:
-        if t.method == "POST":
-            assert t.mutating, f"{t.name} is POST but not flagged mutating"
+        if t.method in write_methods:
+            assert t.mutating, f"{t.name} is {t.method} but not flagged mutating"
         if t.mutating:
-            assert t.method == "POST", f"{t.name} is mutating but not POST"
+            assert t.method in write_methods, f"{t.name} is mutating but not a write method"
 
 
 def test_body_params_only_on_backtest_symbols():

@@ -107,7 +107,7 @@ function SymbolPicker({ symbol, setSymbol, locale }: {
 // ── Topbar ────────────────────────────────────────────────────────────────────
 
 export function Topbar() {
-  const { board, symbol, theme, locale, setSymbol, setCmdOpen, setTheme, setLocale } = useStore();
+  const { board, symbol, theme, locale, workspace, setSymbol, setCmdOpen, setTheme, setLocale, setWorkspace } = useStore();
   const { regimeData } = useRegime();
 
   const BOARD_LABELS: Record<string, { en: string; ko: string }> = {
@@ -143,6 +143,20 @@ export function Topbar() {
       </div>
 
       <div className="topbar__right">
+        <div className="hide-mobile workspace-switch" aria-label="workspace">
+          {(['trade', 'research', 'macro'] as const).map((id) => (
+            <button
+              key={id}
+              type="button"
+              className={workspace === id ? 'on' : ''}
+              onClick={() => setWorkspace(id)}
+            >
+              {id === 'trade' ? (locale === 'en' ? 'Trade' : '트레이드')
+                : id === 'research' ? (locale === 'en' ? 'Research' : '리서치')
+                : (locale === 'en' ? 'Macro' : '매크로')}
+            </button>
+          ))}
+        </div>
         {/* 심볼 픽커 (21종목 드롭다운) */}
         <div className="topbar__symbols">
           <SymbolPicker symbol={symbol} setSymbol={setSymbol} locale={locale as Locale} />

@@ -26,6 +26,9 @@ frontend/out/
 .DS_Store
 Thumbs.db
 
+# Local overlay alert rules
+backend/data/overlay_alert_rules.json
+
 # Agent Metadata
 .antigravitycli/
 .pytest_cache/

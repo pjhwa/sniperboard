@@ -1,7 +1,7 @@
 # SniperBoard MCP Server
 
 Exposes all SniperBoard `/api/*` endpoints (watchlist, signals, macro,
-sentiment, briefings, backtests, alerts, etc — 29 tools total) as MCP tools
+sentiment, briefings, backtests, alerts, overlays, etc — 40 tools total) as MCP tools
 over stdio, so any MCP-capable client (Claude Desktop, Claude Code, and
 future clients like Grok once they support MCP) can query and operate
 SniperBoard directly.
@@ -71,7 +71,7 @@ Add to `claude_desktop_config.json`:
 
 ## Tools
 
-29 tools, one per `/api/*` endpoint — see `tool_registry.py` for the full
+40 tools, one per `/api/*` endpoint — see `tool_registry.py` for the full
 list with descriptions. Four are mutating (their description is prefixed
 `⚠️`) and change server state when called: `run_backtest`,
 `run_backtest_sweep`, `refresh_signal_log`, `send_email_report`.

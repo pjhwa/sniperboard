@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore, type Board } from '@/hooks/useStore';
 import { useAlerts, type UserAlert } from '@/hooks/useAlerts';
+import { useAlertRules } from '@/hooks/useOverlays';
 import { Bell } from '@/components/ui/Icons';
 import type { Locale } from '@/app/i18n';
 
@@ -114,7 +115,11 @@ export function AlertsBell() {
   const { locale, setBoard, setSymbol, dismissedAlertIds, dismissAlert, clearDismissedAlerts } =
     useStore();
   const { data, isLoading, isError } = useAlerts(3);
+  const rulesQ = useAlertRules();
   const [open, setOpen] = useState(false);
+  const [ruleType, setRuleType] = useState('stage2_ready');
+  const [ruleSym, setRuleSym] = useState('TSLA');
+  const [ruleThr, setRuleThr] = useState('100');
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -251,6 +256,39 @@ export function AlertsBell() {
               onDismiss={dismissAlert}
             />
           ))}
+          <div style={{ padding: 12, borderTop: '1px solid var(--border)', fontSize: 11 }}>
+            <div style={{ fontWeight: 700, marginBottom: 6 }}>
+              {lc === 'ko' ? '규칙 추가' : 'Add rule'}
+            </div>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+              <select value={ruleType} onChange={(e) => setRuleType(e.target.value)} style={{ fontSize: 11 }}>
+                <option value="price_cross">price cross</option>
+                <option value="volume_spike">volume spike</option>
+                <option value="stage2_ready">Stage2≥5</option>
+                <option value="rs_strong">RS≥70</option>
+              </select>
+              <input value={ruleSym} onChange={(e) => setRuleSym(e.target.value.toUpperCase())} style={{ width: 64, fontSize: 11 }} />
+              {(ruleType === 'price_cross' || ruleType === 'volume_spike') && (
+                <input value={ruleThr} onChange={(e) => setRuleThr(e.target.value)} style={{ width: 56, fontSize: 11 }} />
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  const existing = rulesQ.data?.rules || [];
+                  const condition =
+                    ruleType === 'price_cross' ? { threshold: Number(ruleThr), direction: 'above' }
+                    : ruleType === 'volume_spike' ? { multiplier: Number(ruleThr) || 2 }
+                    : {};
+                  rulesQ.save.mutate([
+                    ...existing,
+                    { id: `rule-${Date.now()}`, type: ruleType, symbol: ruleSym, enabled: true, condition },
+                  ]);
+                }}
+              >
+                {lc === 'ko' ? '저장' : 'Save'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

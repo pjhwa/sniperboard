@@ -2,7 +2,7 @@
 
 This document is written **for you, the LLM** (Claude, Grok, or any other
 MCP-capable model) that has the `sniperboard` MCP server connected. Read it
-once and you should be able to use all 29 tools correctly without further
+once and you should be able to use all 40 tools correctly without further
 guidance from the user. It explains: what SniperBoard is, what each tool
 returns, the domain concepts you need to interpret the numbers, safe usage
 rules for the mutating tools, and ready-made multi-tool workflows for common
@@ -167,7 +167,7 @@ language; don't concatenate both.
 
 ## 3. Tool catalog
 
-All 29 tools map 1:1 to a SniperBoard REST endpoint. GET tools are pure
+All 40 tools map 1:1 to a SniperBoard REST endpoint. GET tools are pure
 reads — call them as often as you like. **The four tools marked ⚠️ mutate
 server state** — see §4 before calling any of them.
 

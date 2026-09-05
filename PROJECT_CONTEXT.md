@@ -1,6 +1,6 @@
 > 한국어 문서: [PROJECT_CONTEXT.ko.md](./PROJECT_CONTEXT.ko.md)
 
-# SniperBoard — Project Context (UPDATED 2026-08-31 MCP server)
+# SniperBoard — Project Context (UPDATED 2026-09-06 S1–S4 terminal overlays)
 
 ## 0. Purpose of This Document
 
@@ -134,7 +134,7 @@ sniperboard/
 │       ├── useSignalLog.ts       # GET /api/signal-log, /api/signal-log/stats, POST /api/signal-log/refresh. Exports: useSignalLog(symbol?), useSignalLogStats(), useRefreshSignalLog(). Types: SignalLogEntry, SignalLogStats, SignalStatus, SignalMethodology, LiveBacktestComparison (C1/C2).
 │       ├── useSymbolInfo.ts          # GET /api/symbol-info (1h staleTime). Returns { symbolInfo, isLoading }.
 │       └── useCapLeaderboard.ts      # GET /api/cap-leaderboard (1h staleTime, refetchOnWindowFocus:false). Returns { leaderboard, isLoading, isError, refetch }.
-├── mcp_server/                   # MCP server (stdio) exposing all 29 /api/* endpoints as tools for Claude Desktop/Code and other MCP clients. tool_registry.py = declarative endpoint table; client.py = httpx passthrough to running backend (SNIPERBOARD_API_URL env, default localhost:8000/api); server.py = mcp SDK (<2, low-level Server API) stdio wiring. No business logic — pure HTTP delegation. Own venv (mcp_server/.venv, gitignored); run as `python -m mcp_server.server` with repo root on PYTHONPATH. See mcp_server/README.md.
+├── mcp_server/                   # MCP server (stdio) exposing all 40 /api/* endpoints as tools for Claude Desktop/Code and other MCP clients. tool_registry.py = declarative endpoint table; client.py = httpx passthrough to running backend (SNIPERBOARD_API_URL env, default localhost:8000/api); server.py = mcp SDK (<2, low-level Server API) stdio wiring. No business logic — pure HTTP delegation. Own venv (mcp_server/.venv, gitignored); run as `python -m mcp_server.server` with repo root on PYTHONPATH. See mcp_server/README.md.
 └── docker-compose.yml            # backend 8000→5001, frontend 3000→4000. Frontend build arg+env: BACKEND_URL=http://backend:8000
 ```
 
@@ -165,11 +165,22 @@ Base URL: `http://<host>:4000/api` (via Next.js proxy) or `http://<host>:5001/ap
 | `POST /backtest/sweep` | `symbols[]` (optional) | Runs 8-config parameter sweep and returns comparison results. Takes several minutes. |
 | `GET /signal-log` | `symbol?`, `limit` (default 200) | Signal log query (most recent first). Includes status: PENDING/ACTIVE/WIN/LOSS/TIMEOUT/CANCELLED. |
 | `GET /signal-log/stats` | — | Live performance stats vs. backtest baseline. Fields: sample_n (=n_closed), methodology (scan window / Stage2≥5 / entry·timeout bars), comparison (live vs backtest expectancy/win_rate/PF + honest_gap when n<30), health.status ON_TRACK/WATCH/UNDERPERFORMING/INSUFFICIENT_DATA, backtest_baseline (cached aggregate preferred). |
-| `GET /alerts` | `max_earnings_days` (0–14, default 3) | Phase C4 actionable alerts: earnings D-day, open signals (PENDING/ACTIVE), model health WATCH/UNDERPERFORMING, briefing integrity fail. Dashboard bell only (no push). |
+| `GET /alerts` | `max_earnings_days` (0–14, default 3) | Phase C4 actionable alerts: earnings D-day, open signals (PENDING/ACTIVE), model health WATCH/UNDERPERFORMING, briefing integrity fail, plus user overlay rules (price cross / volume spike / Stage2≥5 / RS≥70). Dashboard bell only (no push). |
 | `GET /insight` | `days` (14–120, default 60), `horizon` (1–20, default 5) | Insight Lab MVP-1..4: divergence forward returns, AI action hit-rate, theme streaks, macro transitions + pre→post shift, integrity checks. Historical only. |
 | `GET /symbol-info` | `symbol` | 시가총액·52W High/Low·섹터·산업. 심볼별 1h 인메모리 캐시. SymbolInfoResponse. |
 | `GET /cap-leaderboard` | — | companiesmarketcap.com 글로벌 랭킹 스크래핑 기반 시가총액 TOP 15. spark(30일 종가)·rank_change·market_structure 포함. 1h 인메모리 캐시 + stale fallback + SQLite 순위 스냅샷. |
 | `POST /signal-log/refresh` | — | Resolves PENDING/ACTIVE signal outcomes against latest daily candles (background task). |
+| `GET /insider` | `symbol` | Yahoo Form 4 list + `cluster_buy` (7d, 2+ buyers). `usage=reference_only`. |
+| `GET /short-float` | `symbol` | `short_percent_of_float`. Reference only. |
+| `GET /rs-horizons` | `symbol` | Excess return vs SPY at 1m/3m/6m/12m. Does **not** change Stage2 `rs_score`. |
+| `GET /calendar` | — | US CPI/FOMC/NFP-class events (normalized public week calendar). |
+| `GET /alert-rules` | — | User overlay rules (price_cross, volume_spike, stage2_ready, rs_strong). |
+| `PUT /alert-rules` | `{rules:[]}` | Replace overlay rules JSON. |
+| `GET /options-unusual` | `symbol` | Unusual options (vol vs OI / premium). Reference only. |
+| `GET /sector-quadrants` | — | Sector ETF momentum × acceleration labels. |
+| `GET /correlation` | — | Pearson return matrix: SPY, QQQ, GLD, CL=F, DX-Y.NYB, ^TNX, ^VIX. |
+| `GET /kelly` | — | Kelly / half-Kelly / MaxDD-R from live or backtest win_rate + expectancy_r. |
+| `GET /status` | — | Connection + overnight cache + Model Health for the status strip. |
 
 ---
 

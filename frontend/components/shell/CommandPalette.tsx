@@ -6,6 +6,7 @@ import { ALL_SYMBOLS, SYMBOL_TIER, SYMBOL_NAMES } from '@/app/types';
 import { GLOSSARY } from '@/app/glossary';
 import { Bolt, Layers } from '@/components/ui/Icons';
 import { t } from '@/app/i18n';
+import { parseGoCommand } from '@/lib/goCommand';
 
 interface Item {
   type: 'symbol' | 'nav' | 'glossary';
@@ -16,7 +17,7 @@ interface Item {
 }
 
 export function CommandPalette() {
-  const { cmdOpen, setCmdOpen, setSymbol, setBoard, locale } = useStore();
+  const { cmdOpen, setCmdOpen, setSymbol, setBoard, setShortcutsOpen, setOverlayFocus, locale } = useStore();
   const [q, setQ] = useState('');
   const [sel, setSel] = useState(0);
 
@@ -24,8 +25,9 @@ export function CommandPalette() {
 
   if (!cmdOpen) return null;
 
-  const isGlossaryMode = q.startsWith('?');
-  const glossaryQ = isGlossaryMode ? q.slice(1).trim().toLowerCase() : '';
+  const parsed = parseGoCommand(q);
+  const isGlossaryMode = parsed.kind === 'glossary';
+  const glossaryQ = isGlossaryMode ? (parsed.query || '') : '';
 
   const navItems: Item[] = [
     ...ALL_SYMBOLS.map(s => ({
@@ -59,11 +61,53 @@ export function CommandPalette() {
       meta: locale === 'en' ? 'Term' : '용어',
     }));
 
-  const items = isGlossaryMode ? glossaryItems : (
-    q
-      ? navItems.filter(i => i.label.toLowerCase().includes(q.toLowerCase()) || i.sub.toLowerCase().includes(q.toLowerCase()))
-      : navItems
-  );
+  const goItems: Item[] = [];
+  if (parsed.kind === 'shortcuts') {
+    goItems.push({
+      type: 'nav',
+      label: locale === 'en' ? 'Keyboard shortcuts' : '키보드 단축키',
+      sub: '?',
+      action: () => { setCmdOpen(false); setShortcutsOpen(true); },
+      meta: 'GO',
+    });
+  } else if (parsed.kind === 'symbol') {
+    goItems.push({
+      type: 'symbol',
+      label: parsed.symbol,
+      sub: 'GO',
+      action: () => { setSymbol(parsed.symbol); setCmdOpen(false); },
+      meta: 'GO',
+    });
+  } else if (parsed.kind === 'board') {
+    goItems.push({
+      type: 'nav',
+      label: parsed.board,
+      sub: 'GO',
+      action: () => { setBoard(parsed.board as Board); setCmdOpen(false); },
+      meta: 'GO',
+    });
+  } else if (parsed.kind === 'symbol-board') {
+    goItems.push({
+      type: 'symbol',
+      label: `${parsed.symbol} → ${parsed.board}${parsed.focus ? ' / ' + parsed.focus : ''}`,
+      sub: 'GO',
+      action: () => {
+        setSymbol(parsed.symbol);
+        setBoard(parsed.board as Board);
+        setOverlayFocus(parsed.focus ?? null);
+        setCmdOpen(false);
+      },
+      meta: 'GO',
+    });
+  }
+
+  const filteredNav = q && parsed.kind !== 'shortcuts'
+    ? navItems.filter(i => i.label.toLowerCase().includes(q.toLowerCase()) || i.sub.toLowerCase().includes(q.toLowerCase()))
+    : navItems;
+
+  const items = isGlossaryMode ? glossaryItems
+    : parsed.kind === 'shortcuts' ? goItems
+    : goItems.length ? [...goItems, ...filteredNav.filter(n => n.label !== goItems[0]?.label)] : filteredNav;
 
   return (
     <div className="cmd-overlay" onClick={() => setCmdOpen(false)}>

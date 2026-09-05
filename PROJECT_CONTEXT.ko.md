@@ -1,6 +1,6 @@
 > English docs: [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md)
 
-# SniperBoard — Project Context (UPDATED 2026-08-31 MCP 서버 추가)
+# SniperBoard — Project Context (UPDATED 2026-09-06 S1–S4 터미널 오버레이)
 
 ## 0. 이 문서의 목적
 
