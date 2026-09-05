@@ -1303,27 +1303,18 @@ async def get_correlation():
 
 @router.get("/kelly")
 async def get_kelly():
-    from core.kelly import kelly_fraction, half_kelly, losing_streak_maxdd_r, payoff_ratio_from_expectancy
-    stats = compute_live_stats() or {}
-    wr = stats.get("win_rate")
-    exp = stats.get("expectancy_r")
-    if wr is None:
-        agg = (load_cached_result() or {}).get("aggregate") or {}
-        wr = (agg.get("all") or {}).get("win_rate")
-        exp = (agg.get("all") or {}).get("expectancy_r")
-    wr_f = float(wr) if wr is not None else None
-    exp_f = float(exp) if exp is not None else None
-    return {
-        "available": wr_f is not None and exp_f is not None,
-        "win_rate": wr_f,
-        "expectancy_r": exp_f,
-        "payoff_ratio": payoff_ratio_from_expectancy(wr_f, exp_f) if wr_f is not None and exp_f is not None else None,
-        "kelly": kelly_fraction(wr_f, exp_f) if wr_f is not None and exp_f is not None else None,
-        "half_kelly": half_kelly(wr_f, exp_f) if wr_f is not None and exp_f is not None else None,
-        "maxdd_r": losing_streak_maxdd_r(wr_f) if wr_f is not None else None,
-        "source": "live_stats_or_backtest",
-        "usage": "reference_only",
-    }
+    from core.kelly import build_kelly_payload
+    stats = None
+    try:
+        stats = compute_live_stats()
+    except Exception as e:
+        logger.warning("kelly: live stats failed: %s", e)
+    cached = None
+    try:
+        cached = load_cached_result()
+    except Exception as e:
+        logger.warning("kelly: backtest cache failed: %s", e)
+    return build_kelly_payload(stats, cached)
 
 
 @router.get("/status")

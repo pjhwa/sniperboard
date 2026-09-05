@@ -179,7 +179,7 @@ Base URL: `http://<host>:4000/api` (via Next.js proxy) or `http://<host>:5001/ap
 | `GET /options-unusual` | `symbol` | Unusual options (vol vs OI / premium). Reference only. |
 | `GET /sector-quadrants` | — | Sector ETF momentum × acceleration labels. |
 | `GET /correlation` | — | Pearson return matrix: SPY, QQQ, GLD, CL=F, DX-Y.NYB, ^TNX, ^VIX. |
-| `GET /kelly` | — | Kelly / half-Kelly / MaxDD-R from live or backtest win_rate + expectancy_r. |
+| `GET /kelly` | — | Kelly / half-Kelly / MaxDD-R. Uses live win_rate only when n_closed≥30 and 0<p<1; otherwise cached backtest aggregate (`source`: live\|backtest\|none). |
 | `GET /status` | — | Connection + overnight cache + Model Health for the status strip. |
 
 ---

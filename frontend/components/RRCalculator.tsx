@@ -122,7 +122,9 @@ export default function RRCalculator({
         </div>
         {tab === 'kelly' && (
           <div className="bg-zinc-900/40 p-3 rounded-xl border border-zinc-800 mb-3 text-xs">
-            <div className="text-zinc-500 mb-1">reference only · live/backtest win-rate</div>
+            <div className="text-zinc-500 mb-1">
+              reference only · {kellyQ.data?.source === 'live' ? 'live win-rate' : kellyQ.data?.source === 'backtest' ? 'backtest baseline (live n thin)' : 'live/backtest win-rate'}
+            </div>
             {kellyQ.data?.kelly == null ? (
               <div className="text-zinc-500">Insufficient closed trades</div>
             ) : (
