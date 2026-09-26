@@ -145,7 +145,7 @@ TOOLS: list[ToolDef] = [
         name="get_prediction",
         method="GET",
         path="/prediction",
-        description="FOMC prediction-market odds (Polymarket, reference only).",
+        description="FOMC prediction-market odds (Kalshi, reference only).",
     ),
     ToolDef(
         name="get_backtest_result",

@@ -12,7 +12,7 @@ AI가 이 프로젝트를 즉시 파악할 수 있도록 전체 코드베이스�
 ## 1. 프로젝트 한 줄 요약
 
 **SniperBoard**는 Livermore · O'Neil · Minervini 방법론에 기반한 미국 주식 트레이딩 신호 대시보드입니다.
-FastAPI(Python) 백엔드가 yfinance로 시세를 가져와 신호를 계산하고, Next.js 프론트엔드가 7개 보드로 시각화합니다.
+FastAPI(Python) 백엔드가 yfinance로 시세를 가져와 신호를 계산하고, Next.js 프론트엔드가 12개 보드로 시각화합니다.
 Grok/Hermes AI가 외부 cron으로 시장 내러티브·종목 Brief·실적 인텔리전스를 생성해 GitHub에 푸시하며, 백엔드가 캐시로 서빙합니다.
 
 ---
@@ -46,7 +46,7 @@ sniperboard/
 │   │   └── macro_insight_service.py  # GitHub raw fetch + 30분 인메모리 캐시 (MACRO_INSIGHT_URL). fetch_macro_insight() → Optional[dict] (전체 AI JSON). get_ai_meta(raw) → {generated_at,age_minutes}. URL 미설정 시 None 반환(graceful). (2026-05-30)
 │   │   └── morning_briefing_service.py  # GitHub raw fetch + 10분 인메모리 캐시 (MORNING_BRIEFING_URL). fetch_morning_briefing() → {available, data}. KST 07:30 하루 1회 생성.
 │   └── tests/
-│       ├── test_data_adapter.py (29 tests total incl. adapter+signal_engine; Phase 5 full suite green)
+│       ├── test_data_adapter.py (10 tests) + test_signal_engine.py (7 tests) — adapter+signal_engine; Phase 5 full suite green
 │       ├── test_signal_engine.py (incl. adjusted vs raw split symbol TDD)
 │       ├── test_conviction_calculator.py (Phase 1 TDD: 3 tests for weighted Conviction v1, RED-GREEN passed 2026-05-25)
 │       └── (service tests: brief/earnings/sentiment — test_sentiment_service.py: fixtures updated with top_news)
@@ -60,7 +60,7 @@ sniperboard/
 │   │   ├── page.tsx              # App shell: Rail+Topbar+MarketStrip+Board 라우터 + ⌘K 핸들러
 │   │   ├── providers.tsx         # QueryClientProvider 래퍼
 │   │   ├── types.ts              # 모든 TypeScript 타입 정의 + 메타데이터 상수
-│   │   ├── glossary.ts           # 컨텍스트 도움말 데이터 (2026-05-29). GlossaryEntry{key,term,body} + GLOSSARY 배열(28개 항목, rates_dollar·commodities 신규 추가) + G 맵(키 기반 조회). InfoPopover·CommandPalette·BoardGuidePanel에서 공유 사용.
+│   │   ├── glossary.ts           # 컨텍스트 도움말 데이터 (2026-05-29). GlossaryEntry{key,term,body} + GLOSSARY 배열(30개 항목, rates_dollar·commodities 신규 추가) + G 맵(키 기반 조회). InfoPopover·CommandPalette·BoardGuidePanel에서 공유 사용.
 │   │   └── globals.css           # Plaid DS 디자인 토큰 (CSS vars, 다크/라이트 토글, 컴포넌트 클래스). .info-pop* + .guide-panel* + .guide-btn + .board-wrap 클래스 포함. .strip: align-items center(가이드 버튼 세로 중앙정렬) (2026-05-29). + 모바일 반응형 블록: @media(max-width:767px){ .app 1컬럼그리드/height:100dvh, .main display:block overflow-y:auto, .board flex-column, mob-order-1~8 유틸, details.mob-collapse 접기, .mob-chart-limit 300px, .bottom-tabs/.bottom-tabs__item, .mob-macro-groups/.mob-inner-stack/.mob-wrap 1열강제 } + @media(min-width:768px){ .mob-wrap/.mob-macro-groups display:contents 데스크톱투명, details.mob-collapse display:contents }
 │   ├── components/
 │   │   ├── shell/
@@ -78,7 +78,7 @@ sniperboard/
 │   │   │   ├── Sparkline.tsx     # Canvas 기반 스파크라인
 │   │   │   ├── RadialGauge.tsx   # Canvas 기반 라디얼 게이지
 │   │   │   └── HeatStrip.tsx     # CSS 기반 히트맵 스트립
-│   │   ├── boards/               # 7개 보드 컴포넌트. 공통 패턴(2026-05-29): <div className="board-wrap"> 래퍼 → BoardGuidePanel만 board-wrap 직계 자식. 가이드 버튼은 MarketStrip에 위치(이전됨). 각 보드는 useEffect로 'guide:open' 이벤트 수신 → setGuideOpen(true). GlossaryPanel 완전 제거.
+│   │   ├── boards/               # 12개 보드 컴포넌트. 공통 패턴(2026-05-29): <div className="board-wrap"> 래퍼 → BoardGuidePanel만 board-wrap 직계 자식. 가이드 버튼은 MarketStrip에 위치(이전됨). 각 보드는 useEffect로 'guide:open' 이벤트 수신 → setGuideOpen(true). GlossaryPanel 완전 제거.
 │   │   │   ├── OverviewBoard.tsx # 시장 개요 (11카드): AI Insight + Earnings Calendar + Regime + DD + Breadth + VIX + Credit + 진입레이더 + Conviction리더보드 + Sector + Watchlist Top3. ⏱ freshness badges. 카드 7개에 info={G.*} prop. 모바일: mob-order-1~8로 Big→Detail 재배치, AI Insight details.mob-collapse 접기.
 │   │   │   ├── DeepDiveBoard.tsx # 종합분석 (5-Row): Row1=종목선택+가격바+배지들(Stage2/Conviction/월봉/구조/신호)+PRE/POST가격. Row2=DailyChart(3fr)|Stage2체크+KPI4(2fr). Row3=세력참여도분석(3fr)|R:R진입계획(2fr). Row4(3×1fr)=소셜심리|AI Brief|실적. Row5=Regime(3fr)|시장전체심리(2fr). 세력참여도: Up/Down Vol비율+거래량추세+집중일+세력점수0-100+10일acc/dist그리드. InfoPopover 직접 임베드(Stage2/세력참여도/R:R/RS 등). 모바일: mob-wrap(display:contents 데스크톱) + mob-order 재배치, Row1 mob-symbol-bar 가로스크롤, 차트 mob-chart-limit 300px, ROW4 mob-inner-stack 1열, AI Brief details.mob-collapse.
 │   │   │   ├── IntradayBoard.tsx # 단기: IntradayChart + 활성신호 + RSI + 액션바. SIG_INFO 맵으로 6개 신호명 옆 InfoPopover 표시. "진입 복사" 버튼 제거됨(2026-05-29).
@@ -106,7 +106,7 @@ sniperboard/
 │       ├── usePrePost.ts         # GET /api/prepost (60초 폴링). prePostData: { market_state, pre/post price+chg_pct, regular_close }
 │       ├── useEarnings.ts        # GET /api/earnings (60분 staleTime)
 │       └── useDistributionDays.ts # GET /api/distribution-days
-├── mcp_server/                   # 모든 /api/* 엔드포인트(29개)를 MCP 도구로 노출하는 stdio MCP 서버. Claude Desktop/Code 등 MCP 클라이언트 연동용. tool_registry.py = 엔드포인트 선언 테이블, client.py = 실행 중인 백엔드로 위임하는 httpx 클라이언트(SNIPERBOARD_API_URL 환경변수, 기본값 localhost:8000/api), server.py = mcp SDK(<2, low-level Server API) stdio 연결. 비즈니스 로직 없음 — 순수 HTTP 위임. 자체 venv(mcp_server/.venv, gitignore 처리); `python -m mcp_server.server`로 저장소 루트를 PYTHONPATH에 두고 실행. mcp_server/README.md 참고.
+├── mcp_server/                   # 모든 /api/* 엔드포인트(40개)를 MCP 도구로 노출하는 stdio MCP 서버. Claude Desktop/Code 등 MCP 클라이언트 연동용. tool_registry.py = 엔드포인트 선언 테이블, client.py = 실행 중인 백엔드로 위임하는 httpx 클라이언트(SNIPERBOARD_API_URL 환경변수, 기본값 localhost:8000/api), server.py = mcp SDK(<2, low-level Server API) stdio 연결. 비즈니스 로직 없음 — 순수 HTTP 위임. 자체 venv(mcp_server/.venv, gitignore 처리); `python -m mcp_server.server`로 저장소 루트를 PYTHONPATH에 두고 실행. mcp_server/README.md 참고.
 └── docker-compose.yml            # backend 8000→5001, frontend 3000→4000
 ```
 
@@ -121,7 +121,7 @@ sniperboard/
 | `GET /ohlcv` | `symbol`, `tf`(기본 5m) | OHLCV 캔들 + 6개 신호 불리언 배열 + ema21/50/rsi/atr |
 | `GET /latest-signal` | `symbol`, `tf`(기본 5m) | 최신 캔들 신호 요약 (active_signals, 가격/RSI/EMA) |
 | `GET /daily` | `symbol` | 252봉 일봉 + EMA8/21/50/200/ATR14/GC + Stage2 전체. 데이터가 20봉 미만이면 **HTTP 404** 반환 (신규 IPO 종목 등). |
-| `GET /macro` | — | 21개 매크로 심볼: 가격·1D/5D변화율·EMA8/21·시장구조·RSI14 |
+| `GET /macro` | — | 24개 매크로 심볼: 가격·1D/5D변화율·EMA8/21·시장구조·RSI14 |
 | `GET /watchlist` | — | WATCHLIST_SYMS 전 종목 Stage2 점수 내림차순 + Conviction Score |
 | `GET /regime` | — | Risk Regime 5요소 점수 + 종합 regime 문자열 |
 | `GET /distribution-days` | — | SPY·QQQ DD count/level/dates |
@@ -317,7 +317,7 @@ export const SETUP_QUALITY_META = { 'A+': {color:'bull'}, 'A': {color:'teal'}, '
 export const EARNINGS_RISK_META = { high: {color:'bear',dot:'●'}, med: {color:'warn',dot:'●'}, low: {color:'teal',dot:'●'} };
 // 2026-05-31 이중 언어 추가:
 // SIGNAL_META.action/desc, REGIME_META.label/desc, DD_META.label/desc 등 → BiLang
-// MACRO_SYMBOL_NAMES: 21개 매크로 심볼 BiLang 표시명 ('CL=F': {en:'WTI Crude Oil', ko:'WTI 원유'} 등)
+// MACRO_SYMBOL_NAMES: 24개 매크로 심볼 BiLang 표시명 ('CL=F': {en:'WTI Crude Oil', ko:'WTI 원유'} 등)
 // CONVICTION_LABEL_META: score 임계값 → BiLang 레이블 (Very High/High/Moderate/Low/Very Low)
 // AI 관련 인터페이스: MarketBrief, SymbolBrief, BriefData, BriefResponse (+ meta: FreshnessMeta Phase 4)
 // Bilingual AI 필드: key_reason_en/ko, headline_en/ko, summary_en/ko, brief_en/ko 등 (v2.0 + v1.x compat)
@@ -589,7 +589,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 | API 주소 변경 | `frontend/app/types.ts: API_BASE` + `docker-compose.yml: NEXT_PUBLIC_API_URL` |
 | 신호 메타데이터(색상·설명) | `frontend/app/types.ts: SIGNAL_META` |
 | FreshnessMeta + AI 응답 meta (Phase 4) | `frontend/app/types.ts` (SentimentData/BriefResponse/EarningsResponse); hooks useBrief/useEarnings expose *Meta; badges in OverviewBoard (AI+ Earnings) + light SentimentBoard |
-| 컨텍스트 도움말 — 용어 추가/수정 | `frontend/app/glossary.ts` (GLOSSARY 배열 + G 맵). 28개 항목. key 기반 조회(G.risk_regime 등). InfoPopover에서 직접 사용하거나 Card info prop 경유. |
+| 컨텍스트 도움말 — 용어 추가/수정 | `frontend/app/glossary.ts` (GLOSSARY 배열 + G 맵). 30개 항목. key 기반 조회(G.risk_regime 등). InfoPopover에서 직접 사용하거나 Card info prop 경유. |
 | 컨텍스트 도움말 — 보드 가이드 내용 수정 | 각 보드 파일의 `*_GUIDE: GuideSection[]` 상수 (예: OVERVIEW_GUIDE, INTRADAY_GUIDE 등). 3섹션: 이 화면은/핵심 지표 읽는 법/지금 이렇게 쓰세요. |
 | 컨텍스트 도움말 — 가이드 버튼 위치 | `frontend/components/shell/MarketStrip.tsx` 우측 끝(margin-left:auto). 각 보드는 'guide:open' 이벤트 수신. 인라인 guide-btn 버튼 없음. |
 | 컨텍스트 도움말 — UI 스타일 | `frontend/app/globals.css` — `.info-pop*`(팝오버), `.guide-panel*`(슬라이드오버), `.guide-btn`(트리거, strip 내에서 relative 포지셔닝), `.board-wrap`(포지셔닝 컨텍스트) 블록. |

@@ -35,7 +35,7 @@
 - **백엔드**: `backend/core/signal_engine.py` — 신호 계산의 모든 것
 - **프론트엔드 타입**: `frontend/app/types.ts` — 메타데이터 상수 집중 (BiLang: REGIME_META, DD_META, SIGNAL_META, STAGE2_META, SENTIMENT_META, TREND_META, VOLUME_META, MACRO_SYMBOL_NAMES, CONVICTION_LABEL_META)
 - **i18n**: `frontend/app/i18n.ts` — `Locale`, `BiLang`, `t()`, `tField()`. 컴포넌트별 `const S: Record<string, BiLang>`로 정적 문자열 관리. `tField(en, ko, fallback, locale)`로 AI 데이터 렌더링.
-- **API 라우터**: `backend/api/endpoints.py` — 엔드포인트 7개+. `MACRO_SYMBOLS`는 영어 이름 사용.
+- **API 라우터**: `backend/api/endpoints.py` — 엔드포인트 40개. `MACRO_SYMBOLS`는 영어 이름 사용.
 - **전역 상태**: `frontend/hooks/useStore.ts` — Zustand (symbol, board, theme, locale: 'en'|'ko' 기본 'ko')
 
 자세한 내용은 `PROJECT_CONTEXT.md` 섹션 10 "코드 수정 시 참고 지점" 참조.
@@ -66,8 +66,10 @@ SniperBoard는 별도 저장소에서 AI 생성 데이터를 소비합니다: **
 | AI 일일 브리프 | `brief/latest.json` | `backend/services/brief_service.py` |
 | 어닝 인텔리전스 | `earnings/latest.json` | `backend/services/earnings_service.py` |
 | 매크로 인사이트 | `macro/latest.json` | `backend/services/macro_insight_service.py` |
+| 아침 브리핑 | `briefing/latest.json` | `backend/services/morning_briefing_service.py` |
+| 예측 시장 | `prediction/latest.json` | `backend/services/prediction_service.py` |
 
-- 서버 크론 잡(수집기 4개)이 데이터를 수집해 해당 레포에 JSON으로 push.
+- 서버 크론 잡(수집기 6개)이 데이터를 수집해 해당 레포에 JSON으로 push.
 - SniperBoard는 raw GitHub URL로 fetch; 토큰은 `SENTIMENT_DATA_TOKEN` 환경변수로 주입.
 - 수집기 아키텍처·스키마·데이터 계약은 `market-sentiment-data/PROJECT_CONTEXT.md` 참조.
-- **스키마 버전**: 2.0 — 모든 AI 텍스트 필드는 `_en`/`_ko` 접미사 쌍 사용. 프론트엔드에서는 `tField()` 사용.
+- **스키마 버전**: 2.0 — 소셜 심리·AI 일일 브리프·어닝 인텔리전스·매크로 인사이트는 모든 AI 텍스트 필드가 `_en`/`_ko` 접미사 쌍 사용, 프론트엔드에서는 `tField()` 사용. 아침 브리핑은 1.1, 예측 시장은 1.0.

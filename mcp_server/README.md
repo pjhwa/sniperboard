@@ -72,9 +72,11 @@ Add to `claude_desktop_config.json`:
 ## Tools
 
 40 tools, one per `/api/*` endpoint — see `tool_registry.py` for the full
-list with descriptions. Four are mutating (their description is prefixed
-`⚠️`) and change server state when called: `run_backtest`,
-`run_backtest_sweep`, `refresh_signal_log`, `send_email_report`.
+list with descriptions. Five are mutating (`server.py` prefixes their
+description with `⚠️` at runtime based on `mutating=True` in
+`tool_registry.py`) and change server state when called: `run_backtest`,
+`run_backtest_sweep`, `refresh_signal_log`, `send_email_report`,
+`put_alert_rules`.
 
 ## Tests
 

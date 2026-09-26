@@ -17,12 +17,12 @@
 SniperBoard is a web-based trading signal dashboard for US equity swing trading.
 
 - **Backend**: FastAPI + yfinance + pandas — real-time calculation of technical indicators and trade signals
-- **Frontend**: Next.js 16 + lightweight-charts — interactive charts and 7 specialized boards
+- **Frontend**: Next.js 16 + lightweight-charts — interactive charts and 12 specialized boards
 - **AI Pipeline**: Grok/Hermes models combine technical indicators + social sentiment to generate market narratives (external cron job)
 - **Signal Philosophy**: VCP · Sniper · Pullback (O'Neil/Livermore) + Stage 2 (Minervini) + Conviction composite score + Risk Regime + Distribution Days
-- **Language Support**: EN/KO toggle in the Topbar — all UI labels, glossary (28 terms), signal descriptions, macro symbol names, and AI-generated text switch instantly. AI data uses bilingual `_en`/`_ko` fields (schema v2.0); v1.x data falls back gracefully.
+- **Language Support**: EN/KO toggle in the Topbar — all UI labels, glossary (30 terms), signal descriptions, macro symbol names, and AI-generated text switch instantly. AI data uses bilingual `_en`/`_ko` fields (schema v2.0); v1.x data falls back gracefully.
 
-Plaid DS-based dark/light theme. ⌘K command palette accepts Bloomberg-style GO commands (`TSLA`, `TSLA S2`, `TSLA RR`, `WATCH`, `REGIME`, `INSIDER TSLA`). Empty `?` opens keyboard shortcuts; `?term` is glossary search (28 terms). Desktop Trade / Research / Macro workspaces persist. Daily/intraday charts expose RSI/MACD/BB/ATR/VWAP toggles plus trendline / Fibonacci / horizontal-line drawings. DeepDive shows reference-only insider, short-float, RS-horizon, and unusual-options overlays; Macro adds US CPI/FOMC/NFP calendar, sector quadrants, and cross-asset correlation. Overlay alerts (price cross, volume spike, Stage2≥5, RS≥70) land in the existing bell. Status strip shows connection, data age, and Model Health. None of the new overlays feed Conviction.
+Plaid DS-based dark/light theme. ⌘K command palette accepts Bloomberg-style GO commands (`TSLA`, `TSLA S2`, `TSLA RR`, `WATCH`, `REGIME`, `INSIDER TSLA`). Empty `?` opens keyboard shortcuts; `?term` is glossary search (30 terms). Desktop Trade / Research / Macro workspaces persist. Daily/intraday charts expose RSI/MACD/BB/ATR/VWAP toggles plus trendline / Fibonacci / horizontal-line drawings. DeepDive shows reference-only insider, short-float, RS-horizon, and unusual-options overlays; Macro adds US CPI/FOMC/NFP calendar, sector quadrants, and cross-asset correlation. Overlay alerts (price cross, volume spike, Stage2≥5, RS≥70) land in the existing bell. Status strip shows connection, data age, and Model Health. None of the new overlays feed Conviction.
 
 ---
 
@@ -39,7 +39,7 @@ Most signal dashboards show signals but never prove they work. SniperBoard is bu
 | **Statistical confidence** | Monte Carlo bootstrap (10,000 simulations) proves edge is real, not luck (prob. of positive expectancy: 99.8%) | Not provided |
 | **Transparent methodology** | Every limitation disclosed: survivorship bias, slippage, IS/OOS split, no look-ahead — in the UI | Rarely disclosed |
 | **Conviction composite score** | Stage2 (40%) + Social Sentiment (30%) + Risk Regime (30%) = single actionable score per symbol | Single-factor only |
-| **Bilingual (EN/KO)** | Full UI, AI narratives, glossary (28 terms) all switch instantly | English-only |
+| **Bilingual (EN/KO)** | Full UI, AI narratives, glossary (30 terms) all switch instantly | English-only |
 | **AI market narratives** | Grok/Hermes generates bilingual daily briefs, earnings intelligence, and macro interpretation from actual signal + sentiment data | Generic AI summaries |
 | **Automated journaling** | Signals auto-logged when watchlist refreshes — no manual entry | Manual input required |
 | **Actionable alerts (C4)** | Topbar bell: earnings D-day/D-1, open Stage2 signals, model health, briefing integrity | Passive-only or none |
@@ -189,14 +189,14 @@ The frontend uses **relative API URLs** (`/api/*`) proxied by Next.js — no IP 
 
 ---
 
-## Boards — 7 Views
+## Boards — 12 Views
 
 Click **Rail** icons on the left to switch boards (mobile: bottom tab bar). Use the search bar or **⌘K** to quickly jump to any symbol or board.
 
 Each board has a **3-tier help system**:
 - **ⓘ Popover**: next to card titles and indicator names. Click for an easy explanation in a popover. Auto-detects viewport edges to prevent overflow.
 - **? Guide button**: pinned to the right end of MarketStrip. Opens a slide-over panel with 3 sections: "What this board shows / How to read key indicators / How to use it now."
-- **⌘K Glossary search**: type `?` in the palette input to enter glossary mode. Search `? vix`, `? stage2`, etc. across 28 terms.
+- **⌘K Glossary search**: type `?` in the palette input to enter glossary mode. Search `? vix`, `? stage2`, etc. across 30 terms.
 
 ---
 
@@ -309,7 +309,7 @@ Symbol selector buttons | Current price · RSI · EMA21 + intraday sparkline | S
   - **Commodities**: CL=F (crude oil) · GLD (gold) (crude = economic leading indicator, gold = safe-haven demand)
   - **USD/KRW (KRW=X)**: displayed in MarketStrip as `USD/KRW` with comma-thousands format (e.g. `1,380`). KRW=X yfinance ticker returns Korean Won per 1 USD.
   - **Sector ETFs**: SMH · XLE · XLY · XHB · ITA (track where money is flowing)
-- 21 symbols: price · 1D change · market structure · ⏱ AI freshness badge
+- 24 symbols: price · 1D change · market structure · ⏱ AI freshness badge
 
 ---
 
@@ -490,7 +490,7 @@ Each response includes `meta: {fetched_at, age_minutes, source}` — displayed a
 - **A2** Brief waits for same-slot sentiment (`load_sentiment_for_slot`); consumer annotates `slot_mismatch`.
 - **A3** sentiment/brief/earnings/morning-briefing serve **last-good** on fetch failure with `meta.stale` / `from_cache`.
 - **A4** Health monitor `SNIPERBOARD_SIGNAL_DB` defaults to compose volume path.
-- **A5** Shared `frontend/app/earningsFormat.ts` for absolute date + D-n on Overview/Daily/DeepDive.
+- **A5** Shared `frontend/app/earningsFormat.ts` for absolute date + D-n on Overview/Daily. (DeepDive renders `earnings_date` directly, not yet wired to this helper.)
 
 **Phase B interpretation quality (2026-07-15):**
 - **B1/B2** Mechanical briefing integrity (`briefing_verify`) on serve + MSD `verify_briefing` / `phase_b_integrity`: B1 relative day, mood vs drop, price binding; **B2** false-catalyst (headline must not pin a ticker move to a global theme that marks the ticker `unaffected` when post-market/earnings evidence exists), theme-recurrence/staleness vs history, day-window fitness for morning-brief framing.
@@ -510,7 +510,7 @@ Base URL: `http://localhost:4000/api` (via Next.js proxy) or `http://localhost:5
 | `GET /ohlcv?symbol=&tf=` | Intraday OHLCV + 6 signal boolean arrays + EMA21/50/RSI/ATR |
 | `GET /latest-signal?symbol=&tf=` | Latest candle signal summary |
 | `GET /daily?symbol=` | 252-candle daily data + full Stage2 analysis (adjusted-price based for long-term indicators) |
-| `GET /macro` | 21 macro symbol prices · change rates · indicators |
+| `GET /macro` | 24 macro symbol prices · change rates · indicators |
 | `GET /watchlist` | Watchlist Stage2 scores descending + Conviction Score |
 | `GET /regime` | Risk Regime 5-factor composite score |
 | `GET /distribution-days` | SPY·QQQ Distribution Day count |
@@ -533,7 +533,7 @@ Full response schemas: see `backend/api/schemas.py`
 ## MCP Server
 
 SniperBoard ships a stdio [MCP](https://modelcontextprotocol.io) server
-(`mcp_server/`) that exposes all 29 `/api/*` endpoints as tools, so
+(`mcp_server/`) that exposes all 40 `/api/*` endpoints as tools, so
 MCP-capable clients — Claude Desktop, Claude Code, and future clients like
 Grok once they support MCP — can query and operate SniperBoard directly:
 full watchlist/signal/macro/sentiment/briefing scans, plus mutating actions

@@ -1,6 +1,6 @@
 """Prediction market service — GitHub raw fetch + in-memory cache.
 
-Consumes market-sentiment-data prediction/latest.json (Polymarket reference odds by default).
+Consumes market-sentiment-data prediction/latest.json (Kalshi reference odds).
 Does NOT feed Conviction weights — reference-only macro overlay.
 """
 

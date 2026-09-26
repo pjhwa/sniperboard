@@ -17,10 +17,10 @@
 SniperBoard는 미국 주식 스윙 트레이딩을 위한 웹 기반 매매 신호 대시보드입니다.
 
 - **백엔드**: FastAPI + yfinance + pandas — 기술 지표·매매 신호 실시간 계산
-- **프론트엔드**: Next.js 16 + lightweight-charts — 인터랙티브 차트 및 7개 전문 보드
+- **프론트엔드**: Next.js 16 + lightweight-charts — 인터랙티브 차트 및 12개 전문 보드
 - **AI 파이프라인**: Grok/Hermes 모델이 기술 지표 + 소셜 심리를 결합해 시장 내러티브 생성 (외부 cron)
 - **신호 철학**: VCP·Sniper·Pullback (O'Neil/Livermore) + Stage 2 (Minervini) + Conviction 종합 점수 + Risk Regime + Distribution Day
-- **언어 지원**: Topbar의 EN/KO 토글 버튼 — UI 레이블·용어 28개·신호 설명·매크로 심볼명·AI 생성 텍스트 즉시 전환. AI 데이터는 이중 언어 `_en`/`_ko` 필드(schema v2.0) 사용. v1.x 데이터는 자동 폴백 처리.
+- **언어 지원**: Topbar의 EN/KO 토글 버튼 — UI 레이블·용어 30개·신호 설명·매크로 심볼명·AI 생성 텍스트 즉시 전환. AI 데이터는 이중 언어 `_en`/`_ko` 필드(schema v2.0) 사용. v1.x 데이터는 자동 폴백 처리.
 
 Plaid DS 기반 다크/라이트 테마 전환 지원. ⌘K 커맨드 팔레트는 블룸버그식 GO 명령(`TSLA`, `TSLA S2`, `TSLA RR`, `WATCH`, `REGIME`, `INSIDER TSLA`)을 받습니다. 빈 `?`는 단축키 도움말, `?용어`는 기존 용어 검색입니다. 데스크톱 Trade / Research / Macro 워크스페이스가 저장됩니다. 일봉·분봉 차트에 RSI/MACD/BB/ATR/VWAP 토글과 추세선·피보·수평선 드로잉이 있습니다. DeepDive는 내부자·공매도·RS 멀티기간·이상옵션 오버레이, Macro는 미국 CPI/FOMC/NFP 캘린더·섹터 사분면·교차자산 상관을 보여 줍니다. 가격 돌파·거래량 급증·Stage2≥5·RS≥70 규칙은 기존 알림 벨로 전달됩니다. 하단 상태 줄은 연결·데이터 나이·Model Health를 표시합니다. 새 오버레이는 Conviction에 들어가지 않습니다.
 
@@ -78,7 +78,7 @@ iOS Safari / Android Chrome 에서 동작하는 모바일 반응형 UI를 제공
 
 | 데스크톱 | 모바일 |
 |----------|--------|
-| 좌측 Rail 네비게이션 | 하단 탭바 4탭 (시장/종합분석/매크로/심리) |
+| 좌측 Rail 네비게이션 | 하단 탭바 5탭 + "더보기" 시트 (브리핑/시장/워치/심리/분석 + 더보기) |
 | 상단 MarketStrip | 숨김 |
 | 상단바 (검색·종목버튼·Regime) | 슬림 헤더 (로고·보드명·테마 토글만) |
 | 다열 그리드 카드 배치 | 단일 컬럼 세로 스택 |
@@ -139,14 +139,14 @@ cp .env.example .env
 
 ---
 
-## 화면 구성 — 7 보드
+## 화면 구성 — 12 보드
 
 좌측 **Rail** 아이콘을 클릭해 보드를 전환합니다 (모바일: 하단 탭바). 상단 검색창 또는 **⌘K** 커맨드 팔레트로 종목·보드를 빠르게 전환할 수 있습니다.
 
 각 보드에는 **3단계 도움말 시스템**이 통합되어 있습니다:
 - **ⓘ 팝오버**: 카드 제목·지표 이름 옆에 위치. 클릭하면 해당 지표의 쉬운 설명을 팝오버로 확인. 뷰포트 경계를 자동 감지해 화면 밖으로 벗어나지 않습니다.
 - **? 가이드 버튼**: MarketStrip 우측 끝 고정. 클릭하면 현재 보드의 슬라이드오버 패널이 열리며 "이 화면은 / 핵심 지표 읽는 법 / 지금 이렇게 쓰세요" 3섹션 가이드 제공.
-- **⌘K 용어 검색**: 팔레트 입력창에 `?` 입력 시 용어 검색 모드 전환. `? vix`, `? stage2` 등으로 28개 용어 검색.
+- **⌘K 용어 검색**: 팔레트 입력창에 `?` 입력 시 용어 검색 모드 전환. `? vix`, `? stage2` 등으로 30개 용어 검색.
 
 ---
 
@@ -412,7 +412,7 @@ Mac Mini cron이 하루 2회 외부 데이터를 생성해 GitHub에 푸시하�
 | `GET /ohlcv?symbol=&tf=` | 단기 OHLCV + 6신호 불리언 배열 + EMA21/50/RSI/ATR |
 | `GET /latest-signal?symbol=&tf=` | 최신 캔들 신호 요약 |
 | `GET /daily?symbol=` | 252봉 일봉 + Stage2 전체 분석 (조정가 기반 장기 지표) |
-| `GET /macro` | 21개 매크로 심볼 가격·변화율·지표 |
+| `GET /macro` | 24개 매크로 심볼 가격·변화율·지표 |
 | `GET /watchlist` | 워치리스트 Stage2 점수 내림차순 + Conviction Score |
 | `GET /regime` | Risk Regime 5요소 종합 점수 |
 | `GET /distribution-days` | SPY·QQQ Distribution Day 카운트 |
@@ -434,7 +434,7 @@ Mac Mini cron이 하루 2회 외부 데이터를 생성해 GitHub에 푸시하�
 
 ## MCP 서버
 
-SniperBoard는 모든 `/api/*` 엔드포인트(29개)를 도구로 노출하는 stdio
+SniperBoard는 모든 `/api/*` 엔드포인트(40개)를 도구로 노출하는 stdio
 [MCP](https://modelcontextprotocol.io) 서버(`mcp_server/`)를 제공합니다.
 Claude Desktop, Claude Code, 그리고 향후 MCP를 지원하게 될 Grok 같은
 클라이언트가 SniperBoard를 직접 조회·조작할 수 있습니다 — 워치리스트/

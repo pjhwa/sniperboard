@@ -168,7 +168,7 @@ language; don't concatenate both.
 ## 3. Tool catalog
 
 All 40 tools map 1:1 to a SniperBoard REST endpoint. GET tools are pure
-reads — call them as often as you like. **The four tools marked ⚠️ mutate
+reads — call them as often as you like. **The five tools marked ⚠️ mutate
 server state** — see §4 before calling any of them.
 
 ### Per-symbol tools (any valid US ticker, not just the watchlist)
@@ -196,7 +196,7 @@ server state** — see §4 before calling any of them.
 | Tool | Params | Returns | When to use |
 |---|---|---|---|
 | `get_regime` | none | Risk Regime composite (see §2) | Always check this before making any "should I buy" style statement — it's the market-timing backdrop |
-| `get_macro` | none | Price/EMA/RSI/structure for ~23 macro symbols (dollar, rates, commodities, indices, VIX family, credit spreads, breadth, sectors) | Raw macro data table |
+| `get_macro` | none | Price/EMA/RSI/structure for 24 macro symbols (dollar, rates, commodities, indices, VIX family, credit spreads, breadth, sectors, BTC-USD) | Raw macro data table |
 | `get_macro_insight` | none | Same universe collapsed into 6 group traffic lights (`green`/`yellow`/`red`) + overall `RISK_ON`/`MIXED`/`RISK_OFF` judgment + optional AI commentary | Prefer this over `get_macro` when the user wants an interpreted "is the macro backdrop supportive" answer, not raw numbers |
 | `get_distribution_days` | none | SPY/QQQ distribution day counts (see §2) | Market-timing / broad-market health questions |
 
@@ -208,7 +208,7 @@ server state** — see §4 before calling any of them.
 | `get_brief` | none | AI Daily Brief — market narrative + per-symbol context | Broad "what's the AI's read on the market today" |
 | `get_morning_briefing` | none | Structured morning briefing — mood, big picture, sector analysis, spotlight names, full watchlist notes, today's checkpoints | More structured/actionable than `get_brief`; prefer this for a "give me today's briefing" request |
 | `get_earnings` | none | Upcoming earnings calendar + recent results with AI reaction commentary | Earnings-specific questions |
-| `get_prediction` | none | Polymarket FOMC odds | Only when explicitly asked about rate-decision odds; the API itself marks this `reference_only` — never treat it as feeding into Conviction or Stage2 |
+| `get_prediction` | none | Kalshi FOMC odds | Only when explicitly asked about rate-decision odds; the API itself marks this `reference_only` — never treat it as feeding into Conviction or Stage2 |
 | `get_divergence` | `only_divergences` (bool, default `true`) | Sentiment-vs-price divergence list (see §2) | Only when asked specifically about sentiment/price disconnects; always relay the tool's own disclaimer that this isn't a trading signal |
 
 ### Backtest tools
@@ -229,14 +229,17 @@ server state** — see §4 before calling any of them.
 | `preview_email_report` | none | Renders the same email as HTML **without sending it** | Use this instead of `send_email_report` whenever the user wants to *see* what the email would contain |
 | `get_cap_leaderboard` | none | Global market-cap TOP 15 with rank changes, 52-week position, sparkline data | "Biggest companies by market cap" — unrelated to the watchlist |
 | `get_insight` | `days` (14–120, default 60), `horizon` (1–20, default 5) | Historical-only analytics: divergence→forward-return stats, AI action-recommendation hit rate, theme streaks, macro regime transitions | Retrospective/analytical questions ("has following the AI's calls actually paid off historically") — this tool explicitly does not give live signals, only backward-looking stats |
+| `get_alert_rules` | none | User overlay alert rules (price cross, volume spike, Stage2≥5, RS≥70) | Check current rules before proposing a change with `put_alert_rules` |
+| `put_alert_rules` ⚠️ | rules list (replaces existing) | Replaces the overlay alert rules list | Only on an explicit request to change alert rules — always confirm current rules with `get_alert_rules` first |
 
 ---
 
-## 4. Rules for the four mutating tools
+## 4. Rules for the five mutating tools
 
 `run_backtest`, `run_backtest_sweep`, `refresh_signal_log`,
-`send_email_report` all change server-side state or trigger a real-world
-side effect (an email send). For all four:
+`send_email_report`, `put_alert_rules` all change server-side state or
+trigger a real-world side effect (an email send, or a permanent overwrite
+of the user's alert rules). For all five:
 
 1. **Never call one speculatively** to "see what happens" or as a default
    step in a workflow. Only call when the user's request cannot be
@@ -248,7 +251,8 @@ side effect (an email send). For all four:
 3. **Prefer the cheaper alternative when one exists**: `preview_email_report`
    over `send_email_report` unless sending was explicitly requested;
    `get_backtest_result` over `run_backtest` if a cached result already
-   answers the question.
+   answers the question; `get_alert_rules` before `put_alert_rules` to
+   confirm the current rules and avoid clobbering ones the user forgot about.
 4. `run_backtest` and `run_backtest_sweep` hit real yfinance downloads and
    can take tens of seconds to several minutes — don't assume a fast
    response; if your client has a tool-call timeout, warn the user

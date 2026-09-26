@@ -35,7 +35,7 @@ These two files give you an immediate understanding of the project without readi
 - **Backend**: `backend/core/signal_engine.py` — all signal calculations
 - **Frontend types**: `frontend/app/types.ts` — centralized metadata constants (BiLang: REGIME_META, DD_META, SIGNAL_META, STAGE2_META, SENTIMENT_META, TREND_META, VOLUME_META, MACRO_SYMBOL_NAMES, CONVICTION_LABEL_META)
 - **i18n**: `frontend/app/i18n.ts` — `Locale`, `BiLang`, `t()`, `tField()`. Per-component `const S: Record<string, BiLang>` for static strings. `tField(en, ko, fallback, locale)` for AI data.
-- **API router**: `backend/api/endpoints.py` — 7+ endpoints. `MACRO_SYMBOLS` uses English names.
+- **API router**: `backend/api/endpoints.py` — 40 endpoints. `MACRO_SYMBOLS` uses English names.
 - **Global state**: `frontend/hooks/useStore.ts` — Zustand (symbol, board, theme, locale: 'en'|'ko' default 'ko')
 - **Insight Lab**: `backend/core/insight_engine.py` + `GET /api/insight` + `InsightBoard.tsx`. Mobile follow-up brief: `docs/claude-code-brief-insight-mobile.md` (plan: `docs/superpowers/plans/2026-07-26-insight-lab-mobile.md`)
 
@@ -67,8 +67,10 @@ SniperBoard consumes AI-generated data from a separate repository: **`https://gi
 | AI Daily Brief | `brief/latest.json` | `backend/services/brief_service.py` |
 | Earnings Intelligence | `earnings/latest.json` | `backend/services/earnings_service.py` |
 | Macro Insight | `macro/latest.json` | `backend/services/macro_insight_service.py` |
+| Morning Briefing | `briefing/latest.json` | `backend/services/morning_briefing_service.py` |
+| Prediction Market | `prediction/latest.json` | `backend/services/prediction_service.py` |
 
-- Data is collected by server cron jobs (4 collectors) and pushed to that repo as JSON.
+- Data is collected by server cron jobs (6 collectors) and pushed to that repo as JSON.
 - SniperBoard fetches via raw GitHub URL; token injected via `SENTIMENT_DATA_TOKEN` env var.
 - See `market-sentiment-data/PROJECT_CONTEXT.md` for collector architecture, schema, and data contract.
-- **Schema version**: 2.0 — all AI text fields use `_en`/`_ko` suffix pairs. Use `tField()` in frontend.
+- **Schema version**: 2.0 for Social Sentiment, AI Daily Brief, Earnings Intelligence, and Macro Insight — all AI text fields use `_en`/`_ko` suffix pairs, use `tField()` in frontend. Morning Briefing and Prediction Market are schema_version 1.1/1.0 respectively.

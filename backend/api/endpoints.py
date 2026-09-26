@@ -947,7 +947,7 @@ async def get_divergence_endpoint(
 
 @router.get("/prediction", response_model=PredictionResponse)
 async def get_prediction_endpoint():
-    """FOMC prediction-market odds (Polymarket reference). Soft-fail available:false.
+    """FOMC prediction-market odds (Kalshi reference). Soft-fail available:false.
 
     usage is always reference_only — do not feed into Conviction weights.
     """

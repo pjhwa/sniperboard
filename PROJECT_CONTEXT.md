@@ -12,7 +12,7 @@ Read this file first when modifying code — it lets you understand the project 
 ## 1. One-Line Summary
 
 **SniperBoard** is a US stock trading signal dashboard based on the Livermore · O'Neil · Minervini methodologies.
-A FastAPI (Python) backend fetches prices via yfinance and calculates signals; a Next.js frontend visualizes them across 7 specialized boards.
+A FastAPI (Python) backend fetches prices via yfinance and calculates signals; a Next.js frontend visualizes them across 12 specialized boards.
 Grok/Hermes AI runs on an external cron job, generating market narratives, stock Briefs, and Earnings Intelligence, pushing them to GitHub; the backend serves them from cache.
 
 ---
@@ -23,7 +23,7 @@ Grok/Hermes AI runs on an external cron job, generating market narratives, stock
 sniperboard/
 ├── backend/
 │   ├── main.py                   # FastAPI app entry point (app name: "SniperBoard Signal API"), CORS allow_origins=["*"]
-│   ├── requirements.txt          # fastapi, uvicorn, yfinance, pandas, python-dotenv, pytest
+│   ├── requirements.txt          # fastapi, uvicorn, yfinance, pandas, python-dotenv, pytest, requests, beautifulsoup4, jsonschema, websockets, matplotlib, jinja2, apscheduler>=3.10
 │   ├── Dockerfile
 │   ├── api/
 │   │   ├── endpoints.py          # REST endpoints (APIRouter prefix=/api). MACRO_SYMBOLS dict uses English names (e.g. "WTI Crude Oil", "Gold ETF (GLD)") — frontend overrides display via MACRO_SYMBOL_NAMES BiLang map.
@@ -34,7 +34,7 @@ sniperboard/
 │   │   ├── distribution_day.py   # O'Neil Distribution Day count (25 trading days)
 │   │   ├── data_adapter.py       # SINGLE SOURCE OF TRUTH: yfinance MultiIndex normalization + fetch (normalize_yf_dataframe + get_daily + get_ohlcv_intraday + get_multi_daily). yf 1.3+ compatible. Phase 2: adj_close preserved for daily paths → Stage2 long-term accuracy on splits. Phase 5: centralization verified via full tests + manual endpoint checks.
 │   │   ├── conviction_calculator.py  # Phase 1: Conviction Composite Score v1 (TDD). 40/30/30 weighted (Stage2 0-7 norm + Sentiment + Regime total). Pure function, regime=None → 50 neutral. P0-1 (2026-07-13): normalize_sentiment_composite() maps market-sentiment-data composite_score (−2..+2) → 0–100 via (x+2)/4*100; values outside [−2,2] treated as legacy 0–100; None→50. Returns score+label+components (sentiment.input preserves producer value). Labels English: "Very High"(≥80) / "High"(≥65) / "Moderate"(≥50) / "Low"(≥35) / "Very Low"(<35). Frontend maps via CONVICTION_LABEL_META.
-│   │   ├── macro_rules.py            # Macro Insight traffic-light rule engine. compute_macro_signals(items) → {overall:{judgment,green_count,red_count}, groups:{key:{signal,direction}}}. 6 groups (volatility/breadth/credit/rates/commodities/sectors) each with green/yellow/red + overall RISK_ON/MIXED/RISK_OFF. Pure function, dict list input. TDD 20 tests.
+│   │   ├── macro_rules.py            # Macro Insight traffic-light rule engine. compute_macro_signals(items) → {overall:{judgment,green_count,red_count}, groups:{key:{signal,direction}}}. 6 groups (volatility/breadth/credit/rates/commodities/sectors) each with green/yellow/red + overall RISK_ON/MIXED/RISK_OFF. Pure function, dict list input. TDD 25 tests.
 │   │   ├── cap_rank_tracker.py       # 글로벌 시총 순위 SQLite 영속 (cap_ranks.db). init_db / save_ranks / get_previous_ranks / CapRankItem dataclass.
 │   │   ├── backtest_engine.py        # Backtesting engine (2026-06-02). Daily bar backtest driven by Stage2 signals.
 │   │   ├── earnings_consistency.py   # Absolute earnings_date SoT (YYYY-MM-DD). days_until internal only for sort/tier. AI relative phrases scrubbed → absolute. Email dedupe + mood/session coherence.
@@ -50,7 +50,7 @@ sniperboard/
 │   │   ├── data_service.py       # YFinanceDataService implementation + module-level helpers
 │   │   ├── brief_service.py      # GitHub raw fetch + 30-min in-memory cache (BRIEF_DATA_URL)
 │   │   ├── earnings_service.py   # GitHub raw fetch + 5-min raw cache (EARNINGS_DATA_URL). P0-6: sanitize revenue_estimate_b — drop |v|>300. P0-consistency: every serve recomputes days_until (ET) for tier/sort only; AI free text rewritten to absolute YYYY-MM-DD (no "N일 후"/"in N days" in user-facing copy).
-│   │   ├── prediction_service.py # P0-4: GitHub raw prediction/latest.json (Polymarket FOMC odds). usage=reference_only — never feeds Conviction. 5-min cache.
+│   │   ├── prediction_service.py # P0-4: GitHub raw prediction/latest.json (Kalshi FOMC odds — market-sentiment-data's actual source; several schema fields below like `url`/`event_title`/`volume_usd` are Polymarket-shaped leftovers that Kalshi data never populates). usage=reference_only — never feeds Conviction. 5-min cache.
 │   │   └── overnight_service.py  # Yahoo Finance WebSocket → Blue Ocean ATS overnight price stream. Runs in a dedicated daemon thread (asyncio.run in thread) — NOT in uvicorn's event loop, to avoid handshake timeouts caused by blocking yfinance I/O. Protobuf base64 parsing (field1=symbol, field2=price/float32, field6=session_hours/varint:8=overnight, field12=chg_pct). start_overnight_service() called in FastAPI lifespan; spawns threading.Thread(daemon=True).
 │   │   └── cap_leaderboard_service.py # companiesmarketcap.com 글로벌 랭킹 스크래핑 → yfinance 1y 히스토리로 spark·52W·market_structure 보완. 1h 인메모리 캐시 + stale fallback. fetch_leaderboard() → TOP 15 dict.
 │   │   └── macro_insight_service.py  # GitHub raw fetch + 30-min in-memory cache (MACRO_INSIGHT_URL). fetch_macro_insight() → Optional[dict]. get_ai_meta(raw) → {generated_at,age_minutes}. Returns None gracefully if URL not set.
@@ -58,10 +58,10 @@ sniperboard/
 │   │   └── email_report_service.py  # Morning email: collect + charts + Jinja2. prepare_email_sections() dedupes cross-section restatements; structured earnings calendar is SoT (free-text earnings_alert omitted when calendar present).
 │   │   └── insight_service.py        # Insight Lab assembly: load MSD history (INSIGHT_DATA_ROOT local or GitHub raw) + yfinance closes → insight_engine. 15-min cache. GET /api/insight.
 │   └── tests/
-│       ├── test_data_adapter.py (29 tests — adapter + signal_engine; Phase 5 full suite green)
+│       ├── test_data_adapter.py (10 tests) + test_signal_engine.py (7 tests) — adapter + signal_engine; Phase 5 full suite green
 │       ├── test_signal_engine.py (incl. adjusted vs raw split symbol TDD)
 │       ├── test_conviction_calculator.py (Phase 1 TDD + P0-1 scale normalize + P0-3 helper path; 18+ tests)
-│       ├── test_backtest_engine.py (22 tests — Stage2 vectorized calc/look-ahead/liquidation priority/stats/MDD)
+│       ├── test_backtest_engine.py (26 tests — Stage2 vectorized calc/look-ahead/liquidation priority/stats/MDD)
 │       └── (service tests: brief/earnings/sentiment — test_sentiment_service.py: fixtures updated with top_news)
 ├── frontend/
 │   ├── package.json              # Next.js 16.2.6, React 19.2.4, TanStack Query 5, Zustand 5, lightweight-charts 4.2.3, Tailwind v4
@@ -73,11 +73,11 @@ sniperboard/
 │   │   ├── providers.tsx         # QueryClientProvider wrapper
 │   │   ├── i18n.ts               # Locale type ('en'|'ko'), BiLang interface, t() and tField() helpers (2026-05-31)
 │   │   ├── types.ts              # All TypeScript type definitions + metadata constants. REGIME_META/DD_META/SIGNAL_META/STAGE2_META/SENTIMENT_META/TREND_META/VOLUME_META all use BiLang for label/desc/action (2026-05-31).
-│   │   ├── glossary.ts           # Context help data. GlossaryEntry{key, term: BiLang, body: BiLang} + GLOSSARY array (28 entries) + G map (key-based lookup). Used by InfoPopover, CommandPalette, BoardGuidePanel. Converted to BiLang (2026-05-31).
+│   │   ├── glossary.ts           # Context help data. GlossaryEntry{key, term: BiLang, body: BiLang} + GLOSSARY array (30 entries) + G map (key-based lookup). Used by InfoPopover, CommandPalette, BoardGuidePanel. Converted to BiLang (2026-05-31).
 │   │   └── globals.css           # Plaid DS design tokens (CSS vars, dark/light toggle, component classes). .info-pop* + .guide-panel* + .guide-btn + .board-wrap classes included. .strip: align-items center (guide button vertical centering). .board: flex:1 + overflow:auto + min-height:0; .board > * { flex-shrink:0; min-height:min-content } prevents TrackBoard flex-column from collapsing .card (overflow:hidden) bodies. Mobile responsive block: @media(max-width:767px){ .app 1-col grid/height:100dvh, .main display:block overflow-y:auto, .board flex-column, mob-order-1~8 utils, details.mob-collapse folding, .mob-chart-limit 300px, .bottom-tabs/.bottom-tabs__item, .mob-macro-groups/.mob-inner-stack/.mob-wrap 1-col forced } + @media(min-width:768px){ .mob-wrap/.mob-macro-groups display:contents desktop-transparent, details.mob-collapse height chain }
 │   ├── components/
 │   │   ├── shell/
-│   │   │   ├── Rail.tsx          # Left navigation rail (7 board icons + active indicator). deepdive=Layers icon in 2nd position. Mobile: hidden via hide-mobile class.
+│   │   │   ├── Rail.tsx          # Left navigation rail (12 board icons + active indicator). deepdive=Layers icon in 2nd position. Mobile: hidden via hide-mobile class.
 │   │   │   ├── Topbar.tsx        # Top bar (title, search, symbol buttons, Regime mini, AlertsBell C4, theme toggle, EN/KO). BOARD_LABELS includes all boards.
 │   │   │   ├── AlertsBell.tsx    # Phase C4: topbar bell + dropdown. useAlerts → GET /api/alerts. Dismiss via Zustand dismissedAlertIds. Click navigates board/symbol.
 │   │   │   ├── BottomTabs.tsx    # Mobile-only bottom tab bar (5 tabs + "More" sheet). Tabs: Briefing/Market/Watch/Sentiment/Analysis. "More" (6th) opens a 4-item slide-up sheet: Insight(Lightbulb)/Track(Target)/Macro(Globe)/Backtest(Flask). More tab shows active when current board is one of insight/track/macro/backtest. Shows only at max-width:767px. safe-area-inset-bottom applied. Bilingual labels.
@@ -93,7 +93,7 @@ sniperboard/
 │   │   │   ├── RadialGauge.tsx   # Canvas-based radial gauge
 │   │   │   ├── HeatStrip.tsx     # CSS-based heatmap strip
 │   │   │   └── PerplexityFinanceLink.tsx  # Shared ↗ deep link to perplexity.ai/finance/{SYM} or /earnings. New tab; never feeds Conviction.
-│   │   ├── boards/               # 7 board components. Common pattern: <div className="board-wrap"> wrapper → BoardGuidePanel is a direct child of board-wrap. Guide button lives in MarketStrip (moved there). Each board listens for 'guide:open' event via useEffect → setGuideOpen(true). GlossaryPanel fully removed. All boards converted to bilingual with t()/tField() (2026-05-31).
+│   │   ├── boards/               # 12 board components. Common pattern: <div className="board-wrap"> wrapper → BoardGuidePanel is a direct child of board-wrap. Guide button lives in MarketStrip (moved there). Each board listens for 'guide:open' event via useEffect → setGuideOpen(true). GlossaryPanel fully removed. All boards converted to bilingual with t()/tField() (2026-05-31).
 │   │   │   ├── OverviewBoard.tsx # Market overview (11 cards): AI Insight + Earnings Calendar + Regime + DD + Breadth + VIX + Credit + Entry Radar + Conviction Leaderboard + Sector + Watchlist Top3. ⏱ freshness badges. 7 cards have info={G.*} props (resolved to locale-aware strings via t()). Earnings rows link out to perplexity.ai/finance/{SYM}/earnings. Mobile: mob-order-1~8 for Big→Detail reordering, AI Insight details.mob-collapse.
 │   │   │   ├── DeepDiveBoard.tsx # Full analysis (5-Row): Row1=symbol selector+price bar+badges(Stage2/Conviction/monthly/structure/signal)+PRE/POST price. Row1.5 strip includes Perplexity Finance quote deep link. Row2=DailyChart(3fr)|Stage2 checks+KPI4(2fr). Row3=Institutional Activity(3fr)|R:R Entry Plan(2fr: setup status Ready/Watch/Invalid + distance% + pivot plan primary + market-now secondary reference + deep-breakdown copy). Row4(3×1fr)=Social Sentiment|AI Brief|Earnings (footer → perplexity.ai/finance/{SYM}/earnings). Row5=Regime(3fr)|Market-wide Sentiment(2fr). market_structure badge gets '·D' suffix (daily structure), intraday signal badges get '·{timeframe}' suffix — prevents UPTREND(D) vs downtrend(5m) confusion (2026-06-02). tField() for all AI data fields.
 │   │   │   ├── IntradayBoard.tsx # Intraday: IntradayChart + active signals + RSI + action bar. SIG_META BiLang map for signal name InfoPopovers. Bilingual all labels.
@@ -149,7 +149,7 @@ Base URL: `http://<host>:4000/api` (via Next.js proxy) or `http://<host>:5001/ap
 | `GET /ohlcv` | `symbol`, `tf` (default 5m) | OHLCV candles + 6 signal boolean arrays + ema21/50/rsi/atr |
 | `GET /latest-signal` | `symbol`, `tf` (default 5m) | Latest candle signal summary (active_signals, price/RSI/EMA) |
 | `GET /daily` | `symbol` | 252-candle daily data + EMA8/21/50/200/ATR14/GC + full Stage2. Returns **HTTP 404** if fewer than 20 bars available (e.g., recent IPO stocks). |
-| `GET /macro` | — | 21 macro symbols: price · 1D/5D change · EMA8/21 · market structure · RSI14. Includes `KRW=X` (USD/KRW exchange rate). |
+| `GET /macro` | — | 24 macro symbols: price · 1D/5D change · EMA8/21 · market structure · RSI14. Includes `KRW=X` (USD/KRW exchange rate). |
 | `GET /watchlist` | — | WATCHLIST_SYMS (22 symbols) Stage2 score descending. IPO stocks with < 20 bars return a minimal entry (score=0, all checks=False, conviction_notes=["Insufficient historical data (recent IPO)"]). |
 | `GET /regime` | — | Risk Regime 5-factor scores + regime string |
 | `GET /distribution-days` | — | SPY·QQQ DD count/level/dates |
@@ -372,10 +372,10 @@ export const VOLUME_META = { low, normal, elevated, surging };                  
 export const SETUP_QUALITY_META = { 'A+': {color:'bull'}, 'A': {color:'teal'}, ... };
 export const EARNINGS_RISK_META = { high: {color:'bear',dot:'●'}, ... };
 
-// 21 macro symbol BiLang display names — MacroBoard uses this, not the backend name field:
+// 24 macro symbol BiLang display names — MacroBoard uses this, not the backend name field:
 export const MACRO_SYMBOL_NAMES: Record<string, BiLang> = {
   'CL=F': { en: 'WTI Crude Oil', ko: 'WTI 원유 (Crude)' },
-  'GLD':  { en: 'Gold ETF (GLD)', ko: '금 ETF (GLD)' }, /* ... all 21 symbols */ };
+  'GLD':  { en: 'Gold ETF (GLD)', ko: '금 ETF (GLD)' }, /* ... all 24 symbols, incl. BTC-USD */ };
 
 // Conviction score → BiLang label (matches conviction_calculator.py score thresholds):
 export const CONVICTION_LABEL_META: { min: number; label: BiLang }[] = [
@@ -596,7 +596,7 @@ Docker Compose passes `BACKEND_URL=http://backend:8000` as both a build arg (for
 
 Note: Brief/Earnings data covers TIER1 12 symbols (collect_brief.py, collect_earnings.py updated). Backtest defaults to TIER1_SYMS. TIER2 covered by sentiment only.
 
-### Macro Symbols (`endpoints.py: MACRO_SYMBOLS`) — 21 total
+### Macro Symbols (`endpoints.py: MACRO_SYMBOLS`) — 24 total
 | Category | Symbols |
 |----------|---------|
 | Dollar · Rates · Bonds · Commodities | DX-Y.NYB, ^TNX, TLT, CL=F, GLD |
@@ -685,7 +685,7 @@ Note: Brief/Earnings data covers TIER1 12 symbols (collect_brief.py, collect_ear
 | UI language strings (static) | Per-component `const S: Record<string, BiLang>` at top of each board file |
 | UI language toggle | `frontend/components/shell/Topbar.tsx` (EN/KO buttons) + `frontend/hooks/useStore.ts` (locale state) |
 | AI data bilingual rendering | Use `tField(data.field_en, data.field_ko, data.field, locale)` |
-| Glossary terms | `frontend/app/glossary.ts` (GLOSSARY array + G map). 28 entries, each with BiLang term/body. |
+| Glossary terms | `frontend/app/glossary.ts` (GLOSSARY array + G map). 30 entries, each with BiLang term/body. |
 | Board guide content | Per-board `*_GUIDE` function (returns `GuideSection[]` based on locale). 3 sections: what this board shows / how to read key indicators / how to use it now. |
 | Guide button location | `frontend/components/shell/MarketStrip.tsx` far right (margin-left:auto). Boards listen for 'guide:open' event. |
 | InfoPopover positioning | `frontend/components/ui/InfoPopover.tsx` — uses `getBoundingClientRect()` for position:fixed rendering, auto right-edge correction |
